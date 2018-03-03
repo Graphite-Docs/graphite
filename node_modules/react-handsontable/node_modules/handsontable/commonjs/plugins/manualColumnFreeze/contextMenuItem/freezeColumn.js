@@ -1,0 +1,30 @@
+'use strict';
+
+exports.__esModule = true;
+exports.default = freezeColumnItem;
+function freezeColumnItem(manualColumnFreezePlugin) {
+  return {
+    key: 'freeze_column',
+    name: 'Freeze this column',
+    callback: function callback() {
+      var selectedColumn = this.getSelectedRange().from.col;
+
+      manualColumnFreezePlugin.freezeColumn(selectedColumn);
+
+      this.render();
+      this.view.wt.wtOverlays.adjustElementsSize(true);
+    },
+    hidden: function hidden() {
+      var selection = this.getSelectedRange();
+      var hide = false;
+
+      if (selection === void 0) {
+        hide = true;
+      } else if (selection.from.col !== selection.to.col || selection.from.col <= this.getSettings().fixedColumnsLeft - 1) {
+        hide = true;
+      }
+
+      return hide;
+    }
+  };
+}

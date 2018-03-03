@@ -1,0 +1,39 @@
+import { checkSelectionConsistency, markLabelAsSelected } from './../utils';
+
+export var KEY = 'make_read_only';
+
+export default function readOnlyItem() {
+  return {
+    key: KEY,
+    name: function name() {
+      var _this = this;
+
+      var label = 'Read only';
+      var atLeastOneReadOnly = checkSelectionConsistency(this.getSelectedRange(), function (row, col) {
+        return _this.getCellMeta(row, col).readOnly;
+      });
+
+      if (atLeastOneReadOnly) {
+        label = markLabelAsSelected(label);
+      }
+
+      return label;
+    },
+    callback: function callback() {
+      var _this2 = this;
+
+      var range = this.getSelectedRange();
+      var atLeastOneReadOnly = checkSelectionConsistency(range, function (row, col) {
+        return _this2.getCellMeta(row, col).readOnly;
+      });
+
+      range.forAll(function (row, col) {
+        _this2.setCellMeta(row, col, 'readOnly', !atLeastOneReadOnly);
+      });
+      this.render();
+    },
+    disabled: function disabled() {
+      return !(this.getSelectedRange() && !this.selection.selectedHeader.corner);
+    }
+  };
+}
