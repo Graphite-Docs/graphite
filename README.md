@@ -51,6 +51,6 @@ https://help.github.com/articles/creating-a-pull-request/
 
 ## License
 
-GNU v3. See the License file.
+GPLv3. See the License file.
 
                     
