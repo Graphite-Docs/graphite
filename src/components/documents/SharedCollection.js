@@ -161,7 +161,7 @@ export default class SharedCollection extends Component {
           <div className="navbar-fixed toolbar">
             <nav className="toolbar-nav">
               <div className="nav-wrapper">
-                <a href="/shared-docs" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+                <a href="/shared-docs" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
 
 
                   <ul className="left toolbar-menu">
@@ -213,7 +213,7 @@ export default class SharedCollection extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a href="/documents" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+              <a href="/documents" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
 
 
                 <ul className="left toolbar-menu">

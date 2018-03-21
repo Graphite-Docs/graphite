@@ -333,11 +333,11 @@ export default class SingleDoc extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a onClick={this.handleBack} className="arrow-back brand-logo"><i className="material-icons">arrow_back</i></a>
+              <a onClick={this.handleBack} className="arrow-back left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
 
 
                 <ul className="left toolbar-menu">
-                  <li><a onClick={this.printPreview}>Back to Editing</a></li>
+                  <li><a className="small-menu" onClick={this.printPreview}>Back to Editing</a></li>
                   <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
                   <li><a download={this.state.title + ".doc"}  href={dataUri}><img className="wordlogo" src="https://png.icons8.com/metro/540//doc.png" /></a></li>
                   <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
@@ -418,15 +418,14 @@ export default class SingleDoc extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a onClick={this.handleBack} className="brand-logo"><i className="material-icons">arrow_back</i></a>
-
+              <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
 
                 <ul className="left toolbar-menu">
-                <li><input className="print-title" placeholder="Title" type="text" value={this.state.title} onChange={this.handleTitleChange} /></li>
-                <li><a onClick={this.printPreview}>Export Options</a></li>
+                <li><input className="print-title small-menu" placeholder="Title" type="text" value={this.state.title} onChange={this.handleTitleChange} /></li>
+                <li><a className="small-menu" onClick={this.printPreview}>Export Options</a></li>
                 </ul>
-                <ul className="right toolbar-menu auto-save">
-                <li><a className="muted">{autoSave}</a></li>
+                <ul className="right toolbar-menu small-toolbar-menu auto-save">
+                <li><a className="small-menu muted">{autoSave}</a></li>
                 </ul>
 
             </div>

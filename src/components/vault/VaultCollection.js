@@ -27,11 +27,14 @@ export default class VaultCollection extends Component {
   	  	},
   	  },
       files: [],
+      filteredValue: [],
       folders: [],
       docs: [],
       sheets: [],
       combined: []
   	};
+    this.filterList = this.filterList.bind(this);
+    this.handleSignOut = this.handleSignOut.bind(this);
   }
 
   componentDidMount() {
@@ -67,12 +70,27 @@ export default class VaultCollection extends Component {
     getFile("uploads.json", {decrypt: true})
      .then((fileContents) => {
        this.setState({ files: JSON.parse(fileContents || '{}') });
-       this.merge();
+       this.setState({filteredValue: this.state.files});
+       // this.merge();
      })
       .catch(error => {
         console.log(error);
       });
 
+  }
+
+  handleSignOut(e) {
+    e.preventDefault();
+    signUserOut(window.location.origin);
+  }
+
+  filterList(event){
+    var updatedList = this.state.files;
+    updatedList = updatedList.filter(function(item){
+      return item.name.toLowerCase().search(
+        event.target.value.toLowerCase()) !== -1;
+    });
+    this.setState({filteredValue: updatedList});
   }
 
   merge() {
@@ -81,7 +99,7 @@ export default class VaultCollection extends Component {
   }
 
   render() {
-    let files = this.state.files;
+    let files = this.state.filteredValue;
     let folders = this.state.folders;
     let docs = this.state.docs;
     let sheets = this.state.sheets;
@@ -95,13 +113,13 @@ export default class VaultCollection extends Component {
       <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="http://www.iconsplace.com/icons/preview/white/pencil-256.png" alt="pencil" /></a>
+            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/shB70Sn.png" alt="pencil" /></a>
 
             <ul id="nav-mobile" className="right">
             <ul id="dropdown1" className="dropdown-content">
               <li><a href="/profile">Profile</a></li>
-              <li><a href="/shared-sheets">Shared Files</a></li>
-              <li><a href="/export">Export All Data</a></li>
+              <li><a href="/shared-vault">Shared Files</a></li>
+
               <li className="divider"></li>
               <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
@@ -119,67 +137,59 @@ export default class VaultCollection extends Component {
       </div>
       <div className="docs">
         <h3 className="center-align">Your Files</h3>
-        <div className="row">
-          <div className="col s4 m2">
-            <div className="card-panel grey">
-              <span className="white-text center-align">
-                <p><i className="medium material-icons">create_new_folder</i></p>
-                <p>Create a folder</p>
-              </span>
-            </div>
-          </div>
-          {folders.slice(0).reverse().map(folder => {
-            return (
-              <div className="col s4 m2">
-                <div className="card-panel grey">
-                  <span className="white-text center-align">
-                    <p>{folder.name}</p>
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+        <div className="">
+          <form className="searchform">
+          <fieldset className=" form-group searchfield">
+
+          <input type="text" className="form-control fileform form-control-lg searchinput" placeholder="Search Files" onChange={this.filterList}/>
+          </fieldset>
+          </form>
         </div>
+
         <div className="row">
-          <div className="col s6 m3">
-          <div className="card small">
-            <Link to={'/vault/new/file'}><div className="center-align card-content">
-              <p><i className="addDoc large material-icons">add</i></p>
+
+          <div className="col s12 m6 l3">
+          <div className="card collections-card">
+            <Link to={'/vault/new/file'}><div className="center-align new-doc card-content">
+              <p><i className="addDoc red-text lighten-2 medium material-icons">add</i></p>
             </div></Link>
-            <Link to={'/vault/new/file'}><div className="card-action">
-              <a className="black-text">Upload File</a>
-            </div></Link>
+            <Link to={'/vault/new/file'}>
+              <h5 className="center-align black-text">Upload File</h5>
+            </Link>
           </div>
           </div>
 
           {files.slice(0).reverse().map(file => {
               return(
-                <div key={file.id} className="col s6 m3">
 
-                  <div className="card small renderedDocs">
-                  <Link to={'/vault/' + file.id} className="black-text">
-                    <div className="center-align card-content">
+                <div key={file.id} className="col s12 m6 l3">
+
+                  <div className="card collections-card hoverable horizontal">
+                  <Link to={'/vault/' + file.id} className="side-card black-text file-side">
+                    <div className="card-image card-image-side file-side">
                     {
-                      file.type.includes("image") ? <p><i className="vault large material-icons">photo</i></p> :
-                      file.type.includes("pdf") ? <p><i className="vault large material-icons">picture_as_pdf</i></p> :
-                      file.type.includes("word") ? <img className="icon-image" src="https://image.flaticon.com/icons/svg/732/732078.svg" alt="word document" /> :
-                      file.type.includes("video") ? <p><i className="vault large material-icons">video_library</i></p> :
-                      file.type.includes("spreadsheet") ? <img className="icon-image" src="https://image.flaticon.com/icons/svg/1/1396.svg" alt="excel file" /> :
+                      file.type.includes("image") ? <img src="https://i.imgur.com/jLnXZXM.png" alt="image icon" /> :
+                      file.type.includes("pdf") ? <img src="https://i.imgur.com/urkNBL9.png" alt="pdf icon" /> :
+                      file.type.includes("word") ? <img className="icon-image" src="https://i.imgur.com/6ibKpk4.png" alt="word document" /> :
+                      file.type.includes("rtf") || file.type.includes("text/plain") || file.type.includes("opendocument") ? <img className="icon-image" src="https://i.imgur.com/xADzUSW.png" alt="document" /> :
+                      file.type.includes("video") ? <img className="icon-image" src="https://i.imgur.com/Hhj5KAl.png" alt="video icon" /> :
+                      file.type.includes("spreadsheet") ? <img className="icon-image" src="https://i.imgur.com/1mOhZ4u.png" alt="excel file" /> :
+                      file.type.includes("csv") ? <img className="icon-image" src="https://i.imgur.com/BxA1Cgv.png" alt="csv file" /> :
                       <div />
                     }
                     </div>
                     </Link>
-                    <div className="card-action">
-                      <Link to={'/vault/' + file.id}><a className="black-text">{file.name.length > 14 ? file.name.substring(0,17)+"..." :  file.name}</a></Link>
-                      <Link to={'/vault/delete/' + file.id}>
-
-                          <i className="modal-trigger material-icons red-text delete-button">delete</i>
-
-                      </Link>
-                      <div className="muted">
-                        <p>Last updated: {file.lastModifiedDate}</p>
+                    <div className="card-stacked">
+                    <Link to={'/vault/' + file.id} className="black-text">
+                      <div className="card-content">
+                        <p className="title">{file.name.length > 14 ? file.name.substring(0,17)+"..." :  file.name}</p>
+                      </div>
+                    </Link>
+                      <div className="edit-card-action card-action">
+                        <p><span className="muted muted-card">Uploaded: {file.uploaded}</span><Link to={'/vault/delete/' + file.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></p>
                       </div>
                     </div>
+
                   </div>
                 </div>
 
@@ -199,3 +209,25 @@ export default class VaultCollection extends Component {
     });
   }
 }
+
+// <div className="row">
+//   <div className="col s4 m2">
+//     <div className="card-panel grey">
+//       <span className="white-text center-align">
+//         <p><i className="medium material-icons">create_new_folder</i></p>
+//         <p>Create a folder</p>
+//       </span>
+//     </div>
+//   </div>
+//   {folders.slice(0).reverse().map(folder => {
+//     return (
+//       <div className="col s4 m2">
+//         <div className="card-panel grey">
+//           <span className="white-text center-align">
+//             <p>{folder.name}</p>
+//           </span>
+//         </div>
+//       </div>
+//     );
+//   })}
+// </div>

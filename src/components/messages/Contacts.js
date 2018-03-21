@@ -211,16 +211,20 @@ export default class Contacts extends Component {
               }
 
                 return (
-                  <li key={result.username}className="collection-item avatar">
+                  <div key={result.username} className={showFirstLink}>
+                  <a className="contact-add" onClick={() => this.setState({ addContact: result.username, confirmAdd: true })}>
+                  <li className="collection-item avatar">
                     <img src={imageLink} alt="avatar" className="circle" />
                     <span className="title">{result.profile.name}</span>
                     <p>{result.username}
                     </p>
-                    <div className={showFirstLink}>
-                      <a onClick={() => this.setState({ addContact: result.username, confirmAdd: true })} className="secondary-content"><i className="blue-text text-darken-2 material-icons">add</i></a>
-                    </div>
+
+                      <a className="secondary-content"></a>
+
 
                   </li>
+                  </a>
+                  </div>
                 )
               })
             }

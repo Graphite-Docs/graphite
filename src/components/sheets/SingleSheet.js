@@ -41,6 +41,7 @@ export default class SingleSheet extends Component {
       receiverID: "",
       shareModal: "hide",
       shareFile: "",
+      hideSheet: "",
       initialLoad: "",
       show: "",
       pubKey: ""
@@ -145,7 +146,8 @@ autoSave() {
 
 shareModal() {
   this.setState({
-    shareModal: ""
+    shareModal: "",
+    hideSheet: "hide"
   });
 }
 
@@ -167,7 +169,7 @@ sharedInfo(){
       .catch(error => {
         console.log("No key: " + error);
         Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-        this.setState({ shareModal: "hide", loading: "hide", show: "" });
+        this.setState({ shareModal: "hide", loading: "hide", show: "", hideSheet: "" });
       });
 }
 
@@ -215,7 +217,8 @@ loadMyFile() {
 
 hideModal() {
   this.setState({
-    shareModal: "hide"
+    shareModal: "hide",
+    hideSheet: ""
   });
 }
 
@@ -226,7 +229,7 @@ shareSheet() {
   const file = userShort + fileName;
   putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
     .then(() => {
-      this.setState({ shareModal: "hide", loading: "hide", show: "" });
+      this.setState({ shareModal: "hide", loading: "hide", show: "", hideSheet: "" });
       Materialize.toast('Sheet shared with ' + this.state.receiverID, 4000);
     })
     .catch(e => {
@@ -261,6 +264,7 @@ renderView() {
   const autoSave = this.state.autoSave;
   const shareModal = this.state.shareModal;
   const show = this.state.show;
+  const hideSheet = this.state.hideSheet;
   const initialLoad = this.state.initialLoad;
   const contacts = this.state.contacts;
 
@@ -270,11 +274,11 @@ renderView() {
       <div className="navbar toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/sheets" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+            <a href="/sheets" className="brand-logo left"><i className="small-brand material-icons">arrow_back</i></a>
 
 
               <ul className="left toolbar-menu">
-                <li><input className="white-text" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
+                <li><input className="white-text small-menu" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
                 <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
                 <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} ><img className="csvlogo" src="http://www.iconsplace.com/download/white-csv-512.png" /></CSVLink></li>
                 <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
@@ -307,7 +311,7 @@ renderView() {
       <div className="navbar toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/sheets" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+            <a href="/sheets" className="brand-logo left"><i className="small-brand material-icons">arrow_back</i></a>
 
 
               <ul className="left toolbar-menu">
@@ -372,7 +376,7 @@ renderView() {
         </div>
         </div>
         <div>
-          <div>
+          <div className={hideSheet}>
             <div className="spreadsheet-table">
               <HotTable root="hot" settings={{
                 data: this.state.grid,

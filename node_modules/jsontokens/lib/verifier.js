@@ -5,6 +5,8 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.TokenVerifier = undefined;
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _base64url = require('base64url');
@@ -43,6 +45,17 @@ var TokenVerifier = exports.TokenVerifier = function () {
     _createClass(TokenVerifier, [{
         key: 'verify',
         value: function verify(token) {
+            if (typeof token === 'string') {
+                return this.verifyCompact(token);
+            } else if ((typeof token === 'undefined' ? 'undefined' : _typeof(token)) === 'object') {
+                return this.verifyExpanded(token);
+            } else {
+                return false;
+            }
+        }
+    }, {
+        key: 'verifyCompact',
+        value: function verifyCompact(token) {
             // decompose the token into parts
             var tokenParts = token.split('.');
 
@@ -55,6 +68,26 @@ var TokenVerifier = exports.TokenVerifier = function () {
 
             // verify the signed hash
             return this.cryptoClient.verifyHash(signingInputHash, derSignatureBuffer, this.rawPublicKey);
+        }
+    }, {
+        key: 'verifyExpanded',
+        value: function verifyExpanded(token) {
+            var _this = this;
+
+            var signingInput = [token["header"].join('.'), _base64url2.default.encode(token["payload"])].join('.');
+            var signingInputHash = this.cryptoClient.createHash(signingInput);
+
+            var verified = true;
+
+            token["signature"].map(function (signature) {
+                var derSignatureBuffer = _this.cryptoClient.loadSignature(signature);
+                var signatureVerified = _this.cryptoClient.verifyHash(signingInputHash, derSignatureBuffer, _this.rawPublicKey);
+                if (!signatureVerified) {
+                    verified = false;
+                }
+            });
+
+            return verified;
         }
     }]);
 

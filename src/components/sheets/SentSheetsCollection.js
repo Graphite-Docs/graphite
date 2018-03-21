@@ -100,32 +100,6 @@ export default class SharedSheetsCollection extends Component {
         console.log(error);
       });
 
-    // let fileID = loadUserData().username;
-    // let fileString = 'sharedsheets.json'
-    // let file = fileID.slice(0, -3) + fileString;
-    // this.setState({ user: this.props.match.params.id });
-    // const directory = '/shared/' + file;
-    //
-    // const privateKey = loadUserData().appPrivateKey;
-    // getFile(directory, options)
-    //  .then((fileContents) => {
-    //    lookupProfile(this.state.user, "https://core.blockstack.org/v1/names")
-    //      .then((profile) => {
-    //        let image = profile.image;
-    //        if(profile.image){
-    //          this.setState({img: image[0].contentUrl})
-    //        } else {
-    //          this.setState({ img: avatarFallbackImage })
-    //        }
-    //      })
-    //      .catch((error) => {
-    //        console.log('could not resolve profile')
-    //      })
-    //     this.setState({ shareFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
-    //  })
-    //   .catch(error => {
-    //     console.log(error);
-    //   });
       this.deleteShareDoc = () => {
         this.setState({deleteId: ""})
         let sharedSheets = this.state.sharedSheets;
@@ -190,7 +164,7 @@ export default class SharedSheetsCollection extends Component {
           <div className="navbar-fixed toolbar">
             <nav className="toolbar-nav">
               <div className="nav-wrapper">
-                <a href="/shared-sheets" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+                <a href="/shared-sheets" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
               </div>
             </nav>
           </div>
@@ -238,7 +212,7 @@ export default class SharedSheetsCollection extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a href="/shared-sheets" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+              <a href="/shared-sheets" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
 
 
                 <ul className="left toolbar-menu">

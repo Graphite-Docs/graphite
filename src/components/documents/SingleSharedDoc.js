@@ -191,7 +191,7 @@ getFile(directory, options)
     <div className="navbar-fixed toolbar">
       <nav className="toolbar-nav">
         <div className="nav-wrapper">
-          <a href="/documents" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+          <a href="/shared-docs" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
           <ul className="left toolbar-menu">
 
             <li className={hideButton}><a onClick={this.handleaddItem}>Add to Documents</a></li>

@@ -32,6 +32,9 @@ import MainVault from './vault/MainVault';
 import SingleVaultFile from './vault/SingleVaultFile';
 import NewVaultFile from './vault/NewVaultFile';
 import DeleteVaultFile from './vault/DeleteVaultFile';
+import SharedVault from './vault/SharedVault';
+import SharedVaultCollection from './vault/SharedVaultCollection';
+import SingleSharedFile from './vault/SingleSharedFile';
 import Export from './Export';
 import {
   isSignInPending,
@@ -95,6 +98,9 @@ export default class App extends Component {
             <Route exact path="/vault/new/file" component={NewVaultFile} />
             <Route exact path="/vault/:id" component={SingleVaultFile} />
             <Route exact path="/vault/delete/:id" component={DeleteVaultFile} />
+            <Route exact path="/shared-vault" component={SharedVault} />
+            <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
+            <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
           </div>
         </BrowserRouter>
       </div>

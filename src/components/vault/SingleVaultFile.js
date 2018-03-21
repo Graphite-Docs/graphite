@@ -1,41 +1,51 @@
-import React, { Component } from 'react';
+import React, { Component } from "react";
 import {
-isSignInPending,
-loadUserData,
-Person,
-getFile,
-putFile,
-lookupProfile,
-signUserOut,
-} from 'blockstack';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
-import { Link } from 'react-router-dom';
-import Dropzone from 'react-dropzone'
-import PDF from 'react-pdf-js';
-import { Player } from 'video-react';
-import XLSX from 'xlsx';
+  isSignInPending,
+  loadUserData,
+  Person,
+  getFile,
+  putFile,
+  lookupProfile,
+  signUserOut
+} from "blockstack";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { Link } from "react-router-dom";
+import Dropzone from "react-dropzone";
+import PDF from "react-pdf-js";
+import { Player } from "video-react";
+import XLSX from "xlsx";
+import HotTable from "react-handsontable";
+const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
+const { getPublicKeyFromPrivate } = require('blockstack');
 const Quill = ReactQuill.Quill;
-const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+const avatarFallbackImage =
+  "https://s3.amazonaws.com/onename/avatar-placeholder.png";
 const mammoth = require("mammoth");
-const str2ab = require('string-to-arraybuffer')
+const str2ab = require("string-to-arraybuffer");
+const rtfToHTML = require('./rtf-to-html.js');
+const parse = require('rtf-parser');
+const Papa = require('papaparse');
 
 export default class SingleVaultFile extends Component {
   constructor(props) {
-  	super(props);
+    super(props);
 
-  	this.state = {
-  	  person: {
-  	  	name() {
-          return 'Anonymous';
+    this.state = {
+      person: {
+        name() {
+          return "Anonymous";
         },
-  	  	avatarUrl() {
-  	  	  return avatarFallbackImage;
-  	  	},
-  	  },
+        avatarUrl() {
+          return avatarFallbackImage;
+        }
+      },
       files: [],
       grid: [[]],
       value: [],
+      sheets: [],
+      contacts: [],
+      file: "",
       name: "",
       link: "",
       lastModified: "",
@@ -46,9 +56,14 @@ export default class SingleVaultFile extends Component {
       pages: "",
       page: "",
       content: "",
-      hideButton: "",
-      loading: "hide"
-  	};
+      show: "hide",
+      loading: "",
+      shareModal: "hide",
+      receiverID: "",
+      shareFile: {},
+      shareFileIndex: [],
+      pubKey: ""
+    };
     this.saveNewFile = this.saveNewFile.bind(this);
     this.onDocumentComplete = this.onDocumentComplete.bind(this);
     this.onPageComplete = this.onPageComplete.bind(this);
@@ -57,28 +72,98 @@ export default class SingleVaultFile extends Component {
     this.downloadPDF = this.downloadPDF.bind(this);
     this.handleaddItem = this.handleaddItem.bind(this);
     this.handleaddTwo = this.handleaddTwo.bind(this);
+    this.handleaddSheet = this.handleaddSheet.bind(this);
+    this.handleaddTwoSheet = this.handleaddTwoSheet.bind(this);
+    this.saveNewSheetFile = this.saveNewSheetFile.bind(this);
+    this.shareModal = this.shareModal.bind(this);
+    this.hideModal = this.hideModal.bind(this);
+    this.shareFile = this.shareFile.bind(this);
+    this.sharedInfo = this.sharedInfo.bind(this);
   }
 
   componentDidMount() {
-    getFile(this.props.match.params.id + '.json', {decrypt: true})
-      .then((file) => {
-        console.log(JSON.parse(file || '{}'));
-        this.setState({name: JSON.parse(file || '{}').name, lastModifiedDate: JSON.parse(file || '{}').lastModifiedDate, size: JSON.parse(file || '{}').size, link: JSON.parse(file || '{}').link, type: JSON.parse(file || '{}').type})
-        if(this.state.type.includes("officedocument")) {
-          var abuf4 = str2ab(this.state.link)
-            mammoth.convertToHtml({arrayBuffer: abuf4})
-            .then((result) => {
-                var html = result.value; // The generated HTML
-                var messages = result.messages;
-                this.setState({content: html});
-                console.log(this.state.content);
+    getFile("contact.json", {decrypt: true})
+     .then((fileContents) => {
+       if(fileContents) {
+         console.log("Contacts are here");
+         this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
+       } else {
+         console.log("No contacts");
+       }
+     })
+      .catch(error => {
+        console.log(error);
+      });
+
+
+    getFile(this.props.match.params.id + ".json", { decrypt: true })
+      .then(file => {
+        this.setState({
+          file: JSON.parse(file || "{}").name,
+          name: JSON.parse(file || "{}").name,
+          lastModifiedDate: JSON.parse(file || "{}").lastModifiedDate,
+          size: JSON.parse(file || "{}").size,
+          link: JSON.parse(file || "{}").link,
+          type: JSON.parse(file || "{}").type
+        });
+        if (this.state.type.includes("word")) {
+          var abuf4 = str2ab(this.state.link);
+          mammoth
+            .convertToHtml({ arrayBuffer: abuf4 })
+            .then(result => {
+              var html = result.value; // The generated HTML
+              var messages = result.messages;
+              this.setState({ content: html });
+              console.log(this.state.content);
+              this.setState({ loading: "hide", show: "" });
             })
             .done();
+        }
+
+        else if (this.state.type.includes("rtf")) {
+          let base64 = this.state.link.split("data:text/rtf;base64,")[1];
+          rtfToHTML.fromString(window.atob(base64), (err, html) => {
+            console.log(window.atob(base64));
+            console.log(html)
+            let htmlFixed = html.replace("body", ".noclass");
+            this.setState({ content:  htmlFixed});
+            this.setState({ loading: "hide", show: "" });
+          })
+        }
+
+        else if (this.state.type.includes("text/plain")) {
+          let base64 = this.state.link.split("data:text/plain;base64,")[1];
+          console.log(window.atob(base64));
+          this.setState({ loading: "hide", show: "" });
+          this.setState({ content: window.atob(base64) });
+        }
+
+        else if (this.state.type.includes("sheet")) {
+          var abuf4 = str2ab(this.state.link);
+          var wb = XLSX.read(abuf4, { type: "buffer" });
+          var first_worksheet = wb.Sheets[wb.SheetNames[0]];
+          var data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
+          console.log(data);
+          // console.log("result: ")
+          // console.log(wb);
+          this.setState({ grid: data });
+          this.setState({ loading: "hide", show: "" });
+        }
+
+        else if (this.state.type.includes("csv")) {
+          let base64 = this.state.link.split("data:text/csv;base64,")[1];
+          console.log(Papa.parse(window.atob(base64)).data);
+          this.setState({ grid: Papa.parse(window.atob(base64)).data });
+          this.setState({ loading: "hide", show: "" });
+        }
+
+        else {
+          this.setState({ loading: "hide", show: "" });
         }
       })
       .catch(error => {
         console.log(error);
-      })
+      });
   }
 
   onDocumentComplete(pages) {
@@ -98,73 +183,282 @@ export default class SingleVaultFile extends Component {
   }
 
   downloadPDF() {
-
-    var dlnk = document.getElementById('dwnldLnk');
+    var dlnk = document.getElementById("dwnldLnk");
     dlnk.href = this.state.link;
 
     dlnk.click();
-
-}
+  }
 
   handleaddItem() {
-    getFile("documents.json", {decrypt: true})
-     .then((fileContents) => {
-       if(fileContents) {
-         this.setState({ value: JSON.parse(fileContents || '{}').value });
-       } else {
-         console.log("No docs");
-       }
-     })
-     .then(() => {
-       this.handleaddTwo();
-     })
+    getFile("documents.json", { decrypt: true })
+      .then(fileContents => {
+        if (fileContents) {
+          this.setState({ value: JSON.parse(fileContents || "{}").value });
+        } else {
+          console.log("No docs");
+        }
+      })
+      .then(() => {
+        this.handleaddTwo();
+      })
       .catch(error => {
         console.log(error);
       });
   }
 
-handleaddTwo() {
-  this.setState({ show: "hide" });
-  this.setState({ hideButton: "hide", loading: "" })
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
-  const rando = Date.now();
-  const object = {};
-  object.title = this.state.name;
-  object.content = this.state.content;
-  object.id = rando;
-  object.created = month + "/" + day + "/" + year;
+  handleaddSheet() {
+    getFile("spread.json", { decrypt: true })
+      .then(fileContents => {
+        this.setState({ sheets: JSON.parse(fileContents || "{}").sheets });
+        console.log("Sheets added");
+      })
+      .then(() => {
+        this.handleaddTwoSheet();
+      })
+      .catch(error => {
+        console.log(error);
+      });
+  }
 
-  this.setState({ value: [...this.state.value, object] });
-  this.setState({ loading: "" });
-  // this.setState({ confirm: true, cancel: false });
-  setTimeout(this.saveNewFile, 500);
-  // setTimeout(this.handleGo, 700);
-}
+  handleaddTwo() {
+    this.setState({ show: "hide" });
+    this.setState({ hideButton: "hide", loading: "" });
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const rando = Date.now();
+    const object = {};
+    object.title = this.state.name;
+    object.content = this.state.content;
+    object.id = rando;
+    object.created = month + "/" + day + "/" + year;
 
-saveNewFile() {
-  putFile("documents.json", JSON.stringify(this.state), {encrypt:true})
-    .then(() => {
-      console.log("Saved!");
-      window.location.replace("/documents");
-    })
-    .catch(e => {
-      console.log("e");
-      console.log(e);
-      alert(e.message);
+    this.setState({ value: [...this.state.value, object] });
+    this.setState({ loading: "" });
+    // this.setState({ confirm: true, cancel: false });
+    setTimeout(this.saveNewFile, 500);
+    // setTimeout(this.handleGo, 700);
+  }
+
+  handleaddTwoSheet() {
+    this.setState({ show: "hide" });
+    this.setState({ hideButton: "hide", loading: "" });
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const rando = Date.now();
+    const object = {};
+    object.title = this.state.name;
+    object.content = this.state.grid;
+    object.id = rando;
+    object.created = month + "/" + day + "/" + year;
+
+    this.setState({ sheets: [...this.state.sheets, object] });
+    this.setState({ loading: "" });
+    console.log("adding new sheet");
+    // this.setState({ confirm: true, cancel: false });
+    setTimeout(this.saveNewSheetFile, 500);
+    // setTimeout(this.handleGo, 700);
+  }
+
+  saveNewFile() {
+    putFile("documents.json", JSON.stringify(this.state), { encrypt: true })
+      .then(() => {
+        console.log("Saved!");
+        window.location.replace("/documents");
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+        alert(e.message);
+      });
+  }
+
+  saveNewSheetFile() {
+    putFile("spread.json", JSON.stringify(this.state), { encrypt: true })
+      .then(() => {
+        console.log("Saved!");
+        window.location.replace("/sheets");
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+        alert(e.message);
+      });
+  }
+
+  shareModal() {
+    this.setState({
+      shareModal: ""
     });
-}
+  }
+
+  sharedInfo(){
+    const user = this.state.receiverID;
+    const userShort = user.slice(0, -3);
+    const fileName = 'sharedvault.json'
+    const file = userShort + fileName;
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+
+    getFile('key.json', options)
+      .then((file) => {
+        this.setState({ pubKey: JSON.parse(file)})
+        console.log("Step One: PubKey Loaded");
+      })
+        .then(() => {
+          this.loadMyFile();
+        })
+        .catch(error => {
+          console.log("No key: " + error);
+          Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+          this.setState({ shareModal: "hide", loading: "hide", show: "" });
+        });
+  }
+
+  loadMyFile() {
+    const user = this.state.receiverID;
+    const userShort = user.slice(0, -3);
+    const fileName = 'sharedvault.json'
+    const file = userShort + fileName;
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+
+
+
+    getFile(file, {decrypt: true})
+     .then((fileContents) => {
+        this.setState({ shareFileIndex: JSON.parse(fileContents || '{}') })
+        console.log("Step Two: Loaded share file");
+        this.setState({ loading: "", show: "hide" });
+        const object = {};
+        const today = new Date();
+        const day = today.getDate();
+        const month = today.getMonth() + 1;
+        const year = today.getFullYear();
+        object.uploaded = month + '/' + day + '/' + year;
+        object.file = file;
+        object.link = this.state.link;
+        object.name = this.state.name;
+        object.size = this.state.size;
+        object.type = this.state.type;
+        object.lastModified = this.state.lastModified;
+        object.lastModifiedDate = this.state.lastModifiedDate;
+        object.id = Date.now();
+        this.setState({ shareFile: object, shareFileIndex: [...this.state.shareFileIndex, object] });
+        setTimeout(this.shareFile, 700);
+     })
+      .catch(error => {
+        console.log(error);
+        console.log("Step Two: No share file yet, moving on");
+        this.setState({ loading: "", show: "hide" });
+        const object = {};
+        const today = new Date();
+        const day = today.getDate();
+        const month = today.getMonth() + 1;
+        const year = today.getFullYear();
+        object.uploaded = month + '/' + day + '/' + year;
+        object.file = file;
+        object.link = event.target.result;
+        object.name = file.name;
+        object.size = file.size;
+        object.type = file.type;
+        object.lastModified = file.lastModified;
+        object.lastModifiedDate = file.lastModifiedDate;
+        object.id = Date.now();
+        this.setState({ shareFile: object, shareFileIndex: [...this.state.shareFileIndex, object] });
+        setTimeout(this.shareFile, 700);
+      });
+  }
+
+  hideModal() {
+    this.setState({
+      shareModal: "hide"
+    });
+  }
+
+  shareFile() {
+    const user = this.state.receiverID;
+    const userShort = user.slice(0, -3);
+    const fileName = 'sharedvault.json'
+    const file = userShort + fileName;
+    putFile(file, JSON.stringify(this.state.shareFileIndex), {encrypt: true})
+      .then(() => {
+        // console.log("Step Three: File Shared: " + this.state.shareFileIndex);
+        // this.setState({ shareModal: "hide", loading: "hide", show: "" });
+        // Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+      putFile(userShort + this.props.match.params.id + '.json', JSON.stringify(this.state.shareFile), {encrypt: true})
+        .then(() => {
+          console.log(userShort + this.props.match.params.id + '.json')
+          // console.log("Step Four: File Shared: " + this.state.shareFile);
+          this.setState({ shareModal: "hide", loading: "hide", show: "" });
+          Materialize.toast('File shared with ' + this.state.receiverID, 4000);
+        })
+        .catch(e => {
+          console.log("e");
+          console.log(e);
+        });
+      const publicKey = this.state.pubKey;
+      const data = this.state.shareFileIndex;
+      const dataTwo = this.state.shareFile;
+      const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
+      const encryptedDataTwo = JSON.stringify(encryptECIES(publicKey, JSON.stringify(dataTwo)));
+      const directory = '/shared/' + file;
+      putFile(directory, encryptedData)
+        .then(() => {
+
+          console.log("Shared encrypted fileIndex" + directory);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+      putFile('/shared/' + userShort + this.props.match.params.id + '.json', encryptedDataTwo)
+        .then(() => {
+          console.log("Shared encrypted file");
+          console.log(dataTwo);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+  }
 
   renderPagination(page, pages) {
-    let previousButton = <li className="previous" onClick={this.handlePrevious}><a href="#"><i className="fa fa-arrow-left"></i> Previous</a></li>;
+    let previousButton = (
+      <li className="previous" onClick={this.handlePrevious}>
+        <a href="#">
+          <i className="fa fa-arrow-left" /> Previous
+        </a>
+      </li>
+    );
     if (page === 1) {
-      previousButton = <li className="previous disabled"><a href="#"><i className="fa fa-arrow-left"></i> Previous</a></li>;
+      previousButton = (
+        <li className="previous disabled">
+          <a href="#">
+            <i className="fa fa-arrow-left" /> Previous
+          </a>
+        </li>
+      );
     }
-    let nextButton = <li className="next" onClick={this.handleNext}><a href="#">Next <i className="fa fa-arrow-right"></i></a></li>;
+    let nextButton = (
+      <li className="next" onClick={this.handleNext}>
+        <a href="#">
+          Next <i className="fa fa-arrow-right" />
+        </a>
+      </li>
+    );
     if (page === pages) {
-      nextButton = <li className="next disabled"><a href="#">Next <i className="fa fa-arrow-right"></i></a></li>;
+      nextButton = (
+        <li className="next disabled">
+          <a href="#">
+            Next <i className="fa fa-arrow-right" />
+          </a>
+        </li>
+      );
     }
     return (
       <nav>
@@ -173,7 +467,7 @@ saveNewFile() {
           {nextButton}
         </ul>
       </nav>
-      );
+    );
   }
 
   render() {
@@ -184,58 +478,138 @@ saveNewFile() {
     const { handleSignOut } = this.props;
     const { person } = this.state;
     const loading = this.state.loading;
+    const show = this.state.show;
     const hideButton = this.state.hideButton;
+    const shareModal = this.state.shareModal;
+    const contacts = this.state.contacts;
     let pagination = null;
     if (this.state.pages) {
       pagination = this.renderPagination(this.state.page, this.state.pages);
     }
-    return (
-      !isSignInPending() ?
+    return !isSignInPending() ? (
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/vault" className="brand-logo"><i className="material-icons">arrow_back</i></a>
-
+        <div className="navbar-fixed toolbar">
+          <nav className="toolbar-nav">
+            <div className="nav-wrapper">
+              <a href="/vault" className="brand-logo left">
+                <i className="material-icons small-brand">arrow_back</i>
+              </a>
 
               <ul className="left toolbar-menu">
-                <li><a>{this.state.name.toUpperCase()}</a></li>
-                {
-                  type.includes("image") ? <li><a href={this.state.link} download={this.state.name}><i className="material-icons">cloud_download</i></a></li> :
-                  type.includes("pdf") ? <li><a href="#" onClick={this.downloadPDF} title={this.state.name}><i className="material-icons">cloud_download</i></a></li> :
-                  type.includes("officedocument") ? <li><a href="#" onClick={this.downloadPDF} title={this.state.name}><i className="material-icons">cloud_download</i></a></li> :
-                  type.includes("excel") ? <li><a href="#" onClick={this.downloadPDF} title={this.state.name}><i className="material-icons">cloud_download</i></a></li> :
-                  <li></li>
-                }
-                <li><a><i className="material-icons">share</i></a></li>
+                <li>
+                  <a className="small-menu">{this.state.name.length > 14 ? this.state.name.substring(0,17).toUpperCase() +"..." : this.state.name.toUpperCase()}</a>
+                </li>
+                {type.includes("image") ? (
+                  <li>
+                    <a href={this.state.link} download={this.state.name}>
+                      <i className="material-icons">cloud_download</i>
+                    </a>
+                  </li>
+                ) : type.includes("video") ? (
+                  <li>
+                    <a href={this.state.link} download={this.state.name}>
+                      <i className="material-icons">cloud_download</i>
+                    </a>
+                  </li>
+                ) : type.includes("application/pdf") ? (
+                  <li>
+                    <a
+                      href="#"
+                      onClick={this.downloadPDF}
+                      title={this.state.name}
+                    >
+                      <i className="material-icons">cloud_download</i>
+                    </a>
+                  </li>
+                ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
+                  <li>
+                    <a
+                      href="#"
+                      onClick={this.downloadPDF}
+                      title={this.state.name}
+                    >
+                      <i className="material-icons">cloud_download</i>
+                    </a>
+                  </li>
+                ) : type.includes("sheet")|| type.includes("csv") ? (
+                  <li>
+                    <a
+                      href="#"
+                      onClick={this.downloadPDF}
+                      title={this.state.name}
+                    >
+                      <i className="material-icons">cloud_download</i>
+                    </a>
+                  </li>
+                ) : (
+                  <li />
+                )}
+                <li>
+                  <a onClick={this.shareModal}>
+                    <i className="material-icons">share</i>
+                  </a>
+                </li>
+                {type.includes("word") ? (
+                  <li>
+                    <a href="#" onClick={this.handleaddItem}>
+                      Edit in Documents
+                    </a>
+                  </li>
+                ) : type.includes("sheet") ? (
+                  <li>
+                    <a href="#" onClick={this.handleaddSheet}>
+                      Edit in Sheets
+                    </a>
+                  </li>
+                ) : type.includes("csv") ? (
+                  <li>
+                    <a href="#" onClick={this.handleaddSheet}>
+                      Edit in Sheets
+                    </a>
+                  </li>
+                ) : (
+                  <li />
+                )}
               </ul>
+            </div>
+          </nav>
+        </div>
 
-          </div>
-        </nav>
-      </div>
-      <div className="file-view">
-      <div className="center-align container">
-        <div>
-        {
-          type.includes("image") ? <div className="single-file-div"><img className="z-depth-4 responsive-img" src={this.state.link} alt={this.state.name} /></div> :
-          type.includes("pdf") ?
-            <div className="single-file-div">
-              <PDF
-                file={this.state.link}
-                onDocumentComplete={this.onDocumentComplete}
-                onPageComplete={this.onPageComplete}
-                page={this.state.page}
-              />
-            {pagination}
-            <a id='dwnldLnk' download={this.state.name} style={thisStyle} />
-            </div> :
-          type.includes("officedocument") ?
-          <div className="left-align">
-          <div className={hideButton}>
-            <button onClick={this.handleaddItem} className="btn black center-align">Edit in Documents</button>
-          </div>
-          <div className={loading}>
-            <div className="preloader-wrapper small active">
+        <div className={shareModal}>
+
+          <div id="modal1" className="modal bottom-sheet">
+            <div className="modal-content">
+              <h4>Share</h4>
+              <p>Enter the Blockstack user ID of the person to share with.</p>
+              <p>Or select from your contacts.</p>
+              <input className="share-input white grey-text" placeholder="Ex: JohnnyCash.id" type="text" value ={this.state.receiverID} onChange={this.handleIDChange} />
+              <div className={show}>
+                <button onClick={this.sharedInfo} className="btn black white-text">Share</button>
+                <button onClick={this.hideModal} className="btn grey">Cancel</button>
+              </div>
+              <div className={show}>
+                <div className="container">
+                  <h4 className="contacts-share center-align">Your Contacts</h4>
+                  <ul className="collection">
+                  {contacts.slice(0).reverse().map(contact => {
+                      return (
+                        <li key={contact.contact}className="collection-item avatar">
+                          <img src={contact.img} alt="avatar" className="circle" />
+                          <span className="title black-text">{contact.contact}</span>
+                          <div>
+                            <a onClick={() => this.setState({ receiverID: contact.contact })} className="secondary-content"><i className="blue-text text-darken-2 material-icons">add</i></a>
+                          </div>
+
+                        </li>
+                      )
+                    })
+                  }
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className={loading}>
+              <div className="preloader-wrapper small active">
                 <div className="spinner-layer spinner-green-only">
                   <div className="circle-clipper left">
                     <div className="circle"></div>
@@ -247,39 +621,139 @@ saveNewFile() {
                 </div>
               </div>
             </div>
-            <div className="card single-file-doc">
-              <div
-                className="print-view no-edit"
-                dangerouslySetInnerHTML={{ __html: this.state.content }}
-              />
+          </div>
+          </div>
+
+        <div className="container">
+          <div className={loading}>
+            <div className="file-loading progress">
+              <div className="indeterminate" />
             </div>
-            <a id='dwnldLnk' download={this.state.name} style={thisStyle} />
-          </div> :
-          type.includes("video") ?
-            <div className="single-file-div">
-              <Player
-                playsInline
-                src={this.state.link}
-              />
-            </div> :
-          type.includes("excel") ?
-            <div>
-              <img className="icon-image" src="https://image.flaticon.com/icons/svg/1/1396.svg" alt="excel file" />
-              <a id='dwnldLnk' download={this.state.name} style={thisStyle} />
-            </div> :
-          <div />
-        }
+          </div>
         </div>
+        <div className={show}>
+          <div className="file-view">
+            <div className="">
+              <div>
+                {type.includes("image") ? (
+                  <div className="single-file-div center-align">
+                    <img
+                      className="z-depth-4 responsive-img"
+                      src={this.state.link}
+                      alt={this.state.name}
+                    />
+                  </div>
+                ) : type.includes("pdf") ? (
+                  <div className="center-align container">
+                    <div className="single-file-div">
+                      <PDF
+                        className="card"
+                        file={this.state.link}
+                        onDocumentComplete={this.onDocumentComplete}
+                        onPageComplete={this.onPageComplete}
+                        page={this.state.page}
+                      />
+                      {pagination}
+                      <a
+                        id="dwnldLnk"
+                        download={this.state.name}
+                        style={thisStyle}
+                      />
+                    </div>
+                  </div>
+                ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
+                  <div className="">
+                    <div className={loading}>
+                      <div className="edit-button">
+                        <div className="preloader-wrapper small active">
+                          <div className="spinner-layer spinner-green-only">
+                            <div className="circle-clipper left">
+                              <div className="circle" />
+                            </div>
+                            <div className="gap-patch">
+                              <div className="circle" />
+                            </div>
+                            <div className="circle-clipper right">
+                              <div className="circle" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="container">
+                      <div className="card single-file-doc">
+                        <div
+                          className="print-view no-edit"
+                          dangerouslySetInnerHTML={{
+                            __html: this.state.content
+                          }}
+                        />
+                      </div>
+                      <a
+                        id="dwnldLnk"
+                        download={this.state.name}
+                        style={thisStyle}
+                      />
+                    </div>
+                  </div>
+                ) : type.includes("video") ? (
+                  <div className="single-file-div">
+                    <div className="center-align container">
+                      <Player playsInline src={this.state.link} />
+                    </div>
+                  </div>
+                ) : type.includes("sheet") || type.includes("csv") ? (
+                  <div>
+                    <div className="spreadsheet-table">
+                      <HotTable
+                        root="hot"
+                        settings={{
+                          data: this.state.grid,
+                          readOnly: true,
+                          stretchH: "all",
+                          manualRowResize: true,
+                          manualColumnResize: true,
+                          colHeaders: true,
+                          rowHeaders: true,
+                          colWidths: 100,
+                          rowHeights: 30,
+                          minCols: 26,
+                          minRows: 100,
+                          contextMenu: true,
+                          formulas: true,
+                          columnSorting: true,
+                          contextMenu: true,
+                          autoRowSize: true,
+                          manualColumnMove: true,
+                          manualRowMove: true,
+                          ref: "hot",
+                          fixedRowsTop: 0,
+                          minSpareRows: 1,
+                          comments: true
+                        }}
+                      />
+
+                      <a
+                        id="dwnldLnk"
+                        download={this.state.name}
+                        style={thisStyle}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div />
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      </div>
-       : null
-    );
+    ) : null;
   }
 
   componentWillMount() {
     this.setState({
-      person: new Person(loadUserData().profile),
+      person: new Person(loadUserData().profile)
     });
   }
 }

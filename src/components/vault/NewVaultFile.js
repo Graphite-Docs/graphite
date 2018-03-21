@@ -55,6 +55,7 @@ export default class NewVaultFile extends Component {
 
   handleDrop(files) {
     var file = files[0]
+    console.log(file);
     const reader = new FileReader();
     reader.onload = (event) => {
        const object = {};
@@ -67,16 +68,26 @@ export default class NewVaultFile extends Component {
        object.lastModifiedDate = file.lastModifiedDate;
        object.id = Date.now();
        const objectTwo = {};
+       const today = new Date();
+       const day = today.getDate();
+       const month = today.getMonth() + 1;
+       const year = today.getFullYear();
+       objectTwo.uploaded = month + "/" + day + "/" + year;
        objectTwo.id = object.id;
        objectTwo.name = object.name;
        objectTwo.type = object.type;
+       objectTwo.lastModifiedDate = object.lastModifiedDate;
+
        this.setState({id: objectTwo.id, name: objectTwo.name});
-       if(object.type.inlcudes("spreadsheet")) {
+       console.log(object.type);
+       if(object.type.includes('sheet')) {
          var abuf4 = str2ab(object.link)
           var wb = XLSX.read(abuf4, {type:'buffer'});
           this.setState({ grid: wb.Strings })
           console.log(this.state.grid);
           object.grid = this.state.grid;
+       } else {
+         console.log("not a spreadsheet");
        }
        if(object.size > 111048576) {
          this.handleDropRejected();
@@ -155,7 +166,7 @@ save() {
       <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/vault" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+            <a href="/vault" className="brand-logo left"><i className="material-icons">arrow_back</i></a>
 
 
               <ul className="left toolbar-menu">
@@ -165,9 +176,9 @@ save() {
           </div>
         </nav>
       </div>
-      <div className="center-align container">
+      <div className="docs center-align container">
       <h3>Upload a new file</h3>
-      <h5>File size limit: 1mb</h5>
+      <h5>File size limit: 2mb<span className="note"><a onClick={() => Materialize.toast('Accepted files: .doc, .docx, .rtf, .txt, .xlsx, .csv, .png, .tiff, .jpeg, .jpg, .mov, .mp4', 4000)}>?</a></span></h5>
       <div className={loading}>
 
       <div className="preloader-wrapper small active">
@@ -188,7 +199,7 @@ save() {
           <Dropzone
             style={dropzoneStyle}
             onDrop={ this.handleDrop }
-            accept="application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,video/quicktime, video/x-ms-wmv,video/mp4,application/pdf,image/png,image/jpeg,image/jpg,image/tiff,image/gif"
+            accept="application/rtf, application/x-rtf, text/richtext, text/plain, application/rtf, application/x-rtf, text/rtf, application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv, video/quicktime, video/x-ms-wmv,video/mp4,application/pdf,image/png,image/jpeg,image/jpg,image/tiff,image/gif"
             multiple={ false }
             onDropRejected={ this.handleDropRejected }>
             <h1 className="upload-cloud"><i className="material-icons white-text large">cloud_upload</i></h1>
@@ -208,3 +219,5 @@ save() {
     });
   }
 }
+
+// <a className="btn tooltipped" dataPosition="bottom" dataDelay="50" dataTooltip=".doc, .docx, .rtf, .txt, .xlsx, .png, .tiff, .jpeg, .jpg, .mov, .mp4"><p className="muted">Accepted files<span className="note">?</span></p></a>

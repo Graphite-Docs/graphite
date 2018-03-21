@@ -122,7 +122,7 @@ render() {
     <div className="navbar-fixed toolbar">
       <nav className="toolbar-nav">
         <div className="nav-wrapper">
-          <a href="/contacts" className="brand-logo"><i className="material-icons">arrow_back</i></a>
+          <a href="/contacts" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
 
 
             <ul className="left toolbar-menu">
