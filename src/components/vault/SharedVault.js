@@ -135,7 +135,7 @@ export default class SharedVault extends Component {
                   <div className="card collections-card hoverable horizontal">
                   <Link to={'/vault/shared/'+ contact.contact} className="side-card file-side">
                     <div className="card-image card-image-side file-side">
-                      <img src="https://i.imgur.com/7bRMkK8.png" alt="files icon" />
+                      <img src="https://i.imgur.com/9ZlABws.png" alt="files icon" />
                     </div>
                   </Link>
                     <div className="card-stacked">
@@ -171,7 +171,7 @@ export default class SharedVault extends Component {
                   <div className="card collections-card hoverable horizontal">
                   <Link to={'/vault/sent/'+ contact.contact} className="side-card file-side">
                     <div className="card-image card-image-side file-side">
-                      <img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" />
+                      <img src="https://i.imgur.com/9ZlABws.png" alt="sheets-icon" />
                     </div>
                   </Link>
                     <div className="card-stacked">
@@ -230,6 +230,7 @@ export default class SharedVault extends Component {
               <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
               <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
               <li><a href="/conversations"><img src="https://i.imgur.com/cuXF1V5.png" alt="conversations-icon" className="dropdown-icon-bigger" /><br />Conversations</a></li>
+              <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
               </ul>
                 <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
                 <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>

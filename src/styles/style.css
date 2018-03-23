@@ -1015,8 +1015,21 @@ h5, h6 {
   display: none;
 }
 
+.files-card h5, .files-card button, .files-card h3 {
+  display: none;
+}
+
+.other-icon {
+  background: #fff;
+  border-radius: 50%;
+  padding: 0;
+  height: 150px;
+  width: 150px;
+  margin: auto;
+}
+
 .docs-card:hover {
-  background: #1D44FF
+  /* background: #1D44FF */
 }
 
 .docs-card:hover p, .docs-card:hover h4, .docs-card:hover h5, .docs-card:hover button, .docs-card:hover h3{
@@ -1030,8 +1043,23 @@ h5, h6 {
   width: 150px;
   border: 1px #1D44FF solid;
   color: #fff!important;
-  background: #2282FF;
+  background: #fff;
   padding: 25px;
+}
+
+.files-card:hover p, .files-card:hover h4, .files-card:hover h5, .files-card:hover button, .files-card:hover h3{
+  top: 25%;
+  display: block;
+}
+
+.files-card:hover p div {
+  border-radius: 50%;
+  height: 150px;
+  width: 150px;
+  border: 1px #eb6a5a solid;
+  color: #fff!important;
+  background: #fff;
+  padding-top: 10px;
 }
 
 .note {
@@ -1062,7 +1090,7 @@ h5, h6 {
 }
 
 .sheets-card:hover {
-  background: #1EBE55;
+  /* background: #1EBE55; */
 }
 
 .sheets-card:hover p, .sheets-card:hover h4, .sheets-card:hover h5, .sheets-card:hover button, .sheets-card:hover h3 {
@@ -1076,7 +1104,7 @@ h5, h6 {
   width: 150px;
   border: 1px #1EBE55 solid;
   color: #fff!important;
-  background: #13DF80;
+  background: #fff;
   padding: 25px;
 }
 
@@ -1093,7 +1121,7 @@ h5, h6 {
 }
 
 .contacts-card:hover {
-  background: #644BFF;
+  /* background: #644BFF; */
 }
 
 .contacts-card:hover p, .contacts-card:hover h4, .contacts-card:hover h5, .contacts-card:hover button, .contacts-card:hover h3{
@@ -1107,7 +1135,7 @@ h5, h6 {
   width: 150px;
   border: 1px #644BFF solid;
   color: #fff!important;
-  background: #7878FF;
+  background: #fff;
   padding: 25px;
 }
 
@@ -1124,7 +1152,7 @@ h5, h6 {
 }
 
 .convos:hover {
-  background: #FFB428;
+  /* background: #FFB428; */
 }
 
 .convos:hover p, .convos:hover h4, .convos:hover h5, .convos:hover button {
@@ -1138,7 +1166,7 @@ h5, h6 {
   width: 150px;
   border: 1px #FFB428 solid;
   color: #fff!important;
-  background: #FFD25A;
+  background: #fff;
   padding: 25px;
 }
 
@@ -1214,6 +1242,13 @@ h5, h6 {
 
 .dropdown-icon {
   max-width: 20px;
+}
+
+.dropdown-icon-file {
+  max-width: 30%;
+  margin-left: -7px;
+  margin-bottom: -5px;
+  margin-top: -7px;
 }
 
 .dropdown-icon-bigger {
@@ -1992,6 +2027,10 @@ nav ul a {
   /* border: 1.5px solid #0d47a1; */
   border-radius: 50%;
   padding: 15px;
+}
+
+.file-icon {
+  max-width: 90%;
 }
 .sheets-icon {
   background: #fff;

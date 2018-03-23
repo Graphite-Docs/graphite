@@ -412,7 +412,7 @@ export default class SharedVaultCollection extends Component {
                     <div className="card collections-card hoverable horizontal">
                     <Link to={'/vault/single/shared/' + file.id} className="side-card black-text file-side">
                       <div className="card-image card-image-side file-side">
-                        <img src="https://i.imgur.com/7bRMkK8.png" alt="file icon" />
+                        <img src="https://i.imgur.com/9ZlABws.png" alt="file icon" />
                       </div>
                     </Link>
                       <div className="card-stacked">
