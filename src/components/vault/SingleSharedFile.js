@@ -90,7 +90,7 @@ export default class SingleSharedFile extends Component {
        let fileString = 'sharedvault.json'
        let file = fileID.slice(0, -3) + fileString;
        const directory = '/shared/' + file;
-       const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+       const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
        const privateKey = loadUserData().appPrivateKey;
        getFile(directory, options)
         .then((fileContents) => {
@@ -259,7 +259,7 @@ export default class SingleSharedFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+
       });
   }
 
@@ -273,7 +273,7 @@ export default class SingleSharedFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+
       });
   }
 

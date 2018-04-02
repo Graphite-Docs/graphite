@@ -95,7 +95,7 @@ getOther() {
   let fileString = 'sharedsheets.json'
   let file = fileID.slice(0, -3) + fileString;
   const directory = '/shared/' + file;
-  const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+  const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile(directory, options)
   .then((fileContents) => {
    let privateKey = loadUserData().appPrivateKey;

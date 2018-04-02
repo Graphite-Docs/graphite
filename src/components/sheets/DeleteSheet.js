@@ -87,7 +87,7 @@ export default class DeleteSheet extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+      
       });
   }
 

@@ -2385,6 +2385,32 @@ polygon.ql-stroke {
   padding-top: 0!important;
 } */
 
+.sharing-notice {
+  padding: 20px;
+}
+
+.print-view img {
+  max-width: 85%;
+}
+
+/* Stealthy */
+
+#stealthyFrame {
+  width: 100%;
+  margin: auto;
+  border: none!important;
+  padding: 20px;
+  height: 90%;
+}
+
+#stealthyCol {
+  position: fixed;
+  top: 85px;
+  right: 20px;
+  height: 80vh;
+  width: 25%;
+}
+
 /*Media Queires*/
 
 @media screen and (max-width: 800px) {
@@ -2643,6 +2669,22 @@ polygon.ql-stroke {
 }
 
 @media screen and (max-width: 380px) {
+
+  #stealthyFrame {
+    width: 100%;
+    margin: auto;
+    border: none!important;
+    padding: 20px;
+    height: 90%;
+  }
+
+  #stealthyCol {
+    position: fixed;
+    top: 85px;
+    right: 0;
+    height: 80vh;
+    width: 100%;
+  }
 
   .search-input {
     font-size: 12px!important;

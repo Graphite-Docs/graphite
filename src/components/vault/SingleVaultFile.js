@@ -272,7 +272,7 @@ export default class SingleVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+
       });
   }
 
@@ -285,7 +285,6 @@ export default class SingleVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
       });
   }
 
@@ -300,7 +299,7 @@ export default class SingleVaultFile extends Component {
     const userShort = user.slice(0, -3);
     const fileName = 'sharedvault.json'
     const file = userShort + fileName;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
     getFile('key.json', options)
       .then((file) => {
@@ -409,7 +408,7 @@ export default class SingleVaultFile extends Component {
       const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
       const encryptedDataTwo = JSON.stringify(encryptECIES(publicKey, JSON.stringify(dataTwo)));
       const directory = '/shared/' + file;
-      putFile(directory, encryptedData)
+      putFile(directory, encryptedData, {encrypt: false})
         .then(() => {
 
           console.log("Shared encrypted fileIndex" + directory);
@@ -417,7 +416,7 @@ export default class SingleVaultFile extends Component {
         .catch(e => {
           console.log(e);
         });
-      putFile('/shared/' + userShort + this.props.match.params.id + '.json', encryptedDataTwo)
+      putFile('/shared/' + userShort + this.props.match.params.id + '.json', encryptedDataTwo, {encrypt: false})
         .then(() => {
           console.log("Shared encrypted file");
           console.log(dataTwo);

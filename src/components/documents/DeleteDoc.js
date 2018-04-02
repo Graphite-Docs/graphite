@@ -19,6 +19,7 @@ export default class DeleteDoc extends Component {
     this.state = {
       value: [],
       textvalue : "",
+      singleDoc: {},
       test:"",
       index: "",
       save: "",
@@ -37,7 +38,7 @@ export default class DeleteDoc extends Component {
   }
 
   componentDidMount() {
-    getFile("documents.json", {decrypt: true})
+    getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
         this.setState({ value: JSON.parse(fileContents || '{}').value })
         console.log("loaded");
@@ -53,6 +54,19 @@ export default class DeleteDoc extends Component {
       .catch(error => {
         console.log(error);
       });
+      const file = this.props.match.params.id;
+      const fullFile = '/documents/' + file + '.json';
+      getFile(fullFile, {decrypt: true})
+       .then((fileContents) => {
+         console.log(fileContents);
+          this.setState({
+            singleDoc: JSON.parse(fileContents || '{}')
+         })
+       })
+        .catch(error => {
+          console.log(error);
+        });
+
     }
 
   handleDeleteItem() {
@@ -61,7 +75,7 @@ export default class DeleteDoc extends Component {
     object.content = this.state.test;
     object.id = parseInt(this.props.match.params.id);
     this.setState({ value: [...this.state.value, this.state.value.splice(this.state.index, 1)]})
-    console.log(this.state.value);
+    this.setState({ singleDoc: {} });
     this.setState({ loading: "show", save: "hide" });
     this.saveNewFile();
   };
@@ -69,17 +83,32 @@ export default class DeleteDoc extends Component {
   saveNewFile() {
     this.setState({ loading: "show" });
     this.setState({ save: "hide"});
-    putFile("documents.json", JSON.stringify(this.state), {encrypt: true})
+    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log(JSON.stringify(this.state));
+        this.saveTwo();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+
+      });
+  }
+
+  saveTwo() {
+    const file = this.props.match.params.id;
+    const fullFile = '/documents/' + file + '.json';
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
+      .then(() => {
         this.setState({ loading: "hide" });
         location.href = '/documents';
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+      
       });
+
   }
 
   render() {

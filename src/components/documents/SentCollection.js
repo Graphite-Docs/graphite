@@ -62,7 +62,7 @@ export default class SentCollection extends Component {
     const file = userShort + fileName;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 
-    getFile('key.json', options)
+    getFile('key.json', options, {decrypt: false})
       .then((file) => {
         this.setState({ pubKey: JSON.parse(file)})
         console.log("Step One: PubKey Loaded");
@@ -120,7 +120,7 @@ export default class SentCollection extends Component {
       const data = this.state.docs;
       const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
       const directory = '/shared/' + file;
-      putFile(directory, encryptedData)
+      putFile(directory, encryptedData, {encrypt: false})
         .then(() => {
           const user = this.props.match.params.id;
           const userShort = user.slice(0, -3);

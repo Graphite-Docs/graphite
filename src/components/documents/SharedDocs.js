@@ -14,7 +14,8 @@ import {
   Person,
   getFile,
   putFile,
-  lookupProfile
+  lookupProfile,
+  signUserOut
 } from 'blockstack';
 import update from 'immutability-helper';
 const wordcount = require("wordcount");
@@ -135,7 +136,7 @@ export default class SharedDocs extends Component {
   }
 
   saveNewFile() {
-    putFile("documents.json", JSON.stringify(this.state), {encrypt:true})
+    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
       .then(() => {
         console.log("Saved!");
         window.location.replace("/documents");
@@ -143,7 +144,7 @@ export default class SharedDocs extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+    
       });
   }
 
@@ -166,7 +167,7 @@ export default class SharedDocs extends Component {
 
       const options = { username: this.state.senderID, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 
-      getFile('shared.json', options)
+      getFile('shared.json', options, {decrypt: false})
         .then((file) => {
           const doc = JSON.parse(file || '{}');
           console.log(doc.title);

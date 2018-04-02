@@ -95,7 +95,7 @@ export default class DeleteVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+
       });
   }
 
@@ -109,7 +109,7 @@ export default class DeleteVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+      
       });
   }
 

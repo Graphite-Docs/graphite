@@ -62,7 +62,7 @@ export default class SharedSheetsCollection extends Component {
     const userShort = user.slice(0, -3);
     const fileName = 'sharedsheets.json'
     const file = userShort + fileName;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
     getFile('key.json', options)
       .then((file) => {
@@ -123,7 +123,7 @@ export default class SharedSheetsCollection extends Component {
         const data = this.state.sharedSheets;
         const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
         const directory = '/shared/' + file;
-        putFile(directory, encryptedData)
+        putFile(directory, encryptedData, {encrypt: false})
           .then(() => {
             const user = this.props.match.params.id;
             const userShort = user.slice(0, -3);

@@ -44,7 +44,13 @@ export default class SingleDoc extends Component {
       shareModal: "hide",
       shareFile: [],
       show: "",
-      pubKey: ""
+      pubKey: "",
+      singleDoc: {},
+      confirmAdd: false,
+      singlePublic: {},
+      publicShare: "hide",
+      gaiaLink: "",
+      sharedWith: []
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleAutoAdd = this.handleAutoAdd.bind(this);
@@ -55,6 +61,10 @@ export default class SingleDoc extends Component {
     this.shareDoc = this.shareDoc.bind(this);
     this.sharedInfo = this.sharedInfo.bind(this);
     this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
+    this.sharePublicly = this.sharePublicly.bind(this);
+    this.savePublic = this.savePublic.bind(this);
+    this.stopSharing = this.stopSharing.bind(this);
+    this.saveStop = this.saveStop.bind(this);
   }
 
   componentWillMount() {
@@ -68,30 +78,62 @@ export default class SingleDoc extends Component {
   componentDidMount() {
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
-       if(fileContents) {
-         console.log("Contacts are here");
-         this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
-       } else {
-         console.log("No contacts");
-       }
+       let file = JSON.parse(fileContents || '{}');
+       let contacts = file.contacts;
+       console.log(contacts);
+       this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
      })
       .catch(error => {
         console.log(error);
       });
 
+      getFile(this.props.match.params.id + 'sharedwith.json', {decrypt: true})
+       .then((fileContents) => {
+          this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
+       })
+        .catch(error => {
+          console.log("shared with doc error: ")
+          console.log(error);
+        });
 
-    getFile("documents.json", {decrypt: true})
+      getFile("shareddocsindex.json", {decrypt: true})
+       .then((fileContents) => {
+         if(fileContents) {
+           console.log("Contacts are here");
+           this.setState({ sharedIndex: JSON.parse(fileContents || '{}') });
+         } else {
+           console.log("No contacts");
+         }
+       })
+        .catch(error => {
+          console.log(error);
+        });
+
+      getFile("documentscollection.json", {decrypt: true})
+       .then((fileContents) => {
+          this.setState({ value: JSON.parse(fileContents || '{}').value })
+          let value = this.state.value;
+          const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
+          let index = thisDoc && thisDoc.id;
+          console.log(index);
+          function findObjectIndex(doc) {
+              return doc.id == index;
+          }
+          this.setState({index: value.findIndex(findObjectIndex)})
+       })
+        .catch(error => {
+          console.log(error);
+        });
+
+    const file = this.props.match.params.id;
+    const fullFile = '/documents/' + file + '.json';
+    getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
-        this.setState({ value: JSON.parse(fileContents || '{}').value })
-        console.log("loaded");
-        let value = this.state.value;
-        const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
-        let index = thisDoc && thisDoc.id;
-        console.log(index);
-        function findObjectIndex(doc) {
-            return doc.id == index;
-        }
-        this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: value.findIndex(findObjectIndex) })
+       console.log(fileContents);
+        this.setState({
+          title: JSON.parse(fileContents || '{}').title,
+          content: JSON.parse(fileContents || '{}').content
+       })
      })
       .catch(error => {
         console.log(error);
@@ -103,37 +145,15 @@ export default class SingleDoc extends Component {
           this.setState({printPreview: true});
         }
       }
-      // setTimeout(this.handleAutoAdd, 1000);
-      // this.refresh = setInterval(() => this.handleAutoAdd(), 3000);
     }
 
-
-  handleTitleChange(e) {
-    this.setState({
-      title: e.target.value
-    });
-    clearTimeout(this.timeout);
-    this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  componentDidUpdate() {
+    if(this.state.confirmAdd == true) {
+      this.sharedInfo();
+    }
   }
-  handleChange(value) {
-      this.setState({ content: value });
-      clearTimeout(this.timeout);
-      this.timeout = setTimeout(this.handleAutoAdd, 1500)
-    }
 
-  handleIDChange(e) {
-      this.setState({ receiverID: e.target.value })
-    }
-
-    handleBack() {
-      if(this.state.autoSave == "Saving") {
-        setTimeout(this.handleBack, 500);
-      } else {
-        window.location.replace("/documents");
-      }
-    }
-
-  handleAutoAdd() {
+  sharePublicly() {
     const today = new Date();
     const day = today.getDate();
     const month = today.getMonth() + 1;
@@ -141,42 +161,75 @@ export default class SingleDoc extends Component {
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
-    object.id = parseInt(this.props.match.params.id);
-    object.updated = month + "/" + day + "/" + year;
     object.words = wordcount(this.state.content);
-    const index = this.state.index;
-    const updatedDoc = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-    this.setState({value: updatedDoc});
-    this.setState({autoSave: "Saving..."});
-    console.log(this.state.value);
-    this.autoSave();
-  };
+    object.shared = month + "/" + day + "/" + year;
+    this.setState({singlePublic: object})
+    setTimeout(this.savePublic, 700);
 
-  autoSave() {
-    putFile("documents.json", JSON.stringify(this.state), {encrypt: true})
+  }
+
+  stopSharing() {
+    this.setState({ singlePublic: {}})
+    setTimeout(this.saveStop, 700);
+  }
+
+  saveStop() {
+    const user = loadUserData().username;
+    const userShort = user.slice(0, -3);
+    const params = this.props.match.params.id;
+    const directory = 'public/';
+    const file = directory + userShort + params + '.json'
+    putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
       .then(() => {
-        console.log("Autosaved");
-        this.setState({autoSave: "Saved"});
+        Materialize.toast(this.state.title + " is no longer publicly shared.", 4000);
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+
       });
   }
 
-  shareModal() {
-    this.setState({
-      shareModal: ""
-    });
+  savePublic() {
+    var gaiaLink;
+    const profile = loadUserData().profile;
+    const apps = profile.apps;
+    gaiaLink = apps["https://app.graphitedocs.com"];
+
+    console.log("Shared: ")
+    console.log(this.state.singlePublic);
+    const user = loadUserData().username;
+    const userShort = user.slice(0, -3);
+    const params = this.props.match.params.id;
+    const directory = 'public/';
+    const file = directory + userShort + params + '.json'
+    putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
+      .then(() => {
+        console.log("Shared Public Link")
+        console.log(gaiaLink + file);
+        this.setState({gaiaLink: gaiaLink + file, publicShare: "", shareModal: "hide"});
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+
+      });
+  }
+
+  copyLink() {
+    var copyText = document.getElementById("gaia");
+    copyText.select();
+    document.execCommand("Copy");
+    Materialize.toast("Link copied to clipboard", 1000);
   }
 
   sharedInfo(){
+    this.setState({ confirmAdd: false });
     const user = this.state.receiverID;
     const userShort = user.slice(0, -3);
     const fileName = 'shareddocs.json'
     const file = userShort + fileName;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
     getFile('key.json', options)
       .then((file) => {
@@ -216,7 +269,9 @@ export default class SingleDoc extends Component {
         object.receiverID = this.state.receiverID;
         object.words = wordcount(this.state.content);
         object.shared = month + "/" + day + "/" + year;
-        this.setState({ shareFile: [...this.state.shareFile, object] });
+        const objectTwo = {};
+        objectTwo.contact = this.state.receiverID;
+        this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, objectTwo] });
         setTimeout(this.shareDoc, 700);
      })
       .catch(error => {
@@ -239,12 +294,6 @@ export default class SingleDoc extends Component {
       });
   }
 
-  hideModal() {
-    this.setState({
-      shareModal: "hide"
-    });
-  }
-
   shareDoc() {
     const user = this.state.receiverID;
     const userShort = user.slice(0, -3);
@@ -264,14 +313,114 @@ export default class SingleDoc extends Component {
       const data = this.state.shareFile;
       const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
       const directory = '/shared/' + file;
-      putFile(directory, encryptedData)
+      putFile(directory, encryptedData, {encrypt: false})
         .then(() => {
           console.log("Shared encrypted file " + directory);
         })
         .catch(e => {
           console.log(e);
         });
+      putFile(this.props.match.params.id + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
+        .then(() => {
+          console.log("Shared With File Updated")
+        })
+        .catch(e => {
+          console.log(e);
+        });
   }
+
+  shareModal() {
+    this.setState({
+      shareModal: ""
+    });
+  }
+
+  hideModal() {
+    this.setState({
+      shareModal: "hide"
+    });
+  }
+
+  handleTitleChange(e) {
+    this.setState({
+      title: e.target.value
+    });
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  }
+  handleChange(value) {
+      this.setState({ content: value });
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(this.handleAutoAdd, 1500)
+    }
+
+  handleIDChange(e) {
+      this.setState({ receiverID: e.target.value })
+    }
+
+  handleBack() {
+    if(this.state.autoSave == "Saving") {
+      setTimeout(this.handleBack, 500);
+    } else {
+      window.location.replace("/documents");
+    }
+  }
+
+  handleAutoAdd() {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const object = {};
+    object.title = this.state.title;
+    object.content = this.state.content;
+    object.id = parseInt(this.props.match.params.id);
+    object.updated = month + "/" + day + "/" + year;
+    object.words = wordcount(this.state.content);
+    this.setState({singleDoc: object});
+    this.setState({autoSave: "Saving..."});
+    const objectTwo = {};
+    objectTwo.title = this.state.title;
+    objectTwo.contacts = this.state.sharedWith;
+    objectTwo.id = parseInt(this.props.match.params.id);
+    objectTwo.updated = month + "/" + day + "/" + year;
+    objectTwo.words = wordcount(this.state.content);
+    const index = this.state.index;
+    const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
+    this.setState({value: updatedDoc});
+    this.autoSave();
+    console.log("after save")
+    console.log(this.state.value);
+  };
+
+  autoSave() {
+    const file = this.props.match.params.id;
+    const fullFile = '/documents/' + file + '.json';
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
+      .then(() => {
+        console.log("Autosaved");
+        this.saveCollection();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+
+      });
+  }
+
+  saveCollection() {
+    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+      .then(() => {
+        this.setState({autoSave: "Saved"});
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+    
+      });
+
+  }
+
 
   print(){
     const curURL = window.location.href;
@@ -281,7 +430,7 @@ export default class SingleDoc extends Component {
   }
 
   renderView() {
-
+    console.log(this.state.contacts);
     SingleDoc.modules = {
       toolbar: [
         [{ 'header': '1'}, {'header': '2'}, { 'font': Font.whitelist }],,
@@ -312,6 +461,7 @@ export default class SingleDoc extends Component {
     const save = this.state.save;
     const autoSave = this.state.autoSave;
     const shareModal = this.state.shareModal;
+    const publicShare = this.state.publicShare;
     const show = this.state.show;
     const contacts = this.state.contacts;
     var content = "<p style='text-align: center;'>" + this.state.title + "</p>" + "<div style='text-indent: 30px;'>" + this.state.content + "</div>";
@@ -346,31 +496,48 @@ export default class SingleDoc extends Component {
             </div>
           </nav>
         </div>
+
+        <div className={publicShare}>
+        <div id="modal1" className="modal bottom-sheet">
+          <div className="modal-content">
+
+            <div className={show}>
+
+              <button onClick={() => this.setState({ publicShare: "hide" })} className="btn grey">Done</button>
+            </div>
+            <div className={show}>
+              <div className="container">
+                <h4 className="contacts-share center-align">Public Link</h4>
+                <p>Ask the person you are sharing with to visit <a href="https://app.graphitedocs.com/publicdoc" target="_blank">https://app.graphitedocs.com/publicdoc</a> and provide this link to them: </p>
+                <p><input type="text" value={this.state.gaiaLink} id="gaia" /><button className="btn" onClick={this.copyLink}>Copy Link</button></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+
         <div className={shareModal}>
 
           <div id="modal1" className="modal bottom-sheet">
             <div className="modal-content">
               <h4>Share</h4>
-              <p>Enter the Blockstack user ID of the person to share with.</p>
-              <p>Or select from your contacts.</p>
-              <input className="share-input white grey-text" placeholder="Ex: JohnnyCash.id" type="text" value ={this.state.receiverID} onChange={this.handleIDChange} />
+              <p>Select the person to share with or <a onClick={this.sharePublicly}>share publicly</a>*</p>
+              <p><span className="note"><a onClick={() => Materialize.toast('Public files are not encrypted but will be available to anyone with the share link, even if they are not on Blockstack', 4000)}>*Learn more</a></span></p>
               <div className={show}>
-                <button onClick={this.sharedInfo} className="btn black white-text">Share</button>
+                <button className="btn" onClick={this.stopSharing}>Stop Sharing Publicly</button>
                 <button onClick={this.hideModal} className="btn grey">Cancel</button>
               </div>
               <div className={show}>
                 <div className="container">
                   <h4 className="contacts-share center-align">Your Contacts</h4>
-                  <ul className="collection">
+                  <ul className="collection cointainer">
                   {contacts.slice(0).reverse().map(contact => {
                       return (
                         <li key={contact.contact}className="collection-item avatar">
-                          <img src={contact.img} alt="avatar" className="circle" />
+                          <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
+                          <p><img src={contact.img} alt="avatar" className="circle" /></p>
                           <span className="title black-text">{contact.contact}</span>
-                          <div>
-                            <a onClick={() => this.setState({ receiverID: contact.contact })} className="secondary-content"><i className="blue-text text-darken-2 material-icons">add</i></a>
-                          </div>
-
+                          </a>
                         </li>
                       )
                     })
@@ -379,6 +546,7 @@ export default class SingleDoc extends Component {
                 </div>
               </div>
             </div>
+
             <div className={loading}>
               <div className="preloader-wrapper small active">
                 <div className="spinner-layer spinner-green-only">
@@ -413,6 +581,14 @@ export default class SingleDoc extends Component {
         </div>
       );
     } else {
+
+      const {sharedWith} = this.state
+      const to = (sharedWith && sharedWith[0] && sharedWith[0].contact) ? sharedWith[0].contact : ''
+      const stealthyUrlStub = (process.env.NODE_ENV == 'production') ?
+        'http://localhost:3030/?plugin=1&to=' :
+        'https://www.stealthy.im/?plugin=1&to=';
+      const stealthyUrl = stealthyUrlStub + to
+
       return (
         <div>
         <div className="navbar-fixed toolbar">
@@ -466,6 +642,9 @@ export default class SingleDoc extends Component {
               </div>
               </div>
               </div>
+
+
+
             </div>
           </div>
           </div>
@@ -482,3 +661,8 @@ export default class SingleDoc extends Component {
     );
   }
 }
+
+// <div id='stealthyCol' className='card'>
+//     <iframe src={stealthyUrl} id='stealthyFrame' />
+//     <button>X</button>
+// </div>

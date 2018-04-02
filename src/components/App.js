@@ -1,5 +1,6 @@
 import React, { Component, Link } from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
+import { HashRouter } from 'react-router-dom';
 import Profile from './Profile';
 import Signin from './Signin';
 import Header from './Header';
@@ -36,6 +37,7 @@ import SharedVault from './vault/SharedVault';
 import SharedVaultCollection from './vault/SharedVaultCollection';
 import SingleSharedFile from './vault/SingleSharedFile';
 import Export from './Export';
+import PublicDoc from './PublicDoc';
 import {
   isSignInPending,
   isUserSignedIn,
@@ -101,6 +103,7 @@ export default class App extends Component {
             <Route exact path="/shared-vault" component={SharedVault} />
             <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
             <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
+            <Route exact path="/publicdoc" component={PublicDoc} />
           </div>
         </BrowserRouter>
       </div>

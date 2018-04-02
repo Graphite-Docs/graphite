@@ -54,7 +54,7 @@ export default class SheetsCollections extends Component {
 
   componentDidMount() {
     const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
-    putFile('key.json', JSON.stringify(publicKey))
+    putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
     .then(() => {
         console.log("Saved!");
         console.log(JSON.stringify(publicKey));

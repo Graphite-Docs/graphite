@@ -89,7 +89,7 @@ export default class Conversations extends Component {
 
   componentDidMount() {
     const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
-    putFile('key.json', JSON.stringify(publicKey))
+    putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
     .then(() => {
         console.log("Saved");
       })
@@ -164,7 +164,7 @@ export default class Conversations extends Component {
 
   fetchData() {
     const username = this.state.conversationUser;
-    const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+    const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
     getFile('key.json', options)
       .then((file) => {
         this.setState({ pubKey: JSON.parse(file)})
@@ -279,7 +279,7 @@ export default class Conversations extends Component {
     const data = this.state;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const directory = '/shared/messages/' + fileName;
-    putFile(directory, encryptedData)
+    putFile(directory, encryptedData, {encrypt: false})
       .then(() => {
       })
       .catch(e => {

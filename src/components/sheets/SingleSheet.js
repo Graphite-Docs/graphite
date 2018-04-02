@@ -142,6 +142,11 @@ autoSave() {
       console.log("e");
       console.log(e);
     });
+    //TODO this is a test, remove it when done
+    putFile("timelinetest.json", JSON.stringify(this.state.grid), {encrypt: false})
+      .then(() => {
+        console.log("public!")
+      })
 }
 
 shareModal() {
@@ -156,7 +161,7 @@ sharedInfo(){
   const userShort = user.slice(0, -3);
   const fileName = 'sharedsheets.json'
   const file = userShort + fileName;
-  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
   getFile('key.json', options)
     .then((file) => {
@@ -239,7 +244,7 @@ shareSheet() {
     const data = this.state.shareFile;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const directory = '/shared/' + file;
-    putFile(directory, encryptedData)
+    putFile(directory, encryptedData, {encrypt: false})
       .then(() => {
         console.log("Shared encrypted file");
       })

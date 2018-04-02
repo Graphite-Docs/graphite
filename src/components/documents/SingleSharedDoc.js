@@ -64,15 +64,15 @@ export default class SingleSharedDoc extends Component {
   }
 
   componentDidMount() {
-
-    getFile("documents.json", {decrypt: true})
+    getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
          this.setState({ value: JSON.parse(fileContents || '{}').value });
          this.setState({ user: JSON.parse(fileContents || '{}').user });
          this.refresh = setInterval(() => this.getOther(), 1000);
        } else {
-         console.log("No docs");
+         console.log("No saved files");
+
        }
      })
       .catch(error => {
@@ -92,7 +92,7 @@ getOther() {
   let fileString = 'shareddocs.json'
   let file = fileID.slice(0, -3) + fileString;
   const directory = '/shared/' + file;
-  const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+  const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 getFile(directory, options)
  .then((fileContents) => {
    let privateKey = loadUserData().appPrivateKey;
@@ -126,8 +126,6 @@ getFile(directory, options)
     }
 
     handleaddItem() {
-      this.setState({ show: "hide" });
-      this.setState({ hideButton: "hide", loading: "" })
       const today = new Date();
       const day = today.getDate();
       const month = today.getMonth() + 1;
@@ -135,19 +133,41 @@ getFile(directory, options)
       const rando = Date.now();
       const object = {};
       object.title = this.state.title;
-      object.content = this.state.content;
       object.id = rando;
       object.created = month + "/" + day + "/" + year;
-
+      const objectTwo = {}
+      objectTwo.title = object.title;
+      objectTwo.id = object.id;
+      objectTwo.created = object.created;
+      objectTwo.content = this.state.content;
       this.setState({ value: [...this.state.value, object] });
-      this.setState({ loading: "" });
-      // this.setState({ confirm: true, cancel: false });
+      this.setState({ singleDoc: objectTwo });
+      this.setState({ tempDocId: object.id });
       setTimeout(this.saveNewFile, 500);
-      // setTimeout(this.handleGo, 700);
+
+      this.setState({ show: "hide" });
+      this.setState({ hideButton: "hide", loading: "" })
+
     }
 
     saveNewFile() {
-      putFile("documents.json", JSON.stringify(this.state), {encrypt:true})
+      putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
+        .then(() => {
+          console.log("Saved!");
+          this.saveNewSingleDoc()
+
+        })
+        .catch(e => {
+          console.log("e");
+          console.log(e);
+
+        });
+    }
+
+    saveNewSingleDoc() {
+      const file = this.state.tempDocId;
+      const fullFile = '/documents/' + file + '.json'
+      putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
         .then(() => {
           console.log("Saved!");
           window.location.replace("/documents");
@@ -155,7 +175,6 @@ getFile(directory, options)
         .catch(e => {
           console.log("e");
           console.log(e);
-          alert(e.message);
         });
     }
 

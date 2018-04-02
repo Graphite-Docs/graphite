@@ -73,7 +73,7 @@ export default class SharedCollection extends Component {
     let file = fileID.slice(0, -3) + fileString;
     const directory = '/shared/' + file;
     const user = this.props.match.params.id;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
     lookupProfile(this.state.user, "https://core.blockstack.org/v1/names")
       .then((profile) => {
         let image = profile.image;
@@ -101,7 +101,7 @@ export default class SharedCollection extends Component {
   }
 
   save() {
-    putFile("documents.json", JSON.stringify(this.state), {encrypt: true})
+    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log("saved");
       })

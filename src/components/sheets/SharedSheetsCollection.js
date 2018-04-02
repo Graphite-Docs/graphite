@@ -76,7 +76,7 @@ export default class SharedSheetsCollection extends Component {
       let fileString = 'sharedsheets.json'
       let file = fileID.slice(0, -3) + fileString;
       const directory = '/shared/' + file;
-      const options = { username: this.props.match.params.id, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+      const options = { username: this.props.match.params.id, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
       const privateKey = loadUserData().appPrivateKey;
       getFile(directory, options)
        .then((fileContents) => {

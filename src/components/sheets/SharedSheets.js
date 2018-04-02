@@ -131,7 +131,7 @@ export default class SharedSheets extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+
       });
   }
 
@@ -152,7 +152,7 @@ export default class SharedSheets extends Component {
           setTimeout(this.windowRefresh, 2000);
         })
 
-      const options = { username: this.state.senderID, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+      const options = { username: this.state.senderID, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
       getFile('sharedsheet.json', options)
         .then((file) => {

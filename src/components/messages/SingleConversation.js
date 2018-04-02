@@ -124,7 +124,7 @@ fetchMine() {
 
 fetchData() {
 const username = this.state.conversationUser;
-const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 getFile('key.json', options)
   .then((file) => {
     this.setState({ pubKey: JSON.parse(file)})
@@ -207,7 +207,7 @@ saveShared() {
   const data = this.state;
   const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
   const directory = '/shared/' + fileName;
-  putFile(directory, encryptedData)
+  putFile(directory, encryptedData, {encrypt: false})
     .then(() => {
       console.log("Shared encrypted file " + directory);
     })
