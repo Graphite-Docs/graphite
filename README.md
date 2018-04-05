@@ -6,6 +6,10 @@ Check it out at http://app.graphitedocs.com
 
 Graphite is open source and available for contributions. It is also available to simple run locally. One of the exciting things about this app is you can run it (alongside Blockstack) without ever going to the Graphite URL.
 
+Graphite proudly uses Browserstack for cross-browser and cross-operating-system testing. 
+
+![Browserstack](https://p14.zdusercontent.com/attachment/1015988/LBauiyGjzvaI0GcWZ5Y4qmDfu?token=eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..TJeZfwZBUzCYSjNuD1fxzw.H900JhMleaeduTZgNeLbFYB6i4uvBQEkW4zPxzcFukvzX9C0KD_NcOQJilbJNO9ZYwsWJvQtA3VFUGSq_UR959qFQSwMsUbpecM3FYdv7GC8WZ9dhNWW9glFyaPTIHidDqwH5zgvJtx3YPKgYCb6KQxBrDwyWOCRStW30TkAHbLRLZb39lswB_iZ5BOk-iq98halb4Q0zX86uUSb4J597h_ZLJedBNewxKjrtk_EqTVqZrRK5UN1V5sGILUHF2WwveyWBsSK2c_aIsVTeCaTfUMmL8pF79Q3IkGeZlylJEc.W8TKRB86-wrxQ-vMwEzQHQ)
+
 ## Install
 
 Graphite is open source and welcomes new issues, feature requests, and contributions.
