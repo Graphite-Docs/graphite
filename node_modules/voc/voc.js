@@ -1,8 +1,10 @@
+/* voc.js (C) 2012-present  SheetJS -- http://sheetjs.com */
+/*global exports, require:false, marked:false, CoffeeScript:false */
 var VOC = {};
 (function(exports){
   var handlers = {};
   var add = function(lang, handler) {
-    if(typeof lang === "string") handlers[lang] = handler; 
+    if(typeof lang === "string") handlers[lang] = handler;
     else lang.forEach(function(l) { handlers[l] = handler; });
   };
   var files = {};
@@ -38,7 +40,7 @@ var VOC = {};
           if(c) t.push(c);
           s = [];
         }
-        lastlang = x.lang; 
+        lastlang = x.lang;
       } else x.lang = lastlang;
       s.push(x.text);
     });

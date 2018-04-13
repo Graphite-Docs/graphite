@@ -96,10 +96,12 @@ class Clipboard extends Module {
 
   dangerouslyPasteHTML(index, html, source = Quill.sources.API) {
     if (typeof index === 'string') {
-      return this.quill.setContents(this.convert(index), html);
+      this.quill.setContents(this.convert(index), html);
+      this.quill.setSelection(0, Quill.sources.SILENT);
     } else {
       let paste = this.convert(html);
-      return this.quill.updateContents(new Delta().retain(index).concat(paste), source);
+      this.quill.updateContents(new Delta().retain(index).concat(paste), source);
+      this.quill.setSelection(index + paste.length(), Quill.sources.SILENT);
     }
   }
 
@@ -227,11 +229,11 @@ function matchAttributor(node, delta) {
       if (formats[attr.attrName]) return;
     }
     attr = ATTRIBUTE_ATTRIBUTORS[name];
-    if (attr != null && attr.attrName === name) {
+    if (attr != null && (attr.attrName === name || attr.keyName === name)) {
       formats[attr.attrName] = attr.value(node) || undefined;
     }
     attr = STYLE_ATTRIBUTORS[name]
-    if (attr != null && attr.attrName === name) {
+    if (attr != null && (attr.attrName === name || attr.keyName === name)) {
       attr = STYLE_ATTRIBUTORS[name];
       formats[attr.attrName] = attr.value(node) || undefined;
     }

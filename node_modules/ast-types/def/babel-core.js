@@ -7,7 +7,7 @@ module.exports = function (fork) {
   var or = types.Type.or;
 
   def("Noop")
-    .bases("Node")
+    .bases("Statement")
     .build();
 
   def("DoExpression")
@@ -136,7 +136,17 @@ module.exports = function (fork) {
   def("NumericLiteral")
     .bases("Literal")
     .build("value")
-    .field("value", Number);
+    .field("value", Number)
+    .field("raw", or(String, null), defaults["null"])
+    .field("extra", {
+      rawValue: Number,
+      raw: String
+    }, function getDefault() {
+      return {
+        rawValue: this.value,
+        raw: this.value + ""
+      }
+    });
 
   def("BigIntLiteral")
     .bases("Literal")
@@ -177,7 +187,8 @@ module.exports = function (fork) {
     def("Property"),
     def("ObjectMethod"),
     def("ObjectProperty"),
-    def("SpreadProperty")
+    def("SpreadProperty"),
+    def("SpreadElement")
   );
 
   // Split Property -> ObjectProperty and ObjectMethod
@@ -197,6 +208,9 @@ module.exports = function (fork) {
     .field("computed", Boolean, defaults["false"])
     .field("generator", Boolean, defaults["false"])
     .field("async", Boolean, defaults["false"])
+    .field("accessibility", // TypeScript
+           or(def("Literal"), null),
+           defaults["null"])
     .field("decorators",
            or([def("Decorator")], null),
            defaults["null"]);
@@ -206,6 +220,9 @@ module.exports = function (fork) {
     .build("key", "value")
     .field("key", or(def("Literal"), def("Identifier"), def("Expression")))
     .field("value", or(def("Expression"), def("Pattern")))
+    .field("accessibility", // TypeScript
+           or(def("Literal"), null),
+           defaults["null"])
     .field("computed", Boolean, defaults["false"]);
 
   var ClassBodyElement = or(

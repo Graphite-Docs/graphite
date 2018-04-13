@@ -1,18 +1,14 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Link } from 'react-router-dom';
 import {
-  isSignInPending,
-  loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile
 } from 'blockstack';
 import update from 'immutability-helper';
-const formula = require('excel-formula');
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+import $ from 'jquery';
+
+const numeral = require('numeral');
+
+const { encryptECIES } = require('blockstack/lib/encryption');
 
 export default class TestSheet extends Component {
   constructor(props) {
@@ -24,7 +20,6 @@ export default class TestSheet extends Component {
         [],
       ],
       title: "",
-      shareFile: [],
       index: "",
       save: "",
       loading: "hide",
@@ -69,12 +64,12 @@ export default class TestSheet extends Component {
         this.setState({ initialLoad: "hide" });
      }).then(() =>{
        let sheets = this.state.sheets;
-       const thisSheet = sheets.find((sheet) => { return sheet.id == this.props.match.params.id});
+       const thisSheet = sheets.find((sheet) => { return sheet.id === this.props.match.params.id});
        // console.log(thisSheet);
        let index = thisSheet && thisSheet.id;
        console.log(index);
        function findObjectIndex(sheet) {
-           return sheet.id == index;
+           return sheet.id === index;
        }
        this.setState({ grid: thisSheet && thisSheet.content || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
        console.log(this.state.grid);
@@ -90,8 +85,7 @@ export default class TestSheet extends Component {
        this.$el.jexcel('updateSettings', {
          cells: function (cell, col, row) {
              if (col > 0) {
-                 value = $('#my').jexcel('getValue', $(cell));
-                 val = numeral($(cell).text()).format('0,0.00');
+                 let val = numeral($(cell).text()).format('0,0.00');
                  $(cell).html('' + val);
              }
          }
@@ -101,7 +95,7 @@ export default class TestSheet extends Component {
         console.log(error);
       });
       this.printPreview = () => {
-        if(this.state.printPreview == true) {
+        if(this.state.printPreview === true) {
           this.setState({printPreview: false});
         } else {
           this.setState({printPreview: true});
@@ -159,7 +153,7 @@ autoSave() {
     .catch(e => {
       console.log("e");
       console.log(e);
-    
+      alert(e.message);
     });
 }
 
@@ -171,10 +165,7 @@ shareModal() {
 
 sharedInfo(){
   const user = this.state.receiverID;
-  const userShort = user.slice(0, -3);
-  const fileName = 'shareddocs.json'
-  const file = userShort + fileName;
-  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 
   getFile('key.json', options)
     .then((file) => {
@@ -186,7 +177,7 @@ sharedInfo(){
       })
       .catch(error => {
         console.log(error);
-        Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+        // Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
         this.setState({ shareModal: "hide", loading: "hide", show: "" });
       });
 }
@@ -196,7 +187,6 @@ loadMyFile() {
   const userShort = user.slice(0, -3);
   const fileName = 'sharedsheets.json'
   const file = userShort + fileName;
-  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 
   getFile(file, {decrypt: true})
    .then((fileContents) => {
@@ -251,7 +241,7 @@ shareSheet() {
     .then(() => {
       console.log("Step Three: File Shared: " + file);
       this.setState({ shareModal: "hide", loading: "hide", show: "" });
-      Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+      // Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
     })
     .catch(e => {
       console.log("e");
@@ -261,7 +251,7 @@ shareSheet() {
     const data = this.state;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const directory = '/shared/' + file;
-    putFile(directory, encryptedData, {encrypt: false})
+    putFile(directory, encryptedData)
       .then(() => {
         console.log("Shared encrypted file " + directory);
       })
@@ -272,9 +262,9 @@ shareSheet() {
 
 print(){
   const curURL = window.location.href;
-  history.replaceState(history.state, '', '/');
+  window.history.replaceState(window.history.state, '', '/');
   window.print();
-  history.replaceState(history.state, '', curURL);
+  window.history.replaceState(window.history.state, '', curURL);
 }
 
 
@@ -282,7 +272,6 @@ print(){
 renderView() {
 
   const loading = this.state.loading;
-  const save = this.state.save;
   const autoSave = this.state.autoSave;
   const shareModal = this.state.shareModal;
   const show = this.state.show;
@@ -302,7 +291,7 @@ renderView() {
               <ul className="left toolbar-menu">
                 <li><input className="black-text" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
                 <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
-                <li><a ref={el => this.el = el} onClick={this.download}><img className="csvlogo" src="https://d30y9cdsu7xlg0.cloudfront.net/png/605579-200.png" /></a></li>
+                <li><a ref={el => this.el = el} onClick={this.download}><img alt="csvlogo" className="csvlogo" src="https://d30y9cdsu7xlg0.cloudfront.net/png/605579-200.png" /></a></li>
                 <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
               </ul>
               <ul className="right toolbar-menu auto-save">
@@ -339,7 +328,7 @@ renderView() {
               <ul className="left toolbar-menu">
                 <li><input className="black-text" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
                 <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
-                <li><a ref={el => this.el = el} onClick={this.download}><img className="csvlogo" src="https://d30y9cdsu7xlg0.cloudfront.net/png/605579-200.png" /></a></li>
+                <li><a ref={el => this.el = el} onClick={this.download}><img alt="csvlogo" className="csvlogo" src="https://d30y9cdsu7xlg0.cloudfront.net/png/605579-200.png" /></a></li>
                 <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
               </ul>
               <ul className="right toolbar-menu auto-save">

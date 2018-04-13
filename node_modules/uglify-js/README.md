@@ -6,9 +6,8 @@ UglifyJS is a JavaScript parser, minifier, compressor and beautifier toolkit.
 #### Note:
 - **`uglify-js@3` has a simplified [API](#api-reference) and [CLI](#command-line-usage) that is not backwards compatible with [`uglify-js@2`](https://github.com/mishoo/UglifyJS2/tree/v2.x)**.
 - **Documentation for UglifyJS `2.x` releases can be found [here](https://github.com/mishoo/UglifyJS2/tree/v2.x)**.
-- `uglify-js` only supports ECMAScript 5 (ES5).
-- Those wishing to minify
-ES2015+ (ES6+) should use the `npm` package [**uglify-es**](https://github.com/mishoo/UglifyJS2/tree/harmony).
+- `uglify-js` only supports JavaScript (ECMAScript 5).
+- To minify ECMAScript 2015 or above, transpile using tools like [Babel](https://babeljs.io/).
 
 Install
 -------
@@ -70,7 +69,7 @@ a double dash to prevent input files being used as option arguments:
                                 `debug`  Add debug prefix and suffix.
                                 `domprops`  Mangle property names that overlaps
                                             with DOM properties.
-                                `keep_quoted`  Only mangle unquoted properies.
+                                `keep_quoted`  Only mangle unquoted properties.
                                 `regex`  Only mangle matched property names.
                                 `reserved`  List of names that should not be mangled.
     -b, --beautify [options]    Beautify output/specify output options:
@@ -598,18 +597,18 @@ If you're using the `X-SourceMap` header instead, you can just omit `sourceMap.u
 
 ## Compress options
 
+- `arguments` (default: `true`) -- replace `arguments[index]` with function
+  parameter name whenever possible.
+
 - `booleans` (default: `true`) -- various optimizations for boolean context,
   for example `!!a ? b : c → a ? b : c`
-
-- `cascade` (default: `true`) -- small optimization for sequences, transform
-  `x, x` into `x` and `x = something(), x` into `x = something()`
 
 - `collapse_vars` (default: `true`) -- Collapse single-use non-constant variables,
   side effects permitting.
 
 - `comparisons` (default: `true`) -- apply certain optimizations to binary nodes,
-  e.g. `!(a <= b) → a > b` (only when `unsafe_comps`), attempts to negate binary
-  nodes, e.g. `a = !b && !c && !d && !e → a=!(b||c||d||e)` etc.
+  e.g. `!(a <= b) → a > b`, attempts to negate binary nodes, e.g.
+  `a = !b && !c && !d && !e → a=!(b||c||d||e)` etc.
 
 - `conditionals` (default: `true`) -- apply optimizations for `if`-s and conditional
   expressions
@@ -630,7 +629,7 @@ If you're using the `X-SourceMap` header instead, you can just omit `sourceMap.u
 
 - `global_defs` (default: `{}`) -- see [conditional compilation](#conditional-compilation)
 
-- `hoist_funs` (default: `true`) -- hoist function declarations
+- `hoist_funs` (default: `false`) -- hoist function declarations
 
 - `hoist_props` (default: `true`) -- hoist properties from constant object and
   array literals into regular variables subject to a set of constraints. For example:
@@ -643,7 +642,13 @@ If you're using the `X-SourceMap` header instead, you can just omit `sourceMap.u
 
 - `if_return` (default: `true`) -- optimizations for if/return and if/continue
 
-- `inline` (default: `true`) -- embed simple functions
+- `inline` (default: `true`) -- inline calls to function with simple/`return` statement:
+  - `false` -- same as `0`
+  - `0` -- disabled inlining
+  - `1` -- inline simple functions
+  - `2` -- inline functions with arguments
+  - `3` -- inline functions with arguments and variables
+  - `true` -- same as `3`
 
 - `join_vars` (default: `true`) -- join consecutive `var` statements
 
@@ -727,14 +732,10 @@ If you're using the `X-SourceMap` header instead, you can just omit `sourceMap.u
 
 - `unsafe` (default: `false`) -- apply "unsafe" transformations (discussion below)
 
-- `unsafe_comps` (default: `false`) -- Reverse `<` and `<=` to `>` and `>=` to
-  allow improved compression. This might be unsafe when an at least one of two
-  operands is an object with computed values due the use of methods like `get`,
-  or `valueOf`. This could cause change in execution order after operands in the
-  comparison are switching. Compression only works if both `comparisons` and
-  `unsafe_comps` are both set to true.
+- `unsafe_comps` (default: `false`) -- compress expressions like `a <= b` assuming
+  none of the operands can be (coerced to) `NaN`.
 
-- `unsafe_Func` (default: `false`) -- compress and mangle `Function(args, code)`
+- `unsafe_Function` (default: `false`) -- compress and mangle `Function(args, code)`
   when both `args` and `code` are string literals.
 
 - `unsafe_math` (default: `false`) -- optimize numerical expressions like
@@ -745,6 +746,10 @@ If you're using the `X-SourceMap` header instead, you can just omit `sourceMap.u
 
 - `unsafe_regexp` (default: `false`) -- enable substitutions of variables with
   `RegExp` values the same way as if they are constants.
+
+- `unsafe_undefined` (default: `false`) -- substitute `void 0` if there is a
+  variable named `undefined` in scope (variable name will be mangled, typically
+  reduced to a single character)
 
 - `unused` (default: `true`) -- drop unreferenced functions and variables (simple
   direct variable assignments do not count as references unless set to `"keep_assign"`)
@@ -819,7 +824,7 @@ can pass additional arguments that control the code output:
   when you want to generate minified code, in order to specify additional
   arguments, so you can use `-b beautify=false` to override it.
 
-- `bracketize` (default `false`) -- always insert brackets in `if`, `for`,
+- `braces` (default `false`) -- always insert braces in `if`, `for`,
   `do`, `while` or `with` statements, even if their body is a single
   statement.
 
@@ -831,8 +836,8 @@ can pass additional arguments that control the code output:
 
 - `indent_start` (default `0`) -- prefix all lines by that many spaces
 
-- `inline_script` (default `false`) -- escape the slash in occurrences of
-  `</script` in strings
+- `inline_script` (default `true`) -- escape HTML comments and the slash in
+  occurrences of `</script>` in strings
 
 - `keep_quoted_props` (default `false`) -- when turned on, prevents stripping
   quotes from property names in object literals.
@@ -919,9 +924,6 @@ when this flag is on:
 - `new Object()` → `{}`
 - `String(exp)` or `exp.toString()` → `"" + exp`
 - `new Object/RegExp/Function/Error/Array (...)` → we discard the `new`
-- `void 0` → `undefined` (if there is a variable named "undefined" in
-  scope; we do it because the variable name will be mangled, typically
-  reduced to a single character)
 
 ### Conditional compilation
 
@@ -1098,3 +1100,27 @@ To enable fast minify mode with the API use:
 ```js
 UglifyJS.minify(code, { compress: false, mangle: true });
 ```
+
+#### Source maps and debugging
+
+Various `compress` transforms that simplify, rearrange, inline and remove code
+are known to have an adverse effect on debugging with source maps. This is
+expected as code is optimized and mappings are often simply not possible as
+some code no longer exists. For highest fidelity in source map debugging
+disable the Uglify `compress` option and just use `mangle`.
+
+### Compiler assumptions
+
+To allow for better optimizations, the compiler makes various assumptions:
+
+- `.toString()` and `.valueOf()` don't have side effects, and for built-in
+  objects they have not been overridden.
+- `undefined`, `NaN` and `Infinity` have not been externally redefined.
+- `arguments.callee`, `arguments.caller` and `Function.prototype.caller` are not used.
+- The code doesn't expect the contents of `Function.prototype.toString()` or
+  `Error.prototype.stack` to be anything in particular.
+- Getting and setting properties on a plain object does not cause other side effects
+  (using `.watch()` or `Proxy`).
+- Object properties can be added, removed and modified (not prevented with
+  `Object.defineProperty()`, `Object.defineProperties()`, `Object.freeze()`,
+  `Object.preventExtensions()` or `Object.seal()`).

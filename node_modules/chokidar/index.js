@@ -8,6 +8,9 @@ var globParent = require('glob-parent');
 var isGlob = require('is-glob');
 var isAbsolute = require('path-is-absolute');
 var inherits = require('inherits');
+var braces = require('braces');
+var normalizePath = require('normalize-path');
+var upath = require('upath');
 
 var NodeFsHandler = require('./lib/nodefs-handler');
 var FsEventsHandler = require('./lib/fsevents-handler');
@@ -300,8 +303,8 @@ FSWatcher.prototype._awaitWriteFinish = function(path, threshold, event, awfEmit
 
   var awaitWriteFinish = (function (prevStat) {
     fs.stat(fullPath, function(err, curStat) {
-      if (err) {
-        if (err.code !== 'ENOENT') awfEmit(err);
+      if (err || !(path in this._pendingWrites)) {
+        if (err && err.code !== 'ENOENT') awfEmit(err);
         return;
       }
 
@@ -355,7 +358,7 @@ FSWatcher.prototype._isIgnored = function(path, stats) {
     if (cwd && ignored) {
       ignored = ignored.map(function (path) {
         if (typeof path !== 'string') return path;
-        return isAbsolute(path) ? path : sysPath.join(cwd, path);
+        return upath.normalize(isAbsolute(path) ? path : sysPath.join(cwd, path));
       });
     }
     var paths = arrify(ignored)
@@ -423,21 +426,31 @@ FSWatcher.prototype._getWatchHelpers = function(path, depth) {
 
   var getDirParts = function(path) {
     if (!hasGlob) return false;
-    var parts = sysPath.relative(watchPath, path).split(/[\/\\]/);
+    var parts = [];
+    var expandedPath = braces.expand(path);
+    expandedPath.forEach(function(path) {
+      parts.push(sysPath.relative(watchPath, path).split(/[\/\\]/));
+    });
     return parts;
   };
 
   var dirParts = getDirParts(path);
-  if (dirParts && dirParts.length > 1) dirParts.pop();
+  if (dirParts) {
+    dirParts.forEach(function(parts) {
+      if (parts.length > 1) parts.pop();
+    });
+  }
   var unmatchedGlob;
 
   var filterDir = function(entry) {
     if (hasGlob) {
       var entryParts = getDirParts(checkGlobSymlink(entry));
       var globstar = false;
-      unmatchedGlob = !dirParts.every(function(part, i) {
-        if (part === '**') globstar = true;
-        return globstar || !entryParts[i] || anymatch(part, entryParts[i]);
+      unmatchedGlob = !dirParts.some(function(parts) {
+        return parts.every(function(part, i) {
+          if (part === '**') globstar = true;
+          return globstar || !entryParts[0][i] || anymatch(part, entryParts[0][i]);
+        });
       });
     }
     return !unmatchedGlob && this._isntIgnored(entryPath(entry), entry.stat);
@@ -575,6 +588,7 @@ FSWatcher.prototype._closePath = function(path) {
 
 // Returns an instance of FSWatcher for chaining.
 FSWatcher.prototype.add = function(paths, _origAdd, _internal) {
+  var disableGlobbing = this.options.disableGlobbing;
   var cwd = this.options.cwd;
   this.closed = false;
   paths = flatten(arrify(paths));
@@ -584,12 +598,20 @@ FSWatcher.prototype.add = function(paths, _origAdd, _internal) {
   }
 
   if (cwd) paths = paths.map(function(path) {
+    var absPath;
     if (isAbsolute(path)) {
-      return path;
+      absPath = path;
     } else if (path[0] === '!') {
-      return '!' + sysPath.join(cwd, path.substring(1));
+      absPath = '!' + sysPath.join(cwd, path.substring(1));
     } else {
-      return sysPath.join(cwd, path);
+      absPath = sysPath.join(cwd, path);
+    }
+
+    // Check `path` instead of `absPath` because the cwd portion can't be a glob
+    if (disableGlobbing || !isGlob(path)) {
+      return absPath;
+    } else {
+      return normalizePath(absPath);
     }
   });
 

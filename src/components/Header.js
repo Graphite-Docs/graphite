@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import {
   isSignInPending,
   isUserSignedIn,
@@ -9,7 +8,6 @@ import {
   Person,
   signUserOut,
 } from 'blockstack';
-const blockstack = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Header extends Component {
@@ -40,28 +38,26 @@ export default class Header extends Component {
   }
 
   renderHeader() {
-    const { handleSignOut } = this.props;
-    const { handleSignIn } = this.props;
-    if (blockstack.isUserSignedIn()) {
-      const userData = blockstack.loadUserData();
+    if (isUserSignedIn()) {
+      const userData = loadUserData();
       console.log('userData', userData);
 
-      const person = new blockstack.Person(userData.profile);
+      const person = new Person(userData.profile);
       console.log('person', person);
       return (
         <ul id="nav-mobile" className="right">
         <ul id="dropdown1" className="dropdown-content">
           <li><a href="/export">Export All Data</a></li>
           <li className="divider"></li>
-          <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+          <li><a onClick={ this.handleSignOut }>Sign out</a></li>
         </ul>
-          <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+          <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
         </ul>
       );
     } else {
       return(
         <ul id="nav-mobile" className="right">
-          <li><a href="http://graphitedocs.com" target="_blank">About Graphite</a></li>
+          <li><a href="http://graphitedocs.com" target="_blank" rel="noopener">About Graphite</a></li>
         </ul>
       );
     }

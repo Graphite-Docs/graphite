@@ -102,12 +102,21 @@ Set `options.fmode` and `options.dmode` to ensure that files/directories extract
 
 ``` js
 var extract = tar.extract('./my-directory', {
-  dmode: 0555, // all dirs and files should be readable
-  fmode: 0444
+  dmode: parseInt(555, 8), // all dirs should be readable
+  fmode: parseInt(444, 8) // all files should be readable
 })
 ```
 
 It can be useful to use `dmode` and `fmode` if you are packing/unpacking tarballs between *nix/windows to ensure that all files/directories unpacked are readable.
+
+Alternatively you can set `options.readable` and/or `options.writable` to set the dmode and fmode to readable/writable.
+
+``` js
+var extract = tar.extract('./my-directory', {
+  readable: true, // all dirs and files should be readable
+  writable: true, // all dirs and files should be writable
+})
+```
 
 Set `options.strict` to `false` if you want to ignore errors due to unsupported entry types (like device files)
 

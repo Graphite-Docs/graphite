@@ -32,7 +32,7 @@ module.exports = (target, opts) => {
 		}
 	} else if (process.platform === 'win32' || isWsl) {
 		cmd = 'cmd' + (isWsl ? '.exe' : '');
-		args.push('/c', 'start', '""');
+		args.push('/c', 'start', '""', '/b');
 		target = target.replace(/&/g, '^&');
 
 		if (opts.wait) {
@@ -59,8 +59,10 @@ module.exports = (target, opts) => {
 
 		if (!opts.wait) {
 			// `xdg-open` will block the process unless
-			// stdio is ignored even if it's unref'd
+			// stdio is ignored and it's detached from the parent
+			// even if it's unref'd
 			cpOpts.stdio = 'ignore';
+			cpOpts.detached = true;
 		}
 	}
 

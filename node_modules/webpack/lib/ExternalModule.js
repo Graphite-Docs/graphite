@@ -10,12 +10,17 @@ const WebpackMissingModule = require("./dependencies/WebpackMissingModule");
 const Template = require("./Template");
 
 class ExternalModule extends Module {
-	constructor(request, type) {
+	constructor(request, type, userRequest) {
 		super();
 		this.request = request;
+		this.userRequest = userRequest;
 		this.type = type;
 		this.built = false;
 		this.external = true;
+	}
+
+	libIdent() {
+		return this.userRequest;
 	}
 
 	chunkCondition(chunk) {
@@ -110,6 +115,13 @@ class ExternalModule extends Module {
 
 	size() {
 		return 42;
+	}
+
+	updateHash(hash) {
+		hash.update(this.type);
+		hash.update(JSON.stringify(this.request));
+		hash.update(JSON.stringify(Boolean(this.optional)));
+		super.updateHash(hash);
 	}
 }
 

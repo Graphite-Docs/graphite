@@ -1,22 +1,13 @@
 import React, { Component } from 'react';
-import { BrowserRouter, Route, Link } from 'react-router-dom';
 import {
-  isSignInPending,
   loadUserData,
-  Person,
   getFile,
-  putFile,
-  lookupProfile
+  putFile
 } from 'blockstack';
-import ReactDOM from 'react-dom';
 import HotTable from 'react-handsontable';
 import update from 'immutability-helper';
-import {CSVLink, CSVDownload} from 'react-csv';
-const formula = require('excel-formula');
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
-const timeout = null;
+import {CSVLink} from 'react-csv';
+const { encryptECIES } = require('blockstack/lib/encryption');
 
 export default class SingleSheet extends Component {
   constructor(props) {
@@ -37,14 +28,17 @@ export default class SingleSheet extends Component {
       saveNow: false,
       loading: "hide",
       printPreview: false,
+      confirmAdd: false,
       autoSave: "Saved",
       receiverID: "",
       shareModal: "hide",
-      shareFile: "",
       hideSheet: "",
       initialLoad: "",
       show: "",
-      pubKey: ""
+      pubKey: "",
+      singlePublic: {},
+      publicShare: "hide",
+      gaiaLink: ""
     }
     this.autoSave = this.autoSave.bind(this);
     this.shareModal = this.shareModal.bind(this);
@@ -54,6 +48,10 @@ export default class SingleSheet extends Component {
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handleAddItem = this.handleAddItem.bind(this);
     this.handleIDChange = this.handleIDChange.bind(this);
+    this.sharePublicly = this.sharePublicly.bind(this);
+    this.stopSharing = this.stopSharing.bind(this);
+    this.saveStop = this.saveStop.bind(this);
+    this.savePublic = this.savePublic.bind(this);
   }
   componentDidMount() {
     getFile("contact.json", {decrypt: true})
@@ -84,7 +82,8 @@ export default class SingleSheet extends Component {
        function findObjectIndex(sheet) {
            return sheet.id == index;
        }
-       this.setState({ grid: thisSheet && thisSheet.content || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
+       let grid = thisSheet && thisSheet.content;
+       this.setState({ grid: grid || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
        console.log(this.state.grid);
      })
       .catch(error => {
@@ -99,8 +98,13 @@ export default class SingleSheet extends Component {
       }
       console.clear();
       setTimeout(this.handleAddItem,1000);
-      // this.refresh = setInterval(() => this.handleAddItem(), 5000);
     }
+
+  componentDidUpdate() {
+    if(this.state.confirmAdd === true) {
+      this.sharedInfo();
+    }
+  }
 
     handleAddItem() {
       const today = new Date();
@@ -142,11 +146,6 @@ autoSave() {
       console.log("e");
       console.log(e);
     });
-    //TODO this is a test, remove it when done
-    putFile("timelinetest.json", JSON.stringify(this.state.grid), {encrypt: false})
-      .then(() => {
-        console.log("public!")
-      })
 }
 
 shareModal() {
@@ -156,7 +155,77 @@ shareModal() {
   });
 }
 
+sharePublicly() {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const object = {};
+    object.title = this.state.title;
+    object.content = this.state.grid;
+    object.shared = month + "/" + day + "/" + year;
+    this.setState({singlePublic: object})
+    setTimeout(this.savePublic, 700);
+  }
+
+stopSharing() {
+  this.setState({ singlePublic: {}})
+  setTimeout(this.saveStop, 700);
+}
+
+saveStop() {
+  const user = loadUserData().username;
+  const userShort = user.slice(0, -3);
+  const params = this.props.match.params.id;
+  const directory = 'public/';
+  const file = directory + userShort + params + '.json'
+  putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
+    .then(() => {
+      window.Materialize.toast(this.state.title + " is no longer publicly shared.", 4000);
+    })
+    .catch(e => {
+      console.log("e");
+      console.log(e);
+
+    });
+}
+
+savePublic() {
+  var gaiaLink;
+  const profile = loadUserData().profile;
+  const apps = profile.apps;
+  // gaiaLink = apps["https://app.graphitedocs.com"];
+  gaiaLink = apps["http://localhost:3000"];
+
+  console.log("Shared: ")
+  console.log(this.state.singlePublic);
+  const user = loadUserData().username;
+  const userShort = user.slice(0, -3);
+  const params = this.props.match.params.id;
+  const directory = 'public/';
+  const file = directory + userShort + params + '.json'
+  putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
+    .then(() => {
+      console.log("Shared Public Link")
+      console.log(gaiaLink + file);
+      this.setState({gaiaLink: gaiaLink + file, publicShare: "", shareModal: "hide"});
+    })
+    .catch(e => {
+      console.log("e");
+      console.log(e);
+
+    });
+}
+
+copyLink() {
+  var copyText = document.getElementById("gaia");
+  copyText.select();
+  document.execCommand("Copy");
+  window.Materialize.toast("Link copied to clipboard", 1000);
+}
+
 sharedInfo(){
+  this.setState({ confirmAdd: false});
   const user = this.state.receiverID;
   const userShort = user.slice(0, -3);
   const fileName = 'sharedsheets.json'
@@ -173,7 +242,7 @@ sharedInfo(){
       })
       .catch(error => {
         console.log("No key: " + error);
-        Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+        window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
         this.setState({ shareModal: "hide", loading: "hide", show: "", hideSheet: "" });
       });
 }
@@ -235,7 +304,7 @@ shareSheet() {
   putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
     .then(() => {
       this.setState({ shareModal: "hide", loading: "hide", show: "", hideSheet: "" });
-      Materialize.toast('Sheet shared with ' + this.state.receiverID, 4000);
+      window.Materialize.toast('Sheet shared with ' + this.state.receiverID, 4000);
     })
     .catch(e => {
       console.log(e);
@@ -255,15 +324,15 @@ shareSheet() {
 
 print(){
   const curURL = window.location.href;
-  history.replaceState(history.state, '', '/');
+  window.history.replaceState(window.history.state, '', '/');
   window.print();
-  history.replaceState(history.state, '', curURL);
+  window.history.replaceState(window.history.state, '', curURL);
 }
 
 
 
 renderView() {
-  console.clear();
+  // console.clear();
   const loading = this.state.loading;
   const save = this.state.save;
   const autoSave = this.state.autoSave;
@@ -272,6 +341,7 @@ renderView() {
   const hideSheet = this.state.hideSheet;
   const initialLoad = this.state.initialLoad;
   const contacts = this.state.contacts;
+  const publicShare = this.state.publicShare;
 
   if(this.state.initialLoad === "") {
     return (
@@ -332,39 +402,55 @@ renderView() {
           </div>
         </nav>
       </div>
-      <div className={shareModal}>
 
+      <div className={publicShare}>
         <div id="modal1" className="modal bottom-sheet">
           <div className="modal-content">
-            <h4>Share</h4>
-            <p>Enter the Blockstack user ID of the person to share with.</p>
-            <p>Or select from your contacts.</p>
-            <input className="share-input white grey-text" placeholder="Ex: JohnnyCash.id" type="text" value ={this.state.receiverID} onChange={this.handleIDChange} />
+
             <div className={show}>
-              <button onClick={this.sharedInfo} className="btn black white-text">Share</button>
-              <button onClick={this.hideModal} className="btn grey">Cancel</button>
+
+              <button onClick={() => this.setState({ publicShare: "hide" })} className="btn grey">Done</button>
             </div>
             <div className={show}>
               <div className="container">
-                <h4 className="contacts-share center-align">Your Contacts</h4>
-                <ul className="collection">
-                {contacts.slice(0).reverse().map(contact => {
-                    return (
-                      <li key={contact.contact}className="collection-item avatar">
-                        <img src={contact.img} alt="avatar" className="circle" />
-                        <span className="title black-text">{contact.contact}</span>
-                        <div>
-                          <a onClick={() => this.setState({ receiverID: contact.contact })} className="secondary-content"><i className="blue-text text-darken-2 material-icons">add</i></a>
-                        </div>
-
-                      </li>
-                    )
-                  })
-                }
-                </ul>
+                <h4 className="contacts-share center-align">Public Link</h4>
+                <p>Ask the person you are sharing with to visit <a href="https://app.graphitedocs.com/publicdoc" target="_blank">https://app.graphitedocs.com/publicdoc</a> and provide this link to them: </p>
+                <p><input type="text" value={this.state.gaiaLink} id="gaia" /><button className="btn" onClick={this.copyLink}>Copy Link</button></p>
               </div>
             </div>
           </div>
+        </div>
+        </div>
+
+      <div className={shareModal}>
+
+      <div id="modal1" className="modal bottom-sheet">
+        <div className="modal-content">
+          <h4>Share</h4>
+          <p>Select the person to share with.</p>
+          <div className={show}>
+            <button onClick={this.hideModal} className="btn grey">Cancel</button>
+          </div>
+          <div className={show}>
+            <div className="container">
+              <h4 className="contacts-share center-align">Your Contacts</h4>
+              <ul className="collection cointainer">
+              {contacts.slice(0).reverse().map(contact => {
+                  return (
+                    <li key={contact.contact}className="collection-item avatar">
+                      <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
+                      <p><img src={contact.img} alt="avatar" className="circle" /></p>
+                      <span className="title black-text">{contact.contact}</span>
+                      </a>
+                    </li>
+                  )
+                })
+              }
+              </ul>
+            </div>
+          </div>
+        </div>
+
           <div className={loading}>
             <div className="preloader-wrapper small active">
               <div className="spinner-layer spinner-green-only">

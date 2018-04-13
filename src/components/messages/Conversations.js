@@ -1,8 +1,4 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
 import {
@@ -12,17 +8,14 @@ import {
   getFile,
   putFile,
   lookupProfile,
+  handlePendingSignIn,
   signUserOut
 } from "blockstack";
-import update from 'immutability-helper';
-const iconNew = 'http://www.iconj.com/ico/0/o/0o93qd5dr7.ico';
-const Quill = ReactQuill.Quill;
+import SingleConversation from './SingleConversation';
 const Font = ReactQuill.Quill.import('formats/font');
 Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
 ReactQuill.Quill.register(Font, true);
-import SingleConversation from './SingleConversation';
-import axios from 'axios';
-const blockstack = require("blockstack");
+
 const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -55,7 +48,6 @@ export default class Conversations extends Component {
       userImg: avatarFallbackImage,
       filteredContacts: [],
       contacts: [],
-      redirect: false,
       newContact: "",
       add: false,
       loading: "hide",
@@ -119,7 +111,7 @@ export default class Conversations extends Component {
       });
 
       this.fetchMine();
-      if(this.state.myMessages.length == 0) {
+      if(this.state.myMessages.length === 0) {
         this.refresh = setInterval(() => this.fetchMine(), 1000);
       }
 
@@ -164,14 +156,14 @@ export default class Conversations extends Component {
 
   fetchData() {
     const username = this.state.conversationUser;
-    const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
     getFile('key.json', options)
       .then((file) => {
         this.setState({ pubKey: JSON.parse(file)})
       })
         .catch(error => {
           console.log(error);
-          Materialize.toast(this.state.conversationUser + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+          // Materialize.toast(this.state.conversationUser + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
           this.setState({ conversationUser: "" });
         });
 
@@ -213,7 +205,7 @@ export default class Conversations extends Component {
               this.setState({ newCount: this.state.newCount});
             }
           }
-          if(document.hidden == false) {
+          if(document.hidden === false) {
             this.favBack();
           }
           this.setState({ combinedMessages: [...this.state.myMessages, ...this.state.sharedMessages] });
@@ -229,7 +221,6 @@ export default class Conversations extends Component {
   }
 
   handleaddItem() {
-    let temp = this.state.tempMessages;
     const today = new Date();
     const object = {};
     let combinedMessages;
@@ -247,7 +238,7 @@ export default class Conversations extends Component {
       let random = Math.random()*0.08;
       let calc = 1 + random;
       let newID = ids.slice(-1)[0]*calc;
-      object.id = parseInt(newID.toFixed(0));
+      object.id = parseInt(newID.toFixed(0), 10);
     } else {
       object.id = Date.now();
     }
@@ -279,7 +270,7 @@ export default class Conversations extends Component {
     const data = this.state;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const directory = '/shared/messages/' + fileName;
-    putFile(directory, encryptedData, {encrypt: false})
+    putFile(directory, encryptedData)
       .then(() => {
       })
       .catch(e => {
@@ -329,12 +320,9 @@ favBack() {
 
   renderView() {
 
-    if(this.state.newCount > 0 && this.state.scroll == true) {
+    if(this.state.newCount > 0 && this.state.scroll === true) {
       this.scrollToBottom();
     }
-    let contacts = this.state.filteredContacts;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     let combinedMessages;
     if(this.state.combinedMessages.length <1) {
       combinedMessages = this.state.myMessages;
@@ -345,8 +333,6 @@ favBack() {
       return a.id - b.id
     }
     let messages = combinedMessages.sort(compare);
-    let myMessages = this.state.myMessages;
-    let sharedMessages = this.state.sharedMessages;
     let show = this.state.show;
     let loading = this.state.loading;
     if(this.state.conversationUser === "") {
@@ -356,7 +342,7 @@ favBack() {
     } else {
       SingleConversation.modules = {
         toolbar: [
-          [{ 'header': '1'}, {'header': '2'}, { 'font': Font.whitelist }],,
+          [{ 'header': '1'}, {'header': '2'}, { 'font': Font.whitelist }],
           [{size: []}],
           ['bold', 'italic', 'underline', 'strike', 'blockquote'],
           [{'list': 'ordered'}, {'list': 'bullet'},
@@ -394,8 +380,8 @@ favBack() {
           <div className={show}>
           <div>
           {messages.map(message => {
-            if(message.sender == loadUserData().username || message.receiver == loadUserData().username){
-              if(message.sender == loadUserData().username) {
+            if(message.sender === loadUserData().username || message.receiver === loadUserData().username){
+              if(message.sender === loadUserData().username) {
                 return (
                   <div key={message.id} className="main-covo">
 
@@ -460,10 +446,8 @@ favBack() {
   render(){
     console.log(this.state.combinedMessages)
     let contacts = this.state.filteredContacts;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
-    let show = this.state.show;
-    let loading = this.state.loading;
+    const userData = loadUserData();
+    const person = new Person(userData.profile);
     return(
       <div>
       <div className="navbar-fixed toolbar">
@@ -475,7 +459,7 @@ favBack() {
             <ul id="dropdown1" className="dropdown-content">
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
             <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -485,7 +469,7 @@ favBack() {
             <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>

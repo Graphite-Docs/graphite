@@ -1,13 +1,7 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
-import { Redirect } from 'react-router';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import Profile from '../Profile';
-import Signin from '../Signin';
-import Header from '../Header';
-import Collections from './Collections';
 import {
   isSignInPending,
   loadUserData,
@@ -15,15 +9,15 @@ import {
   getFile,
   putFile,
   lookupProfile,
-  signUserOut
+  handlePendingSignIn,
+  signUserOut,
+  redirectToSignIn,
 } from 'blockstack';
-import update from 'immutability-helper';
-const wordcount = require("wordcount");
 const blockstack = require("blockstack");
-const Quill = ReactQuill.Quill;
 const Font = ReactQuill.Quill.import('formats/font');
 Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
 ReactQuill.Quill.register(Font, true);
+const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedDocs extends Component {
 
@@ -47,7 +41,6 @@ export default class SharedDocs extends Component {
       words: "",
       index: "",
       save: "",
-      loading: "hide",
       printPreview: false,
       autoSave: "Saved",
       value: [],
@@ -65,7 +58,6 @@ export default class SharedDocs extends Component {
 
     this.fetchData = this.fetchData.bind(this);
     this.handleIDChange = this.handleIDChange.bind(this);
-    this.pullData = this.pullData.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handleaddItem = this.handleaddItem.bind(this);
@@ -110,6 +102,11 @@ export default class SharedDocs extends Component {
     this.setState({
       person: new Person(loadUserData().profile),
     });
+    if (isSignInPending()) {
+      handlePendingSignIn().then((userData) => {
+        window.location = window.location.origin;
+      });
+    }
   }
 
   handleaddItem() {
@@ -136,7 +133,7 @@ export default class SharedDocs extends Component {
   }
 
   saveNewFile() {
-    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
+    putFile("documents.json", JSON.stringify(this.state), {encrypt:true})
       .then(() => {
         console.log("Saved!");
         window.location.replace("/documents");
@@ -144,7 +141,7 @@ export default class SharedDocs extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-    
+        alert(e.message);
       });
   }
 
@@ -161,13 +158,13 @@ export default class SharedDocs extends Component {
         .catch((error) => {
           console.log('could not resolve profile')
           this.setState({ loading: "hide" });
-          Materialize.toast('Could not find user', 2000);
+          // Materialize.toast('Could not find user', 2000);
           setTimeout(this.windowRefresh, 2000);
         })
 
       const options = { username: this.state.senderID, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 
-      getFile('shared.json', options, {decrypt: false})
+      getFile('shared.json', options)
         .then((file) => {
           const doc = JSON.parse(file || '{}');
           console.log(doc.title);
@@ -180,7 +177,7 @@ export default class SharedDocs extends Component {
         .catch((error) => {
           console.log('could not fetch');
           this.setState({ loading: "hide" });
-          Materialize.toast('Nothing shared', 2000);
+          // Materialize.toast('Nothing shared', 2000);
           setTimeout(this.windowRefresh, 2000);
         })
     }
@@ -215,24 +212,10 @@ export default class SharedDocs extends Component {
     this.setState({ content: value })
   }
 
-  pullData() {
-
-    <Redirect push to={fullLink} />
-  }
-
   renderView() {
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const show = this.state.show;
-    const hideButton = this.state.hideButton;
-    let value = this.state.value;
-    console.log(loadUserData().username);
-    const loading = this.state.loading;
     let contacts = this.state.filteredContacts;
-    let link = '/documents/shared/';
-    let user = this.state.senderID;
-    let fullLink = link + user;
-    if(this.state.sharedWithMe == true) {
+    if(this.state.sharedWithMe === true) {
       return(
       <div className={show}>
         <div className="container center-align">
@@ -311,16 +294,7 @@ export default class SharedDocs extends Component {
   render() {
     const userData = blockstack.loadUserData();
     const person = new blockstack.Person(userData.profile);
-    const show = this.state.show;
-    const hideButton = this.state.hideButton;
-    let value = this.state.value;
     console.log(loadUserData().username);
-    const loading = this.state.loading;
-    let contacts = this.state.filteredContacts;
-    let link = '/documents/shared/';
-    let user = this.state.senderID;
-    let fullLink = link + user;
-
     return (
       <div>
       <div className="navbar-fixed toolbar">
@@ -334,7 +308,7 @@ export default class SharedDocs extends Component {
               <li><a href="/shared-docs">Shared Files</a></li>
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
             <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -344,7 +318,7 @@ export default class SharedDocs extends Component {
             <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>
@@ -360,13 +334,6 @@ export default class SharedDocs extends Component {
     );
   }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
-      });
-    }
-  }
 }
 //TODO add this back when you enable public sharing
 // <div className="card center-align shared">

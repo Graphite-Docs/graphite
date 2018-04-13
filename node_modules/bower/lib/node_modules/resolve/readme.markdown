@@ -1,7 +1,7 @@
 # resolve
 
 implements the [node `require.resolve()`
-algorithm](http://nodejs.org/docs/v0.4.8/api/all.html#all_Together...)
+algorithm](https://nodejs.org/api/modules.html#modules_all_together)
 such that you can `require.resolve()` on behalf of a file asynchronously and
 synchronously
 
@@ -73,6 +73,11 @@ node_modules recursive walk (probably don't use this)
 
 * opts.moduleDirectory - directory (or directories) in which to recursively look for modules. default: `"node_modules"`
 
+* opts.preserveSymlinks - if true, doesn't resolve `basedir` to real path before resolving.
+This is the way Node resolves dependencies when executed with the [--preserve-symlinks](https://nodejs.org/api/all.html#cli_preserve_symlinks) flag.
+**Note:** this property is currently `true` by default but it will be changed to
+`false` in the next major version because *Node's resolution algorithm does not preserve symlinks by default*.
+
 default `opts` values:
 
 ``` javascript
@@ -88,7 +93,8 @@ default `opts` values:
             else cb(null, stat.isFile())
         });
     },
-    moduleDirectory: 'node_modules'
+    moduleDirectory: 'node_modules',
+    preserveSymlinks: true
 }
 ```
 
@@ -115,6 +121,11 @@ node_modules recursive walk (probably don't use this)
 
 * opts.moduleDirectory - directory (or directories) in which to recursively look for modules. default: `"node_modules"`
 
+* opts.preserveSymlinks - if true, doesn't resolve `basedir` to real path before resolving.
+This is the way Node resolves dependencies when executed with the [--preserve-symlinks](https://nodejs.org/api/all.html#cli_preserve_symlinks) flag.
+**Note:** this property is currently `true` by default but it will be changed to
+`false` in the next major version because *Node's resolution algorithm does not preserve symlinks by default*.
+
 default `opts` values:
 
 ``` javascript
@@ -127,7 +138,8 @@ default `opts` values:
         try { return fs.statSync(file).isFile() }
         catch (e) { return false }
     },
-    moduleDirectory: 'node_modules'
+    moduleDirectory: 'node_modules',
+    preserveSymlinks: true
 }
 ````
 

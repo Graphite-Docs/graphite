@@ -1,0 +1,10 @@
+{
+  "name": "Graphite",
+  "start_url": "localhost:8080",
+  "description": "Documents, spreadsheets, converations, and more. All decentralized and encrypted.",
+  "icons": [{
+    "src": "https://image.ibb.co/hde71b/AppIcon.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }]
+}

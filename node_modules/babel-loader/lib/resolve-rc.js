@@ -1,29 +1,26 @@
 "use strict";
 
 var path = require("path");
-var exists = require("./utils/exists")({});
-var read = require("./utils/read")({});
+var exists = require("./utils/exists");
 
-var cache = {};
+module.exports = function find(fileSystem, start) {
+  var _arr = [".babelrc", ".babelrc.js", "package.json"];
 
-var find = function find(start, rel) {
-  var file = path.join(start, rel);
+  for (var _i = 0; _i < _arr.length; _i++) {
+    var fileName = _arr[_i];
+    var file = path.join(start, fileName);
 
-  if (exists(file)) {
-    return read(file);
+    if (exists(fileSystem, file)) {
+      if (fileName !== "package.json" || typeof require(file).babel === "object") {
+        return file;
+      }
+    }
   }
 
   var up = path.dirname(start);
-  if (up !== start) {
-    return find(up, rel);
-  }
-};
 
-module.exports = function (loc, rel) {
-  rel = rel || ".babelrc";
-  var cacheKey = loc + "/" + rel;
-  if (!(cacheKey in cache)) {
-    cache[cacheKey] = find(loc, rel);
+  // Reached root
+  if (up !== start) {
+    return find(fileSystem, up);
   }
-  return cache[cacheKey];
 };

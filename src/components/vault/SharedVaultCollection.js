@@ -1,22 +1,17 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
-import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
+import { Link } from 'react-router-dom';
+import PDF from "react-pdf-js";
+import { Player } from "video-react";
+import HotTable from "react-handsontable";
 import {
   isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
   lookupProfile,
   signUserOut,
 } from 'blockstack';
-
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedVaultCollection extends Component {
@@ -50,14 +45,6 @@ export default class SharedVaultCollection extends Component {
       }
 
 
-    }
-
-    componentWillMount() {
-      if (isSignInPending()) {
-        handlePendingSignIn().then(userData => {
-          window.location = window.location.origin;
-        });
-      }
     }
 
     componentDidMount() {
@@ -144,13 +131,8 @@ export default class SharedVaultCollection extends Component {
       display: "none"
     };
     const type = this.state.type;
-    const { handleSignOut } = this.props;
-    const { person } = this.state;
     const loading = this.state.loading;
     const show = this.state.show;
-    const hideButton = this.state.hideButton;
-    const shareModal = this.state.shareModal;
-    const contacts = this.state.contacts;
     let pagination = null;
     if (this.state.pages) {
       pagination = this.renderPagination(this.state.page, this.state.pages);
@@ -184,7 +166,6 @@ export default class SharedVaultCollection extends Component {
                 ) : type.includes("application/pdf") ? (
                   <li>
                     <a
-                      href="#"
                       onClick={this.downloadPDF}
                       title={this.state.name}
                     >
@@ -194,7 +175,6 @@ export default class SharedVaultCollection extends Component {
                 ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
                   <li>
                     <a
-                      href="#"
                       onClick={this.downloadPDF}
                       title={this.state.name}
                     >
@@ -204,7 +184,6 @@ export default class SharedVaultCollection extends Component {
                 ) : type.includes("sheet")|| type.includes("csv") ? (
                   <li>
                     <a
-                      href="#"
                       onClick={this.downloadPDF}
                       title={this.state.name}
                     >
@@ -221,19 +200,19 @@ export default class SharedVaultCollection extends Component {
                 </li>
                 {type.includes("word") ? (
                   <li>
-                    <a href="#" onClick={this.handleaddItem}>
+                    <a onClick={this.handleaddItem}>
                       Edit in Documents
                     </a>
                   </li>
                 ) : type.includes("sheet") ? (
                   <li>
-                    <a href="#" onClick={this.handleaddSheet}>
+                    <a onClick={this.handleaddSheet}>
                       Edit in Sheets
                     </a>
                   </li>
                 ) : type.includes("csv") ? (
                   <li>
-                    <a href="#" onClick={this.handleaddSheet}>
+                    <a onClick={this.handleaddSheet}>
                       Edit in Sheets
                     </a>
                   </li>
@@ -276,11 +255,11 @@ export default class SharedVaultCollection extends Component {
                         page={this.state.page}
                       />
                       {pagination}
-                      <a
+                      <a className="hide"
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
-                      />
+                      >Download</a>
                     </div>
                   </div>
                 ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
@@ -312,10 +291,11 @@ export default class SharedVaultCollection extends Component {
                         />
                       </div>
                       <a
+                        className="hide"
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
-                      />
+                      >Download</a>
                     </div>
                   </div>
                 ) : type.includes("video") ? (
@@ -344,7 +324,6 @@ export default class SharedVaultCollection extends Component {
                           contextMenu: true,
                           formulas: true,
                           columnSorting: true,
-                          contextMenu: true,
                           autoRowSize: true,
                           manualColumnMove: true,
                           manualRowMove: true,
@@ -356,10 +335,11 @@ export default class SharedVaultCollection extends Component {
                       />
 
                       <a
+                        className="hide"
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
-                      />
+                      >Download</a>
                     </div>
                   </div>
                 ) : (
@@ -381,11 +361,6 @@ export default class SharedVaultCollection extends Component {
       this.loadFile();
     }
     let files = this.state.shareFileIndex;
-    console.log(files);
-    const loading = this.state.loading;
-
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const img = this.state.img;
     if (files.length > 0 && this.state.fileID == "") {
       return (
@@ -435,7 +410,7 @@ export default class SharedVaultCollection extends Component {
           </div>
         </div>
       );
-    } else if (this.state.fileID != "") {
+    } else if (this.state.fileID !== "") {
       this.renderView();
     } else {
       return (

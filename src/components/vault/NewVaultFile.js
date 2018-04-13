@@ -5,14 +5,10 @@ loadUserData,
 Person,
 getFile,
 putFile,
-lookupProfile,
-signUserOut,
 } from 'blockstack';
 import XLSX from 'xlsx';
-import { Link } from 'react-router-dom';
 import Dropzone from 'react-dropzone'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const mammoth = require("mammoth");
 const str2ab = require('string-to-arraybuffer');
 
 export default class NewVaultFile extends Component {
@@ -97,17 +93,13 @@ export default class NewVaultFile extends Component {
          this.setState({ loading: "", show: "hide"})
          setTimeout(this.save, 700)
        }
-
-      // console.log(event.target.result);
-      // console.log(object);
    };
    reader.readAsDataURL(file);
-   // this.setState({ files: [...this.state.files, object]})
  }
 
  handleDropRejected(files) {
   console.log("Error file too large");
-  Materialize.toast('Sorry, your file is larger than 1mb', 4000) // 4000 is the duration of the toast
+  // Materialize.toast('Sorry, your file is larger than 1mb', 4000) // 4000 is the duration of the toast
 }
 
 save() {
@@ -122,7 +114,7 @@ save() {
       .catch(e => {
         console.log("e");
         console.log(e);
-
+        alert(e.message);
       });
 
   }
@@ -136,7 +128,7 @@ save() {
       .catch(e => {
         console.log("e");
         console.log(e);
-        
+        alert(e.message);
       });
   }
 
@@ -150,14 +142,11 @@ save() {
       paddingTop: "10%",
       cursor: "pointer"
     };
-    let key = Date.now();
     let files = this.state.files;
     // files.slice(0).reverse().map(file => {
     //   return(console.log(file.name))
     // });
     console.log(files);
-    const { handleSignOut } = this.props;
-    const { person } = this.state;
     const show = this.state.show;
     const loading = this.state.loading;
     return (
@@ -178,7 +167,7 @@ save() {
       </div>
       <div className="docs center-align container">
       <h3>Upload a new file</h3>
-      <h5>File size limit: 2mb<span className="note"><a onClick={() => Materialize.toast('Accepted files: .doc, .docx, .rtf, .txt, .xlsx, .csv, .png, .tiff, .jpeg, .jpg, .mov, .mp4', 4000)}>?</a></span></h5>
+      {/*<h5>File size limit: 2mb<span className="note"><a onClick={() => Materialize.toast('Accepted files: .doc, .docx, .rtf, .txt, .xlsx, .csv, .png, .tiff, .jpeg, .jpg, .mov, .mp4', 4000)}>?</a></span></h5>*/}
       <div className={loading}>
 
       <div className="preloader-wrapper small active">

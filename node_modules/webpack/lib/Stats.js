@@ -7,8 +7,13 @@
 const RequestShortener = require("./RequestShortener");
 const SizeFormatHelpers = require("./SizeFormatHelpers");
 const formatLocation = require("./formatLocation");
+const identifierUtils = require("./util/identifier");
 
-const optionOrFallback = (optionValue, fallbackValue) => optionValue !== undefined ? optionValue : fallbackValue;
+const optionsOrFallback = function() {
+	let optionValues = [];
+	optionValues.push.apply(optionValues, arguments);
+	return optionValues.find(optionValue => typeof optionValue !== "undefined");
+};
 
 class Stats {
 	constructor(compilation) {
@@ -75,54 +80,83 @@ class Stats {
 			options = {};
 		}
 
+		const optionOrLocalFallback = (v, def) =>
+			typeof v !== "undefined" ? v :
+			typeof options.all !== "undefined" ? options.all : def;
+
+		const testAgainstGivenOption = (item) => {
+			if(typeof item === "string") {
+				const regExp = new RegExp(`[\\\\/]${item.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")}([\\\\/]|$|!|\\?)`); // eslint-disable-line no-useless-escape
+				return ident => regExp.test(ident);
+			}
+			if(item && typeof item === "object" && typeof item.test === "function")
+				return ident => item.test(ident);
+			if(typeof item === "function")
+				return item;
+		};
+
 		const compilation = this.compilation;
-		const requestShortener = new RequestShortener(optionOrFallback(options.context, process.cwd()));
-		const showPerformance = optionOrFallback(options.performance, true);
-		const showHash = optionOrFallback(options.hash, true);
-		const showVersion = optionOrFallback(options.version, true);
-		const showTimings = optionOrFallback(options.timings, true);
-		const showAssets = optionOrFallback(options.assets, true);
-		const showEntrypoints = optionOrFallback(options.entrypoints, !forToString);
-		const showChunks = optionOrFallback(options.chunks, true);
-		const showChunkModules = optionOrFallback(options.chunkModules, !!forToString);
-		const showChunkOrigins = optionOrFallback(options.chunkOrigins, !forToString);
-		const showModules = optionOrFallback(options.modules, !forToString);
-		const showDepth = optionOrFallback(options.depth, !forToString);
-		const showCachedModules = optionOrFallback(options.cached, true);
-		const showCachedAssets = optionOrFallback(options.cachedAssets, true);
-		const showReasons = optionOrFallback(options.reasons, !forToString);
-		const showUsedExports = optionOrFallback(options.usedExports, !forToString);
-		const showProvidedExports = optionOrFallback(options.providedExports, !forToString);
-		const showChildren = optionOrFallback(options.children, true);
-		const showSource = optionOrFallback(options.source, !forToString);
-		const showModuleTrace = optionOrFallback(options.moduleTrace, true);
-		const showErrors = optionOrFallback(options.errors, true);
-		const showErrorDetails = optionOrFallback(options.errorDetails, !forToString);
-		const showWarnings = optionOrFallback(options.warnings, true);
-		const warningsFilter = optionOrFallback(options.warningsFilter, null);
-		const showPublicPath = optionOrFallback(options.publicPath, !forToString);
-		const excludeModules = [].concat(optionOrFallback(options.exclude, [])).map(str => {
-			if(typeof str !== "string") return str;
-			return new RegExp(`[\\\\/]${str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&")}([\\\\/]|$|!|\\?)`);
-		});
-		const maxModules = optionOrFallback(options.maxModules, forToString ? 15 : Infinity);
-		const sortModules = optionOrFallback(options.modulesSort, "id");
-		const sortChunks = optionOrFallback(options.chunksSort, "id");
-		const sortAssets = optionOrFallback(options.assetsSort, "");
+		const context = optionsOrFallback(options.context, process.cwd());
+		const requestShortener = new RequestShortener(context);
+		const showPerformance = optionOrLocalFallback(options.performance, true);
+		const showHash = optionOrLocalFallback(options.hash, true);
+		const showEnv = optionOrLocalFallback(options.env, false);
+		const showVersion = optionOrLocalFallback(options.version, true);
+		const showTimings = optionOrLocalFallback(options.timings, true);
+		const showAssets = optionOrLocalFallback(options.assets, true);
+		const showEntrypoints = optionOrLocalFallback(options.entrypoints, !forToString);
+		const showChunks = optionOrLocalFallback(options.chunks, !forToString);
+		const showChunkModules = optionOrLocalFallback(options.chunkModules, true);
+		const showChunkOrigins = optionOrLocalFallback(options.chunkOrigins, !forToString);
+		const showModules = optionOrLocalFallback(options.modules, true);
+		const showDepth = optionOrLocalFallback(options.depth, !forToString);
+		const showCachedModules = optionOrLocalFallback(options.cached, true);
+		const showCachedAssets = optionOrLocalFallback(options.cachedAssets, true);
+		const showReasons = optionOrLocalFallback(options.reasons, !forToString);
+		const showUsedExports = optionOrLocalFallback(options.usedExports, !forToString);
+		const showProvidedExports = optionOrLocalFallback(options.providedExports, !forToString);
+		const showOptimizationBailout = optionOrLocalFallback(options.optimizationBailout, !forToString);
+		const showChildren = optionOrLocalFallback(options.children, true);
+		const showSource = optionOrLocalFallback(options.source, !forToString);
+		const showModuleTrace = optionOrLocalFallback(options.moduleTrace, true);
+		const showErrors = optionOrLocalFallback(options.errors, true);
+		const showErrorDetails = optionOrLocalFallback(options.errorDetails, !forToString);
+		const showWarnings = optionOrLocalFallback(options.warnings, true);
+		const warningsFilter = optionsOrFallback(options.warningsFilter, null);
+		const showPublicPath = optionOrLocalFallback(options.publicPath, !forToString);
+		const excludeModules = [].concat(optionsOrFallback(options.excludeModules, options.exclude, [])).map(testAgainstGivenOption);
+		const excludeAssets = [].concat(optionsOrFallback(options.excludeAssets, [])).map(testAgainstGivenOption);
+		const maxModules = optionsOrFallback(options.maxModules, forToString ? 15 : Infinity);
+		const sortModules = optionsOrFallback(options.modulesSort, "id");
+		const sortChunks = optionsOrFallback(options.chunksSort, "id");
+		const sortAssets = optionsOrFallback(options.assetsSort, "");
+
+		if(!showCachedModules) {
+			excludeModules.push((ident, module) => !module.built);
+		}
 
 		const createModuleFilter = () => {
 			let i = 0;
 			return module => {
-				if(!showCachedModules && !module.built) {
-					return false;
-				}
 				if(excludeModules.length > 0) {
 					const ident = requestShortener.shorten(module.resource);
-					const excluded = excludeModules.some(regExp => regExp.test(ident));
+					const excluded = excludeModules.some(fn => fn(ident, module));
 					if(excluded)
 						return false;
 				}
 				return i++ < maxModules;
+			};
+		};
+
+		const createAssetFilter = () => {
+			return asset => {
+				if(excludeAssets.length > 0) {
+					const ident = asset.name;
+					const excluded = excludeAssets.some(fn => fn(ident, asset));
+					if(excluded)
+						return false;
+				}
+				return showCachedAssets || asset.emitted;
 			};
 		};
 
@@ -165,15 +199,22 @@ class Stats {
 			text += e.message;
 			if(showErrorDetails && e.details) text += `\n${e.details}`;
 			if(showErrorDetails && e.missing) text += e.missing.map(item => `\n[${item}]`).join("");
-			if(showModuleTrace && e.dependencies && e.origin) {
+			if(showModuleTrace && e.origin) {
 				text += `\n @ ${e.origin.readableIdentifier(requestShortener)}`;
-				e.dependencies.forEach(dep => {
-					if(!dep.loc) return;
-					if(typeof dep.loc === "string") return;
-					const locInfo = formatLocation(dep.loc);
-					if(!locInfo) return;
-					text += ` ${locInfo}`;
-				});
+				if(typeof e.originLoc === "object") {
+					const locInfo = formatLocation(e.originLoc);
+					if(locInfo)
+						text += ` ${locInfo}`;
+				}
+				if(e.dependencies) {
+					e.dependencies.forEach(dep => {
+						if(!dep.loc) return;
+						if(typeof dep.loc === "string") return;
+						const locInfo = formatLocation(dep.loc);
+						if(!locInfo) return;
+						text += ` ${locInfo}`;
+					});
+				}
 				let current = e.origin;
 				while(current.issuer) {
 					current = current.issuer;
@@ -207,6 +248,11 @@ class Stats {
 		if(showTimings && this.startTime && this.endTime) {
 			obj.time = this.endTime - this.startTime;
 		}
+
+		if(showEnv && options._env) {
+			obj.env = options._env;
+		}
+
 		if(compilation.needAdditionalPass) {
 			obj.needAdditionalPass = true;
 		}
@@ -217,8 +263,9 @@ class Stats {
 		}
 		if(showAssets) {
 			const assetsByFile = {};
+			const compilationAssets = Object.keys(compilation.assets);
 			obj.assetsByChunkName = {};
-			obj.assets = Object.keys(compilation.assets).map(asset => {
+			obj.assets = compilationAssets.map(asset => {
 				const obj = {
 					name: asset,
 					size: compilation.assets[asset].size(),
@@ -233,7 +280,8 @@ class Stats {
 
 				assetsByFile[asset] = obj;
 				return obj;
-			}).filter(asset => showCachedAssets || asset.emitted);
+			}).filter(createAssetFilter());
+			obj.filteredAssets = compilationAssets.length - obj.assets.length;
 
 			compilation.chunks.forEach(chunk => {
 				chunk.files.forEach(asset => {
@@ -280,7 +328,7 @@ class Stats {
 				built: !!module.built,
 				optional: !!module.optional,
 				prefetched: !!module.prefetched,
-				chunks: module.chunks.map(chunk => chunk.id),
+				chunks: module.mapChunks(chunk => chunk.id),
 				assets: Object.keys(module.assets || {}),
 				issuer: module.issuer && module.issuer.identifier(),
 				issuerId: module.issuer && module.issuer.id,
@@ -311,6 +359,12 @@ class Stats {
 			if(showProvidedExports) {
 				obj.providedExports = Array.isArray(module.providedExports) ? module.providedExports : null;
 			}
+			if(showOptimizationBailout) {
+				obj.optimizationBailout = module.optimizationBailout.map(item => {
+					if(typeof item === "function") return item(requestShortener);
+					return item;
+				});
+			}
 			if(showDepth) {
 				obj.depth = module.depth;
 			}
@@ -328,19 +382,19 @@ class Stats {
 					entry: chunk.hasRuntime(),
 					recorded: chunk.recorded,
 					extraAsync: !!chunk.extraAsync,
-					size: chunk.modules.reduce((size, module) => size + module.size(), 0),
+					size: chunk.mapModules(m => m.size()).reduce((size, moduleSize) => size + moduleSize, 0),
 					names: chunk.name ? [chunk.name] : [],
 					files: chunk.files.slice(),
 					hash: chunk.renderedHash,
 					parents: chunk.parents.map(c => c.id)
 				};
 				if(showChunkModules) {
-					obj.modules = chunk.modules
-						.slice()
+					obj.modules = chunk
+						.getModules()
 						.sort(sortByField("depth"))
 						.filter(createModuleFilter())
 						.map(fnModule);
-					obj.filteredModules = chunk.modules.length - obj.modules.length;
+					obj.filteredModules = chunk.getNumberOfModules() - obj.modules.length;
 					obj.modules.sort(sortByField(sortModules));
 				}
 				if(showChunkOrigins) {
@@ -373,7 +427,8 @@ class Stats {
 				const obj = new Stats(child).toJson(childOptions, forToString);
 				delete obj.hash;
 				delete obj.version;
-				obj.name = child.name;
+				if(child.name)
+					obj.name = identifierUtils.makePathsRelative(context, child.name, compilation.cache);
 				return obj;
 			});
 		}
@@ -388,7 +443,7 @@ class Stats {
 			options = {};
 		}
 
-		const useColors = optionOrFallback(options.colors, false);
+		const useColors = optionsOrFallback(options.colors, false);
 
 		const obj = this.toJson(options, true);
 
@@ -504,6 +559,11 @@ class Stats {
 			colors.normal("ms");
 			newline();
 		}
+		if(obj.env) {
+			colors.normal("Environment (--env): ");
+			colors.bold(JSON.stringify(obj.env, null, 2));
+			newline();
+		}
 		if(obj.publicPath) {
 			colors.normal("PublicPath: ");
 			colors.bold(obj.publicPath);
@@ -554,6 +614,16 @@ class Stats {
 				}]);
 			});
 			table(t, "rrrlll");
+		}
+		if(obj.filteredAssets > 0) {
+			colors.normal(" ");
+			if(obj.assets.length > 0)
+				colors.normal("+ ");
+			colors.normal(obj.filteredAssets);
+			if(obj.assets.length > 0)
+				colors.normal(" hidden");
+			colors.normal(obj.filteredAssets !== 1 ? " assets" : " asset");
+			newline();
 		}
 		if(obj.entrypoints) {
 			Object.keys(obj.entrypoints).forEach(name => {
@@ -623,18 +693,28 @@ class Stats {
 		const processModuleContent = (module, prefix) => {
 			if(Array.isArray(module.providedExports)) {
 				colors.normal(prefix);
-				colors.cyan(`[exports: ${module.providedExports.join(", ")}]`);
+				if(module.providedExports.length === 0)
+					colors.cyan("[no exports]");
+				else
+					colors.cyan(`[exports: ${module.providedExports.join(", ")}]`);
 				newline();
 			}
 			if(module.usedExports !== undefined) {
 				if(module.usedExports !== true) {
 					colors.normal(prefix);
-					if(module.usedExports === false)
+					if(module.usedExports === false || module.usedExports.length === 0)
 						colors.cyan("[no exports used]");
 					else
 						colors.cyan(`[only some exports used: ${module.usedExports.join(", ")}]`);
 					newline();
 				}
+			}
+			if(Array.isArray(module.optimizationBailout)) {
+				module.optimizationBailout.forEach(item => {
+					colors.normal(prefix);
+					colors.yellow(item);
+					newline();
+				});
 			}
 			if(module.reasons) {
 				module.reasons.forEach(reason => {
@@ -659,9 +739,9 @@ class Stats {
 				const path = [];
 				let current = module;
 				while(current.issuer) {
-					path.unshift(current = current.issuer);
+					path.push(current = current.issuer);
 				}
-				path.forEach(module => {
+				path.reverse().forEach(module => {
 					colors.normal("[");
 					colors.normal(module.id);
 					colors.normal("] ");
@@ -682,6 +762,35 @@ class Stats {
 				colors.normal(" = ");
 				coloredTime(sum);
 				newline();
+			}
+		};
+
+		const processModulesList = (obj, prefix) => {
+			if(obj.modules) {
+				obj.modules.forEach(module => {
+					colors.normal(prefix);
+					if(module.id < 1000) colors.normal(" ");
+					if(module.id < 100) colors.normal(" ");
+					if(module.id < 10) colors.normal(" ");
+					colors.normal("[");
+					colors.normal(module.id);
+					colors.normal("] ");
+					colors.bold(module.name || module.identifier);
+					processModuleAttributes(module);
+					newline();
+					processModuleContent(module, prefix + "       ");
+				});
+				if(obj.filteredModules > 0) {
+					colors.normal(prefix);
+					colors.normal("   ");
+					if(obj.modules.length > 0)
+						colors.normal(" + ");
+					colors.normal(obj.filteredModules);
+					if(obj.modules.length > 0)
+						colors.normal(" hidden");
+					colors.normal(obj.filteredModules !== 1 ? " modules" : " module");
+					newline();
+				}
 			}
 		};
 
@@ -746,45 +855,11 @@ class Stats {
 						newline();
 					});
 				}
-				if(chunk.modules) {
-					chunk.modules.forEach(module => {
-						colors.normal(" ");
-						if(module.id < 1000) colors.normal(" ");
-						if(module.id < 100) colors.normal(" ");
-						if(module.id < 10) colors.normal(" ");
-						colors.normal("[");
-						colors.normal(module.id);
-						colors.normal("] ");
-						colors.bold(module.name);
-						processModuleAttributes(module);
-						newline();
-						processModuleContent(module, "        ");
-					});
-					if(chunk.filteredModules > 0) {
-						colors.normal(`     + ${chunk.filteredModules} hidden modules`);
-						newline();
-					}
-				}
+				processModulesList(chunk, " ");
 			});
 		}
-		if(obj.modules) {
-			obj.modules.forEach(module => {
-				if(module.id < 1000) colors.normal(" ");
-				if(module.id < 100) colors.normal(" ");
-				if(module.id < 10) colors.normal(" ");
-				colors.normal("[");
-				colors.normal(module.id);
-				colors.normal("] ");
-				colors.bold(module.name || module.identifier);
-				processModuleAttributes(module);
-				newline();
-				processModuleContent(module, "       ");
-			});
-			if(obj.filteredModules > 0) {
-				colors.normal(`    + ${obj.filteredModules} hidden modules`);
-				newline();
-			}
-		}
+
+		processModulesList(obj, "");
 
 		if(obj._showWarnings && obj.warnings) {
 			obj.warnings.forEach(warning => {
@@ -827,51 +902,64 @@ class Stats {
 	}
 
 	static presetToOptions(name) {
-		//Accepted values: none, errors-only, minimal, normal, verbose
-		//Any other falsy value will behave as 'none', truthy values as 'normal'
-		const pn = (typeof name === "string") && name.toLowerCase() || name;
-		if(pn === "none" || !pn) {
-			return {
-				hash: false,
-				version: false,
-				timings: false,
-				assets: false,
-				entrypoints: false,
-				chunks: false,
-				chunkModules: false,
-				modules: false,
-				reasons: false,
-				depth: false,
-				usedExports: false,
-				providedExports: false,
-				children: false,
-				source: false,
-				errors: false,
-				errorDetails: false,
-				warnings: false,
-				publicPath: false,
-				performance: false
-			};
-		} else {
-			return {
-				hash: pn !== "errors-only" && pn !== "minimal",
-				version: pn === "verbose",
-				timings: pn !== "errors-only" && pn !== "minimal",
-				assets: pn === "verbose",
-				entrypoints: pn === "verbose",
-				chunks: pn !== "errors-only",
-				chunkModules: pn === "verbose",
-				//warnings: pn !== "errors-only",
-				errorDetails: pn !== "errors-only" && pn !== "minimal",
-				reasons: pn === "verbose",
-				depth: pn === "verbose",
-				usedExports: pn === "verbose",
-				providedExports: pn === "verbose",
-				colors: true,
-				performance: true
-			};
+		// Accepted values: none, errors-only, minimal, normal, detailed, verbose
+		// Any other falsy value will behave as 'none', truthy values as 'normal'
+		const pn = (typeof name === "string") && name.toLowerCase() || name || "none";
+		switch(pn) {
+			case "none":
+				return {
+					all: false
+				};
+			case "verbose":
+				return {
+					entrypoints: true,
+					modules: false,
+					chunks: true,
+					chunkModules: true,
+					chunkOrigins: true,
+					depth: true,
+					env: true,
+					reasons: true,
+					usedExports: true,
+					providedExports: true,
+					optimizationBailout: true,
+					errorDetails: true,
+					publicPath: true,
+					exclude: () => false,
+					maxModules: Infinity,
+				};
+			case "detailed":
+				return {
+					entrypoints: true,
+					chunks: true,
+					chunkModules: false,
+					chunkOrigins: true,
+					depth: true,
+					usedExports: true,
+					providedExports: true,
+					optimizationBailout: true,
+					errorDetails: true,
+					publicPath: true,
+					exclude: () => false,
+					maxModules: Infinity,
+				};
+			case "minimal":
+				return {
+					all: false,
+					modules: true,
+					maxModules: 0,
+					errors: true,
+					warnings: true,
+				};
+			case "errors-only":
+				return {
+					all: false,
+					errors: true,
+					moduleTrace: true,
+				};
+			default:
+				return {};
 		}
-
 	}
 
 	static getChildOptions(options, idx) {

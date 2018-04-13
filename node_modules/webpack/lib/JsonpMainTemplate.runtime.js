@@ -2,7 +2,7 @@
 	MIT License http://www.opensource.org/licenses/mit-license.php
 	Author Tobias Koppers @sokra
 */
-/*globals hotAddUpdateChunk parentHotUpdateCallback document XMLHttpRequest $require$ $hotChunkFilename$ $hotMainFilename$ */
+/*globals hotAddUpdateChunk parentHotUpdateCallback document XMLHttpRequest $require$ $hotChunkFilename$ $hotMainFilename$ $crossOriginLoading$ */
 module.exports = function() {
 	function webpackHotUpdateCallback(chunkId, moreModules) { // eslint-disable-line no-unused-vars
 		hotAddUpdateChunk(chunkId, moreModules);
@@ -15,10 +15,12 @@ module.exports = function() {
 		script.type = "text/javascript";
 		script.charset = "utf-8";
 		script.src = $require$.p + $hotChunkFilename$;
+		$crossOriginLoading$;
 		head.appendChild(script);
 	}
 
-	function hotDownloadManifest() { // eslint-disable-line no-unused-vars
+	function hotDownloadManifest(requestTimeout) { // eslint-disable-line no-unused-vars
+		requestTimeout = requestTimeout || 10000;
 		return new Promise(function(resolve, reject) {
 			if(typeof XMLHttpRequest === "undefined")
 				return reject(new Error("No browser support"));
@@ -26,7 +28,7 @@ module.exports = function() {
 				var request = new XMLHttpRequest();
 				var requestPath = $require$.p + $hotMainFilename$;
 				request.open("GET", requestPath, true);
-				request.timeout = 10000;
+				request.timeout = requestTimeout;
 				request.send(null);
 			} catch(err) {
 				return reject(err);

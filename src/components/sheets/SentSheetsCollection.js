@@ -1,22 +1,12 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
-import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
-  isSignInPending,
-  loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile,
   signUserOut,
 } from 'blockstack';
 import update from 'immutability-helper';
 const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedSheetsCollection extends Component {
@@ -48,20 +38,10 @@ export default class SharedSheetsCollection extends Component {
 
   }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
-    }
-  }
-
   componentDidMount() {
     this.setState({user: this.props.match.params.id});
     const user = this.props.match.params.id;
-    const userShort = user.slice(0, -3);
     const fileName = 'sharedsheets.json'
-    const file = userShort + fileName;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
     getFile('key.json', options)
@@ -131,7 +111,7 @@ export default class SharedSheetsCollection extends Component {
             const file = userShort + fileName;
             putFile(file, JSON.stringify(this.state.sharedSheets), {encrypt: true})
               .then(() => {
-                Materialize.toast('Sheet no longer shared', 3000);
+                window.Materialize.toast('Sheet no longer shared', 3000);
               })
               .catch(e => {
                 console.log(e);
@@ -151,9 +131,6 @@ export default class SharedSheetsCollection extends Component {
 
   renderView() {
     let sheets = this.state.sharedSheets;
-    const loading = this.state.loading;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const img = this.state.img;
     if(this.state.deleteId != "") {
       this.deleteShareDoc();
@@ -232,9 +209,6 @@ export default class SharedSheetsCollection extends Component {
 
 
   render() {
-    const loading = this.state.loading;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const img = this.state.img;
 
     return (

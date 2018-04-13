@@ -29,7 +29,6 @@ function set_shorthand(name, options, keys) {
 
 function init_cache(cache) {
     if (!cache) return;
-    if (!("cname" in cache)) cache.cname = -1;
     if (!("props" in cache)) {
         cache.props = new Dictionary();
     } else if (!(cache.props instanceof Dictionary)) {
@@ -39,7 +38,6 @@ function init_cache(cache) {
 
 function to_json(cache) {
     return {
-        cname: cache.cname,
         props: cache.props.toObject()
     };
 }
@@ -152,7 +150,6 @@ function minify(files, options) {
         if (options.mangle) toplevel.figure_out_scope(options.mangle);
         if (timings) timings.mangle = Date.now();
         if (options.mangle) {
-            base54.reset();
             toplevel.compute_char_frequency(options.mangle);
             toplevel.mangle_names(options.mangle);
         }

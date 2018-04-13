@@ -1,24 +1,15 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
-import Profile from "../Profile";
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
   Person,
   getFile,
-  putFile,
   lookupProfile,
-  signUserOut
+  signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
-import axios from 'axios';
-import update from 'immutability-helper';
-const Quill = ReactQuill.Quill;
-const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class ContactsProfile extends Component {
@@ -66,7 +57,7 @@ componentDidMount() {
          console.log("Contacts are here");
          this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
          let contact = this.state.contacts;
-         const thisContact = contact.find((a) => { return a.contact == this.props.match.params.id});
+         const thisContact = contact.find((a) => { return a.contact === this.props.match.params.id});
          this.setState({ conversationUser: thisContact && thisContact.contact});
        } else {
          console.log("No contacts");
@@ -111,12 +102,6 @@ handleSignOut(e) {
 
 render() {
   console.log(this.state.accounts);
-  let twitter = 'https://twitter.com/'
-  let facebook = 'https://facebook.com/'
-  let github = 'https://github.com/'
-  let accounts = this.state.accounts;
-  const userData = blockstack.loadUserData();
-  const person = new blockstack.Person(userData.profile);
   return (
     <div>
     <div className="navbar-fixed toolbar">
@@ -137,7 +122,7 @@ render() {
     <div className="col s12 m7">
     <div className="card medium contact-profile-card horizontal">
       <div className="card-image profile-image">
-        <img className="rounded-img responsive-img" src={this.state.img} />
+        <img className="rounded-img responsive-img" alt="state img" src={this.state.img} />
       </div>
       <div className="card-stacked">
         <div className="card-content">

@@ -4,14 +4,11 @@ import {
   loadUserData,
   Person,
   getFile,
-  putFile,
-  lookupProfile
 } from 'blockstack';
 import {Bar} from 'react-chartjs-2';
 import {Line} from 'react-chartjs-2';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const blockstack = require("blockstack");
 
 export default class Profile extends Component {
   constructor(props) {
@@ -99,7 +96,6 @@ export default class Profile extends Component {
       ]
     };
 
-    const { handleSignOut } = this.props;
     const { person } = this.state;
     console.log(words);
     return (

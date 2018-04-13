@@ -140,9 +140,9 @@ export default class SingleDoc extends Component {
 
   print(){
     const curURL = window.location.href;
-    history.replaceState(history.state, '', '/');
+    window.history.replaceState(window.history.state, '', '/');
     window.print();
-    history.replaceState(history.state, '', curURL);
+    window.history.replaceState(window.history.state, '', curURL);
   }
 
   renderView() {

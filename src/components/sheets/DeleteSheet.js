@@ -1,17 +1,9 @@
-import React, { Component, Link } from "react";
-import Profile from "../Profile";
-import Signin from "../Signin";
+import React, { Component } from "react";
 import Header from "../Header";
 import {
-  isSignInPending,
-  loadUserData,
-  Person,
   getFile,
-  putFile,
-  lookupProfile
+  putFile
 } from 'blockstack';
-
-const blockstack = require("blockstack");
 
 export default class DeleteSheet extends Component {
   constructor(props) {
@@ -36,14 +28,6 @@ export default class DeleteSheet extends Component {
     this.saveNewFile = this.saveNewFile.bind(this);
   }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
-    }
-  }
-
   componentDidMount() {
     getFile("spread.json", {decrypt: true})
      .then((fileContents) => {
@@ -57,7 +41,8 @@ export default class DeleteSheet extends Component {
        function findObjectIndex(sheet) {
            return sheet.id == index;
        }
-       this.setState({ grid: thisSheet && thisSheet.grid || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
+       let grid = thisSheet && thisSheet.grid;
+       this.setState({ grid: grid || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
      })
       .catch(error => {
         console.log(error);
@@ -68,7 +53,7 @@ export default class DeleteSheet extends Component {
     const object = {};
     object.title = this.state.title;
     object.grid = this.state.grid;
-    object.id = parseInt(this.props.match.params.id);
+    object.id = parseInt(this.props.match.params.id, 10);
     this.setState({ sheets: [...this.state.sheets, this.state.sheets.splice(this.state.index, 1)]})
     console.log(this.state.grid);
     this.setState({ loading: "show", save: "hide" });
@@ -82,12 +67,12 @@ export default class DeleteSheet extends Component {
       .then(() => {
         console.log(JSON.stringify(this.state));
         this.setState({ loading: "hide" });
-        location.href = '/sheets';
+        window.location.href = '/sheets';
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-      
+
       });
   }
 

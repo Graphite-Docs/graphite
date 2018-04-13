@@ -1,17 +1,11 @@
-import React, { Component, Link } from "react";
-import Profile from "../Profile";
-import Signin from "../Signin";
+import React, { Component } from "react";
 import Header from "../Header";
 import {
   isSignInPending,
-  loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile
+  handlePendingSignIn
 } from 'blockstack';
-
-const blockstack = require("blockstack");
 
 export default class DeleteDoc extends Component {
   constructor(props) {
@@ -44,10 +38,10 @@ export default class DeleteDoc extends Component {
         console.log("loaded");
      }).then(() =>{
        let value = this.state.value;
-       const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
+       const thisDoc = value.find((doc) => { return doc.id === this.props.match.params.id});
        let index = thisDoc && thisDoc.id;
        function findObjectIndex(doc) {
-           return doc.id == index;
+           return doc.id === index;
        }
        this.setState({ test: thisDoc && thisDoc.content, textvalue: thisDoc && thisDoc.title, index: value.findIndex(findObjectIndex) })
      })
@@ -85,13 +79,13 @@ export default class DeleteDoc extends Component {
     this.setState({ save: "hide"});
     putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
-        console.log(JSON.stringify(this.state));
+        // console.log(JSON.stringify(this.state));
         this.saveTwo();
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-
+        alert(e.message);
       });
   }
 
@@ -101,12 +95,12 @@ export default class DeleteDoc extends Component {
     putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
       .then(() => {
         this.setState({ loading: "hide" });
-        location.href = '/documents';
+        window.location.href = '/documents';
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-      
+        alert(e.message);
       });
 
   }
@@ -123,7 +117,7 @@ export default class DeleteDoc extends Component {
             <h5>
               Delete Document
             </h5>
-            <h6>Are you sure you want to delete <strong>{this.state.textvalue}</strong>?
+            <h6>Are you sure you want to delete <strong>{this.state.singleDoc.title}</strong>?
             </h6>
             <div className={save}>
             <button className="btn red" onClick={this.handleDeleteItem}>

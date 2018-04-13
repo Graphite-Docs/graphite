@@ -1,18 +1,10 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
-import Profile from '../Profile';
-import Signin from '../Signin';
-import Header from '../Header';
 import {
-  isSignInPending,
   loadUserData,
   Person,
-  getFile,
-  putFile,
-  lookupProfile
+  getFile
 } from 'blockstack';
-import update from 'immutability-helper';
 const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -48,9 +40,7 @@ export default class SharedVault extends Component {
       filteredValue: [],
       tempDocId: "",
       redirect: false,
-      loading: "hide",
       receiverID: "",
-      senderID: "",
       show: "",
       hide: "",
       hideButton: "",
@@ -86,18 +76,6 @@ export default class SharedVault extends Component {
     window.location.reload(true);
   }
 
-
-  handleSignIn(e) {
-    e.preventDefault();
-    const origin = window.location.origin
-    redirectToSignIn(origin, origin + '/manifest.json', ['store_write', 'publish_data'])
-  }
-
-  handleSignOut(e) {
-    e.preventDefault();
-    signUserOut(window.location.origin);
-  }
-
   handleIDChange(e) {
     this.setState({ senderID: e.target.value })
   }
@@ -109,18 +87,14 @@ export default class SharedVault extends Component {
 
   renderView() {
     const show = this.state.show;
-    const hideButton = this.state.hideButton;
-    let value = this.state.value;
     console.log(loadUserData().username);
     const loading = this.state.loading;
     let contacts = this.state.filteredContacts;
     let link = '/sheets/shared/';
     let user = this.state.senderID;
-    let fullLink = link + user;
     const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
 
-    if(this.state.sharedWithMe == true) {
+    if(this.state.sharedWithMe === true) {
       return(
       <div className={show}>
         <div className="container center-align">
@@ -198,15 +172,9 @@ export default class SharedVault extends Component {
 
 
   render() {
-      const show = this.state.show;
-      const hideButton = this.state.hideButton;
-      let value = this.state.value;
       console.log(loadUserData().username);
-      const loading = this.state.loading;
-      let contacts = this.state.filteredContacts;
       let link = '/vault/shared/';
       let user = this.state.senderID;
-      let fullLink = link + user;
       const userData = blockstack.loadUserData();
       const person = new blockstack.Person(userData.profile);
 
@@ -223,7 +191,7 @@ export default class SharedVault extends Component {
                 <li><a href="/shared-sheets">Shared Files</a></li>
                 <li><a href="/export">Export All Data</a></li>
                 <li className="divider"></li>
-                <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+                <li><a onClick={ this.handleSignOut }>Sign out</a></li>
               </ul>
               <ul id="dropdown2" className="dropdown-content">
               <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -246,16 +214,4 @@ export default class SharedVault extends Component {
       );
     }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
-      });
-    }
-  }
 }
-
-// <div className="share-buttons center-align">
-//   <button onClick={() => this.setState({ sharedWithMe: true })} className="share-button">Shared with me</button>
-//   <button onClick={() => this.setState({ sharedWithMe: false })} className="share-button">Shared with others</button>
-// </div>

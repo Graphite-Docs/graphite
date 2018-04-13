@@ -1,18 +1,11 @@
-import React, { Component, Link } from "react";
-import Profile from "../Profile";
-import Signin from "../Signin";
+import React, { Component } from "react";
 import Header from "../Header";
 import {
   isSignInPending,
-  loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile,
-  signUserOut
+  handlePendingSignIn,
 } from 'blockstack';
-
-const blockstack = require("blockstack");
 
 export default class DeleteContact extends Component {
   constructor(props) {
@@ -44,10 +37,10 @@ export default class DeleteContact extends Component {
         console.log("loaded");
      }).then(() =>{
        let contact = this.state.contacts;
-       const thisContact = contact.find((a) => { return a.contact == this.props.match.params.id});
+       const thisContact = contact.find((a) => { return a.contact === this.props.match.params.id});
        let index = thisContact && thisContact.contact;
        function findObjectIndex(contact) {
-           return contact.contact == index;
+           return contact.contact === index;
        }
        this.setState({ contact: thisContact && thisContact.contact, contactImg: thisContact && thisContact.img, index: contact.findIndex(findObjectIndex) })
      })
@@ -73,12 +66,12 @@ export default class DeleteContact extends Component {
       .then(() => {
         console.log(JSON.stringify(this.state));
         this.setState({ loading: "hide" });
-        location.href = '/contacts';
+        window.location.href = '/contacts';
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-    
+        alert(e.message);
       });
   }
 

@@ -1,11 +1,6 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom';
-import { Link } from 'react-router-dom';
-import Profile from "../Profile";
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.bubble.css';
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
@@ -13,18 +8,15 @@ import {
   getFile,
   putFile,
   lookupProfile,
-  signUserOut
+  signUserOut,
+  handlePendingSignIn
 } from 'blockstack';
-import update from 'immutability-helper';
 
 const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
-const Quill = ReactQuill.Quill;
 const Font = ReactQuill.Quill.import('formats/font');
 Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
 ReactQuill.Quill.register(Font, true);
 
-const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SingleConversation extends Component {
@@ -86,7 +78,7 @@ componentDidMount() {
          console.log("Contacts are here");
          this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
          let contact = this.state.contacts;
-         const thisContact = contact.find((a) => { return a.contact == this.props.match.params.id});
+         const thisContact = contact.find((a) => { return a.contact === this.props.match.params.id});
          this.setState({ conversationUser: thisContact && thisContact.contact});
        } else {
          console.log("No contacts");
@@ -124,7 +116,7 @@ fetchMine() {
 
 fetchData() {
 const username = this.state.conversationUser;
-const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+const options = { username: username, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 getFile('key.json', options)
   .then((file) => {
     this.setState({ pubKey: JSON.parse(file)})
@@ -207,7 +199,7 @@ saveShared() {
   const data = this.state;
   const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
   const directory = '/shared/' + fileName;
-  putFile(directory, encryptedData, {encrypt: false})
+  putFile(directory, encryptedData)
     .then(() => {
       console.log("Shared encrypted file " + directory);
     })
@@ -233,7 +225,7 @@ render() {
 
   SingleConversation.modules = {
     toolbar: [
-      [{ 'header': '1'}, {'header': '2'}, { 'font': Font.whitelist }],,
+      [{ 'header': '1'}, {'header': '2'}, { 'font': Font.whitelist }],
       [{size: []}],
       ['bold', 'italic', 'underline', 'strike', 'blockquote'],
       [{'list': 'ordered'}, {'list': 'bullet'},
@@ -263,11 +255,6 @@ render() {
   }
   let messages = combinedMessages.sort(compare);
 
-  let myMessages = this.state.myMessages;
-  let sharedMessages = this.state.sharedMessages;
-
-  const userData = blockstack.loadUserData();
-  const person = new blockstack.Person(userData.profile);
   let loading = this.state.loading;
   let show = this.state.show;
 
@@ -298,8 +285,8 @@ render() {
       <div className={show}>
       <div>
       {messages.map(message => {
-        if(message.sender == loadUserData().username || message.receiver == loadUserData().username){
-          if(message.sender == loadUserData().username) {
+        if(message.sender === loadUserData().username || message.receiver === loadUserData().username){
+          if(message.sender === loadUserData().username) {
             return (
               <div key={message.id} className="">
 

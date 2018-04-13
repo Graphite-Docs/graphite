@@ -6,7 +6,6 @@
 
 var url = require('url');
 var LRU = require('lru-cache');
-var extend = require('extend');
 var Agent = require('agent-base');
 var inherits = require('util').inherits;
 var debug = require('debug')('proxy-agent');
@@ -86,7 +85,7 @@ function ProxyAgent (opts) {
 
   var proxies;
   if (opts.proxies) {
-    proxies = extend(Object.create(exports.proxies), opts.proxies);
+    proxies = Object.assign({}, exports.proxies, opts.proxies);
   } else {
     proxies = exports.proxies;
   }
@@ -95,7 +94,7 @@ function ProxyAgent (opts) {
   var protocol = opts.protocol;
   if (!protocol) {
     throw new TypeError('You must specify a "protocol" for the ' +
-                        'proxy type (' + types().join(', ') + ')');
+                        'proxy type (' + Object.keys(proxies).join(', ') + ')');
   }
 
   // strip the trailing ":" if present
@@ -111,11 +110,12 @@ function ProxyAgent (opts) {
 
   this.proxy = opts;
   // format the proxy info back into a URI, since an opts object
-  // could have been passed in originally. This generated URI is used
-  // as part of the "key" for the LRU cache
+  // could have been passed in originally. This generated URI is
+  // used as part of the "key" for the LRU cache
   this.proxyUri = url.format({
     protocol: protocol + ':',
     slashes: true,
+    auth:opts.auth,
     hostname: opts.hostname || opts.host,
     port: opts.port
   });
@@ -127,7 +127,7 @@ inherits(ProxyAgent, Agent);
  *
  */
 
-function connect (req, opts, fn) {
+function connect (req, opts) {
   // create the "key" for the LRU cache
   var key = this.proxyUri;
   if (opts.secureEndpoint) key += ' secure';
@@ -137,28 +137,12 @@ function connect (req, opts, fn) {
   if (!agent) {
     // get an `http.Agent` instance from protocol-specific agent function
     agent = this.proxyFn(this.proxy, opts.secureEndpoint);
-    if (agent) exports.cache.set(key, agent);
+    if (agent) {
+      exports.cache.set(key, agent);
+    }
   } else {
     debug('cache hit with key: %o', key);
   }
 
-  // XXX: agent.callback() is an agent-base-ism
-  // TODO: add support for generic `http.Agent` instances by calling
-  // agent.addRequest(), but with support for <= 0.10.x and >= 0.12.x
-  agent.callback(req, opts, fn);
-}
-
-/**
- * Returns an Array of supported protocol string names.
- *
- * @return {Array}
- * @api private
- */
-
-function types () {
-  var rtn = [];
-  // not using Object.keys() so that we get any
-  // potential prototype values as well
-  for (var type in exports.proxies) rtn.push(type);
-  return rtn;
+  return agent;
 }

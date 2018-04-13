@@ -985,6 +985,54 @@ h5, h6 {
   z-index: 100;
 }
 
+/* Stealthy */
+
+.stealthylogo {
+  height: 30px;
+  margin-top: 17px;
+}
+
+#stealthyFrame {
+  width: 100%;
+  margin: auto;
+  border: none!important;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+  height: 90%;
+}
+
+#stealthyCol {
+  position: fixed;
+  top: 85px;
+  right: 20px;
+  height: 80vh;
+  width: 33%;
+  z-index: 999;
+}
+
+.module-contacts {
+  padding: 5px;
+}
+
+.contact-module-ul {
+  height: 450px;
+  overflow: scroll;
+}
+
+.stealthy-contacts {
+  padding-top: 7px!important;
+}
+
+.module-buttons button {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.innerStealthy {
+  height: 100%;
+}
+
 .alert-message {
   padding: 10px;
   background: #ffd54f;
@@ -993,9 +1041,10 @@ h5, h6 {
 .app-card {
   margin: -15px;
   padding: 0;
-  height: 100vh!important;
+  /* height: 100vh!important; */
   /* border-right: 1px #222223 solid; */
   /* color: #fff; */
+  margin-bottom: 20px;
 }
 
 .app-card p, .app-card h4, .app-card h5, .app-card button {
@@ -1022,7 +1071,7 @@ h5, h6 {
 .other-icon {
   background: #fff;
   border-radius: 50%;
-  padding: 0;
+  padding: 10px!important;
   height: 150px;
   width: 150px;
   margin: auto;
@@ -1256,7 +1305,7 @@ h5, h6 {
 }
 
 .app-list {
-  margin-top: 0px;
+  margin-top: 200px;
 }
 
 .splash {
@@ -1310,6 +1359,120 @@ h5, h6 {
   display: block;
 }
 
+/* projects */
+
+.main-projects-page {
+  margin-top: 50px;
+}
+
+.filter-pane {
+  background: #BDBDBD;
+  height: 100vh;
+}
+
+.projects-pane {
+  height: 100vh;
+}
+
+.project-table {
+  margin-top: 100px!important;
+  width: 85%;
+  margin: auto;
+}
+
+.filter {
+  margin-top: 100px!important;
+}
+
+.add-project-modal {
+  margin-top: 85px!important;
+}
+
+.project-modal {
+  position: relative!important;
+  max-width: 85%!important;
+  margin: auto!important;
+  margin-top: 35px!important;
+}
+
+.filter-trigger {
+  margin-top: 35px;
+}
+
+.filter-dropdown {
+  width: 75%!important;
+  position: relative!important;
+  top: 20px!important;
+  left: 15%!important;
+  display: block!important;
+  opacity: 1!important;
+}
+
+#modal1 {
+  z-index: 999!important;
+}
+
+.apply-button {
+  font-size: 12px!important;
+}
+
+/* Single Project */
+
+.tl-timeline {
+  width: 85%;
+  margin: auto;
+}
+.tl-slide .tl-slide-content-container {
+  display: block;
+}
+
+.tl-storyslider {
+  height: 250px!important;
+}
+
+.tl-slide {
+  background: #282828;
+}
+
+.tl-timeline h1, .tl-timeline h2, .tl-timeline h3, .tl-timeline p {
+  color: #fff;
+}
+
+.tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-description, .tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-icon, .tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-title, .tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-description, .tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-icon, .tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-title {
+  color: #fff;
+  text-shadow: none;
+}
+
+.main-content{
+  margin-top: 80px;
+}
+
+.project-page-modal {
+  position: fixed;
+  top: 85px;
+  z-index: 999;
+}
+
+/* Blog Settings */
+
+.blog-settings {
+  margin-top: 85px;
+}
+
+.blog-settings div h3 {
+  padding-top: 45px;
+  padding-bottom: 45px;
+}
+
+.add-teammate-button {
+  margin-left: 25px;
+}
+
+.stats {
+  margin-top: 55px;
+}
+
+
 /* messaging */
 
 .add-contact {
@@ -1325,6 +1488,7 @@ h5, h6 {
   width: 65%;
   margin: auto;
   border-radius: 10px!important;
+  margin-bottom: 40px;
 }
 
 .add-new {
@@ -2183,12 +2347,20 @@ input:focus {
 }
 
 .auto-save li a:hover {
-  background: #fff;
+  background: transparent;
   cursor: default;
 }
 
 .doc-card {
   padding: 25px;
+  width: 85%;
+  margin: auto;
+}
+
+.with-module {
+  padding: 25px;
+  width: 65%;
+  margin: 0;
 }
 
 .delete-card {
@@ -2237,7 +2409,7 @@ input:focus {
     top: 0;
     z-index: 999;
     width: auto;
-    right: 150px;
+    right: 180px;
     background: #282828;
     height: 60px;
     padding: 15px!important;
@@ -2385,35 +2557,14 @@ polygon.ql-stroke {
   padding-top: 0!important;
 } */
 
-.sharing-notice {
-  padding: 20px;
-}
-
-.print-view img {
-  max-width: 85%;
-}
-
-/* Stealthy */
-
-#stealthyFrame {
-  width: 100%;
-  margin: auto;
-  border: none!important;
-  padding: 20px;
-  height: 90%;
-}
-
-#stealthyCol {
-  position: fixed;
-  top: 85px;
-  right: 20px;
-  height: 80vh;
-  width: 25%;
-}
-
 /*Media Queires*/
 
 @media screen and (max-width: 800px) {
+  .with-module {
+    width: 85%;
+    margin: auto;
+  }
+  
   .convo-left {
     margin-top: 80px;
     width: 100%!important;
@@ -2469,9 +2620,19 @@ polygon.ql-stroke {
 
 @media screen and (max-width: 960px) {
 
+  #stealthyCol {
+    position: fixed;
+    top: 85px;
+    right: 20px;
+    height: 80vh;
+    width: 45%;
+    z-index: 999;
+  }
+
   .app-list {
     max-width: 85%;
     margin: auto;
+    margin-top: 75px;
   }
 
   .brand-logo {
@@ -2493,9 +2654,10 @@ polygon.ql-stroke {
     margin: -15px;
     padding: 0;
     width: 100%;
-    height: 25vh!important;
+    /* height: 25vh!important; */
     /* border-right: 1px #222223 solid; */
     color: #404040;
+    margin-bottom: 20px;
   }
 
   .app-card:active h5, .app-card:active p button {
@@ -2656,6 +2818,22 @@ polygon.ql-stroke {
 }
 
 @media screen and (max-width: 760px) {
+  #stealthyFrame {
+  width: 100%;
+  margin: auto;
+  border: none!important;
+  padding: 20px;
+  height: 90%;
+}
+
+#stealthyCol {
+  position: fixed;
+  top: 85px;
+  right: 20px;
+  height: 80vh;
+  width: 45%;
+}
+
   .app-headers {
     font-size: 18px;
     text-align: center!important;
@@ -2671,20 +2849,21 @@ polygon.ql-stroke {
 @media screen and (max-width: 380px) {
 
   #stealthyFrame {
-    width: 100%;
-    margin: auto;
-    border: none!important;
-    padding: 20px;
-    height: 90%;
-  }
+  width: 100%;
+  margin: auto;
+  border: none!important;
+  padding: 20px;
+  height: 90%;
+}
 
-  #stealthyCol {
-    position: fixed;
-    top: 85px;
-    right: 0;
-    height: 80vh;
-    width: 100%;
-  }
+#stealthyCol {
+  position: fixed;
+  top: 85px;
+  right: 0;
+  height: 80vh;
+  width: 100%;
+  z-index: 999;
+}
 
   .search-input {
     font-size: 12px!important;
@@ -2765,6 +2944,25 @@ polygon.ql-stroke {
 
 @media screen and (max-width: 450px) {
 
+  .stealthy-logo img {
+    height: 20px!important;
+    margin-top: 19px!important;
+  }
+
+  .doc-card {
+    width: 95%;
+    margin: auto;
+  }
+
+  #stealthyCol {
+  position: fixed;
+  top: 85px;
+  right: 0;
+  height: 80vh;
+  width: 100%;
+  z-index: 999;
+}
+
   .convo-left {
     margin-top: 80px;
     width: 100%!important;
@@ -2831,6 +3029,11 @@ polygon.ql-stroke {
 }
 
 @media screen and (max-width: 325px) {
+
+  .toolbar-menu li input{
+    width: 60px!important;
+  }
+
   .pencil {
     height: 15px!important;
     width: 15px!important;

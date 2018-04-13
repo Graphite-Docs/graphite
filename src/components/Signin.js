@@ -1,11 +1,7 @@
 import React, { Component } from 'react';
-import { isUserSignedIn } from 'blockstack';
+const civicSip = new window.civic.sip({ appId: 'rJ-YXevoG' });
 
 export default class Signin extends Component {
-  constructor(props) {
-    super(props);
-  }
-
   render() {
     const { handleSignIn } = this.props;
 
@@ -24,6 +20,11 @@ export default class Signin extends Component {
             Sign In with Blockstack
           </button>
         </p>
+        {/*
+        <button id="signupButton" class="civic-button-a medium" type="button">
+            <span>Sign in with Civic</span>
+        </button>
+        */}
       </div>
     );
   }

@@ -9,8 +9,7 @@ var Base64 = (function make_b64(){
 	return {
 		encode: function(input) {
 			var o = "";
-			var c1, c2, c3;
-			var e1, e2, e3, e4;
+			var c1=0, c2=0, c3=0, e1=0, e2=0, e3=0, e4=0;
 			for(var i = 0; i < input.length; ) {
 				c1 = input.charCodeAt(i++);
 				e1 = (c1 >> 2);
@@ -29,9 +28,7 @@ var Base64 = (function make_b64(){
 		},
 		decode: function b64_decode(input) {
 			var o = "";
-			var c1, c2, c3;
-			var e1, e2, e3, e4;
-			// eslint-disable-next-line no-useless-escape
+			var c1=0, c2=0, c3=0, e1=0, e2=0, e3=0, e4=0;
 			input = input.replace(/[^\w\+\/\=]/g, "");
 			for(var i = 0; i < input.length;) {
 				e1 = map.indexOf(input.charAt(i++));
@@ -159,10 +156,10 @@ function new_buf(sz) {
 	return o;
 }
 
-/* [MS-CFB] v20130118 */
+/* [MS-CFB] v20171201 */
 var CFB = (function _CFB(){
 var exports = {};
-exports.version = '1.0.3';
+exports.version = '1.0.5';
 /* [MS-CFB] 2.6.4 */
 function namecmp(l, r) {
 	var L = l.split("/"), R = r.split("/");
@@ -186,6 +183,7 @@ function filename(p) {
 var fs;
 function get_fs() { return fs || (fs = require('fs')); }
 function parse(file, options) {
+if(file.length < 512) throw new Error("CFB file size " + file.length + " < 512");
 var mver = 3;
 var ssz = 512;
 var nmfs = 0; // number of mini FAT sectors
@@ -342,7 +340,7 @@ function build_full_paths(FI, FP, Paths) {
 		if(L !== -1) { dad[L] = dad[i]; q.push(L); }
 		if(R !== -1) { dad[R] = dad[i]; q.push(R); }
 	}
-	for(i=1; i !== pl; ++i) if(dad[i] === i) {
+	for(i=1; i < pl; ++i) if(dad[i] === i) {
 		if(R !== -1 /*NOSTREAM*/ && dad[R] !== R) dad[i] = dad[R];
 		else if(L !== -1 && dad[L] !== L) dad[i] = dad[L];
 	}
@@ -729,7 +727,6 @@ if(file.size > 0 && file.size < 0x1000) {
 }
 /* [MS-CFB] 2.6.4 (Unicode 3.0.1 case conversion) */
 function find(cfb, path) {
-	//return cfb.find(path);
 	var UCFullPaths = cfb.FullPaths.map(function(x) { return x.toUpperCase(); });
 	var UCPaths = UCFullPaths.map(function(x) { var y = x.split("/"); return y[y.length - (x.slice(-1) == "/" ? 2 : 1)]; });
 	var k = false;
@@ -739,10 +736,12 @@ function find(cfb, path) {
 	var w = k === true ? UCFullPaths.indexOf(UCPath) : UCPaths.indexOf(UCPath);
 	if(w !== -1) return cfb.FileIndex[w];
 
-	UCPath = UCPath.replace(chr0,'').replace(chr1,'!');
+	var m = !UCPath.match(chr1);
+	UCPath = UCPath.replace(chr0,'');
+	if(m) UCPath = UCPath.replace(chr1,'!');
 	for(w = 0; w < UCFullPaths.length; ++w) {
-		if(UCFullPaths[w].replace(chr0,'').replace(chr1,'!') == UCPath) return cfb.FileIndex[w];
-		if(UCPaths[w].replace(chr0,'').replace(chr1,'!') == UCPath) return cfb.FileIndex[w];
+		if((m ? UCFullPaths[w].replace(chr1,'!') : UCFullPaths[w]).replace(chr0,'') == UCPath) return cfb.FileIndex[w];
+		if((m ? UCPaths[w].replace(chr1,'!') : UCPaths[w]).replace(chr0,'') == UCPath) return cfb.FileIndex[w];
 	}
 	return null;
 }

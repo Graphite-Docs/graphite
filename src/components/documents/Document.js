@@ -1,14 +1,7 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
-  isUserSignedIn,
-  redirectToSignIn,
   handlePendingSignIn,
-  signUserOut
 } from "blockstack";
 
 const blockstack = require("blockstack");
@@ -88,7 +81,7 @@ export default class Doc extends Component {
       this.setState({ save: "hide"});
       setTimeout(this.saveNewFile, 500)
     } else {
-      location.href = '/';
+      window.location.href = '/';
     }
   };
 
@@ -115,7 +108,7 @@ export default class Doc extends Component {
     blockstack.putFile("documents.json", JSON.stringify(this.state), true)
       .then(() => {
         console.log(JSON.stringify(this.state));
-        location.href = '/';
+        window.location.href = '/';
       })
       .catch(e => {
         console.log("e");
@@ -161,16 +154,15 @@ export default class Doc extends Component {
 
   print(){
     const curURL = window.location.href;
-    history.replaceState(history.state, '', '/');
+    window.history.replaceState(window.history.state, '', '/');
     window.print();
-    history.replaceState(history.state, '', curURL);
+    window.history.replaceState(window.history.state, '', curURL);
   }
 
   render() {
     const words = wordcount(this.state.test);
     const loading = this.state.loading;
     const save = this.state.save;
-    const lineSpacing = this.state.lineSpacing;
 
     return (
       <div>

@@ -1,4 +1,13 @@
 
+2.2.0 / 2018-01-15
+==================
+
+  * Add `auth` to proxyUri
+  * Upgrade to "agent-base" v4.2.0
+  * Use `Object.keys()` to determine the supported proxies
+  * Remove `extend` dependency
+  * Update dependencies
+
 2.1.0 / 2017-07-20
 ==================
 

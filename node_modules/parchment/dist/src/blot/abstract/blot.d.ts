@@ -25,6 +25,9 @@ export interface Blot extends LinkedNode {
     optimize(context: {
         [key: string]: any;
     }): void;
+    optimize(mutations: MutationRecord[], context: {
+        [key: string]: any;
+    }): void;
     update(mutations: MutationRecord[], context: {
         [key: string]: any;
     }): void;

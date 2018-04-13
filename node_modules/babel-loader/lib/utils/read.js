@@ -1,18 +1,14 @@
 "use strict";
 
-var fs = require("fs");
+var path = require("path");
 
-module.exports = function (cache) {
-  cache = cache || {};
+module.exports = function readBabelConfig(fileSystem, filename) {
+  if (path.basename(filename) === "package.json") {
+    var pkg = require(filename);
 
-  return function (filename) {
+    return JSON.stringify(pkg.babel);
+  }
 
-    if (!filename) {
-      throw new Error("filename must be a string");
-    }
-
-    cache[filename] = cache[filename] || fs.readFileSync(filename, "utf8");
-
-    return cache[filename];
-  };
+  // Webpack `fs` return Buffer
+  return fileSystem.readFileSync(filename).toString("utf8");
 };

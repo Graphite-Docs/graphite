@@ -4,12 +4,9 @@ isSignInPending,
 loadUserData,
 Person,
 getFile,
-putFile,
-lookupProfile,
 signUserOut,
 } from 'blockstack';
 import { Link } from 'react-router-dom';
-import Dropzone from 'react-dropzone'
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -57,9 +54,6 @@ export default class VaultCollection extends Component {
          this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
        } else {
          console.log("Nothing to see here");
-         // this.setState({ value: {} });
-         // this.setState({ filteredValue: {} })
-         // console.log(this.state.value);
          this.setState({ loading: "hide" });
        }
      })
@@ -69,14 +63,18 @@ export default class VaultCollection extends Component {
 
     getFile("uploads.json", {decrypt: true})
      .then((fileContents) => {
-       this.setState({ files: JSON.parse(fileContents || '{}') });
-       this.setState({filteredValue: this.state.files});
-       // this.merge();
+       if(fileContents){
+         this.setState({ files: JSON.parse(fileContents || '{}') });
+         this.setState({filteredValue: this.state.files});
+       }else {
+         this.setState({ files: [] });
+         this.setState({filteredValue: []});
+       }
      })
       .catch(error => {
         console.log(error);
+        this.setState({ files: [], filteredValue: [] });
       });
-
   }
 
   handleSignOut(e) {
@@ -93,19 +91,15 @@ export default class VaultCollection extends Component {
     this.setState({filteredValue: updatedList});
   }
 
-  merge() {
-    this.setState({ combinedFiles: this.state.files });
-    console.log("Combined: " + this.state.combinedFiles);
-  }
-
   render() {
-    let files = this.state.filteredValue;
-    let folders = this.state.folders;
-    let docs = this.state.docs;
-    let sheets = this.state.sheets;
-
-    console.log(files);
-    const { handleSignOut } = this.props;
+    console.log("value: ")
+    console.log(this.state.filteredValue);
+    let files;
+    if (this.state.filteredValue !=null) {
+      files = this.state.filteredValue;
+    } else {
+      files = [];
+    }
     const { person } = this.state;
     return (
       !isSignInPending() ?
@@ -117,11 +111,10 @@ export default class VaultCollection extends Component {
 
             <ul id="nav-mobile" className="right">
             <ul id="dropdown1" className="dropdown-content">
-              <li><a href="/profile">Profile</a></li>
               <li><a href="/shared-vault">Shared Files</a></li>
 
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
             <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -131,7 +124,7 @@ export default class VaultCollection extends Component {
             <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>
@@ -169,8 +162,8 @@ export default class VaultCollection extends Component {
                   <Link to={'/vault/' + file.id} className="side-card black-text file-side">
                     <div className="card-image card-image-side file-side">
                     {
-                      file.type.includes("image") ? <img src="https://i.imgur.com/jLnXZXM.png" alt="image icon" /> :
-                      file.type.includes("pdf") ? <img src="https://i.imgur.com/urkNBL9.png" alt="pdf icon" /> :
+                      file.type.includes("image") ? <img src="https://i.imgur.com/jLnXZXM.png" alt="icon" /> :
+                      file.type.includes("pdf") ? <img src="https://i.imgur.com/urkNBL9.png" alt="icon" /> :
                       file.type.includes("word") ? <img className="icon-image" src="https://i.imgur.com/6ibKpk4.png" alt="word document" /> :
                       file.type.includes("rtf") || file.type.includes("text/plain") || file.type.includes("opendocument") ? <img className="icon-image" src="https://i.imgur.com/xADzUSW.png" alt="document" /> :
                       file.type.includes("video") ? <img className="icon-image" src="https://i.imgur.com/Hhj5KAl.png" alt="video icon" /> :
@@ -210,25 +203,3 @@ export default class VaultCollection extends Component {
     });
   }
 }
-
-// <div className="row">
-//   <div className="col s4 m2">
-//     <div className="card-panel grey">
-//       <span className="white-text center-align">
-//         <p><i className="medium material-icons">create_new_folder</i></p>
-//         <p>Create a folder</p>
-//       </span>
-//     </div>
-//   </div>
-//   {folders.slice(0).reverse().map(folder => {
-//     return (
-//       <div className="col s4 m2">
-//         <div className="card-panel grey">
-//           <span className="white-text center-align">
-//             <p>{folder.name}</p>
-//           </span>
-//         </div>
-//       </div>
-//     );
-//   })}
-// </div>

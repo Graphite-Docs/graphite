@@ -1,22 +1,11 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
-import { Redirect } from 'react-router';
-import Profile from "./Profile";
 import Header from './Header';
-import Signin from "./Signin";
 import {
-  isSignInPending,
-  loadUserData,
-  Person,
   getFile,
-  putFile,
-  lookupProfile,
-  signUserOut,
 } from 'blockstack';
+import $ from 'jquery';
 
-const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-
 
 export default class Export extends Component {
   constructor(props) {
@@ -78,15 +67,12 @@ export default class Export extends Component {
 
   render() {
     const docs = this.state.value;
-    const sheets = this.state.sheets;
     var dataDocs = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(docs));
     $('<a href="data:' + dataDocs + '" download="docsdownload.json">Download Docs</a>').appendTo('#doccontainer');
     var dataSheets = "text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state.sheets));
     $('<a href="data:' + dataSheets + '" download="sheetsdownload.json">Download Sheets</a>').appendTo('#sheetcontainer');
 
     console.log(this.state.sheets);
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     return (
       <div>
         <Header />

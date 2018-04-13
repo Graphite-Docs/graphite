@@ -1,18 +1,12 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
 import { Link } from 'react-router-dom';
-import Profile from '../Profile';
-import Signin from '../Signin';
-import Header from '../Header';
 import {
-  isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
   lookupProfile
 } from 'blockstack';
-import update from 'immutability-helper';
 const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -48,9 +42,7 @@ export default class SharedSheets extends Component {
       filteredValue: [],
       tempDocId: "",
       redirect: false,
-      loading: "hide",
       receiverID: "",
-      senderID: "",
       show: "",
       hide: "",
       hideButton: "",
@@ -148,7 +140,7 @@ export default class SharedSheets extends Component {
         .catch((error) => {
           console.log('could not resolve profile')
           this.setState({ loading: "hide" });
-          Materialize.toast('Could not find user', 2000);
+          window.Materialize.toast('Could not find user', 2000);
           setTimeout(this.windowRefresh, 2000);
         })
 
@@ -164,7 +156,7 @@ export default class SharedSheets extends Component {
         .catch((error) => {
           console.log('could not fetch');
           this.setState({ loading: "hide" });
-          Materialize.toast('Nothing shared', 2000);
+          window.Materialize.toast('Nothing shared', 2000);
           setTimeout(this.windowRefresh, 2000);
         })
         .then(() => {
@@ -174,18 +166,6 @@ export default class SharedSheets extends Component {
 
   windowRefresh() {
     window.location.reload(true);
-  }
-
-
-  handleSignIn(e) {
-    e.preventDefault();
-    const origin = window.location.origin
-    redirectToSignIn(origin, origin + '/manifest.json', ['store_write', 'publish_data'])
-  }
-
-  handleSignOut(e) {
-    e.preventDefault();
-    signUserOut(window.location.origin);
   }
 
   handleIDChange(e) {
@@ -209,18 +189,10 @@ export default class SharedSheets extends Component {
 
   renderView() {
     const show = this.state.show;
-    const hideButton = this.state.hideButton;
-    let value = this.state.value;
     console.log(loadUserData().username);
-    const loading = this.state.loading;
     let contacts = this.state.filteredContacts;
-    let link = '/sheets/shared/';
-    let user = this.state.senderID;
-    let fullLink = link + user;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
 
-    if(this.state.sharedWithMe == true) {
+    if(this.state.sharedWithMe === true) {
       return(
       <div className={show}>
         <div className="container center-align">
@@ -298,15 +270,6 @@ export default class SharedSheets extends Component {
 
 
   render() {
-      const show = this.state.show;
-      const hideButton = this.state.hideButton;
-      let value = this.state.value;
-      console.log(loadUserData().username);
-      const loading = this.state.loading;
-      let contacts = this.state.filteredContacts;
-      let link = '/sheets/shared/';
-      let user = this.state.senderID;
-      let fullLink = link + user;
       const userData = blockstack.loadUserData();
       const person = new blockstack.Person(userData.profile);
 
@@ -323,7 +286,7 @@ export default class SharedSheets extends Component {
                 <li><a href="/shared-sheets">Shared Files</a></li>
                 <li><a href="/export">Export All Data</a></li>
                 <li className="divider"></li>
-                <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+                <li><a onClick={ this.handleSignOut }>Sign out</a></li>
               </ul>
               <ul id="dropdown2" className="dropdown-content">
               <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -333,7 +296,7 @@ export default class SharedSheets extends Component {
               <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
               </ul>
                 <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" alt="avatar" /><i className="material-icons right">arrow_drop_down</i></a></li>
               </ul>
             </div>
           </nav>
@@ -349,11 +312,4 @@ export default class SharedSheets extends Component {
       );
     }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
-      });
-    }
-  }
 }

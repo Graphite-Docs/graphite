@@ -1,20 +1,16 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
-  lookupProfile,
   signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
 
-const blockstack = require("blockstack");
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -104,9 +100,7 @@ export default class SheetsCollections extends Component {
     this.setState({ sheets: [...this.state.sheets, object] });
     this.setState({ filteredSheets: [...this.state.filteredSheets, object] });
     this.setState({ tempSheetId: object.id });
-    // this.setState({ confirm: true, cancel: false });
     setTimeout(this.saveNewFile, 500);
-    // setTimeout(console.log(this.state.sheets), 1000);
   }
   filterList(event){
     var updatedList = this.state.sheets;
@@ -136,9 +130,8 @@ export default class SheetsCollections extends Component {
 
 
   render() {
-    const alert = this.state.alert;
-    console.log(this.state.sheets);
     let sheets = this.state.filteredSheets;
+    console.log(sheets);
     const loading = this.state.loading;
     const link = '/sheets/sheet/' + this.state.tempSheetId;
     if (this.state.redirect) {
@@ -146,8 +139,8 @@ export default class SheetsCollections extends Component {
     } else {
       console.log("No redirect");
     }
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
+    const userData = loadUserData();
+    const person = new Person(userData.profile);
     return (
       <div>
       <div className="navbar-fixed toolbar">
@@ -160,7 +153,7 @@ export default class SheetsCollections extends Component {
               <li><a href="/shared-sheets">Shared Files</a></li>
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
             <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -170,7 +163,7 @@ export default class SheetsCollections extends Component {
             <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>
@@ -234,25 +227,3 @@ export default class SheetsCollections extends Component {
     );
   }
 }
-
-// <div key={sheet.id} className="col s6 m3">
-//
-//   <div className="card small renderedDocs">
-//   <Link to={'/sheets/sheet/'+ sheet.id} className="black-text">
-//     <div className="center-align card-content">
-//       <p><i className="spreadsheet-icon large green-text text-lighten-1 material-icons">grid_on</i></p>
-//     </div>
-//     </Link>
-//     <div className="card-action">
-//       <Link to={'/sheets/sheet/'+ sheet.id}><a className="black-text">{sheet.title.length > 17 ? sheet.title.substring(0,17)+"..." :  sheet.title}</a></Link>
-//       <Link to={'/sheets/sheet/delete/'+ sheet.id}>
-//
-//           <i className="modal-trigger material-icons red-text delete-button">delete</i>
-//
-//       </Link>
-//       <div className="muted">
-//         <p>Last updated: {sheet.updated}</p>
-//       </div>
-//     </div>
-//   </div>
-// </div>

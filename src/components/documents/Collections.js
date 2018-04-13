@@ -1,19 +1,15 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
-  lookupProfile,
   signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
-const blockstack = require("blockstack");
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -75,7 +71,7 @@ export default class Collections extends Component {
         this.setState({migrationComplete: JSON.parse(fileContents || '{}')})
       })
       .then(() => {
-        if(this.state.migrationComplete != true) {
+        if(this.state.migrationComplete !== true) {
           this.migrateDocs();
         }
       })
@@ -101,7 +97,6 @@ export default class Collections extends Component {
       });
   }
   migrateDocs() {
-    Materialize.toast("Please wait while Graphite is optimising file storage in the background. This will only happen once. When done, the page will refresh.", 10000);
     getFile("documents.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
@@ -267,7 +262,7 @@ export default class Collections extends Component {
 
 
   render() {
-    const alert = this.state.alert;
+    console.log(this.state.value);
     let value = this.state.filteredValue;
     const loading = this.state.loading;
     const link = '/documents/doc/' + this.state.tempDocId;
@@ -276,8 +271,8 @@ export default class Collections extends Component {
     } else {
       console.log("No redirect");
     }
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
+    const userData = loadUserData();
+    const person = new Person(userData.profile);
 
     return (
       <div>
@@ -291,7 +286,7 @@ export default class Collections extends Component {
               <li><a href="/shared-docs">Shared Files</a></li>
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
             <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -301,7 +296,7 @@ export default class Collections extends Component {
             <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>

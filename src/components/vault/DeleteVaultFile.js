@@ -5,13 +5,7 @@ loadUserData,
 Person,
 getFile,
 putFile,
-lookupProfile,
-signUserOut,
 } from 'blockstack';
-import { Link } from 'react-router-dom';
-import Dropzone from 'react-dropzone'
-import PDF from 'react-pdf-js';
-import { Player } from 'video-react';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class DeleteVaultFile extends Component {
@@ -51,11 +45,11 @@ export default class DeleteVaultFile extends Component {
       .then((file) => {
         this.setState({files: JSON.parse(file || '{}') });
         let files = this.state.files;
-        const thisFile = files.find((file) => { return file.id == this.props.match.params.id});
+        const thisFile = files.find((file) => { return file.id === this.props.match.params.id});
         let index = thisFile && thisFile.id;
         console.log(index);
         function findObjectIndex(file) {
-          return file.id == index;
+          return file.id === index;
         }
         this.setState({index: files.findIndex(findObjectIndex)});
       })
@@ -95,7 +89,7 @@ export default class DeleteVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-
+        alert(e.message);
       });
   }
 
@@ -109,7 +103,7 @@ export default class DeleteVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-      
+        alert(e.message);
       });
   }
 

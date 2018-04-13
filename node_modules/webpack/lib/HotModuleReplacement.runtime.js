@@ -2,11 +2,12 @@
 	MIT License http://www.opensource.org/licenses/mit-license.php
 	Author Tobias Koppers @sokra
 */
-/*global $hash$ installedModules $require$ hotDownloadManifest hotDownloadUpdateChunk hotDisposeChunk modules */
+/*global $hash$ $requestTimeout$ installedModules $require$ hotDownloadManifest hotDownloadUpdateChunk hotDisposeChunk modules */
 module.exports = function() {
 
 	var hotApplyOnUpdate = true;
 	var hotCurrentHash = $hash$; // eslint-disable-line no-unused-vars
+	var hotRequestTimeout = $requestTimeout$;
 	var hotCurrentModuleData = {};
 	var hotCurrentChildModule; // eslint-disable-line no-unused-vars
 	var hotCurrentParents = []; // eslint-disable-line no-unused-vars
@@ -167,7 +168,7 @@ module.exports = function() {
 		if(hotStatus !== "idle") throw new Error("check() is only allowed in idle status");
 		hotApplyOnUpdate = apply;
 		hotSetStatus("check");
-		return hotDownloadManifest().then(function(update) {
+		return hotDownloadManifest(hotRequestTimeout).then(function(update) {
 			if(!update) {
 				hotSetStatus("idle");
 				return null;
@@ -227,11 +228,19 @@ module.exports = function() {
 		hotDeferred = null;
 		if(!deferred) return;
 		if(hotApplyOnUpdate) {
-			hotApply(hotApplyOnUpdate).then(function(result) {
-				deferred.resolve(result);
-			}, function(err) {
-				deferred.reject(err);
-			});
+			// Wrap deferred object in Promise to mark it as a well-handled Promise to
+			// avoid triggering uncaught exception warning in Chrome.
+			// See https://bugs.chromium.org/p/chromium/issues/detail?id=465666
+			Promise.resolve().then(function() {
+				return hotApply(hotApplyOnUpdate);
+			}).then(
+				function(result) {
+					deferred.resolve(result);
+				},
+				function(err) {
+					deferred.reject(err);
+				}
+			);
 		} else {
 			var outdatedModules = [];
 			for(var id in hotUpdate) {
@@ -453,6 +462,9 @@ module.exports = function() {
 			// remove module from cache
 			delete installedModules[moduleId];
 
+			// when disposing there is no need to call dispose handler
+			delete outdatedDependencies[moduleId];
+
 			// remove "parents" references from all children
 			for(j = 0; j < module.children.length; j++) {
 				var child = installedModules[module.children[j]];
@@ -498,30 +510,34 @@ module.exports = function() {
 		for(moduleId in outdatedDependencies) {
 			if(Object.prototype.hasOwnProperty.call(outdatedDependencies, moduleId)) {
 				module = installedModules[moduleId];
-				moduleOutdatedDependencies = outdatedDependencies[moduleId];
-				var callbacks = [];
-				for(i = 0; i < moduleOutdatedDependencies.length; i++) {
-					dependency = moduleOutdatedDependencies[i];
-					cb = module.hot._acceptedDependencies[dependency];
-					if(callbacks.indexOf(cb) >= 0) continue;
-					callbacks.push(cb);
-				}
-				for(i = 0; i < callbacks.length; i++) {
-					cb = callbacks[i];
-					try {
-						cb(moduleOutdatedDependencies);
-					} catch(err) {
-						if(options.onErrored) {
-							options.onErrored({
-								type: "accept-errored",
-								moduleId: moduleId,
-								dependencyId: moduleOutdatedDependencies[i],
-								error: err
-							});
+				if(module) {
+					moduleOutdatedDependencies = outdatedDependencies[moduleId];
+					var callbacks = [];
+					for(i = 0; i < moduleOutdatedDependencies.length; i++) {
+						dependency = moduleOutdatedDependencies[i];
+						cb = module.hot._acceptedDependencies[dependency];
+						if(cb) {
+							if(callbacks.indexOf(cb) >= 0) continue;
+							callbacks.push(cb);
 						}
-						if(!options.ignoreErrored) {
-							if(!error)
-								error = err;
+					}
+					for(i = 0; i < callbacks.length; i++) {
+						cb = callbacks[i];
+						try {
+							cb(moduleOutdatedDependencies);
+						} catch(err) {
+							if(options.onErrored) {
+								options.onErrored({
+									type: "accept-errored",
+									moduleId: moduleId,
+									dependencyId: moduleOutdatedDependencies[i],
+									error: err
+								});
+							}
+							if(!options.ignoreErrored) {
+								if(!error)
+									error = err;
+							}
 						}
 					}
 				}
@@ -545,7 +561,8 @@ module.exports = function() {
 								type: "self-accept-error-handler-errored",
 								moduleId: moduleId,
 								error: err2,
-								orginalError: err
+								orginalError: err, // TODO remove in webpack 4
+								originalError: err
 							});
 						}
 						if(!options.ignoreErrored) {

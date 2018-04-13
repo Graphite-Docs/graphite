@@ -98,6 +98,7 @@ controls the behavior:
 |------------|-----------------------------------------------------------------|
 | `"base64"` | string: Base64 encoding of the file                             |
 | `"binary"` | string: binary string (byte `n` is `data.charCodeAt(n)`)        |
+| `"file"`   | string: path of file that will be created (nodejs only)         |
 | (default)  | buffer if available, array of 8-bit unsigned int otherwise      |
 
 `CFB.writeFile(cfb, filename, opts)` creates a file with the specified name.

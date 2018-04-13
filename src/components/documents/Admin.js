@@ -1,20 +1,14 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
-import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
-  lookupProfile,
   signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
 
-const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Admin extends Component {
@@ -99,7 +93,7 @@ export default class Admin extends Component {
     putFile("documents.json", JSON.stringify(this.state), {encrypt:true})
       .then(() => {
         console.log("Saved!");
-        Materialize.toast('Documents Deleted', 2000);
+        // Materialize.toast('Documents Deleted', 2000);
         setTimeout(this.redirect, 2000);
       })
       .catch(e => {
@@ -120,8 +114,8 @@ export default class Admin extends Component {
 
 
   render() {
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
+    const userData = loadUserData();
+    const person = new Person(userData.profile);
     return (
       <div>
       <div className="navbar-fixed toolbar">
@@ -135,14 +129,14 @@ export default class Admin extends Component {
               <li><a href="/shared-docs">Shared Files</a></li>
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
               <li><a href="/documents"><i className="material-icons blue-text text-darken-2">description</i><br />Documents</a></li>
               <li><a href="/sheets"><i className="material-icons green-text text-lighten-1">grid_on</i><br />Sheets</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt='avatar' src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>

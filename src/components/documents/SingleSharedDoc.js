@@ -1,26 +1,17 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom';
-import { Link } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile
+  handlePendingSignIn,
 } from 'blockstack';
-import update from 'immutability-helper';
-const wordcount = require("wordcount");
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+// import $ from 'jquery';
+
+const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const Quill = ReactQuill.Quill;
 const Font = ReactQuill.Quill.import('formats/font');
 Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
 ReactQuill.Quill.register(Font, true);
@@ -64,6 +55,7 @@ export default class SingleSharedDoc extends Component {
   }
 
   componentDidMount() {
+
     getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
@@ -71,15 +63,14 @@ export default class SingleSharedDoc extends Component {
          this.setState({ user: JSON.parse(fileContents || '{}').user });
          this.refresh = setInterval(() => this.getOther(), 1000);
        } else {
-         console.log("No saved files");
-
+         console.log("No docs");
        }
      })
       .catch(error => {
         console.log(error);
       });
       this.printPreview = () => {
-        if(this.state.printPreview == true) {
+        if(this.state.printPreview === true) {
           this.setState({printPreview: false});
         } else {
           this.setState({printPreview: true});
@@ -89,27 +80,26 @@ export default class SingleSharedDoc extends Component {
 
 getOther() {
   let fileID = loadUserData().username;
+  console.log(this.state.user);
   let fileString = 'shareddocs.json'
   let file = fileID.slice(0, -3) + fileString;
   const directory = '/shared/' + file;
   const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-getFile(directory, options)
- .then((fileContents) => {
-   let privateKey = loadUserData().appPrivateKey;
-    this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
-    console.log("loaded");
-    let docs = this.state.sharedFile;
-    const thisDoc = docs.find((doc) => { return doc.id == this.props.match.params.id});
-    let index = thisDoc && thisDoc.id;
-    console.log(index);
-    function findObjectIndex(doc) {
-        return doc.id == index;
-    }
-    this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex) })
- })
-  .catch(error => {
-    console.log(error);
-  });
+    getFile(directory, options)
+     .then((fileContents) => {
+       let privateKey = loadUserData().appPrivateKey;
+        this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
+        let docs = this.state.sharedFile;
+        const thisDoc = docs.find((doc) => { return doc.id == this.props.match.params.id});
+        let index = thisDoc && thisDoc.id;
+        function findObjectIndex(doc) {
+            return doc.id === index;
+        }
+        this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex) })
+     })
+      .catch(error => {
+        console.log(error);
+      });
 }
 
   handleTitleChange(e) {
@@ -147,20 +137,17 @@ getFile(directory, options)
 
       this.setState({ show: "hide" });
       this.setState({ hideButton: "hide", loading: "" })
-
     }
 
     saveNewFile() {
       putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
         .then(() => {
           console.log("Saved!");
-          this.saveNewSingleDoc()
-
+          this.saveNewSingleDoc();
         })
         .catch(e => {
           console.log("e");
           console.log(e);
-
         });
     }
 
@@ -176,35 +163,18 @@ getFile(directory, options)
           console.log("e");
           console.log(e);
         });
-    }
+      }
 
   print(){
     const curURL = window.location.href;
-    history.replaceState(history.state, '', '/');
+    window.history.replaceState(window.history.state, '', '/');
     window.print();
-    history.replaceState(history.state, '', curURL);
+    window.history.replaceState(window.history.state, '', curURL);
   }
 
   renderView() {
-    const words = wordcount(this.state.content);
     const loading = this.state.loading;
-    const save = this.state.save;
-    const autoSave = this.state.autoSave;
-    const shareModal = this.state.shareModal;
     const hideButton = this.state.hideButton;
-    const show = this.state.show;
-    var content = "<p style='text-align: center;'>" + this.state.title + "</p>" + "<div style='text-indent: 30px;'>" + this.state.content + "</div>";
-
-    var htmlString = $('<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">').html('<body>' +
-
-    content +
-
-    '</body>'
-
-    ).get().outerHTML;
-
-    var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + content + '</body></html>';
-    var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
     return(
     <div>
     <div className="navbar-fixed toolbar">
@@ -254,8 +224,6 @@ getFile(directory, options)
   }
 
   render() {
-    console.log(this.state.value);
-
     return (
       <div>
         {this.renderView()}

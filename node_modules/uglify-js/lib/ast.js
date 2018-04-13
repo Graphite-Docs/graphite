@@ -87,7 +87,7 @@ function DEFNODE(type, props, methods, base) {
     return ctor;
 };
 
-var AST_Token = DEFNODE("Token", "type value line col pos endline endcol endpos nlb comments_before file raw", {
+var AST_Token = DEFNODE("Token", "type value line col pos endline endcol endpos nlb comments_before comments_after file raw", {
 }, null);
 
 var AST_Node = DEFNODE("Node", "start end", {
@@ -165,7 +165,7 @@ function walk_body(node, visitor) {
 };
 
 var AST_Block = DEFNODE("Block", "body", {
-    $documentation: "A body of statements (usually bracketed)",
+    $documentation: "A body of statements (usually braced)",
     $propdoc: {
         body: "[AST_Statement*] an array of statements"
     },
@@ -267,11 +267,10 @@ var AST_For = DEFNODE("For", "init condition step", {
     }
 }, AST_IterationStatement);
 
-var AST_ForIn = DEFNODE("ForIn", "init name object", {
+var AST_ForIn = DEFNODE("ForIn", "init object", {
     $documentation: "A `for ... in` statement",
     $propdoc: {
         init: "[AST_Node] the `for/in` initialization code",
-        name: "[AST_SymbolRef?] the loop variable, only if `init` is AST_Var",
         object: "[AST_Node] the object that we're looping through"
     },
     _walk: function(visitor) {
@@ -309,6 +308,13 @@ var AST_Scope = DEFNODE("Scope", "variables functions uses_with uses_eval parent
         enclosed: "[SymbolDef*/S] a list of all symbol definitions that are accessed from this scope or any subscopes",
         cname: "[integer/S] current index for mangling variables (used internally by the mangler)",
     },
+    clone: function(deep) {
+        var node = this._clone(deep);
+        if (this.variables) node.variables = this.variables.clone();
+        if (this.functions) node.functions = this.functions.clone();
+        if (this.enclosed) node.enclosed = this.enclosed.slice();
+        return node;
+    }
 }, AST_Block);
 
 var AST_Toplevel = DEFNODE("Toplevel", "globals", {
@@ -683,8 +689,8 @@ var AST_Object = DEFNODE("Object", "properties", {
 var AST_ObjectProperty = DEFNODE("ObjectProperty", "key value", {
     $documentation: "Base class for literal object properties",
     $propdoc: {
-        key: "[string] the property name converted to a string for ObjectKeyVal.  For setters and getters this is an AST_SymbolAccessor.",
-        value: "[AST_Node] property value.  For setters and getters this is an AST_Accessor."
+        key: "[string|AST_SymbolAccessor] property name. For ObjectKeyVal this is a string. For getters and setters this is an AST_SymbolAccessor.",
+        value: "[AST_Node] property value.  For getters and setters this is an AST_Accessor."
     },
     _walk: function(visitor) {
         return visitor._visit(this, function(){
@@ -909,6 +915,26 @@ TreeWalker.prototype = {
             if (x instanceof AST_IterationStatement
                 || node instanceof AST_Break && x instanceof AST_Switch)
                 return x;
+        }
+    },
+    in_boolean_context: function() {
+        var self = this.self();
+        for (var i = 0, p; p = this.parent(i); i++) {
+            if (p instanceof AST_SimpleStatement
+                || p instanceof AST_Conditional && p.condition === self
+                || p instanceof AST_DWLoop && p.condition === self
+                || p instanceof AST_For && p.condition === self
+                || p instanceof AST_If && p.condition === self
+                || p instanceof AST_UnaryPrefix && p.operator == "!" && p.expression === self) {
+                return true;
+            }
+            if (p instanceof AST_Binary && (p.operator == "&&" || p.operator == "||")
+                || p instanceof AST_Conditional
+                || p.tail_node() === self) {
+                self = p;
+            } else {
+                return false;
+            }
         }
     }
 };

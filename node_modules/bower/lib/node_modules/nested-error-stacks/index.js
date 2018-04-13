@@ -3,10 +3,6 @@ var inherits = require('inherits');
 var NestedError = function (message, nested) {
     this.nested = nested;
 
-    Error.captureStackTrace(this, this.constructor);
-
-    var oldStackDescriptor = Object.getOwnPropertyDescriptor(this, 'stack');
-
     if (typeof message !== 'undefined') {
         Object.defineProperty(this, 'message', {
             value: message,
@@ -16,19 +12,34 @@ var NestedError = function (message, nested) {
         });
     }
 
-    Object.defineProperties(this, {
-        stack: {
+    Error.captureStackTrace(this, this.constructor);
+    var oldStackDescriptor = Object.getOwnPropertyDescriptor(this, 'stack');
+    var stackDescriptor = buildStackDescriptor(oldStackDescriptor, nested);
+    Object.defineProperty(this, 'stack', stackDescriptor);
+};
+
+function buildStackDescriptor(oldStackDescriptor, nested) {
+    if (oldStackDescriptor.get) {
+        return {
             get: function () {
                 var stack = oldStackDescriptor.get.call(this);
-                if (this.nested) {
-                    stack += '\nCaused By: ' + this.nested.stack;
-                }
-                return stack;
+                return buildCombinedStacks(stack, this.nested);
             }
-        }
+        };
+    } else {
+        var stack = oldStackDescriptor.value;
+        return {
+            value: buildCombinedStacks(stack, nested)
+        };
+    }
+}
 
-    });
-};
+function buildCombinedStacks(stack, nested) {
+    if (nested) {
+        stack += '\nCaused By: ' + nested.stack;
+    }
+    return stack;
+}
 
 inherits(NestedError, Error);
 NestedError.prototype.name = 'NestedError';

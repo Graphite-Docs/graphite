@@ -24,7 +24,6 @@ const avatarFallbackImage =
 const mammoth = require("mammoth");
 const str2ab = require("string-to-arraybuffer");
 const rtfToHTML = require('./rtf-to-html.js');
-const parse = require('rtf-parser');
 const Papa = require('papaparse');
 
 export default class SingleVaultFile extends Component {
@@ -45,6 +44,7 @@ export default class SingleVaultFile extends Component {
       value: [],
       sheets: [],
       contacts: [],
+      confirmAdd: false,
       file: "",
       name: "",
       link: "",
@@ -61,6 +61,7 @@ export default class SingleVaultFile extends Component {
       shareModal: "hide",
       receiverID: "",
       shareFile: {},
+      singleDoc: {},
       shareFileIndex: [],
       pubKey: ""
     };
@@ -79,6 +80,7 @@ export default class SingleVaultFile extends Component {
     this.hideModal = this.hideModal.bind(this);
     this.shareFile = this.shareFile.bind(this);
     this.sharedInfo = this.sharedInfo.bind(this);
+    this.saveNewFileTwo = this.saveNewFileTwo.bind(this);
   }
 
   componentDidMount() {
@@ -94,7 +96,6 @@ export default class SingleVaultFile extends Component {
       .catch(error => {
         console.log(error);
       });
-
 
     getFile(this.props.match.params.id + ".json", { decrypt: true })
       .then(file => {
@@ -166,6 +167,12 @@ export default class SingleVaultFile extends Component {
       });
   }
 
+  componentDidUpdate() {
+    if(this.state.confirmAdd == true) {
+      this.sharedInfo();
+    }
+  }
+
   onDocumentComplete(pages) {
     this.setState({ page: 1, pages });
   }
@@ -190,7 +197,7 @@ export default class SingleVaultFile extends Component {
   }
 
   handleaddItem() {
-    getFile("documents.json", { decrypt: true })
+    getFile("documentscollection.json", { decrypt: true })
       .then(fileContents => {
         if (fileContents) {
           this.setState({ value: JSON.parse(fileContents || "{}").value });
@@ -233,12 +240,16 @@ export default class SingleVaultFile extends Component {
     object.content = this.state.content;
     object.id = rando;
     object.created = month + "/" + day + "/" + year;
+    const objectTwo = {}
+    objectTwo.title = object.title;
+    objectTwo.id = object.id;
+    objectTwo.created = object.created;
+    objectTwo.content = object.content;
 
-    this.setState({ value: [...this.state.value, object] });
+    this.setState({ value: [...this.state.value, object], singleDoc: objectTwo });
     this.setState({ loading: "" });
-    // this.setState({ confirm: true, cancel: false });
+    console.log(this.state.singleDoc)
     setTimeout(this.saveNewFile, 500);
-    // setTimeout(this.handleGo, 700);
   }
 
   handleaddTwoSheet() {
@@ -258,13 +269,26 @@ export default class SingleVaultFile extends Component {
     this.setState({ sheets: [...this.state.sheets, object] });
     this.setState({ loading: "" });
     console.log("adding new sheet");
-    // this.setState({ confirm: true, cancel: false });
     setTimeout(this.saveNewSheetFile, 500);
-    // setTimeout(this.handleGo, 700);
   }
 
   saveNewFile() {
-    putFile("documents.json", JSON.stringify(this.state), { encrypt: true })
+    putFile("documentscollection.json", JSON.stringify(this.state), { encrypt: true })
+      .then(() => {
+        console.log("Saved!");
+        this.saveNewFileTwo();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
+  saveNewFileTwo() {
+    let singleDoc = this.state.singleDoc;
+    const id = singleDoc.id;
+    const fullFile = '/documents/' + id + '.json'
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
       .then(() => {
         console.log("Saved!");
         window.location.replace("/documents");
@@ -272,7 +296,6 @@ export default class SingleVaultFile extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-
       });
   }
 
@@ -295,6 +318,7 @@ export default class SingleVaultFile extends Component {
   }
 
   sharedInfo(){
+    this.setState({ confirmAdd: false });
     const user = this.state.receiverID;
     const userShort = user.slice(0, -3);
     const fileName = 'sharedvault.json'
@@ -311,7 +335,7 @@ export default class SingleVaultFile extends Component {
         })
         .catch(error => {
           console.log("No key: " + error);
-          Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+          window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
           this.setState({ shareModal: "hide", loading: "hide", show: "" });
         });
   }
@@ -358,7 +382,7 @@ export default class SingleVaultFile extends Component {
         const year = today.getFullYear();
         object.uploaded = month + '/' + day + '/' + year;
         object.file = file;
-        object.link = event.target.result;
+        object.link = this.state.link;
         object.name = file.name;
         object.size = file.size;
         object.type = file.type;
@@ -383,9 +407,7 @@ export default class SingleVaultFile extends Component {
     const file = userShort + fileName;
     putFile(file, JSON.stringify(this.state.shareFileIndex), {encrypt: true})
       .then(() => {
-        // console.log("Step Three: File Shared: " + this.state.shareFileIndex);
-        // this.setState({ shareModal: "hide", loading: "hide", show: "" });
-        // Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+        console.log("Step Three: File Shared: " + this.state.shareFileIndex);
       })
       .catch(e => {
         console.log("e");
@@ -396,7 +418,7 @@ export default class SingleVaultFile extends Component {
           console.log(userShort + this.props.match.params.id + '.json')
           // console.log("Step Four: File Shared: " + this.state.shareFile);
           this.setState({ shareModal: "hide", loading: "hide", show: "" });
-          Materialize.toast('File shared with ' + this.state.receiverID, 4000);
+          window.Materialize.toast('File shared with ' + this.state.receiverID, 4000);
         })
         .catch(e => {
           console.log("e");
@@ -579,11 +601,8 @@ export default class SingleVaultFile extends Component {
           <div id="modal1" className="modal bottom-sheet">
             <div className="modal-content">
               <h4>Share</h4>
-              <p>Enter the Blockstack user ID of the person to share with.</p>
-              <p>Or select from your contacts.</p>
-              <input className="share-input white grey-text" placeholder="Ex: JohnnyCash.id" type="text" value ={this.state.receiverID} onChange={this.handleIDChange} />
+              <p>Select from your contacts.</p>
               <div className={show}>
-                <button onClick={this.sharedInfo} className="btn black white-text">Share</button>
                 <button onClick={this.hideModal} className="btn grey">Cancel</button>
               </div>
               <div className={show}>
@@ -593,12 +612,10 @@ export default class SingleVaultFile extends Component {
                   {contacts.slice(0).reverse().map(contact => {
                       return (
                         <li key={contact.contact}className="collection-item avatar">
-                          <img src={contact.img} alt="avatar" className="circle" />
+                          <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
+                          <p><img src={contact.img} alt="avatar" className="circle" /></p>
                           <span className="title black-text">{contact.contact}</span>
-                          <div>
-                            <a onClick={() => this.setState({ receiverID: contact.contact })} className="secondary-content"><i className="blue-text text-darken-2 material-icons">add</i></a>
-                          </div>
-
+                          </a>
                         </li>
                       )
                     })

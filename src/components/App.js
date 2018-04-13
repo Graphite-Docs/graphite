@@ -1,15 +1,13 @@
-import React, { Component, Link } from 'react';
+import React, { Component } from 'react';
 import { BrowserRouter, Route } from 'react-router-dom';
-import { HashRouter } from 'react-router-dom';
 import Profile from './Profile';
-import Signin from './Signin';
-import Header from './Header';
 import AppPage from './AppPage';
 import Main from './documents/Main';
 import Doc from './documents/Document';
 import TestDoc from './documents/TestDoc';
 import SingleDoc from './documents/SingleDoc';
 import DeleteDoc from './documents/DeleteDoc';
+import Blog from './documents/Blog';
 import SharedCollection from './documents/SharedCollection';
 import SentCollection from './documents/SentCollection';
 import SingleSharedDoc from './documents/SingleSharedDoc';
@@ -24,7 +22,6 @@ import SharedSheetsCollection from './sheets/SharedSheetsCollection';
 import SentSheetsCollection from './sheets/SentSheetsCollection';
 import SingleSharedSheet from './sheets/SingleSharedSheet';
 import MainContacts from './messages/MainContacts';
-import Contacts from './messages/Contacts';
 import Conversations from './messages/Conversations';
 import ContactsProfile from './messages/ContactsProfile';
 import SingleConversation from './messages/SingleConversation';
@@ -36,22 +33,20 @@ import DeleteVaultFile from './vault/DeleteVaultFile';
 import SharedVault from './vault/SharedVault';
 import SharedVaultCollection from './vault/SharedVaultCollection';
 import SingleSharedFile from './vault/SingleSharedFile';
+import MainProject from './projects/MainProject';
+import SingleProject from './projects/SingleProject';
 import Export from './Export';
 import PublicDoc from './PublicDoc';
 import {
   isSignInPending,
-  isUserSignedIn,
   loadUserData,
   redirectToSignIn,
   handlePendingSignIn,
   signUserOut,
 } from 'blockstack';
+const Config = require('Config');
 
 export default class App extends Component {
-
-  constructor(props) {
-  	super(props);
-  }
 
   handleSignIn(e) {
     e.preventDefault();
@@ -64,7 +59,9 @@ export default class App extends Component {
   }
 
   render() {
-    console.log(loadUserData())
+    console.log(loadUserData());
+    console.log('Build Date: ', Config.BUILD_DATE_STAMP)
+    console.log('Build Time: ', Config.BUILD_TIME_STAMP)
     return (
       <div>
       <BrowserRouter>
@@ -72,6 +69,7 @@ export default class App extends Component {
 
             <Route exact path="/" component={AppPage} />
             <Route exact path="/documents" component={Main} />
+            <Route exact path="/documents/blog" component={Blog} />
             <Route exact path="/test" component={TestDoc} />
             <Route exact path="/documents/doc/new" component={Doc} />
             <Route exact path="/documents/doc/:id" component={SingleDoc} />
@@ -104,6 +102,8 @@ export default class App extends Component {
             <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
             <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
             <Route exact path="/publicdoc" component={PublicDoc} />
+            <Route exact path="/projects" component={MainProject} />
+            <Route exact path="/projects/:id" component={SingleProject} />
           </div>
         </BrowserRouter>
       </div>

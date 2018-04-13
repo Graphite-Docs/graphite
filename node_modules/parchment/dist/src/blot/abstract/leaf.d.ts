@@ -4,7 +4,7 @@ import * as Registry from '../../registry';
 declare class LeafBlot extends ShadowBlot implements Leaf {
     static scope: Registry.Scope;
     static value(domNode: Node): any;
-    index(node: any, offset: any): number;
+    index(node: Node, offset: number): number;
     position(index: number, inclusive?: boolean): [Node, number];
     value(): any;
 }

@@ -1,5 +1,4 @@
-'use strict'
-const parse = require('rtf-parser')
+const parse = require('../../utils/rtf-parser')
 
 module.exports = rtfToHTML
 module.exports = asStream
@@ -68,22 +67,22 @@ ${content}
 `
 }
 
-function font (ft) {
-  const name = ft.name.replace(/-\w+$/,'')
-  const family = genericFontMap[ft.family]
-  if (name === 'ZapfDingbatsITC') return ''
-  return 'font-family: ' + name + (family ? `, ${family}` : '')
-}
+// function font (ft) {
+//   const name = ft.name.replace(/-\w+$/,'')
+//   const family = genericFontMap[ft.family]
+//   if (name === 'ZapfDingbatsITC') return ''
+//   return 'font-family: ' + name + (family ? `, ${family}` : '')
+// }
 
-const genericFontMap = {
-  roman: 'serif',
-  swiss: 'sans-serif',
-  script: 'cursive',
-  decor: 'fantasy',
-  modern: 'sans-serif',
-  tech: 'monospace',
-  bidi: 'serif'
-}
+// const genericFontMap = {
+//   roman: 'serif',
+//   swiss: 'sans-serif',
+//   script: 'cursive',
+//   decor: 'fantasy',
+//   modern: 'sans-serif',
+//   tech: 'monospace',
+//   bidi: 'serif'
+// }
 
 function colorEq (aa, bb) {
   return aa.red === bb.red && aa.blue === bb.blue && aa.green === bb.green

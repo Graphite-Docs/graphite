@@ -1,8 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
-import Profile from '../Profile';
 import Signin from '../Signin';
-import Header from '../Header';
 import Contacts from './Contacts';
 import {
   isSignInPending,
@@ -13,10 +10,6 @@ import {
 } from 'blockstack';
 
 export default class MainContacts extends Component {
-
-  constructor(props) {
-  	super(props);
-  }
 
   handleSignIn(e) {
     e.preventDefault();

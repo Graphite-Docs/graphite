@@ -1,3 +1,83 @@
+## 5.5.3 (2018-03-08)
+
+### Bug fixes
+
+A _second_ republish of the code in 5.5.1, this time with yarn, to hopefully get valid timestamps.
+
+## 5.5.2 (2018-03-08)
+
+### Bug fixes
+
+A republish of the code in 5.5.1 in an attempt to solve an issue with the file timestamps in the npm package being 0.
+
+## 5.5.2 (2018-03-08)
+
+### Bug fixes
+
+A republish of the code in 5.5.1 in an attempt to solve an issue with the file timestamps in the npm package being 0.
+
+## 5.5.1 (2018-03-06)
+
+### Bug fixes
+
+Fix regression in walker causing property values in object patterns to be walked as expressions.
+
+Fix misleading error message for octal escapes in template strings.
+
+## 5.5.0 (2018-02-27)
+
+### Bug fixes
+
+Support object spread in the AST walker.
+
+### New features
+
+The identifier character categorization is now based on Unicode version 10.
+
+Acorn will now validate the content of regular expressions, including new ES9 features.
+
+## 5.4.1 (2018-02-02)
+
+### Bug fixes
+
+5.4.0 somehow accidentally included an old version of walk.js.
+
+## 5.4.0 (2018-02-01)
+
+### Bug fixes
+
+Disallow duplicate or escaped flags on regular expressions.
+
+Disallow octal escapes in strings in strict mode.
+
+### New features
+
+Add support for async iteration.
+
+Add support for object spread and rest.
+
+## 5.3.0 (2017-12-28)
+
+### Bug fixes
+
+Fix parsing of floating point literals with leading zeroes in loose mode.
+
+Allow duplicate property names in object patterns.
+
+Don't allow static class methods named `prototype`.
+
+Disallow async functions directly under `if` or `else`.
+
+Parse right-hand-side of `for`/`of` as an assignment expression.
+
+Stricter parsing of `for`/`in`.
+
+Don't allow unicode escapes in contextual keywords.
+
+### New features
+
+Parsing class members was factored into smaller methods to allow plugins to hook into it.
+
 ## 5.2.1 (2017-10-30)
 
 ### Bug fixes

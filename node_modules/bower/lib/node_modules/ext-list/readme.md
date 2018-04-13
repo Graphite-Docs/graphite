@@ -13,7 +13,7 @@ $ npm install --save ext-list
 ## Usage
 
 ```js
-var extList = require('ext-list');
+const extList = require('ext-list');
 
 extList();
 //=> {'123': 'application/vnd.lotus-1-2-3', ez: 'application/andrew-inset', aw: 'application/applixware', ...}

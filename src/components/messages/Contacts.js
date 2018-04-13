@@ -1,8 +1,5 @@
 import React, { Component } from "react";
 import { Link } from "react-router-dom";
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
@@ -10,12 +7,11 @@ import {
   getFile,
   putFile,
   lookupProfile,
-  signUserOut
+  signUserOut,
+  handlePendingSignIn,
 } from "blockstack";
-import SingleConversation from './SingleConversation';
 import axios from 'axios';
 
-const blockstack = require("blockstack");
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -51,6 +47,8 @@ export default class Contacts extends Component {
     this.handleNewContact = this.handleNewContact.bind(this);
     this.newContact = this.newContact.bind(this);
     this.filterList = this.filterList.bind(this);
+    this.handleManualAdd = this.handleManualAdd.bind(this);
+    this.manualAdd = this.manualAdd.bind(this);
   }
 
   componentWillMount() {
@@ -89,7 +87,7 @@ export default class Contacts extends Component {
   }
 
   componentDidUpdate() {
-    if(this.state.confirmAdd == true) {
+    if(this.state.confirmAdd === true) {
       this.handleaddItem();
     }
   }
@@ -100,30 +98,27 @@ export default class Contacts extends Component {
 
   handleaddItem() {
     console.log("adding...");
-    this.setState({ showResults: "hide", loading: "", show: "hide", confirmAdd: false })
-    // let addContact = this.state.addContact
-    // console.log(this.state.addContact + '.id');
-    lookupProfile(this.state.addContact + '.id', "https://core.blockstack.org/v1/names")
-      .then((profile) => {
-        let image = profile.image;
-        console.log(profile);
-        if(profile.image){
-          this.setState({newContactImg: image[0].contentUrl})
+    const object = {};
+    object.contact = this.state.addContact + '.id';
+    object.img = this.state.newContactImg;
+    let link = 'https://core.blockstack.org/v1/names/' + object.contact;
+    axios
+      .get(
+        link
+      )
+      .then(res => {
+        if(res.data.zonefile.indexOf('https://blockstack.s3.amazonaws.com/') >= 0){
+          window.Materialize.toast(object.contact + " is a legacy Blockstack ID and cannot access Graphite.", 3000);
         } else {
-          this.setState({ newContactImg: avatarFallbackImage })
+          this.setState({ showResults: "hide", loading: "", show: "hide", confirmAdd: false })
+          this.setState({ contacts: [...this.state.contacts, object], add: false });
+          this.setState({ filteredContacts: this.state.contacts });
+          setTimeout(this.saveNewFile, 500);
         }
-      }).then(() => {
-        const object = {};
-        object.contact = this.state.addContact + '.id';
-        object.img = this.state.newContactImg;
-        console.log(object);
-        this.setState({ contacts: [...this.state.contacts, object], add: false });
-        this.setState({ filteredContacts: [...this.state.contacts, object], add: false });
-        setTimeout(this.saveNewFile, 500);
       })
-      .catch((error) => {
-        console.log('could not resolve profile')
-      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
   saveNewFile() {
@@ -157,6 +152,28 @@ export default class Contacts extends Component {
       });
   }
 
+  handleManualAdd(e) {
+    this.setState({ newContact: e.target.value })
+  }
+
+  manualAdd() {
+    lookupProfile(this.state.newContact, "https://core.blockstack.org/v1/names")
+      .then((profile) => {
+
+          const object = {};
+          object.contact = this.state.newContact;
+          // object.img = this.state.newContactImg;
+          this.setState({ contacts: [...this.state.contacts, object], add: false });
+          this.setState({ filteredContacts: this.state.contacts });
+          setTimeout(this.saveNewFile, 500);
+      })
+      .catch((error) => {
+        console.log('could not resolve profile')
+        window.Materialize.toast("That ID was not found. Please make sure you are typing the full ID.", 3000);
+      })
+
+  }
+
   filterList(event){
     var updatedList = this.state.contacts;
     updatedList = updatedList.filter(function(item){
@@ -169,32 +186,47 @@ export default class Contacts extends Component {
 
   renderView() {
     let contacts = this.state.filteredContacts;
-    console.log(loadUserData().username);
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     let show = this.state.show;
     let showResults = "";
     let loading = this.state.loading;
-    let results = this.state.results;
+    let results;
+    if(this.state.results !=null) {
+      results = this.state.results;
+    } else {
+      results = [];
+    }
     let newContact = this.state.newContact;
     let showFirstLink = this.state.showFirstLink;
-    let showSecondLink = this.state.showSecondLink;
-
     if(newContact.length < 1) {
       showResults = "hide";
     } else {
       showResults = "";
     }
 
-    if(this.state.add == true){
+    if(this.state.add === true){
     return (
       <div className="add-contact">
         <h3 className="center-align">Add a new contact</h3>
+
+        {/*<div className="card card-add">
+          <div className="add-new">
+            <div>
+              <p>If you know your contact's Blockstack ID (or if it's a new, .personal.id), add it here.</p>
+              <input type="text" placeholder="Ex: Johnny Cash" onChange={this.handleManualAdd} />
+              <button onClick={this.manualAdd} className="btn black">Add Contact</button>
+            </div>
+          </div>
+        </div>*/}
+
         <div className="card card-add">
           <div className="add-new">
-            <label>Search for a Contact</label>
-            <input type="text" placeholder="Ex: Johnny Cash" onChange={this.handleNewContact} />
+            <div>
+              <p>Search for a contact</p>
+              <label>Search</label>
+              <input type="text" placeholder="Ex: Johnny Cash" onChange={this.handleNewContact} />
+            </div>
             <div className={showResults}>
+
             <ul className="collection">
             {results.map(result => {
               let profile = result.profile;
@@ -213,16 +245,11 @@ export default class Contacts extends Component {
                 return (
                   <div key={result.username} className={showFirstLink}>
                   <a className="contact-add" onClick={() => this.setState({ addContact: result.username, confirmAdd: true })}>
-                  <li className="collection-item avatar">
-                    <img src={imageLink} alt="avatar" className="circle" />
-                    <span className="title">{result.profile.name}</span>
-                    <p>{result.username}
-                    </p>
-
-                      <a className="secondary-content"></a>
-
-
-                  </li>
+                    <li className="collection-item avatar">
+                      <img src={imageLink} alt="avatar" className="circle" />
+                      <span className="title">{result.profile.name}</span>
+                      <p>{result.username}</p>
+                    </li>
                   </a>
                   </div>
                 )
@@ -309,8 +336,8 @@ export default class Contacts extends Component {
 
   render(){
     console.log("Contact: " + this.state.addContact);
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
+    const userData = loadUserData();
+    const person = new Person(userData.profile);
     return(
       <div>
       <div className="navbar-fixed toolbar">
@@ -322,7 +349,7 @@ export default class Contacts extends Component {
             <ul id="dropdown1" className="dropdown-content">
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
-              <li><a href="#" onClick={ this.handleSignOut }>Sign out</a></li>
+              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
             </ul>
             <ul id="dropdown2" className="dropdown-content">
             <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -332,7 +359,7 @@ export default class Contacts extends Component {
             <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
             </ul>
               <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
             </ul>
           </div>
         </nav>
@@ -342,6 +369,3 @@ export default class Contacts extends Component {
     )
   }
 }
-// <div className="center-align">
-//   <img className="responsive-img circle profile-img" src={contact.img} alt="profile" />
-// </div>

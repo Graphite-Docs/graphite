@@ -1,22 +1,14 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
-import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
+import { Link } from 'react-router-dom';
 import {
-  isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
   lookupProfile,
   signUserOut,
 } from 'blockstack';
 
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedSheetsCollection extends Component {
@@ -44,14 +36,6 @@ export default class SharedSheetsCollection extends Component {
       }
 
 
-    }
-
-    componentWillMount() {
-      if (isSignInPending()) {
-        handlePendingSignIn().then(userData => {
-          window.location = window.location.origin;
-        });
-      }
     }
 
     componentDidMount() {
@@ -119,10 +103,6 @@ export default class SharedSheetsCollection extends Component {
 
   renderView() {
     let sheets = this.state.shareFile;
-    const loading = this.state.loading;
-
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const img = this.state.img;
     if (sheets.length > 0) {
       return (
@@ -198,10 +178,6 @@ export default class SharedSheetsCollection extends Component {
 
 
   render() {
-    const loading = this.state.loading;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
-    const img = this.state.img;
 
     return (
       <div>

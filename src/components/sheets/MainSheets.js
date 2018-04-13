@@ -1,7 +1,5 @@
-import React, { Component, Link } from 'react';
-import Profile from '../Profile';
+import React, { Component } from 'react';
 import Signin from '../Signin';
-import Header from '../Header';
 import SheetsCollections from './SheetsCollections';
 import {
   isSignInPending,
@@ -12,10 +10,6 @@ import {
 } from 'blockstack';
 
 export default class MainSheets extends Component {
-
-  constructor(props) {
-  	super(props);
-  }
 
   handleSignIn(e) {
     e.preventDefault();

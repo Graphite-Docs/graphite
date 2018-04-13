@@ -24,7 +24,6 @@ const avatarFallbackImage =
 const mammoth = require("mammoth");
 const str2ab = require("string-to-arraybuffer");
 const rtfToHTML = require('./rtf-to-html.js');
-const parse = require('rtf-parser');
 const Papa = require('papaparse');
 
 export default class SingleSharedFile extends Component {

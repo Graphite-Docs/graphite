@@ -1,32 +1,13 @@
 import React, { Component } from "react";
-import ReactDOM from 'react-dom';
-import { Link } from 'react-router-dom';
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
-  isSignInPending,
   loadUserData,
-  Person,
   getFile,
-  putFile,
-  lookupProfile
+  putFile
 } from 'blockstack';
 import HotTable from 'react-handsontable';
-import update from 'immutability-helper';
-import {CSVLink, CSVDownload} from 'react-csv';
-const formula = require('excel-formula');
-const wordcount = require("wordcount");
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const Quill = ReactQuill.Quill;
-const Font = ReactQuill.Quill.import('formats/font');
-Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
 
 export default class SingleSharedSheet extends Component {
   constructor(props) {
@@ -59,14 +40,6 @@ export default class SingleSharedSheet extends Component {
     this.saveNewFile = this.saveNewFile.bind(this);
   }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
-    }
-  }
-
   componentDidMount() {
     getFile("spread.json", {decrypt: true})
      .then((fileContents) => {
@@ -82,7 +55,7 @@ export default class SingleSharedSheet extends Component {
         console.log(error);
       });
       this.printPreview = () => {
-        if(this.state.printPreview == true) {
+        if(this.state.printPreview === true) {
           this.setState({printPreview: false});
         } else {
           this.setState({printPreview: true});
@@ -165,20 +138,12 @@ getOther() {
 
   print(){
     const curURL = window.location.href;
-    history.replaceState(history.state, '', '/');
+    window.history.replaceState(window.history.state, '', '/');
     window.print();
-    history.replaceState(history.state, '', curURL);
+    window.history.replaceState(window.history.state, '', curURL);
   }
 
   renderView() {
-    let allSheets = this.state.shareFile;
-    const loading = this.state.loading;
-    const save = this.state.save;
-    const autoSave = this.state.autoSave;
-    const shareModal = this.state.shareModal;
-    const hideButton = this.state.hideButton;
-    const show = this.state.show;
-
 
     return(
     <div>
@@ -207,7 +172,6 @@ getOther() {
           rowHeights: 30,
           minCols: 26,
           minRows: 100,
-          contextMenu: true,
           formulas: true,
           columnSorting: true,
           contextMenu: true,
@@ -235,17 +199,3 @@ getOther() {
     );
   }
 }
-
-// <div className={loading}>
-//   <div className="preloader-wrapper small active">
-//       <div className="spinner-layer spinner-green-only">
-//         <div className="circle-clipper left">
-//           <div className="circle"></div>
-//         </div><div className="gap-patch">
-//           <div className="circle"></div>
-//         </div><div className="circle-clipper right">
-//           <div className="circle"></div>
-//         </div>
-//       </div>
-//     </div>
-//   </div>

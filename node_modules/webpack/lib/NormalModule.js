@@ -34,12 +34,13 @@ function asString(buf) {
 
 function contextify(context, request) {
 	return request.split("!").map(function(r) {
-		let rp = path.relative(context, r);
+		const splitPath = r.split("?");
+		splitPath[0] = path.relative(context, splitPath[0]);
 		if(path.sep === "\\")
-			rp = rp.replace(/\\/g, "/");
-		if(rp.indexOf("../") !== 0)
-			rp = "./" + rp;
-		return rp;
+			splitPath[0] = splitPath[0].replace(/\\/g, "/");
+		if(splitPath[0].indexOf("../") !== 0)
+			splitPath[0] = "./" + splitPath[0];
+		return splitPath.join("?");
 	}).join("!");
 }
 
@@ -53,6 +54,8 @@ class NonErrorEmittedError extends WebpackError {
 		Error.captureStackTrace(this, this.constructor);
 	}
 }
+
+const dependencyTemplatesHashMap = new WeakMap();
 
 class NormalModule extends Module {
 
@@ -224,6 +227,10 @@ class NormalModule extends Module {
 		if(typeof rule === "string") {
 			return content.indexOf(rule) === 0;
 		}
+
+		if(typeof rule === "function") {
+			return rule(content);
+		}
 		// we assume rule is a regexp
 		return rule.test(content);
 	}
@@ -301,9 +308,11 @@ class NormalModule extends Module {
 		});
 	}
 
-	getHashDigest() {
+	getHashDigest(dependencyTemplates) {
+		let dtHash = dependencyTemplatesHashMap.get("hash");
 		const hash = crypto.createHash("md5");
 		this.updateHash(hash);
+		hash.update(`${dtHash}`);
 		return hash.digest("hex");
 	}
 
@@ -384,9 +393,16 @@ class NormalModule extends Module {
 		 * These will contain the variable name and its expression.
 		 * The name will be added as a paramter in a IIFE the expression as its value.
 		 */
-		const vars = block.variables.map((variable) => this.sourceVariables(
-				variable, availableVars, dependencyTemplates, outputOptions, requestShortener))
-			.filter(Boolean);
+		const vars = block.variables.reduce((result, value) => {
+			const variable = this.sourceVariables(
+				value, availableVars, dependencyTemplates, outputOptions, requestShortener);
+
+			if(variable) {
+				result.push(variable);
+			}
+
+			return result;
+		}, []);
 
 		/**
 		 * if we actually have variables
@@ -412,15 +428,22 @@ class NormalModule extends Module {
 			const injectionVariableChunks = this.splitVariablesInUniqueNamedChunks(vars);
 
 			// create all the beginnings of IIFEs
-			const functionWrapperStarts = injectionVariableChunks.map((variableChunk) => variableChunk.map(variable => variable.name))
-				.map(names => this.variableInjectionFunctionWrapperStartCode(names));
+			const functionWrapperStarts = injectionVariableChunks.map((variableChunk) => {
+				return this.variableInjectionFunctionWrapperStartCode(
+					variableChunk.map(variable => variable.name)
+				);
+			});
 
 			// and all the ends
-			const functionWrapperEnds = injectionVariableChunks.map((variableChunk) => variableChunk.map(variable => variable.expression))
-				.map(expressions => this.variableInjectionFunctionWrapperEndCode(expressions, block));
+			const functionWrapperEnds = injectionVariableChunks.map((variableChunk) => {
+				return this.variableInjectionFunctionWrapperEndCode(
+					variableChunk.map(variable => variable.expression), block
+				);
+			});
 
 			// join them to one big string
 			const varStartCode = functionWrapperStarts.join("");
+
 			// reverse the ends first before joining them, as the last added must be the inner most
 			const varEndCode = functionWrapperEnds.reverse().join("");
 
@@ -432,12 +455,21 @@ class NormalModule extends Module {
 				source.insert(end + 0.5, "\n/* WEBPACK VAR INJECTION */" + varEndCode);
 			}
 		}
-		block.blocks.forEach((block) => this.sourceBlock(
-			block, availableVars.concat(vars), dependencyTemplates, source, outputOptions, requestShortener));
+
+		block.blocks.forEach((block) =>
+			this.sourceBlock(
+				block,
+				availableVars.concat(vars),
+				dependencyTemplates,
+				source,
+				outputOptions,
+				requestShortener
+			)
+		);
 	}
 
 	source(dependencyTemplates, outputOptions, requestShortener) {
-		const hashDigest = this.getHashDigest();
+		const hashDigest = this.getHashDigest(dependencyTemplates);
 		if(this._cachedSource && this._cachedSource.hash === hashDigest) {
 			return this._cachedSource.source;
 		}

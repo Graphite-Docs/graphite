@@ -1,22 +1,17 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
   lookupProfile,
   signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
 
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedCollection extends Component {
@@ -54,7 +49,7 @@ export default class SharedCollection extends Component {
 
   componentDidMount() {
     this.setState({ user: this.props.match.params.id });
-    getFile("documents.json", {decrypt: true})
+    getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
          this.setState({ value: JSON.parse(fileContents || '{}').value });
@@ -151,9 +146,6 @@ export default class SharedCollection extends Component {
 
   renderView() {
     let docs = this.state.docs;
-    const loading = this.state.loading;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const img = this.state.img;
     if (docs.length > 0) {
       return (
@@ -234,18 +226,12 @@ export default class SharedCollection extends Component {
 
   render() {
     console.log(this.state.docs);
-    let docs = this.state.docs;
-    const loading = this.state.loading;
     const link = '/documents/doc/' + this.state.tempDocId;
     if (this.state.redirect) {
       return <Redirect push to={link} />;
     } else {
       console.log("No redirect");
     }
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
-    const img = this.state.img;
-
     return (
       <div>
         {this.renderView()}

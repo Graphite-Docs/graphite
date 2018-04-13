@@ -1,6 +1,7 @@
 var fs   = require('fs') 
 var path = require('path')
 var resolvers = require('./resolvers')
+var NestedError = require('nested-error-stacks')
 
 'use strict';
 
@@ -10,7 +11,7 @@ function requireg(module) {
   try {
     return require(resolve(module))
   } catch (e) {
-    throw new Error("Cannot find global module '"+ module +"'")
+    throw new NestedError("Could not require module '"+ module +"'", e)
   }
 }
 

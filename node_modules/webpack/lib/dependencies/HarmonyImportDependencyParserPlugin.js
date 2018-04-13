@@ -13,6 +13,7 @@ const HarmonyModulesHelpers = require("./HarmonyModulesHelpers");
 module.exports = class HarmonyImportDependencyParserPlugin {
 	constructor(moduleOptions) {
 		this.strictExportPresence = moduleOptions.strictExportPresence;
+		this.strictThisContextOnImports = moduleOptions.strictThisContextOnImports;
 	}
 
 	apply(parser) {
@@ -52,10 +53,31 @@ module.exports = class HarmonyImportDependencyParserPlugin {
 			parser.state.current.addDependency(dep);
 			return true;
 		});
+		if(this.strictThisContextOnImports) {
+			// only in case when we strictly follow the spec we need a special case here
+			parser.plugin("call imported var.*", (expr) => {
+				if(expr.callee.type !== "MemberExpression") return;
+				if(expr.callee.object.type !== "Identifier") return;
+				const name = expr.callee.object.name;
+				const settings = parser.state.harmonySpecifier[`$${name}`];
+				if(settings[2] !== null)
+					return false;
+				const dep = new HarmonyImportSpecifierDependency(settings[0], settings[1], expr.callee.property.name || expr.callee.property.value, name, expr.callee.range, this.strictExportPresence);
+				dep.shorthand = parser.scope.inShorthand;
+				dep.directImport = false;
+				dep.namespaceObjectAsContext = true;
+				dep.loc = expr.callee.loc;
+				parser.state.current.addDependency(dep);
+				if(expr.arguments)
+					parser.walkExpressions(expr.arguments);
+				return true;
+			});
+		}
 		parser.plugin("call imported var", (expr) => {
 			const args = expr.arguments;
 			const fullExpr = expr;
 			expr = expr.callee;
+			if(expr.type !== "Identifier") return;
 			const name = expr.name;
 			const settings = parser.state.harmonySpecifier[`$${name}`];
 			const dep = new HarmonyImportSpecifierDependency(settings[0], settings[1], settings[2], name, expr.range, this.strictExportPresence);

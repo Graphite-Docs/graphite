@@ -1,22 +1,13 @@
 import React, { Component } from "react";
-import { Link, Route, withRouter} from 'react-router-dom';
-import { Redirect } from 'react-router';
-import Profile from "../Profile";
-import Signin from "../Signin";
-import Header from "../Header";
 import {
   isSignInPending,
-  loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile,
   signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
 import update from 'immutability-helper';
-const blockstack = require("blockstack");
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SentCollection extends Component {
@@ -57,12 +48,10 @@ export default class SentCollection extends Component {
 
   componentDidMount() {
     const user = this.props.match.params.id;
-    const userShort = user.slice(0, -3);
     const fileName = 'shareddocs.json'
-    const file = userShort + fileName;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
-    getFile('key.json', options, {decrypt: false})
+    getFile('key.json', options)
       .then((file) => {
         this.setState({ pubKey: JSON.parse(file)})
         console.log("Step One: PubKey Loaded");
@@ -100,10 +89,10 @@ export default class SentCollection extends Component {
     this.deleteShareDoc = () => {
       this.setState({deleteId: ""})
       let docs = this.state.docs;
-      const thisDoc = docs.find((doc) => { return doc.id == this.state.deleteId});
+      const thisDoc = docs.find((doc) => { return doc.id === this.state.deleteId});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
-        return doc.id == index;
+        return doc.id === index;
       }
       let deleteIndex = docs.findIndex(findObjectIndex)
       let updatedDoc = update(this.state.docs, {$splice: [[deleteIndex, 1, ]]})
@@ -120,7 +109,7 @@ export default class SentCollection extends Component {
       const data = this.state.docs;
       const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
       const directory = '/shared/' + file;
-      putFile(directory, encryptedData, {encrypt: false})
+      putFile(directory, encryptedData)
         .then(() => {
           const user = this.props.match.params.id;
           const userShort = user.slice(0, -3);
@@ -128,7 +117,7 @@ export default class SentCollection extends Component {
           const file = userShort + fileName;
           putFile(file, JSON.stringify(this.state.docs), {encrypt: true})
             .then(() => {
-              Materialize.toast('Document no longer shared', 3000);
+              window.Materialize.toast('Document no longer shared', 3000);
             })
             .catch(e => {
               console.log(e);
@@ -148,11 +137,8 @@ export default class SentCollection extends Component {
   renderView() {
 
     let docs = this.state.docs;
-    const loading = this.state.loading;
-    const userData = blockstack.loadUserData();
-    const person = new blockstack.Person(userData.profile);
     const img = this.state.img;
-    if(this.state.deleteId != "") {
+    if(this.state.deleteId !== "") {
       this.deleteShareDoc();
     }
     if (docs.length > 0) {
