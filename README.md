@@ -21,8 +21,8 @@ Graphite is open source and welcomes new issues, feature requests, and contribut
 Steps to install:
 
 1) Clone the repo.
-2) Run 'npm install'
-3) Run 'npm run start' Note: the initial build time might take a couple minutes, but once it's running, it should be very quick.
+2) Run `npm install`
+3) Run `npm run start` Note: the initial build time might take a couple minutes, but once it's running, it should be very quick.
 4) Have fun!
 
 ## Motivation
