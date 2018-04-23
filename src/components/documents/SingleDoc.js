@@ -703,9 +703,7 @@ export default class SingleDoc extends Component {
             <div className={docFlex}>
               <div className="double-space doc-margin">
               <h4 className="align-left">
-
               </h4>
-
               <ReactQuill
                 modules={SingleDoc.modules}
                 formats={SingleDoc.formats}

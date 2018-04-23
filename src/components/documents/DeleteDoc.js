@@ -38,10 +38,10 @@ export default class DeleteDoc extends Component {
         console.log("loaded");
      }).then(() =>{
        let value = this.state.value;
-       const thisDoc = value.find((doc) => { return doc.id === this.props.match.params.id});
+       const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
        let index = thisDoc && thisDoc.id;
        function findObjectIndex(doc) {
-           return doc.id === index;
+           return doc.id == index;
        }
        this.setState({ test: thisDoc && thisDoc.content, textvalue: thisDoc && thisDoc.title, index: value.findIndex(findObjectIndex) })
      })

@@ -956,7 +956,8 @@ body.video-react-full-window {
 /*# sourceMappingURL=style.css.map*/
 
 body {
-  background-color: #F5F5F5;
+  /* background-color: #F5F5F5; */
+  background-color: #fff;
   font-family: 'Open Sans', sans-serif;
   color: #404040;
 }
@@ -1352,6 +1353,40 @@ h5, h6 {
   margin-top: 40px;
 }
 
+.ql-align-center {
+  text-align: center!important;
+}
+.ql-align-right {
+  text-align: right!important;
+}
+.ql-align-justify {
+  text-align: justify!important;
+}
+
+.ql-syntax {
+  background-color: #23241f;
+  color: #f8f8f2;
+  overflow: visible;
+  padding:5px;
+}
+
+.rs-widget {
+  margin-right: 25px!important;
+}
+
+#remotestorage {
+  max-width: 60%;
+  margin: auto;
+  margin-top: 70px;
+  float: right;
+}
+
+.remote-storage-element-id {
+  position: fixed;
+  top: 65px;
+  right: 0;
+}
+
 #doccontainer a, #sheetcontainer a {
   display: none;
 }
@@ -1375,13 +1410,13 @@ h5, h6 {
 }
 
 .project-table {
-  margin-top: 100px!important;
+  margin-top: 80px!important;
   width: 85%;
   margin: auto;
 }
 
 .filter {
-  margin-top: 100px!important;
+  margin-top: 60px!important;
 }
 
 .add-project-modal {
@@ -1451,6 +1486,26 @@ h5, h6 {
   position: fixed;
   top: 85px;
   z-index: 999;
+}
+
+/* journalism */
+
+.account-details {
+  padding-left: 30px!important;
+  padding-right: 30px!important;
+}
+
+.permissions-header th {
+  font-size: 14px;
+  padding-left: 25px;
+}
+
+.permissions {
+  margin-top: 35px;
+}
+
+.permission-types {
+  font-size: 14px;
 }
 
 /* Blog Settings */
@@ -1651,10 +1706,15 @@ button:active, button:focus {
 }
 
 .ql-bubble {
-  box-sizing: border-box;
-  border: 1px solid #E8E8E8!important;
-  border-radius: 10px;
-  margin-bottom: 10px!important;
+  box-sizing: none;
+  border: none;
+}
+
+.ql-bubble div {
+  font-family: "Roboto", Georgia, Serif!important;
+  line-height: 2!important;
+  font-weight: 300!important;
+  font-size: 16px!important;
 }
 
 .convo-button {
@@ -1671,10 +1731,14 @@ button:active, button:focus {
     bottom: 0!important;
     margin: 0;
     width: 100%;
-    max-height: 100vh!important;
+    /* max-height: 100vh!important; */
     border-radius: 0;
     will-change: bottom, opacity;
     z-index: 999!important;
+  }
+
+  .comment-modal {
+    max-height: 50vh!important;
   }
 
 .convo-right {
@@ -2357,8 +2421,25 @@ input:focus {
   margin: auto;
 }
 
+.doc-title, .doc-title:active, .doc-title:focus {
+  font-size: 36px!important;
+  border: none!important;
+  border-bottom: none!important;
+  font-weight: 400!important;
+}
+
+.test-doc-card {
+  width: 75%;
+  margin: auto;
+}
+
 .with-module {
   padding: 25px;
+  width: 65%;
+  margin: 0;
+}
+
+.test-with-module {
   width: 65%;
   margin: 0;
 }
@@ -2553,6 +2634,61 @@ polygon.ql-stroke {
   margin-top: 15px!important;
 }
 
+.single-doc-dropdown-content {
+  width: auto!important;
+}
+
+#sidenav-overlay {
+  z-index: 99;
+}
+
+.highlightedComment {
+  margin-left: 5px;
+  border-left: 4px solid #000;
+  font-family: 'Roboto', serif;
+  font-weight: 100;
+  line-height: 20px;
+  padding: 10px;
+}
+
+.highlightedComment:before {
+    content: '\201C';
+    font-size: 40px;
+    /* margin-left: 10px; */
+ }
+.comments-side-nav li p {
+  margin-left: 10px;
+}
+
+.comment, .commenter {
+  line-height: 20px;
+  padding: 10px;
+}
+
+.commenter {
+  text-transform: uppercase;
+}
+
+nav .button-collapse {
+  margin-left: 0;
+}
+
+.button-collapse {
+  line-height: 22px!important;
+}
+
+.menu-button-collapse {
+  padding-top: 25px!important;
+}
+
+.comment-button {
+  margin-bottom: 10px;
+}
+
+blockquote {
+  border-left: 5px solid #282828!important;
+}
+
 /* .video-react {
   padding-top: 0!important;
 } */
@@ -2564,7 +2700,7 @@ polygon.ql-stroke {
     width: 85%;
     margin: auto;
   }
-  
+
   .convo-left {
     margin-top: 80px;
     width: 100%!important;
@@ -2597,6 +2733,11 @@ polygon.ql-stroke {
 
   .docs {
     margin-top: 150px;
+  }
+
+  .test-docs {
+    margin-top: 75px;
+    width: 90%!important;
   }
 }
 
@@ -2848,6 +2989,10 @@ polygon.ql-stroke {
 
 @media screen and (max-width: 380px) {
 
+  .document-title {
+    font-size: 12px!important;
+  }
+
   #stealthyFrame {
   width: 100%;
   margin: auto;
@@ -2906,7 +3051,7 @@ polygon.ql-stroke {
   }
 
   .small-menu {
-    font-size: 10px!important;
+    font-size: 12px!important;
   }
 
   .small-brand {
@@ -2943,6 +3088,10 @@ polygon.ql-stroke {
 }
 
 @media screen and (max-width: 450px) {
+
+  .document-title {
+    font-size: 12px!important;
+  }
 
   .stealthy-logo img {
     height: 20px!important;
@@ -3008,7 +3157,7 @@ polygon.ql-stroke {
   }
 
   .small-menu {
-    font-size: 10px!important;
+    font-size: 12px!important;
   }
 
   .small-brand {

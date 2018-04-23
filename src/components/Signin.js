@@ -3,13 +3,13 @@ const civicSip = new window.civic.sip({ appId: 'rJ-YXevoG' });
 
 export default class Signin extends Component {
   render() {
-    const { handleSignIn } = this.props;
+    const { handleSignIn } = this.props; 
 
     return (
       <div className="welcome center-align" id="section-1">
         <h1 className="landing-heading">Welcome!</h1>
         <p className="intro-text">
-        Graphite is a decentralized and encrypted replacement for Google's G-Suite. Built on Blockstack and powered by the Bitcoin Blockchain.
+        Graphite is a decentralized and encrypted replacement for Google's{/* '*/} G-Suite. Built on Blockstack and powered by the Bitcoin Blockchain.
         </p>
         <p className="lead">
           <button
@@ -20,11 +20,11 @@ export default class Signin extends Component {
             Sign In with Blockstack
           </button>
         </p>
-        {/*
-        <button id="signupButton" class="civic-button-a medium" type="button">
+
+        {/*<button id="signupButton" class="civic-button-a medium" type="button">
             <span>Sign in with Civic</span>
-        </button>
-        */}
+        </button>*/}
+
       </div>
     );
   }

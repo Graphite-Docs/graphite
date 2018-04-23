@@ -33,8 +33,6 @@ import DeleteVaultFile from './vault/DeleteVaultFile';
 import SharedVault from './vault/SharedVault';
 import SharedVaultCollection from './vault/SharedVaultCollection';
 import SingleSharedFile from './vault/SingleSharedFile';
-import MainProject from './projects/MainProject';
-import SingleProject from './projects/SingleProject';
 import Export from './Export';
 import PublicDoc from './PublicDoc';
 import {
@@ -72,7 +70,7 @@ export default class App extends Component {
             <Route exact path="/documents/blog" component={Blog} />
             <Route exact path="/test" component={TestDoc} />
             <Route exact path="/documents/doc/new" component={Doc} />
-            <Route exact path="/documents/doc/:id" component={SingleDoc} />
+            <Route exact path="/documents/doc/:id" component={TestDoc} />
             <Route exact path="/documents/doc/delete/:id" component={DeleteDoc} />
             <Route exact path="/documents/shared/:id" component={SharedCollection} />
             <Route exact path="/documents/sent/:id" component={SentCollection} />
@@ -102,8 +100,6 @@ export default class App extends Component {
             <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
             <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
             <Route exact path="/publicdoc" component={PublicDoc} />
-            <Route exact path="/projects" component={MainProject} />
-            <Route exact path="/projects/:id" component={SingleProject} />
           </div>
         </BrowserRouter>
       </div>

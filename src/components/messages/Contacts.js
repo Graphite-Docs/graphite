@@ -208,7 +208,7 @@ export default class Contacts extends Component {
       <div className="add-contact">
         <h3 className="center-align">Add a new contact</h3>
 
-        {/*<div className="card card-add">
+        <div className="card card-add">
           <div className="add-new">
             <div>
               <p>If you know your contact's Blockstack ID (or if it's a new, .personal.id), add it here.</p>
@@ -216,7 +216,7 @@ export default class Contacts extends Component {
               <button onClick={this.manualAdd} className="btn black">Add Contact</button>
             </div>
           </div>
-        </div>*/}
+        </div>
 
         <div className="card card-add">
           <div className="add-new">
