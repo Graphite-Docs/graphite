@@ -67,7 +67,7 @@ export default class Header extends Component {
     return (
       <nav>
         <div className="nav-wrapper">
-          <a href="/" className="left brand-logo text-white">Graphite.<img className="pencil" src="http://www.iconsplace.com/icons/preview/white/pencil-256.png" alt="pencil" /></a>
+          <a href="/" className="left brand-logo text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
           {this.renderHeader()}
         </div>
       </nav>

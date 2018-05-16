@@ -63,7 +63,8 @@ export default class SingleVaultFile extends Component {
       shareFile: {},
       singleDoc: {},
       shareFileIndex: [],
-      pubKey: ""
+      pubKey: "",
+      sharedWith: []
     };
     this.saveNewFile = this.saveNewFile.bind(this);
     this.onDocumentComplete = this.onDocumentComplete.bind(this);
@@ -97,6 +98,27 @@ export default class SingleVaultFile extends Component {
         console.log(error);
       });
 
+      getFile("uploads.json", {decrypt: true})
+       .then((fileContents) => {
+          this.setState({ files: JSON.parse(fileContents || '{}') })
+          console.log("loaded");
+          this.setState({ initialLoad: "hide" });
+       }).then(() =>{
+         let files = this.state.files;
+         const thisFile = files.find((file) => { return file.id == this.props.match.params.id});
+         let index = thisFile && thisFile.id;
+         console.log(index);
+         function findObjectIndex(file) {
+             return file.id == index;
+         }
+         // let grid = thisSheet && thisSheet.content;
+         this.setState({ tags: thisFile && thisFile.tags, sharedWith: thisFile && thisFile.sharedWith, index: files.findIndex(findObjectIndex) })
+         // console.log(this.state.title);
+       })
+        .catch(error => {
+          console.log(error);
+        });
+
     getFile(this.props.match.params.id + ".json", { decrypt: true })
       .then(file => {
         this.setState({
@@ -105,7 +127,9 @@ export default class SingleVaultFile extends Component {
           lastModifiedDate: JSON.parse(file || "{}").lastModifiedDate,
           size: JSON.parse(file || "{}").size,
           link: JSON.parse(file || "{}").link,
-          type: JSON.parse(file || "{}").type
+          type: JSON.parse(file || "{}").type,
+          sharedWith: JSON.parse(file || "{}").sharedWith,
+          tags: JSON.parse(file || "{}").tags
         });
         if (this.state.type.includes("word")) {
           var abuf4 = str2ab(this.state.link);
@@ -442,6 +466,7 @@ export default class SingleVaultFile extends Component {
         .then(() => {
           console.log("Shared encrypted file");
           console.log(dataTwo);
+          this.handleaddItem();
         })
         .catch(e => {
           console.log(e);
@@ -565,11 +590,11 @@ export default class SingleVaultFile extends Component {
                 ) : (
                   <li />
                 )}
-                <li>
+                {/*<li>
                   <a onClick={this.shareModal}>
                     <i className="material-icons">share</i>
                   </a>
-                </li>
+                </li>*/}
                 {type.includes("word") ? (
                   <li>
                     <a href="#" onClick={this.handleaddItem}>

@@ -14,7 +14,7 @@ const { getPublicKeyFromPrivate } = require('blockstack');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
-export default class VaultCollection extends Component {
+export default class TestVault extends Component {
   constructor(props) {
   	super(props);
 
@@ -72,8 +72,7 @@ export default class VaultCollection extends Component {
       selectedType: "",
       selectedTag: "",
       selectedCollab: "",
-      selectedDate: "",
-      tagIndex: ""
+      selectedDate: ""
   	};
     this.filterList = this.filterList.bind(this);
     this.handleSignOut = this.handleSignOut.bind(this);
@@ -542,8 +541,7 @@ export default class VaultCollection extends Component {
     let files = this.state.files;
 
     if(this.state.selectedTag != "") {
-      let tagFilter = files.filter(x => typeof x.tags != 'undefined' ? x.tags.includes(this.state.selectedTag) : console.log("nada"));
-      // let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
+      let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
       this.setState({ filteredValue: tagFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedDate != "") {
@@ -551,8 +549,7 @@ export default class VaultCollection extends Component {
       this.setState({ filteredValue: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedCollab != "") {
-      let collaboratorFilter = files.filter(x => typeof x.sharedWith != 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
-      // let collaboratorFilter = files.filter(x => x.sharedWith.includes(this.state.selectedCollab));
+      let collaboratorFilter = files.filter(x => x.sharedWith.includes(this.state.selectedCollab));
       this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if(this.state.selectedType) {
@@ -572,9 +569,9 @@ export default class VaultCollection extends Component {
     function findObjectIndex(tag) {
         return tag.id == index;
     }
-    this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
+    this.setState({ index: tags.findIndex(findObjectIndex) });
     // setTimeout(this.finalDelete, 300);
-    const updatedTags = update(this.state.singleFileTags, {$splice: [[this.state.tagIndex, 1]]});
+    const updatedTags = update(this.state.singleFileTags, {$splice: [[this.state.index, 1]]});
     this.setState({singleFileTags: updatedTags });
   }
 
@@ -597,16 +594,14 @@ export default class VaultCollection extends Component {
     const currentFiles = files.slice(0).reverse();
 
     let shared = currentFiles.map(a => a.sharedWith);
-    let newShared = shared.filter(function(n){ return n != undefined });
-    let mergedShared = [].concat.apply([], newShared);
+    let mergedShared = [].concat.apply([], shared);
     let uniqueCollabs = [];
     window.$.each(mergedShared, function(i, el){
       if(window.$.inArray(el, uniqueCollabs) === -1) uniqueCollabs.push(el);
     });
 
     let tags = currentFiles.map(a => a.tags);
-    let newTags = tags.filter(function(n){ return n != undefined });
-    let mergedTags = [].concat.apply([], newTags);
+    let mergedTags = [].concat.apply([], tags);
     let uniqueTags = [];
     window.$.each(mergedTags, function(i, el) {
       if(window.$.inArray(el, uniqueTags) === -1) uniqueTags.push(el);
@@ -756,14 +751,19 @@ export default class VaultCollection extends Component {
             <ul className="pagination action-items">
               <li><a onClick={() => this.setState({shareModal: ""})}>Share</a></li>
               <li><a onClick={() => this.setState({tagDownload: true })}>Tag</a></li>
-
+              <li><a onClick={this.download}>Download</a></li>
+              <ul className="right">
+                <li><a><i className="tiny shared-files-table-selector material-icons">people</i></a></li>
+              </ul>
             </ul>
          :
             <ul className="pagination inactive action-items">
               <li><a>Share</a></li>
               <li><a>Tag</a></li>
-
-
+              <li><a>Download</a></li>
+              <ul className="right">
+                <li><a><i className="tiny shared-files-table-selector material-icons">people</i></a></li>
+              </ul>
             </ul>
 
         }

@@ -133,7 +133,6 @@ render() {
         <div className="card-action">
           <Link to={'/documents/shared/' + this.state.username}><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /></Link>
           <Link to={'/sheets/shared/' + this.state.username}><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /></Link>
-          <a href='/conversations'><img src="https://i.imgur.com/cuXF1V5.png" alt="conversations-icon" className="dropdown-icon-bigger" /></a>
         </div>
       </div>
     </div>

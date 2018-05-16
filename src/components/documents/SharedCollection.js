@@ -164,37 +164,34 @@ export default class SharedCollection extends Component {
             </nav>
           </div>
           <div className="container docs">
-          <div className="row">
+          <div className="container">
 
             <h3 className="center-align">Documents {this.state.user} shared with you</h3>
-          {docs.slice(0).reverse().map(doc => {
-              return (
 
-                <div key={doc.id} className="col s12 m6 l3">
-                    <div className="card collections-card hoverable horizontal">
-                    <Link to={'/documents/single/shared/'+ doc.id} className="side-card black-text doc-side">
-                      <div className="card-image card-image-side doc-side">
-                        <img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" />
-                      </div>
-                    </Link>
-                      <div className="card-stacked">
-                      <Link to={'/documents/single/shared/'+ doc.id} className="black-text">
-                        <div className="card-content">
-                          <p className="title">{doc.title.length > 14 ? doc.title.substring(0,14)+"..." :  doc.title}</p>
-                        </div>
-                      </Link>
-                        <div className="edit-card-action card-action">
-                          <p><span className="muted muted-card">Shared on: {doc.shared}</span></p>
-                        </div>
-                      </div>
-                    </div>
+            <table className="bordered">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Shared By</th>
+                  <th>Date Shared</th>
+                </tr>
+              </thead>
+              <tbody>
+            {
+              docs.slice(0).reverse().map(doc => {
 
+              return(
+                <tr key={doc.id}>
+                  <td><Link to={'/documents/single/shared/'+ doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
+                  <td>{this.state.user}</td>
+                  <td>{doc.shared}</td>
+                </tr>
+              );
+              })
+            }
+            </tbody>
+          </table>
 
-                </div>
-
-              )
-            })
-          }
           </div>
           </div>
         </div>
@@ -205,7 +202,7 @@ export default class SharedCollection extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a href="/documents" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
+              <a href="/shared-docs" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
 
 
                 <ul className="left toolbar-menu">

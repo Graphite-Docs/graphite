@@ -22,17 +22,23 @@ export default class DeleteSheet extends Component {
       receiverID: "",
       shareModal: "hide",
       shareFile: "",
-      initialLoad: ""
+      initialLoad: "",
+      singleSheet: {}
     }
     this.handleDeleteItem = this.handleDeleteItem.bind(this);
     this.saveNewFile = this.saveNewFile.bind(this);
   }
 
   componentDidMount() {
-    getFile("spread.json", {decrypt: true})
+
+    const thisFile = this.props.match.params.id;
+    const fullFile = '/sheets/' + thisFile + '.json';
+
+    getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
         console.log("loaded");
+        this.setState({ initialLoad: "hide" });
      }).then(() =>{
        let sheets = this.state.sheets;
        const thisSheet = sheets.find((sheet) => { return sheet.id == this.props.match.params.id});
@@ -41,8 +47,21 @@ export default class DeleteSheet extends Component {
        function findObjectIndex(sheet) {
            return sheet.id == index;
        }
-       let grid = thisSheet && thisSheet.grid;
-       this.setState({ grid: grid || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
+       // let grid = thisSheet && thisSheet.content;
+       this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) })
+       // console.log(this.state.title);
+     })
+      .catch(error => {
+        console.log(error);
+      });
+
+    getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       console.log("loading file: ");
+       console.log(JSON.parse(fileContents || '{}'));
+       if(fileContents) {
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+       }
      })
       .catch(error => {
         console.log(error);
@@ -61,9 +80,18 @@ export default class DeleteSheet extends Component {
   };
 
   saveNewFile() {
+    const thisFile = this.props.match.params.id;
+    const fullFile = '/sheets/' + thisFile + '.json';
+    putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: true})
+      .then(() => {
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
     this.setState({ loading: "show" });
     this.setState({ save: "hide"});
-    putFile("spread.json", JSON.stringify(this.state), {encrypt: true})
+    putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log(JSON.stringify(this.state));
         this.setState({ loading: "hide" });

@@ -16,7 +16,7 @@ import update from 'immutability-helper';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
-export default class Contacts extends Component {
+export default class TestContacts extends Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -367,9 +367,9 @@ export default class Contacts extends Component {
 
     let types = this.state.types;
     const thisType = types.find((type) => { return type.id == this.state.selectedTypeId});
-    let typeIndex = thisType && thisType.id;
+    let index = thisType && thisType.id;
     function findObjectIndex(type) {
-        return type.id == typeIndex;
+        return type.id == index;
     }
     this.setState({ typeIndex: types.findIndex(findObjectIndex) });
     const updatedTypes = update(this.state.types, {$splice: [[this.state.typeIndex, 1]]});
@@ -386,13 +386,11 @@ export default class Contacts extends Component {
     let contacts = this.state.contacts;
 
     if(this.state.selectedType != "") {
-      let typeFilter = contacts.filter(x => typeof x.types != 'undefined' ? x.types.includes(this.state.selectedType) : console.log("nada"));
-      // let typeFilter = contacts.filter(x => x.types.includes(this.state.selectedType));
+      let typeFilter = contacts.filter(x => x.types.includes(this.state.selectedType));
       this.setState({ filteredContacts: typeFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedDate != "") {
-      let dateFilter = contacts.filter(x => typeof x.dateAdded != 'undefined' ? x.dateAdded.includes(this.state.selectedDate) : console.log("nada"));
-      // let dateFilter = contacts.filter(x => x.dateAdded.includes(this.state.selectedDate));
+      let dateFilter = contacts.filter(x => x.dateAdded.includes(this.state.selectedDate));
       this.setState({ filteredContacts: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     }

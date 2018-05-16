@@ -379,33 +379,34 @@ export default class SharedVaultCollection extends Component {
             </nav>
           </div>
           <div className="container docs">
-          <div className="row">
+          <div className="container">
             <h3 className="center-align">Files {this.state.user} shared with you</h3>
-          {files.slice(0).reverse().map(file => {
-              return (
-                <div key={file.id} className="col s12 m6 l3">
-                    <div className="card collections-card hoverable horizontal">
-                    <Link to={'/vault/single/shared/' + file.id} className="side-card black-text file-side">
-                      <div className="card-image card-image-side file-side">
-                        <img src="https://i.imgur.com/9ZlABws.png" alt="file icon" />
-                      </div>
-                    </Link>
-                      <div className="card-stacked">
-                      <Link to={'/vault/single/shared/' + file.id} className="black-text">
-                        <div className="card-content">
-                          <p className="title">{file.name.length > 11 ? file.name.substring(0,11)+"..." :  file.name}</p>
-                        </div>
-                      </Link>
-                        <div className="edit-card-action card-action">
-                          <p><span className="muted muted-card">Shared on: {file.uploaded}</span></p>
-                        </div>
-                      </div>
-                    </div>
-                </div>
 
-              )
-            })
-          }
+            <table className="bordered">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Shared By</th>
+                  <th>Date Shared</th>
+                </tr>
+              </thead>
+              <tbody>
+            {
+              files.slice(0).reverse().map(file => {
+
+              return(
+                <tr key={file.id}>
+                  <td><Link to={'/vault/single/shared/' + file.id}>{file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name}</Link></td>
+                  <td>{this.state.user}</td>
+                  <td>{file.uploaded}</td>
+                </tr>
+              );
+              })
+            }
+            </tbody>
+          </table>
+
+
           </div>
           </div>
         </div>

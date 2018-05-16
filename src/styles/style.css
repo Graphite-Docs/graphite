@@ -1319,11 +1319,30 @@ h5, h6 {
 
 .modal.bottom-sheet {
   background: #E8E8E8;
-  height: 100vh!important;
+  max-height: 70%;
 }
 
 .vault-button {
   background: rgb(235, 106, 90)!important;
+}
+
+.filter-li {
+  margin-left: 15px;
+}
+
+.filter-li a {
+  font-size: 12px!important;
+}
+
+.filter-applied {
+  background: gray;
+  padding: 10px;
+  color: white;
+  font-size: 12px!important;
+}
+
+.filter-applied i {
+  font-size: 12px!important;
 }
 
 .copy img {
@@ -1491,8 +1510,7 @@ h5, h6 {
 /* journalism */
 
 .account-details {
-  padding-left: 30px!important;
-  padding-right: 30px!important;
+  margin-bottom: 40px;
 }
 
 .permissions-header th {
@@ -1506,6 +1524,30 @@ h5, h6 {
 
 .permission-types {
   font-size: 14px;
+}
+
+.pagination li.active {
+  background: #282828!important;
+}
+
+.docs-per-page {
+  width: 15%;
+  margin: auto;
+  float: right;
+  margin-bottom: 35px;
+}
+
+.action-items li a {
+  font-size: 16px!important;
+}
+
+.inactive li a {
+  color: #d4d6d8;
+  font-size: 12px!important;
+}
+
+.modalClose {
+  float: right;
 }
 
 /* Blog Settings */
@@ -1786,7 +1828,7 @@ button:active, button:focus {
   font-family: "Ubuntu";
   content: "Ubuntu";
 }
-.ql-font .ql-font span[data-label="Raleway"]::before {
+.ql-font span[data-label="Raleway"]::before {
   font-family: "Raleway";
   content: "Raleway";
 }
@@ -1796,7 +1838,7 @@ button:active, button:focus {
 }
 .ql-font span[data-label="Lato"]::before {
   font-family: "Lato" !important;
-  content: "Lato";
+  content: "Lato"!important;
 }
 .ql-font span[data-label="Open Sans"]::before {
   font-family: "Open Sans" !important;
@@ -1978,6 +2020,28 @@ nav ul a {
   background: #15081C!important;
 }
 
+.profile-grid-img {
+  height: 40px!important;
+  margin-right: 15px;
+}
+
+.tabs .tab a:hover, .tabs .tab a.active {
+  color: #282828;
+}
+
+.tabs .tab a {
+  color: #282828;
+}
+
+.tabs .indicator {
+  background-color: #282828;
+}
+
+.profile-name-link {
+  position: relative;
+  bottom: 15px;
+}
+
 .calculator {
   height: 20px;
   width: 20px;
@@ -2015,9 +2079,6 @@ nav ul a {
   padding: none!important;
 }
 
-.searchform {
-  margin-bottom: 30px;
-}
 
 .searchinput {
   border: none!important;
@@ -2034,6 +2095,14 @@ nav ul a {
   box-shadow: none!important;
 }
 
+.delete-button {
+  font-size: 20px!important;
+}
+
+.shared-files-table-selector {
+  font-size: 1.5rem!important;
+}
+
 .recovery-message {
   width: 100%;
   margin: auto;
@@ -2043,6 +2112,16 @@ nav ul a {
 }
 
 .warning {
+}
+
+.filter {
+  font-size: 14px;
+  margin-left: 15px;
+}
+
+.filter-icon {
+  position: relative;
+  top: 6px;
 }
 
 .welcome {
@@ -2103,6 +2182,9 @@ nav ul a {
 
 .doc-title {
   text-transform: capitalize!important;
+  /* resize: auto!important; */
+  line-height: 35px;
+  margin-top: 35px!important;
 }
 
 .title {
@@ -2138,6 +2220,7 @@ nav ul a {
 
 .doc-margin {
   padding: 70px;
+  overflow: visible!important;
 }
 
 .delete-button {
@@ -2231,12 +2314,24 @@ nav ul a {
 }
 
 .searchfield {
-  max-width: 50%;
+  max-width: 100%;
   margin: auto;
 }
 
 .docform.searchinput {
-  border-bottom: 1.5px solid #2282FF!important;
+  border-bottom: 1px solid #282828!important;
+}
+
+.docform::placeholder {
+  font-size: 14px!important;
+}
+
+table {
+  font-size: 12px;
+}
+
+td, th {
+  padding: 5px;
 }
 
 .fileform.searchinput {
@@ -2736,8 +2831,9 @@ blockquote {
   }
 
   .test-docs {
+    width: 95%!important;
+    margin: auto;
     margin-top: 75px;
-    width: 90%!important;
   }
 }
 
@@ -2989,6 +3085,10 @@ blockquote {
 
 @media screen and (max-width: 380px) {
 
+  .doc-title {
+    font-size: 20px!important;
+  }
+
   .document-title {
     font-size: 12px!important;
   }
@@ -3088,6 +3188,10 @@ blockquote {
 }
 
 @media screen and (max-width: 450px) {
+
+  .doc-title {
+    font-size: 20px!important;
+  }
 
   .document-title {
     font-size: 12px!important;

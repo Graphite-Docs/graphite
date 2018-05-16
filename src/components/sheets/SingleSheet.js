@@ -7,7 +7,12 @@ import {
 import HotTable from 'react-handsontable';
 import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
-const { encryptECIES } = require('blockstack/lib/encryption');
+import RemoteStorage from 'remotestoragejs';
+import Widget from 'remotestorage-widget';
+const { getPublicKeyFromPrivate } = require('blockstack');
+const remoteStorage = new RemoteStorage({logging: false});
+const widget = new Widget(remoteStorage);
+const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
 
 export default class SingleSheet extends Component {
   constructor(props) {
@@ -23,6 +28,7 @@ export default class SingleSheet extends Component {
       ],
       title: "",
       shareFile: [],
+      sharedWith: [],
       index: "",
       save: "",
       saveNow: false,
@@ -38,7 +44,17 @@ export default class SingleSheet extends Component {
       pubKey: "",
       singlePublic: {},
       publicShare: "hide",
-      gaiaLink: ""
+      gaiaLink: "",
+      remoteTitle: "",
+      remoteContent: [
+        [],
+      ],
+      remoteId: "",
+      singleSheet: {},
+      remoteUpdated: "",
+      remoteStorage: false,
+      hideStealthy: true,
+      revealModule: "innerStealthy"
     }
     this.autoSave = this.autoSave.bind(this);
     this.shareModal = this.shareModal.bind(this);
@@ -52,8 +68,23 @@ export default class SingleSheet extends Component {
     this.stopSharing = this.stopSharing.bind(this);
     this.saveStop = this.saveStop.bind(this);
     this.savePublic = this.savePublic.bind(this);
+    this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
   }
   componentDidMount() {
+    window.$('.dropdown-button').dropdown({
+      inDuration: 300,
+      outDuration: 225,
+      constrainWidth: false, // Does not change width of dropdown to that of the activator
+      hover: false, // Activate on hover
+      gutter: 0, // Spacing from edge
+      belowOrigin: false, // Displays dropdown below the button
+      alignment: 'left', // Displays dropdown with edge aligned to the left of button
+      stopPropagation: false // Stops event propagation
+    }
+  );
+    let privateKey = loadUserData().appPrivateKey;
+    const thisFile = this.props.match.params.id;
+    const fullFile = '/sheets/' + thisFile + '.json';
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
@@ -67,8 +98,20 @@ export default class SingleSheet extends Component {
         console.log(error);
       });
 
+      getFile(this.props.match.params.id + 'sharedwith.json', {decrypt: true})
+       .then((fileContents) => {
+         if(JSON.parse(fileContents || '{}').length > 0) {
+           this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
+         } else {
+           this.setState({ sharedWith: [] });
+         }
+       })
+        .catch(error => {
+          console.log("shared with doc error: ")
+          console.log(error);
+        });
 
-    getFile("spread.json", {decrypt: true})
+    getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
         console.log("loaded");
@@ -76,19 +119,31 @@ export default class SingleSheet extends Component {
      }).then(() =>{
        let sheets = this.state.sheets;
        const thisSheet = sheets.find((sheet) => { return sheet.id == this.props.match.params.id});
-       // console.log(thisSheet);
        let index = thisSheet && thisSheet.id;
        console.log(index);
        function findObjectIndex(sheet) {
            return sheet.id == index;
        }
-       let grid = thisSheet && thisSheet.content;
-       this.setState({ grid: grid || this.state.grid, title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) })
-       console.log(this.state.grid);
+       // let grid = thisSheet && thisSheet.content;
+       this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) })
+       // console.log(this.state.title);
      })
       .catch(error => {
         console.log(error);
       });
+
+    getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       console.log("loading file: ");
+       console.log(JSON.parse(fileContents || '{}'));
+       if(fileContents) {
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+       }
+     })
+      .catch(error => {
+        console.log(error);
+      });
+
       this.printPreview = () => {
         if(this.state.printPreview == true) {
           this.setState({printPreview: false});
@@ -96,9 +151,49 @@ export default class SingleSheet extends Component {
           this.setState({printPreview: true});
         }
       }
-      console.clear();
       setTimeout(this.handleAddItem,1000);
-    }
+
+      remoteStorage.access.claim(thisFile, 'rw');
+      remoteStorage.caching.enable('/' + thisFile + '/');
+      const client = remoteStorage.scope('/' + thisFile + '/');
+      widget.attach('remote-storage-element-id');
+      remoteStorage.on('connected', () => {
+        const userAddress = remoteStorage.remote.userAddress;
+        console.debug(`${userAddress} connected their remote storage.`);
+      })
+
+    remoteStorage.on('network-offline', () => {
+      console.debug(`We're offline now.`);
+    })
+
+    remoteStorage.on('network-online', () => {
+      console.debug(`Hooray, we're back online.`);
+    })
+    client.getFile('title.txt').then(file => {
+      if(file.data !== null) {
+          this.setState({ remoteTitle: file.data });
+      }
+
+    });
+    client.getFile('content.txt').then(file => {
+      if(file.data !==null) {
+        this.setState({ remoteContent: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+
+    });
+    client.getFile('id.txt').then(file => {
+      if(file.data !==null) {
+        this.setState({ remoteId: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+
+    });
+    client.getFile('updated.txt').then(file => {
+      if(file.data !==null) {
+        this.setState({ remoteUpdated: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+
+    });
+  }
 
   componentDidUpdate() {
     if(this.state.confirmAdd === true) {
@@ -116,10 +211,25 @@ export default class SingleSheet extends Component {
       object.content = this.state.grid;
       object.id = parseInt(this.props.match.params.id);
       object.updated = month + "/" + day + "/" + year;
+      object.sharedWith = this.state.sharedWith;
+      const objectTwo = {};
+      objectTwo.title = object.title;
+      objectTwo.id = object.id;
+      objectTwo.updated = object.updated;
+      objectTwo.sharedWith = object.sharedWith;
       const index = this.state.index;
-      const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-      this.setState({sheets: updatedSheet});
+      const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});  // array.splice(start, deleteCount, item1)
+      this.setState({sheets: updatedSheet, singleSheet: object });
+      this.setState({autoSave: "Saving..."});
       this.autoSave();
+    }
+
+    handleBack() {
+      if(this.state.autoSave === "Saving") {
+        setTimeout(this.handleBack, 500);
+      } else {
+        window.location.replace("/sheets");
+      }
     }
 
   handleTitleChange(e) {
@@ -136,16 +246,52 @@ handleIDChange(e) {
   }
 
 autoSave() {
-  this.setState({autoSave: "Saving..."});
-  putFile("spread.json", JSON.stringify(this.state), {encrypt: true})
+  const today = new Date();
+  const day = today.getDate();
+  const month = today.getMonth() + 1;
+  const year = today.getFullYear();
+  const file = this.props.match.params.id;
+  const fullFile = '/sheets/' + file + '.json';
+  putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: true})
     .then(() => {
       console.log("Autosaved");
+      this.saveCollection();
+    })
+    .catch(e => {
+      console.log("e");
+      console.log(e);
+    });
+
+    remoteStorage.access.claim(this.props.match.params.id, 'rw');
+    remoteStorage.caching.enable('/' + this.props.match.params.id + '/');
+    const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
+    const content = this.state.grid;
+    const title = this.state.title;
+    const updated = month + "/" + day + "/" + year;
+    const id = this.props.match.params.id;
+    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+    if(this.state.grid !== []) {
+      client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
+      .then(() => { console.log("Grid saving done") });
+    }
+    client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
+    .then(() => { console.log("Title saved") });
+    client.storeFile('text/plain', 'updated.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
+    .then(() => { console.log("Updated date saved") });
+    client.storeFile('text/plain', 'id.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(id))))
+    .then(() => { console.log("ID saved") });
+}
+
+saveCollection() {
+  putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
+    .then(() => {
       this.setState({autoSave: "Saved"});
     })
     .catch(e => {
       console.log("e");
       console.log(e);
     });
+
 }
 
 shareModal() {
@@ -268,24 +414,24 @@ loadMyFile() {
       object.id = Date.now();
       object.receiverID = this.state.receiverID;
       object.shared = month + "/" + day + "/" + year;
-      this.setState({ shareFile: [...this.state.shareFile, object] });
+      this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
       setTimeout(this.shareSheet, 700);
    })
     .catch(error => {
       console.log(error);
-      this.setState({ loading: "", show: "hide" });
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
-      const object = {};
-      object.title = this.state.title;
-      object.content = this.state.grid;
-      object.id = Date.now();
-      object.receiverID = this.state.receiverID;
-      object.shared = month + "/" + day + "/" + year;
-      this.setState({ shareFile: [...this.state.shareFile, object] });
-      setTimeout(this.shareSheet, 700);
+      // this.setState({ loading: "", show: "hide" });
+      // const today = new Date();
+      // const day = today.getDate();
+      // const month = today.getMonth() + 1;
+      // const year = today.getFullYear();
+      // const object = {};
+      // object.title = this.state.title;
+      // object.content = this.state.grid;
+      // object.id = Date.now();
+      // object.receiverID = this.state.receiverID;
+      // object.shared = month + "/" + day + "/" + year;
+      // this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
+      // setTimeout(this.shareSheet, 700);
     });
 }
 
@@ -320,6 +466,15 @@ shareSheet() {
       .catch(e => {
         console.log(e);
       });
+
+      putFile(this.props.match.params.id + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
+        .then(() => {
+          console.log("Shared With File Updated")
+          this.handleAddItem();
+        })
+        .catch(e => {
+          console.log(e);
+        });
 }
 
 print(){
@@ -332,39 +487,95 @@ print(){
 
 
 renderView() {
-  // console.clear();
-  const loading = this.state.loading;
-  const save = this.state.save;
-  const autoSave = this.state.autoSave;
-  const shareModal = this.state.shareModal;
-  const show = this.state.show;
-  const hideSheet = this.state.hideSheet;
-  const initialLoad = this.state.initialLoad;
-  const contacts = this.state.contacts;
-  const publicShare = this.state.publicShare;
+  console.log(this.state.grid);
+  const { revealModule, hideStealthy, loading, save, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
+  const remoteStorageActivator = remoteStorage === true ? "" : "hide";
+  const {length} = contacts
+  const stealthy = (hideStealthy) ? "hide" : ""
+  let users = '&length=' + length
+  let k = 0
+  for (const i of contacts) {
+    users += '&id' + k + "=" + i.contact
+    k += 1
+  }
+  // const to = (sharedWith && sharedWith[sharedWith.length - 1] && sharedWith[sharedWith.length - 1].contact) ? sharedWith[sharedWith.length - 1].contact : ''
+  const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
+    'http://localhost:3030/?app=gd04012018' :
+    'https://www.stealthy.im/?app=gd04012018';
+  const stealthyUrl = stealthyUrlStub + users;
+
+  // const stealthyModule = (length > 0) ? (
+  const stealthyModule =  (<div className={stealthy}>
+      <div id='stealthyCol' className='card'>
+      <div className={revealModule}>
+        <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
+      </div>
+    </div>
+    </div>
+  )
 
   if(this.state.initialLoad === "") {
     return (
       <div className="center-align sheets-loader">
-      <div className="navbar toolbar">
+      <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/sheets" className="brand-logo left"><i className="small-brand material-icons">arrow_back</i></a>
-
+            <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
 
               <ul className="left toolbar-menu">
-                <li><input className="white-text small-menu" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
-                <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
-                <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} ><img className="csvlogo" src="http://www.iconsplace.com/download/white-csv-512.png" /></CSVLink></li>
-                <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
+              <li><input className="white-text small-menu" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
+              <li><a className="small-menu muted">{autoSave}</a></li>
               </ul>
-              <ul className="right toolbar-menu auto-save">
-              <li><a className="muted">{autoSave}</a></li>
+              <ul className="right toolbar-menu small-toolbar-menu auto-save">
+              {this.state.notificationCount >0 ? <li><a><i className="small-menu red-text material-icons">notifications_active</i></a></li> : <li><a><i className="small-menu material-icons">notifications_none</i></a></li>}
+              <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
+              <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
+              <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
               </ul>
+
+              {/*Share Menu Dropdown*/}
+              <ul id="dropdown2"className="dropdown-content collection cointainer">
+              <li><span className="center-align">Select a contact to share with</span></li>
+              <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
+              <li className="divider" />
+              {contacts.slice(0).reverse().map(contact => {
+                  return (
+                    <li key={contact.contact}className="collection-item">
+                      <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
+                      <p>{contact.contact}</p>
+                      </a>
+                    </li>
+                  )
+                })
+              }
+              </ul>
+              {/*Share Menu Dropdown*/}
+
+              {/* Dropdown menu content */}
+              <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
+                <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
+                <li className="divider"></li>
+                <li><a onClick={this.print}>Print</a></li>
+                <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
+                {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
+                <li className="divider"></li>
+                <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
+                {this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>}
+                {this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>}
+              </ul>
+            {/* End dropdown menu content */}
+            {/*Remote storae widget*/}
+              <div className={remoteStorageActivator} id="remotestorage">
+                <div id='remote-storage-element-id'></div>
+              </div>
+              {/*Remote storae widget*/}
 
           </div>
         </nav>
       </div>
+
+
+
       <div className={initialLoad}>
         <div className="preloader-wrapper big active">
           <div className="spinner-layer spinner-green-only">
@@ -383,21 +594,58 @@ renderView() {
   } else {
     return (
       <div>
-      <div className="navbar toolbar">
+      <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/sheets" className="brand-logo left"><i className="small-brand material-icons">arrow_back</i></a>
-
+            <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
 
               <ul className="left toolbar-menu">
-                <li><input className="white-text" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
-                <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
-                <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'}><img className="csvlogo" src="http://www.iconsplace.com/download/white-csv-512.png" /></CSVLink></li>
-                <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
+              <li><input className="white-text small-menu" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
+              <li><a className="small-menu muted">{autoSave}</a></li>
               </ul>
-              <ul className="right toolbar-menu auto-save">
-              <li className="muted">{autoSave}</li>
+              <ul className="right toolbar-menu small-toolbar-menu auto-save">
+              {this.state.notificationCount >0 ? <li><a><i className="small-menu red-text material-icons">notifications_active</i></a></li> : <li><a><i className="small-menu material-icons">notifications_none</i></a></li>}
+              <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
+              <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
+              <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
               </ul>
+
+              {/*Share Menu Dropdown*/}
+              <ul id="dropdown2"className="dropdown-content collection cointainer">
+              <li><span className="center-align">Select a contact to share with</span></li>
+              <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
+              <li className="divider" />
+              {contacts.slice(0).reverse().map(contact => {
+                  return (
+                    <li key={contact.contact}className="collection-item">
+                      <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
+                      <p>{contact.contact}</p>
+                      </a>
+                    </li>
+                  )
+                })
+              }
+              </ul>
+              {/*Share Menu Dropdown*/}
+
+              {/* Dropdown menu content */}
+              <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
+                <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
+                <li className="divider"></li>
+                <li><a onClick={this.print}>Print</a></li>
+                <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
+                {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
+                <li className="divider"></li>
+                <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
+                {this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>}
+                {this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>}
+              </ul>
+            {/* End dropdown menu content */}
+            {/*Remote storae widget*/}
+              <div className={remoteStorageActivator} id="remotestorage">
+                <div id='remote-storage-element-id'></div>
+              </div>
+              {/*Remote storae widget*/}
 
           </div>
         </nav>
@@ -500,6 +748,7 @@ renderView() {
 
             </div>
           </div>
+          {stealthyModule}
         </div>
         </div>
 

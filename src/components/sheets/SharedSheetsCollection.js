@@ -121,33 +121,32 @@ export default class SharedSheetsCollection extends Component {
             </nav>
           </div>
           <div className="container docs">
-          <div className="row">
+          <div className="container">
             <h3 className="center-align">Sheets {this.state.user} shared with you</h3>
-          {sheets.slice(0).reverse().map(sheet => {
-              return (
-                <div key={sheet.id} className="col s12 m6 l3">
-                    <div className="card collections-card hoverable horizontal">
-                    <Link to={'/sheets/single/shared/'+ sheet.id} className="side-card black-text sheets-side">
-                      <div className="card-image card-image-side sheets-side">
-                        <img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" />
-                      </div>
-                    </Link>
-                      <div className="card-stacked">
-                      <Link to={'/sheets/single/shared/'+ sheet.id} className="black-text">
-                        <div className="card-content">
-                          <p className="title">{sheet.title.length > 11 ? sheet.title.substring(0,11)+"..." :  sheet.title}</p>
-                        </div>
-                      </Link>
-                        <div className="edit-card-action card-action">
-                          <p><span className="muted muted-card">Shared on: {sheet.shared}</span></p>
-                        </div>
-                      </div>
-                    </div>
-                </div>
+            <table className="bordered">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Shared By</th>
+                  <th>Date Shared</th>
+                </tr>
+              </thead>
+              <tbody>
+            {
+              sheets.slice(0).reverse().map(sheet => {
 
-              )
-            })
-          }
+              return(
+                <tr key={sheet.id}>
+                  <td><Link to={'/sheets/single/shared/'+ sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></td>
+                  <td>{this.state.user}</td>
+                  <td>{sheet.shared}</td>
+                </tr>
+              );
+              })
+            }
+            </tbody>
+          </table>
+
           </div>
           </div>
         </div>

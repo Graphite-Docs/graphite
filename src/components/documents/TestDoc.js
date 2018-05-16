@@ -1,322 +1,320 @@
 import React, { Component } from "react";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.bubble.css';
+import { Link } from 'react-router-dom';
+import { Redirect } from 'react-router';
 import {
+  isSignInPending,
   loadUserData,
+  Person,
   getFile,
-  putFile
+  putFile,
+  signUserOut,
+  handlePendingSignIn,
 } from 'blockstack';
 import update from 'immutability-helper';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
-const wordcount = require("wordcount");
-const Font = ReactQuill.Quill.import('formats/font');
-const { encryptECIES } = require('blockstack/lib/encryption');
-const { decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
 const remoteStorage = new RemoteStorage({logging: false});
 const widget = new Widget(remoteStorage);
-Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
+const { getPublicKeyFromPrivate } = require('blockstack');
+const { encryptECIES } = require('blockstack/lib/encryption');
+const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class TestDoc extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      team: [],
+      person: {
+  	  	name() {
+          return 'Anonymous';
+        },
+  	  	avatarUrl() {
+  	  	  return avatarFallbackImage;
+  	  	},
+  	  },
       value: [],
       contacts: [],
-      title : "",
-      content:"",
-      updated: "",
-      words: "",
-      index: "",
-      save: "",
-      loading: "hide",
-      printPreview: false,
-      autoSave: "Saved",
-      receiverID: "",
-      shareModal: "hide",
       shareFile: [],
-      show: "",
-      pubKey: "",
       singleDoc: {},
+      filteredValue: [],
+      sharedWith: [],
+      tempDocId: "",
+      redirect: false,
+      loading: "",
+      alert: "",
+      migrationLength: 1,
+      migrationCount: 0,
+      migrationComplete: false,
+      migrateTitle: "",
+      migrateContent: "",
+      migrateID: "",
+      migrateUpdated: "",
+      migrateWords: "",
+      currentPage: 1,
+      docsPerPage: 10,
+      docsSelected: [],
+      activeIndicator: false,
+      shareModal: "hide",
+      tagModal: "hide",
+      receiverID: "",
       confirmAdd: false,
-      singlePublic: {},
-      publicShare: "hide",
-      gaiaLink: "",
-      hideStealthy: true,
-      hideContact: "",
-      revealModule: "innerStealthy",
-      to: "",
-      blogPost: {},
-      blogIndex: [],
-      blogModal: "hide",
-      docFlex: "test-doc-card",
-      remoteStorage: false,
-      remoteTitle: "",
-      remoteContent: "",
-      remoteWords: "",
-      remoteId: "",
-      remoteUpdated: "",
-      highlightedText: "",
-      selection: "",
-      showCommentModal: "hide",
-      comments: [],
-      commentInput: "",
-      notificationCount: 0,
-      listComments: "hide",
-      reviewSelection: "",
-      commentId: "",
-      deleteIndex: ""
+      pubKey: "",
+      title: "",
+      content: "",
+      id: "",
+      words: "",
+      updated: "",
+      tags: "",
+      index: "",
+      contactDisplay: "",
+      loadingTwo: "hide",
+      singleDocTags: [],
+      tag: "",
+      selectedTagId: "",
+      index: "",
+      deleteState: false,
+      sharedCollection: [],
+      sharedWithSingle: [],
+      collaboratorsModal: "hide",
+      tagDownload: false,
+      tagList: "hide",
+      dateList: "hide",
+      selectedDate: "",
+      selectedCollab: "",
+      selectedTag: "",
+      applyFilter: false,
+      appliedFilter: false
     }
-    this.handleChange = this.handleChange.bind(this);
-    this.handleAutoAdd = this.handleAutoAdd.bind(this);
-    this.handleTitleChange = this.handleTitleChange.bind(this);
-    this.handleIDChange = this.handleIDChange.bind(this);
-    this.shareModal = this.shareModal.bind(this);
-    this.hideModal = this.hideModal.bind(this);
-    this.shareDoc = this.shareDoc.bind(this);
+    this.handleaddItem = this.handleaddItem.bind(this);
+    this.saveNewFile = this.saveNewFile.bind(this);
+    this.saveNewSingleDoc = this.saveNewSingleDoc.bind(this);
+    this.filterList = this.filterList.bind(this);
+    this.handleClick = this.handleClick.bind(this);
+    this.handlePageChange = this.handlePageChange.bind(this);
+    this.handleCheckbox = this.handleCheckbox.bind(this);
+    this.download = this.download.bind(this);
     this.sharedInfo = this.sharedInfo.bind(this);
-    this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
-    this.sharePublicly = this.sharePublicly.bind(this);
-    this.savePublic = this.savePublic.bind(this);
-    this.stopSharing = this.stopSharing.bind(this);
-    this.saveStop = this.saveStop.bind(this);
-    this.quillRef = null;      // Quill instance
-    this.reactQuillRef = null; // ReactQuill component
-    this.addComment = this.addComment.bind(this);
-    this.saveComment = this.saveComment.bind(this);
-    this.handleCommentInput = this.handleCommentInput.bind(this);
-    this.cancelComment = this.cancelComment.bind(this);
-    this.resolveComment = this.resolveComment.bind(this);
-    this.deleteComment = this.deleteComment.bind(this);
-    this.saveNewCommentsArray = this.saveNewCommentsArray.bind(this);
+    this.share = this.share.bind(this);
+    this.loadSingle = this.loadSingle.bind(this);
+    this.saveCollection = this.saveCollection.bind(this);
+    this.loadCollection = this.loadCollection.bind(this);
+    this.setTags = this.setTags.bind(this);
+    this.handleKeyPress = this.handleKeyPress.bind(this);
+    this.deleteTag = this.deleteTag.bind(this);
+    this.saveNewTags = this.saveNewTags.bind(this);
+    this.loadSingleTags = this.loadSingleTags.bind(this);
+    this.saveFullCollectionTags = this.saveFullCollectionTags.bind(this);
+    this.addTagManual = this.addTagManual.bind(this);
+    this.getCollection = this.getCollection.bind(this);
+    this.loadSharedCollection = this.loadSharedCollection.bind(this);
+    this.saveSingleFile = this.saveSingleFile.bind(this);
+    this.saveSharedFile = this.saveSharedFile.bind(this);
+    this.sendFile = this.sendFile.bind(this);
+    this.getCollectionTags = this.getCollectionTags.bind(this);
+    this.applyFilter = this.applyFilter.bind(this);
+    this.filterNow = this.filterNow.bind(this);
   }
 
+  componentWillMount() {
+    if (isSignInPending()) {
+      handlePendingSignIn().then(userData => {
+        window.location = window.location.origin;
+      });
+    }
+  }
 
+  componentDidUpdate() {
+
+  }
 
   componentDidMount() {
-    let privateKey = loadUserData().appPrivateKey;
-    const span = document.createElement("span");
-    span.className += "ql-formats";
-    const button = document.createElement("button");
-    button.innerHTML = "&#x1F4AC;";
-    button.className += "comment-button";
-    span.appendChild(button);
-    const commentButton = document.getElementsByClassName("comment-button");
-    const element = document.getElementsByClassName("ql-toolbar")[0];
-    element.appendChild(span);
-
     window.$('.button-collapse').sideNav({
       menuWidth: 400, // Default is 300
-      edge: 'right', // Choose the horizontal origin
-      closeOnClick: true, // Closes side-nav on <a> clicks, useful for Angular/Meteor
+      edge: 'left', // Choose the horizontal origin
+      closeOnClick: false, // Closes side-nav on <a> clicks, useful for Angular/Meteor
       draggable: true, // Choose whether you can drag to open on touch screens
     }
   );
 
-    const thisFile = this.props.match.params.id;
-    const fullFile = '/documents/' + thisFile + '.json';
-    remoteStorage.access.claim('docs', 'rw');
-    remoteStorage.caching.enable('/docs/');
-    const client = remoteStorage.scope('/docs/');
-    widget.attach('remote-storage-element-id');
-    remoteStorage.on('connected', () => {
-    const userAddress = remoteStorage.remote.userAddress;
-    console.debug(`${userAddress} connected their remote storage.`);
-  })
-
-  remoteStorage.on('network-offline', () => {
-    console.debug(`We're offline now.`);
-  })
-
-  remoteStorage.on('network-online', () => {
-    console.debug(`Hooray, we're back online.`);
-  })
-  client.getFile('title.txt').then(file => {
-    this.setState({ remoteTitle: file.data });
-  });
-  client.getFile('content.txt').then(file => {
-    this.setState({ remoteContent: decryptECIES(privateKey, JSON.parse(file.data)) });
-  });
-  client.getFile('wordCount.txt').then(file => {
-    this.setState({ remoteWords: decryptECIES(privateKey, JSON.parse(file.data)) });
-  });
-  client.getFile('id.txt').then(file => {
-    this.setState({ remoteId: decryptECIES(privateKey, JSON.parse(file.data)) });
-  });
-  client.getFile('updated.txt').then(file => {
-    this.setState({ remoteUpdated: decryptECIES(privateKey, JSON.parse(file.data)) });
-  });
-
-    getFile(thisFile + 'comments.json', {decrypt: true})
-      .then((fileContents) => {
-        let comments = JSON.parse(fileContents || '{}');
-        if(comments.length > 0) {
-          this.setState({ comments: JSON.parse(fileContents || '{}') });
-        } else {
-          this.setState({ comments: [] });
-        }
+    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
+    putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
+    .then(() => {
+        console.log("Saved!");
+        console.log(JSON.stringify(publicKey));
       })
+      .catch(e => {
+        console.log(e);
+      });
 
-    getFile("contact.json", {decrypt: true})
+      getFile("contact.json", {decrypt: true})
+       .then((fileContents) => {
+         let file = JSON.parse(fileContents || '{}');
+         let contacts = file.contacts;
+         if(contacts.length > 0) {
+           this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
+         } else {
+           this.setState({ contacts: [] });
+         }
+       })
+        .catch(error => {
+          console.log(error);
+        });
+
+    this.loadCollection();
+  }
+
+  setTags(e) {
+    this.setState({ tag: e.target.value});
+  }
+
+  handleKeyPress(e) {
+    if (e.key === 'Enter') {
+      const object = {};
+      this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]});
+      this.setState({ tag: "" });
+    }
+  }
+
+  addTagManual() {
+    this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]});
+    this.setState({ tag: "" });
+  }
+
+
+  loadCollection() {
+    getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
-       let file = JSON.parse(fileContents || '{}');
-       let contacts = file.contacts;
-       if(contacts.length > 0) {
-         this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
+       if(JSON.parse(fileContents || '{}').value) {
+         this.setState({ value: JSON.parse(fileContents || '{}').value });
+         this.setState({filteredValue: this.state.value})
+         this.setState({ loading: "hide" });
        } else {
-         this.setState({ contacts: [] });
+         console.log("No saved files");
+         this.setState({ loading: "hide" });
        }
      })
       .catch(error => {
         console.log(error);
       });
-
-      getFile(this.props.match.params.id + 'sharedwith.json', {decrypt: true})
-       .then((fileContents) => {
-          this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
-       })
-        .catch(error => {
-          console.log("shared with doc error: ")
-          console.log(error);
-        });
-
-      getFile("documentscollection.json", {decrypt: true})
-       .then((fileContents) => {
-          this.setState({ value: JSON.parse(fileContents || '{}').value })
-          let value = this.state.value;
-          const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
-          let index = thisDoc && thisDoc.id;
-          console.log(index);
-          function findObjectIndex(doc) {
-              return doc.id == index;
-          }
-          this.setState({index: value.findIndex(findObjectIndex)})
-       })
-        .catch(error => {
-          console.log(error);
-        });
-
-    getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-
-        this.setState({
-          title: JSON.parse(fileContents || '{}').title,
-          content: JSON.parse(fileContents || '{}').content
-       })
-     })
-      .catch(error => {
-        console.log(error);
-      });
-      this.printPreview = () => {
-        if(this.state.printPreview == true) {
-          this.setState({printPreview: false});
-        } else {
-          this.setState({printPreview: true});
-        }
-      }
-    }
-
-  componentDidUpdate() {
-    if(this.state.confirmAdd === true) {
-      this.sharedInfo();
-    }
-
-    this.attachQuillRefs();
-    document.getElementsByClassName("comment-button")[0].onclick = () => {
-       var range = this.quillRef.getSelection();
-       var text = this.quillRef.getText(range.index, range.length);
-       this.quillRef.format('background', 'yellow');
-       this.setState({ highlightedText: text, showCommentModal: "", selection: range });
-    };
   }
 
-  attachQuillRefs = () => {
-   if (typeof this.reactQuillRef.getEditor !== 'function') return;
-   this.quillRef = this.reactQuillRef.getEditor();
- }
 
- insertText = () => {
-    var range = this.quillRef.getSelection();
-    var text = this.quillRef.getText(range.index, range.length);
-    this.setState({ highlightedText: text, showCommentModal: "", selection: range });
- }
-
- cancelComment = () => {
-   this.quillRef.format('background', 'white');
-   this.setState({showCommentModal: "hide", commentInput: "" });
- }
-
-  sharePublicly() {
+  handleaddItem() {
     const today = new Date();
     const day = today.getDate();
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
+    const rando = Date.now();
     const object = {};
-    object.title = this.state.title;
-    object.content = this.state.content;
-    object.words = wordcount(this.state.content);
-    object.shared = month + "/" + day + "/" + year;
-    this.setState({singlePublic: object})
-    setTimeout(this.savePublic, 700);
+    object.title = "Untitled";
+    object.id = rando;
+    object.created = month + "/" + day + "/" + year;
+    object.tags = [];
+    object.sharedWith = [];
+    const objectTwo = {}
+    objectTwo.title = object.title;
+    objectTwo.id = object.id;
+    objectTwo.created = object.created;
+    objectTwo.content = "";
+    objectTwo.tags = [];
+    objectTwo.sharedWith = [];
 
+    this.setState({ value: [...this.state.value, object] });
+    this.setState({ filteredValue: [...this.state.filteredValue, object] });
+    this.setState({ singleDoc: objectTwo });
+    this.setState({ tempDocId: object.id });
+    setTimeout(this.saveNewFile, 500);
+  }
+  filterList(event){
+    var updatedList = this.state.value;
+    updatedList = updatedList.filter(function(item){
+      return item.title.toLowerCase().search(
+        event.target.value.toLowerCase()) !== -1;
+    });
+    this.setState({filteredValue: updatedList});
   }
 
-  stopSharing() {
-    this.setState({ singlePublic: {}})
-    setTimeout(this.saveStop, 700);
-  }
-
-  saveStop() {
-    const user = loadUserData().username;
-    const userShort = user.slice(0, -3);
-    const params = this.props.match.params.id;
-    const directory = 'public/';
-    const file = directory + userShort + params + '.json'
-    putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
+  saveNewFile() {
+    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
       .then(() => {
-        window.Materialize.toast(this.state.title + " is no longer publicly shared.", 4000);
+        console.log("Saved Collection!");
+        this.saveNewSingleDoc();
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-
       });
   }
 
-  savePublic() {
-    var gaiaLink;
-    const profile = loadUserData().profile;
-    const apps = profile.apps;
-    gaiaLink = apps["https://app.graphitedocs.com"];
-    console.log("Shared: ")
-    const user = loadUserData().username;
-    const userShort = user.slice(0, -3);
-    const params = this.props.match.params.id;
-    const directory = 'public/';
-    const file = directory + userShort + params + '.json'
-    putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
+  saveNewSingleDoc() {
+    const file = this.state.tempDocId;
+    const fullFile = '/documents/' + file + '.json'
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
       .then(() => {
-        console.log("Shared Public Link")
-        this.setState({gaiaLink: gaiaLink + file, publicShare: "", shareModal: "hide"});
+        console.log("Saved!");
+        this.setState({ redirect: true });
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-
       });
   }
 
-  copyLink() {
-    var copyText = document.getElementById("gaia");
-    copyText.select();
-    document.execCommand("Copy");
-    window.Materialize.toast("Link copied to clipboard", 1000);
+  handleSignOut(e) {
+    e.preventDefault();
+    signUserOut(window.location.origin);
   }
 
-  sharedInfo(){
+  handleClick() {
+    this.setState({ alert: "hide" })
+  }
+
+  handlePageChange(event) {
+    this.setState({
+      currentPage: Number(event.target.id)
+    });
+  }
+
+  handleCheckbox(event) {
+    let checkedArray = this.state.docsSelected;
+      let selectedValue = event.target.value;
+
+        if (event.target.checked === true) {
+        	checkedArray.push(selectedValue);
+            this.setState({
+              docsSelected: checkedArray
+            });
+          if(checkedArray.length === 1) {
+            this.setState({activeIndicator: true});
+
+          } else {
+            this.setState({activeIndicator: false});
+          }
+        } else {
+          this.setState({activeIndicator: false});
+        	let valueIndex = checkedArray.indexOf(selectedValue);
+			      checkedArray.splice(valueIndex, 1);
+
+            this.setState({
+              docsSelected: checkedArray
+            });
+            if(checkedArray.length === 1) {
+              this.setState({activeIndicator: true});
+            } else {
+              this.setState({activeIndicator: false});
+            }
+        }
+  }
+
+  download() {
+    if(this.state.docsSelected.length < 2) {
+      //download single file
+
+    } else {
+      //do some looping and download multiple files
+    }
+  }
+
+  sharedInfo() {
     this.setState({ confirmAdd: false });
     const user = this.state.receiverID;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
@@ -324,539 +322,663 @@ export default class TestDoc extends Component {
     getFile('key.json', options)
       .then((file) => {
         this.setState({ pubKey: JSON.parse(file)})
-        console.log("Step One: PubKey Loaded");
       })
         .then(() => {
-          this.loadMyFile();
+          this.loadSharedCollection();
         })
         .catch(error => {
           console.log("No key: " + error);
           window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-          this.setState({ shareModal: "hide", loading: "hide", show: "" });
+          this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
         });
   }
 
-  loadMyFile() {
-    const user = this.state.receiverID;
-    const userShort = user.slice(0, -3);
-    const fileName = 'shareddocs.json'
-    const file = userShort + fileName;
+loadSharedCollection () {
+  const user = this.state.receiverID;
+  const file = "shared.json";
+  getFile(user + file, {decrypt: true})
+    .then((fileContents) => {
+      if(fileContents) {
+        this.setState({ sharedCollection: JSON.parse(fileContents || '{}') })
+      } else {
+        this.setState({ sharedCollection: [] });
+      }
+    })
+    .then(() => {
+      this.loadSingle();
+    })
+    .catch((error) => {
+      console.log(error)
+    });
+}
 
-    getFile(file, {decrypt: true})
+loadSingle() {
+
+  if(this.state.docsSelected.length > 1) {
+    //TODO figure out how to handle this
+  } else {
+    const thisFile = this.state.docsSelected[0];
+    const fullFile = '/documents/' + thisFile + '.json';
+    const fullFileSharedWith = thisFile + 'sharedwith.json';
+
+    getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
-        this.setState({ shareFile: JSON.parse(fileContents || '{}') })
-        console.log("Step Two: Loaded share file");
-        this.setState({ loading: "", show: "hide" });
-        const today = new Date();
-        const day = today.getDate();
-        const month = today.getMonth() + 1;
-        const year = today.getFullYear();
-        const object = {};
-        object.title = this.state.title;
-        object.content = this.state.content;
-        object.id = Date.now();
-        object.receiverID = this.state.receiverID;
-        object.words = wordcount(this.state.content);
-        object.shared = month + "/" + day + "/" + year;
-        const objectTwo = {};
-        objectTwo.contact = this.state.receiverID;
-        this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, objectTwo] });
-        setTimeout(this.shareDoc, 700);
+       if(JSON.parse(fileContents || '{}').sharedWith) {
+         this.setState({
+           title: JSON.parse(fileContents || '{}').title,
+           content: JSON.parse(fileContents || '{}').content,
+           tags: JSON.parse(fileContents || '{}').tags,
+           updated: JSON.parse(fileContents || '{}').updated,
+           words: JSON.parse(fileContents || '{}').words,
+           id: JSON.parse(fileContents || '{}').id,
+           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
+        });
+      } else {
+        this.setState({
+          title: JSON.parse(fileContents || '{}').title,
+          content: JSON.parse(fileContents || '{}').content,
+          tags: JSON.parse(fileContents || '{}').tags,
+          updated: JSON.parse(fileContents || '{}').updated,
+          words: JSON.parse(fileContents || '{}').words,
+          id: JSON.parse(fileContents || '{}').id,
+          sharedWithSingle: []
+       });
+      }
+
      })
+      .then(() => {
+        this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
+        setTimeout(this.getCollection, 300);
+      })
       .catch(error => {
         console.log(error);
-        console.log("Step Two: No share file yet, moving on");
-        this.setState({ loading: "", show: "hide" });
-        const today = new Date();
-        const day = today.getDate();
-        const month = today.getMonth() + 1;
-        const year = today.getFullYear();
-        const object = {};
-        object.title = this.state.title;
-        object.content = this.state.content;
-        object.id = Date.now();
-        object.receiverID = this.state.receiverID;
-        object.words = wordcount(this.state.content);
-        object.shared = month + "/" + day + "/" + year;
-        this.setState({ shareFile: [...this.state.shareFile, object] });
-        setTimeout(this.shareDoc, 700);
       });
-  }
-
-  shareDoc() {
-    const user = this.state.receiverID;
-    const userShort = user.slice(0, -3);
-    const fileName = 'shareddocs.json'
-    const file = userShort + fileName;
-    putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
-      .then(() => {
-        console.log("Step Three: File Shared: " + file);
-        this.setState({ shareModal: "hide", loading: "hide", show: "" });
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-      const publicKey = this.state.pubKey;
-      const data = this.state.shareFile;
-      const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-      const directory = '/shared/' + file;
-      putFile(directory, encryptedData, {encrypt: false})
-        .then(() => {
-          console.log("Shared encrypted file ");
-          window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
-        })
-        .catch(e => {
-          console.log(e);
-        });
-      putFile(this.props.match.params.id + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
-        .then(() => {
-          console.log("Shared With File Updated")
-        })
-        .catch(e => {
-          console.log(e);
-        });
-  }
-
-  shareModal() {
-    this.setState({
-      shareModal: ""
-    });
-  }
-
-  hideModal() {
-    this.setState({
-      shareModal: "hide",
-      blogModal: "hide"
-    });
-  }
-
-  handleTitleChange(e) {
-    this.setState({
-      title: e.target.value
-    });
-    clearTimeout(this.timeout);
-    this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  }
-  handleChange(value) {
-      this.setState({ content: value });
-      clearTimeout(this.timeout);
-      this.timeout = setTimeout(this.handleAutoAdd, 1500)
     }
+}
 
-  handleIDChange(e) {
-      this.setState({ receiverID: e.target.value })
+getCollection() {
+  getFile("documentscollection.json", {decrypt: true})
+  .then((fileContents) => {
+     this.setState({ value: JSON.parse(fileContents || '{}').value })
+     this.setState({ initialLoad: "hide" });
+  }).then(() =>{
+    let value = this.state.value;
+    const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
+    let index = thisDoc && thisDoc.id;
+    function findObjectIndex(doc) {
+        return doc.id == index;
     }
+    this.setState({index: value.findIndex(findObjectIndex) });
+  })
+    .then(() => {
+      this.share();
+    })
+    .catch(error => {
+      console.log(error);
+    });
+}
 
-  handleBack() {
-    if(this.state.autoSave === "Saving") {
-      setTimeout(this.handleBack, 500);
-    } else {
-      window.location.replace("/documents");
-    }
-  }
-
-  handleAutoAdd() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
+  share() {
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
-    object.id = parseInt(this.props.match.params.id, 10);
-    object.updated = month + "/" + day + "/" + year;
-    object.words = wordcount(this.state.content);
-    this.setState({singleDoc: object});
-    this.setState({autoSave: "Saving..."});
-    const objectTwo = {};
-    objectTwo.title = this.state.title;
-    objectTwo.contacts = this.state.sharedWith;
-    objectTwo.id = parseInt(this.props.match.params.id, 10);
-    objectTwo.updated = month + "/" + day + "/" + year;
-    objectTwo.words = wordcount(this.state.content);
+    object.id = this.state.id;
+    object.updated = this.state.updated;
+    object.sharedWith = this.state.sharedWithSingle;
+    object.tags = this.state.tags;
     const index = this.state.index;
-    const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
-    this.setState({value: updatedDoc});
-    this.autoSave();
-    console.log("after save")
+    const updatedDocs = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
+    this.setState({value: updatedDocs, singleDoc: object, sharedCollection: [...this.state.sharedCollection, object]});
 
-  };
+    setTimeout(this.saveSharedFile, 300);
+  }
 
-  autoSave() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const file = this.props.match.params.id;
-    const fullFile = '/documents/' + file + '.json';
-    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
+  saveSharedFile() {
+    const user = this.state.receiverID;
+    const file = "shared.json";
+
+    putFile(user + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
       .then(() => {
-        console.log("Autosaved");
+        console.log("Shared Collection Saved");
+        this.saveSingleFile();
+      })
+  }
+
+  saveSingleFile() {
+    const file = this.state.docsSelected[0];
+    const fullFile = '/documents/' + file + '.json'
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
+      .then(() => {
+        console.log("Saved!");
         this.saveCollection();
       })
       .catch(e => {
         console.log("e");
         console.log(e);
       });
-      remoteStorage.access.claim('docs', 'rw');
-      remoteStorage.caching.enable('/docs/');
-      const client = remoteStorage.scope('/docs/');
-      const content = this.state.content;
-      const title = this.state.title;
-      const words = wordcount(this.state.content);
-      const updated = month + "/" + day + "/" + year;
-      const id = parseInt(this.props.match.params.id, 10);
-      const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
-      client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
-      .then(() => { console.log("Upload done") });
-      client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
-      .then(() => { console.log("Upload done") });
-      client.storeFile('text/plain', 'wordCount.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(words))))
-      .then(() => { console.log("Upload done") });
-      client.storeFile('text/plain', 'updated.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
-      .then(() => { console.log("Upload done") });
-      client.storeFile('text/plain', 'id.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
-      .then(() => { console.log("Upload done") });
   }
 
   saveCollection() {
     putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
-        this.setState({autoSave: "Saved"});
+        console.log("Saved Collection");
+        this.sendFile();
       })
       .catch(e => {
         console.log("e");
         console.log(e);
       });
-
   }
 
-  handleCommentInput(e) {
-    this.setState({ commentInput: e.target.value });
-  }
-
-  addComment() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const object = {};
-    object.id = Date.now();
-    object.commenter = loadUserData().username;
-    object.date = month + '/' + day + '/' + year;
-    object.selection = this.state.selection;
-    object.highlightedText = this.state.highlightedText;
-    object.comment = this.state.commentInput;
-    this.setState({ comments: [...this.state.comments, object ]});
-    setTimeout(this.saveComment, 700);
-  }
-
-  saveComment() {
-    const file = this.props.match.params.id;
-    const fullFile = file + 'comments.json';
-    putFile(fullFile, JSON.stringify(this.state.comments), {encrypt: true})
+  sendFile() {
+    const user = this.state.receiverID;
+    const userShort = user.slice(0, -3);
+    const fileName = 'shareddocs.json'
+    const file = userShort + fileName;
+    const publicKey = this.state.pubKey;
+    const data = this.state.sharedCollection;
+    const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
+    const directory = '/shared/' + file;
+    putFile(directory, encryptedData, {encrypt: false})
       .then(() => {
-        this.setState({
-          showCommentModal: "hide",
-          commentInput: "",
-          highlightedText: "",
-          selection: ""
-        });
-        window.Materialize.toast("Comment saved", 3000);
+        console.log("Shared encrypted file ");
+        window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+        this.loadCollection();
+        this.setState({shareModal: "hide", loadingTwo: "", contactDisplay: ""});
       })
       .catch(e => {
-        console.log("e");
         console.log(e);
       });
   }
 
-  getCommentSelection() {
-    this.quillRef.setSelection(this.state.reviewSelection);
-    window.$('.button-collapse').sideNav('hide');
-  }
+  loadSingleTags() {
 
-  resolveComment() {
-    this.quillRef.setSelection(this.state.reviewSelection);
-    let value = this.state.comments;
-    const thisDoc = value.find((doc) => { return doc.id == this.state.commentId});
-    let index = thisDoc && thisDoc.id;
-    function findObjectIndex(doc) {
-        return doc.id == index;
-    }
-    this.setState({ deleteIndex: value.findIndex(findObjectIndex) });
-    this.deleteComment();
-  }
+    this.setState({tagDownload: false});
+    const thisFile = this.state.docsSelected[0];
+    const fullFile = '/documents/' + thisFile + '.json';
 
-  deleteComment() {
-    // var text = this.quillRef.getText(range.index, range.length);
-    this.quillRef.format('background', 'white');
-    const updatedComments = update(this.state.comments, {$splice: [[this.state.deleteIndex, 1]]});
-    this.setState({comments: updatedComments, commentId: "" });
-    window.$('.button-collapse').sideNav('hide');
-    setTimeout(this.saveNewCommentsArray, 500);
-  }
-
-  saveNewCommentsArray() {
-    const file = this.props.match.params.id;
-    const fullFile = file + 'comments.json';
-    putFile(fullFile, JSON.stringify(this.state.comments), {encrypt: true})
-      .then(() => {
-        this.setState({
-          showCommentModal: "hide",
-          commentInput: "",
-          highlightedText: "",
-          selection: ""
+    getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       if(JSON.parse(fileContents || '{}').tags) {
+         this.setState({
+           shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+           title: JSON.parse(fileContents || '{}').title,
+           id: JSON.parse(fileContents || '{}').id,
+           updated: JSON.parse(fileContents || '{}').updated,
+           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+           singleDocTags: JSON.parse(fileContents || '{}').tags,
+           content: JSON.parse(fileContents || '{}').content
         });
-        window.Materialize.toast("Resolved!", 3000);
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-
-  print(){
-    // const curURL = window.location.href;
-    // window.replaceState(window.state, '', '/');
-    // window.print();
-    // window.replaceState(window.state, '', curURL);
-    window.print();
-  }
-
-  renderView() {
-    window.onload = () => {
-
-    }
-    this.state.commentId === "" ? console.log("no index set") : this.resolveComment();
-    this.state.reviewSelection === "" ? console.log("no comment selected") : this.getCommentSelection();
-
-    TestDoc.modules = {
-      toolbar: [
-        [{ font: [] }],
-        [{ header: 1 }, { header: 2 }],
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        [{ align: [] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
-        [{ script: 'sub' }, { script: 'super' }],
-        [{ indent: '-1' }, { indent: '+1' }],
-        [{ color: [] }, { background: [] }],
-        ['video'],
-        ['image'],
-        ['link'],
-      ],
-      clipboard: {
-        // toggle to add extra line breaks when pasting HTML:
-        matchVisual: false,
-      }
-    }
-    // TestDoc.formats = [
-    //   'header', 'font', 'size', 'color',
-    //   'bold', 'italic', 'underline', 'strike', 'blockquote',
-    //   'list', 'bullet', 'indent',
-    //   'link', 'image', 'video'
-    // ]
-    const user = loadUserData().username;
-    const words = wordcount(this.state.content.replace(/<(?:.|\n)*?>/gm, ''));
-    const {listComments, showCommentModal, comments, remoteStorage, blogModal, loading, save, autoSave, shareModal, publicShare, show, contacts, hideStealthy, revealModule} = this.state
-    const stealthy = (hideStealthy) ? "hide" : ""
-    let blogTags = [
-      "Technology",
-      "Computers",
-      "Decentralization",
-      "Art"
-    ]
-    const remoteStorageActivator = remoteStorage === true ? "" : "hide";
-    var content = "<p style='text-align: center;'>" + this.state.title + "</p>" + "<div style='text-indent: 30px;'>" + this.state.content + "</div>";
-    var htmlString = window.$('<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">').html('<body>' +
-
-    content +
-
-    '</body>'
-
-    ).get().outerHTML;
-
-    var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + content + '</body></html>';
-    var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
-
-      const {length} = contacts
-      let users = '&length=' + length
-      let k = 0
-      for (const i of contacts) {
-        users += '&id' + k + "=" + i.contact
-        k += 1
-      }
-      // const to = (sharedWith && sharedWith[sharedWith.length - 1] && sharedWith[sharedWith.length - 1].contact) ? sharedWith[sharedWith.length - 1].contact : ''
-      const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
-        'http://localhost:3030/?app=gd04012018' :
-        'https://www.stealthy.im/?app=gd04012018';
-      const stealthyUrl = stealthyUrlStub + users;
-
-      // const stealthyModule = (length > 0) ? (
-      const stealthyModule =  (<div className={stealthy}>
-          <div id='stealthyCol' className='card'>
-          <div className={revealModule}>
-            <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
-          </div>
-        </div>
-        </div>
-      )
-      // ) : null
-
-      let docFlex;
-      if(this.state.hideStealthy === true) {
-        docFlex = "test-doc-card";
       } else {
-        docFlex = "test-with-module";
+        this.setState({
+          shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+          title: JSON.parse(fileContents || '{}').title,
+          id: JSON.parse(fileContents || '{}').id,
+          updated: JSON.parse(fileContents || '{}').updated,
+          sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+          singleDocTags: [],
+          content: JSON.parse(fileContents || '{}').content
+       });
       }
-
-      return (
-        <div>
-        <div className="navbar-fixed toolbar">
-          <nav className="toolbar-nav">
-            <div className="nav-wrapper">
-              <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
-
-                <ul className="left toolbar-menu">
-                <li className="document-title">{this.state.title.length > 15 ? this.state.title.substring(0,15)+"..." :  this.state.title}</li>
-                <li><a className="small-menu muted">{autoSave}</a></li>
-                </ul>
-                <ul className="right toolbar-menu small-toolbar-menu auto-save">
-                {this.state.notificationCount >0 ? <li><a><i className="small-menu red-text material-icons">notifications_active</i></a></li> : <li><a><i className="small-menu material-icons">notifications_none</i></a></li>}
-                <li><a><i className="small-menu material-icons tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share">people</i></a></li>
-                <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
-                <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
-                </ul>
-
-                {/*Share Menu Dropdown*/}
-                <ul id="dropdown2"className="dropdown-content collection cointainer">
-                <li><span className="center-align">Select a contact to share with</span></li>
-                <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
-                <li className="divider" />
-                {contacts.slice(0).reverse().map(contact => {
-                    return (
-                      <li key={contact.contact}className="collection-item">
-                        <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
-                        <p>{contact.contact}</p>
-                        </a>
-                      </li>
-                    )
-                  })
-                }
-                </ul>
-                {/*Share Menu Dropdown*/}
-
-                {/* Dropdown menu content */}
-                <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
-                  <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
-                  <li className="divider"></li>
-                  <li><a onClick={this.print}>Print</a></li>
-                  <li><a download={this.state.title + ".docx"}  href={dataUri}>Download</a></li>
-                  <li className="divider"></li>
-                  <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
-                  <li><a href="#!">Tag</a></li>
-                  <li><a href="#!">History</a></li>
-                </ul>
-              {/* End dropdown menu content */}
-
-              {/*Show Comments Modal*/}
-              <ul id="slide-out" className="comments-side-nav side-nav">
-                {comments.slice(0).reverse().map(comment => {
-                    return (
-                      <li key={comment.id}>
-                        <p className="black-text commenter">From {comment.commenter}</p>
-                        <p className="black-text highlightedComment">{comment.highlightedText}</p>
-                        <p className="black-text comment">{comment.comment}</p>
-                        <button onClick={() => this.setState({ reviewSelection: comment.selection })} className="black-text btn-flat">Review</button>
-                        <button onClick={() => this.setState({ reviewSelection: comment.selection, commentId: comment.id })} className="btn-flat">Resolve</button>
-                        <p className="divider"></p>
-                      </li>
-                    )
-                  })
-                }
-              </ul>
-              {/*End Show Comments Modal*/}
-
-              {/*Add Comment Modal*/}
-              <div className={showCommentModal}>
-                <div id="modal1" className="modal">
-                  <div className="">
-                    <div className="modal-content">
-                      <blockquote className="black-text">
-                        {this.state.highlightedText}
-                      </blockquote>
-                      <h5 className="black-text">Add Comment</h5>
-
-                        <textarea defaultValue={this.state.commentInput} onChange={this.handleCommentInput} className="materialize-textarea black-text" placeholder="Your comment"/>
-
-                    </div>
-                    <div className="modal-footer">
-                      <a onClick={this.addComment} className="btn-flat modal-action">Save Comment</a>
-                      <a onClick={this.cancelComment} className="modal-action grey-text btn-flat">Cancel</a>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/*End Add Comment Modal*/}
-            </div>
-          </nav>
-        </div>
-        {/*Remote storae widget*/}
-          <div className={remoteStorageActivator} id="remotestorage">
-            <div id='remote-storage-element-id'></div>
-          </div>
-          {/*Remote storae widget*/}
-          <div className="test-docs">
-            <div className={docFlex}>
-              <div className="double-space doc-margin">
-              <h3>
-                {this.state.title === "Untitled" ? <input className="doc-title" placeholder="Give it a title" type="text" onChange={this.handleTitleChange} /> : <input className="doc-title" placeholder="Title" type="text" value={this.state.title} onChange={this.handleTitleChange} />}
-              </h3>
-
-                  <ReactQuill
-                    ref={(el) => { this.reactQuillRef = el }}
-                    modules={TestDoc.modules}
-                    id="textarea1"
-                    className="materialize-textarea"
-                    placeholder="Write something great"
-                    value={this.state.content}
-                    onChange={this.handleChange}
-                    theme="bubble" />
-
-
-              <div className="right-align wordcounter">
-                <p className="wordcount">{words} words</p>
-              </div>
-              <div className={save}>
-              </div>
-              <div className={loading}>
-              <div className="preloader-wrapper small active">
-                <div className="spinner-layer spinner-green-only">
-                  <div className="circle-clipper left">
-                    <div className="circle"></div>
-                  </div><div className="gap-patch">
-                    <div className="circle"></div>
-                  </div><div className="circle-clipper right">
-                    <div className="circle"></div>
-                  </div>
-                </div>
-              </div>
-              </div>
-              </div>
-              {stealthyModule}
-            </div>
-          </div>
-          </div>
-      );
+     })
+     .then(() => {
+       this.setState({ tagModal: ""});
+       setTimeout(this.getCollectionTags, 300);
+     })
+      .catch(error => {
+        console.log(error);
+      });
   }
+
+  getCollectionTags() {
+    getFile("documentscollection.json", {decrypt: true})
+    .then((fileContents) => {
+       this.setState({ value: JSON.parse(fileContents || '{}').value })
+       this.setState({ initialLoad: "hide" });
+    }).then(() =>{
+      let value = this.state.value;
+      const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
+      let index = thisDoc && thisDoc.id;
+      function findObjectIndex(doc) {
+          return doc.id == index;
+      }
+      this.setState({index: value.findIndex(findObjectIndex) });
+    })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+  saveNewTags() {
+    this.setState({ loadingTwo: ""});
+    const object = {};
+    object.id = this.state.id;
+    object.title = this.state.title;
+    object.updated = this.state.updated;
+    object.tags = this.state.singleDocTags;
+    object.content = this.state.content;
+    object.sharedWith = this.state.sharedWith;
+    const objectTwo = {};
+    objectTwo.title = this.state.title;
+    objectTwo.id = this.state.id;
+    objectTwo.updated = this.state.updated;
+    objectTwo.sharedWith = this.state.sharedWith;
+    objectTwo.tags = this.state.singleDocTags
+    const index = this.state.index;
+    const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
+    this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object });
+    setTimeout(this.saveFullCollectionTags, 500);
+  }
+
+  saveFullCollectionTags() {
+    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+      .then(() => {
+        console.log("Saved");
+        this.saveSingleDocTags();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
+  saveSingleDocTags() {
+    const thisFile = this.state.docsSelected[0];
+    const fullFile = '/documents/' + thisFile + '.json';
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
+      .then(() => {
+        console.log("Saved tags");
+        this.setState({ tagModal: "hide", loadingTwo: "hide" });
+        this.loadCollection();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
+  deleteTag() {
+    console.log("Deleted");
+    this.setState({ deleteState: false });
+
+    let tags = this.state.singleDocTags;
+    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId});
+    let index = thisTag && thisTag.id;
+    function findObjectIndex(tag) {
+        return tag.id == index;
+    }
+    this.setState({ index: tags.findIndex(findObjectIndex) });
+    // setTimeout(this.finalDelete, 300);
+    const updatedTags = update(this.state.singleDocTags, {$splice: [[this.state.index, 1]]});
+    this.setState({singleDocTags: updatedTags });
+  }
+
+  applyFilter() {
+    this.setState({ applyFilter: false });
+    setTimeout(this.filterNow, 500);
+  }
+
+  filterNow() {
+    let value = this.state.value;
+
+    if(this.state.selectedTag != "") {
+      let tagFilter = value.filter(x => x.tags.includes(this.state.selectedTag));
+      this.setState({ filteredValue: tagFilter, appliedFilter: true});
+      window.$('.button-collapse').sideNav('hide');
+    } else if (this.state.selectedDate != "") {
+      let dateFilter = value.filter(x => x.updated.includes(this.state.selectedDate));
+      this.setState({ filteredValue: dateFilter, appliedFilter: true});
+      window.$('.button-collapse').sideNav('hide');
+    } else if (this.state.selectedCollab != "") {
+      let collaboratorFilter = value.filter(x => x.sharedWith.includes(this.state.selectedCollab));
+      this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
+      window.$('.button-collapse').sideNav('hide');
+    }
+  }
+
 
   render() {
-    console.log(this.state.comments);
+    this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
+    this.state.deleteState === true ? this.deleteTag() : console.log("no delete");
+    this.state.tagDownload === true ? this.loadSingleTags() : console.log("no document selected");
+    let value;
+    this.state.filteredValue === [] ? value = [] : value = this.state.filteredValue;
+    const { appliedFilter, selectedDate, selectedCollab, selectedTag, dateList, tagList, collaboratorsModal, singleDocTags, contactDisplay, loadingTwo, confirmAdd, contacts, shareModal, tagModal, currentPage, docsPerPage, loading } = this.state;
+    const link = '/documents/doc/' + this.state.tempDocId;
+    if (this.state.redirect) {
+      return <Redirect push to={link} />;
+    } else {
+      console.log("No redirect");
+    }
+    confirmAdd === false ? console.log("Not sharing") : this.sharedInfo();
+    const userData = loadUserData();
+    const person = new Person(userData.profile);
+
+    const indexOfLastDoc = currentPage * docsPerPage;
+    const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
+    const currentDocs = value.slice(0).reverse();
+
+    let shared = currentDocs.map(a => a.sharedWith);
+    console.log("shared");
+    console.log(shared);
+    let mergedShared = [].concat.apply([], shared);
+    console.log("merge shared");
+    console.log(mergedShared);
+    let uniqueCollabs = [];
+    window.$.each(mergedShared, function(i, el){
+      if(window.$.inArray(el, uniqueCollabs) === -1) uniqueCollabs.push(el);
+    });
+
+    let tags = currentDocs.map(a => a.tags);
+    let mergedTags = [].concat.apply([], tags);
+    let uniqueTags = [];
+    window.$.each(mergedTags, function(i, el) {
+      if(window.$.inArray(el, uniqueTags) === -1) uniqueTags.push(el);
+    })
+
+    let date = currentDocs.map(a => a.updated);
+    let mergedDate = [].concat.apply([], date);
+    let uniqueDate = [];
+    window.$.each(mergedDate, function(i, el) {
+      if(window.$.inArray(el, uniqueDate) === -1) uniqueDate.push(el);
+    })
+
+
+    // Logic for displaying page numbers
+   const pageNumbers = [];
+   for (let i = 1; i <= Math.ceil(value.length / docsPerPage); i++) {
+     pageNumbers.push(i);
+   }
+
+   const renderPageNumbers = pageNumbers.map(number => {
+          return (
+            <li
+              key={number}
+              id={number}
+              className={number === this.state.currentPage ? "active" : ""}
+            >
+              <a id={number} onClick={this.handlePageChange}>{number}</a>
+            </li>
+          );
+        });
+
     return (
       <div>
-        {this.renderView()}
+      <div className="navbar-fixed toolbar">
+        <nav className="toolbar-nav">
+          <div className="nav-wrapper">
+            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
+
+            <ul id="nav-mobile" className="right">
+              <ul id="dropdown1" className="dropdown-content">
+                <li><a href="/shared-docs">Shared Files</a></li>
+                <li><a href="/export">Export All Data</a></li>
+                <li className="divider"></li>
+                <li><a onClick={ this.handleSignOut }>Sign out</a></li>
+              </ul>
+              <ul id="dropdown2" className="dropdown-content">
+                <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
+                <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
+                <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
+                <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
+              </ul>
+                <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
+                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+            </ul>
+          </div>
+        </nav>
+        </div>
+
+        <div className="docs">
+        <div className="row container">
+          <div className="col s12 m6">
+            <h5>Documents ({currentDocs.length})
+              {appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+              {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.value})}>Clear</a></span> : <div />}
+            </h5>
+            {/* Filter Dropdown */}
+            <ul id="slide-out" className="comments-side-nav side-nav">
+              <h5 className="center-align">Filter</h5>
+              <li><a onClick={() => this.setState({collaboratorsModal: ""})}>Collaborators</a></li>
+                {/* Collaborator list */}
+                  <ul className={collaboratorsModal}>
+                  {
+                    uniqueCollabs.map(collab => {
+                      return (
+                        <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedCollab: collab, collaboratorsModal: "hide", applyFilter: true})}>{collab}</a></li>
+                      )
+                    })
+                  }
+                  </ul>
+                {/* End Collaborator list */}
+              <li><a onClick={() => this.setState({tagList: ""})}>Tags</a></li>
+              {/* Tags list */}
+                <ul className={tagList}>
+                {
+                  uniqueTags.map(tag => {
+                    return (
+                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedTag: tag, tagList: "hide", applyFilter: true})}>{tag}</a></li>
+                    )
+                  })
+                }
+                </ul>
+              {/* End Tag list */}
+              <li><a onClick={() => this.setState({dateList: ""})}>Updated</a></li>
+              {/* Date list */}
+                <ul className={dateList}>
+                {
+                  uniqueDate.map(date => {
+                    return (
+                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedDate: date, dateList: "hide", applyFilter: true})}>{date}</a></li>
+                    )
+                  })
+                }
+                </ul>
+              {/* End Date list */}
+            </ul>
+            {/* End Filter Dropdown */}
+          </div>
+          <div className="col right s12 m6">
+          <form className="searchform">
+          <fieldset className=" form-group searchfield">
+          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Documents" onChange={this.filterList}/>
+          </fieldset>
+          </form>
+          </div>
+        </div>
+          <div className="container">
+            <div className={loading}>
+              <div className="progress center-align">
+                <p>Loading...</p>
+                <div className="indeterminate"></div>
+              </div>
+            </div>
+          </div>
+        {/* Add button */}
+        <div className="container">
+          <div className="fixed-action-btn">
+            <a onClick={this.handleaddItem} className="btn-floating btn-large black">
+              <i className="large material-icons">add</i>
+            </a>
+        </div>
+        {/* End Add Button */}
+          {
+            this.state.activeIndicator === true ?
+              <ul className="pagination action-items">
+                <li><a onClick={() => this.setState({shareModal: ""})}>Share</a></li>
+                <li><a onClick={() => this.setState({tagDownload: true })}>Tag</a></li>
+                <li><a onClick={this.download}>Download</a></li>
+                <ul className="right">
+                  <li><a><i className="tiny shared-files-table-selector material-icons">people</i></a></li>
+                </ul>
+              </ul>
+           :
+              <ul className="pagination inactive action-items">
+                <li><a>Share</a></li>
+                <li><a>Tag</a></li>
+                <li><a>Download</a></li>
+                <ul className="right">
+                  <li><a><i className="tiny shared-files-table-selector material-icons">people</i></a></li>
+                </ul>
+              </ul>
+
+          }
+
+          <table className="bordered">
+            <thead>
+              <tr>
+                <th></th>
+                <th>Title</th>
+                <th>Collaborators</th>
+                <th>Updated</th>
+                <th>Tags</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+          {
+            currentDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
+              var tags;
+              var collabs;
+              if(doc.tags) {
+                tags = Array.prototype.slice.call(doc.tags);
+              } else {
+                tags = "";
+              }
+              if(doc.sharedWith) {
+                collabs = Array.prototype.slice.call(doc.sharedWith);
+              } else {
+                collabs = "";
+              }
+            return(
+              <tr key={doc.id}>
+                <td><input type="checkbox" checked={this.state.checked} value={doc.id} id={doc.id} onChange={this.handleCheckbox} /><label htmlFor={doc.id}></label></td>
+                <td><Link to={'/documents/doc/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
+                <td>{collabs === "" ? collabs : collabs.join(', ')}</td>
+                <td>{doc.updated}</td>
+                <td>{tags === "" ? tags : tags.join(', ')}</td>
+                <td><Link to={'/documents/doc/delete/'+ doc.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
+              </tr>
+            );
+            })
+          }
+          </tbody>
+        </table>
+
+        <div>
+          <ul className="center-align pagination">
+          {renderPageNumbers}
+          </ul>
+          <div className="docs-per-page right-align">
+            <label>Docs per page</label>
+            <select value={this.state.docsPerPage} onChange={(event) => this.setState({ docsPerPage: event.target.value})}>
+              <option value={10}>
+              10
+              </option>
+              <option value={20}>
+              20
+              </option>
+              <option value={50}>
+              50
+              </option>
+            </select>
+          </div>
+        </div>
+        {/* Share Modal */}
+          <div className={shareModal}>
+            <div id="modal1" className="project-page-modal modal">
+              <div className="modal-content">
+                <a onClick={() => this.setState({shareModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
+                <div className={contactDisplay}>
+                  <h4>Select Contact</h4>
+                  <ul className="collection">
+                  {contacts.slice(0).reverse().map(contact => {
+                      return (
+                        <li key={contact.contact}className="collection-item">
+                          <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true, contactDisplay: "hide", loadingTwo: "" })}>
+                          <p>{contact.contact}</p>
+                          </a>
+                        </li>
+                      )
+                    })
+                  }
+                  </ul>
+                </div>
+              </div>
+              {/*loading */}
+              <div className={loadingTwo}>
+                <div className="center">
+                  <div className="preloader-wrapper small active">
+                    <div className="spinner-layer spinner-green-only">
+                      <div className="circle-clipper left">
+                        <div className="circle"></div>
+                      </div><div className="gap-patch">
+                        <div className="circle"></div>
+                      </div><div className="circle-clipper right">
+                        <div className="circle"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/*end loading */}
+            </div>
+          </div>
+        {/* End Share Modal */}
+
+        {/* Tag Modal */}
+          <div className={tagModal}>
+            <div id="modal1" className="project-page-modal modal">
+              <div className="modal-content">
+                <a onClick={() => this.setState({tagModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
+
+                  <h4>Tags</h4>
+                  <p>Add a new tag or remove an existing tag.</p>
+                  <div className="row">
+                    <div className="col s9">
+                      <input type="text" value={this.state.tag} onChange={this.setTags} onKeyPress={this.handleKeyPress} />
+                    </div>
+                    <div className="col s3">
+                      <a onClick={this.addTagManual}><i className="material-icons">check</i></a>
+                    </div>
+                  </div>
+                  <div>
+                  {singleDocTags.slice(0).reverse().map(tag => {
+                      return (
+                        <div key={tag} className="chip">
+                          {tag}<a onClick={() => this.setState({selectedTagId: tag, deleteState: true})}><i className="close material-icons">close</i></a>
+                        </div>
+                      )
+                    })
+                  }
+                  </div>
+                  <div>
+                    <button onClick={this.saveNewTags} className="btn">Save</button>
+                  </div>
+              </div>
+              {/*loading */}
+              <div className={loadingTwo}>
+                <div className="center">
+                  <div className="preloader-wrapper small active">
+                    <div className="spinner-layer spinner-green-only">
+                      <div className="circle-clipper left">
+                        <div className="circle"></div>
+                      </div><div className="gap-patch">
+                        <div className="circle"></div>
+                      </div><div className="circle-clipper right">
+                        <div className="circle"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/*end loading */}
+            </div>
+          </div>
+        {/* End tag Modal */}
+
+        </div>
+      </div>
       </div>
     );
   }

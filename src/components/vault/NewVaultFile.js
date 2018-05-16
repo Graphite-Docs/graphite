@@ -27,6 +27,8 @@ export default class NewVaultFile extends Component {
       id: "",
       name: "",
       type: "",
+      tags: [],
+      sharedWithSingle: [],
       files: [],
       grid: [[]],
       singleFile: {},
@@ -55,23 +57,28 @@ export default class NewVaultFile extends Component {
     const reader = new FileReader();
     reader.onload = (event) => {
        const object = {};
-       object.file = file;
-       object.link = event.target.result;
-       object.name = file.name;
-       object.size = file.size;
-       object.type = file.type;
-       object.lastModified = file.lastModified;
-       object.lastModifiedDate = file.lastModifiedDate;
-       object.id = Date.now();
-       const objectTwo = {};
        const today = new Date();
        const day = today.getDate();
        const month = today.getMonth() + 1;
        const year = today.getFullYear();
+       object.file = file;
+       object.uploaded = month + "/" + day + "/" + year;
+       object.link = event.target.result;
+       object.name = file.name;
+       object.size = file.size;
+       object.type = file.type;
+       object.tags = this.state.tags,
+       object.sharedWithSingle = this.state.sharedWithSingle;
+       object.lastModified = file.lastModified;
+       object.lastModifiedDate = file.lastModifiedDate;
+       object.id = Date.now();
+       const objectTwo = {};
        objectTwo.uploaded = month + "/" + day + "/" + year;
        objectTwo.id = object.id;
        objectTwo.name = object.name;
        objectTwo.type = object.type;
+       objectTwo.tags = this.state.tags,
+       objectTwo.sharedWithSingle = this.state.sharedWithSingle;
        objectTwo.lastModifiedDate = object.lastModifiedDate;
 
        this.setState({id: objectTwo.id, name: objectTwo.name});

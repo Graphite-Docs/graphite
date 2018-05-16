@@ -200,28 +200,33 @@ export default class SharedSheets extends Component {
           <h5>Select the contact who shared with you</h5>
         </div>
 
-        <div className="shared-contacts row">
-        {contacts.slice(0).reverse().map(contact => {
-            return (
-              <div key={contact.contact} className="col s12 m6 l3">
-                  <div className="card collections-card hoverable horizontal">
-                  <Link to={'/sheets/shared/'+ contact.contact} className="side-card sheets-side">
-                    <div className="card-image card-image-side sheets-side">
-                      <img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" />
-                    </div>
-                  </Link>
-                    <div className="card-stacked">
-                    <Link to={'/sheets/shared/'+ contact.contact} className="black-text">
-                      <div className="card-content">
-                        <p className="title contacts-title">{contact.contact.length > 11 ? contact.contact.substring(0,11)+"..." :  contact.contact}</p>
-                      </div>
-                    </Link>
-                      <div className="edit-card-action card-action">
+        <div className="container">
 
-                      </div>
-                    </div>
-                  </div>
-              </div>
+        {contacts.slice(0).reverse().map(contact => {
+          let imageLink;
+          let name;
+          if(contact.img) {
+            imageLink = contact.img;
+          } else {
+            imageLink = avatarFallbackImage;
+          }
+
+          if(contact.name) {
+            name = contact.name;
+          } else {
+            name = "";
+          }
+
+            return (
+              <ul className="collection">
+                <li key={contact.contact} className="collection-item avatar">
+                  <Link to={'/sheets/shared/'+ contact.contact}>
+                    <img src={imageLink} alt="Profile" className="circle" />
+                    <span className="title">{contact.contact}</span>
+                    <p>{name}</p>
+                  </Link>
+                </li>
+              </ul>
             )
           })
         }
@@ -236,29 +241,33 @@ export default class SharedSheets extends Component {
           <h5 >Select the contact you shared with</h5>
         </div>
 
-        <div className="shared-contacts row">
+        <div className="container">
+
         {contacts.slice(0).reverse().map(contact => {
+          let imageLink;
+          let name;
+          if(contact.img) {
+            imageLink = contact.img;
+          } else {
+            imageLink = avatarFallbackImage;
+          }
+
+          if(contact.name) {
+            name = contact.name;
+          } else {
+            name = "";
+          }
+
             return (
-              <div key={contact.contact} className="col s12 m6 l3">
-                  <div className="card collections-card hoverable horizontal">
-                  <Link to={'/sheets/sent/'+ contact.contact} className="side-card sheets-side">
-                    <div className="card-image card-image-side sheets-side">
-                      <img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" />
-                    </div>
+              <ul className="collection">
+                <li key={contact.contact} className="collection-item avatar">
+                  <Link to={'/sheets/sent/'+ contact.contact}>
+                    <img src={imageLink} alt="Profile" className="circle" />
+                    <span className="title">{contact.contact}</span>
+                    <p>{name}</p>
                   </Link>
-                    <div className="card-stacked">
-                    <Link to={'/sheets/sent/'+ contact.contact} className="black-text">
-                      <div className="card-content">
-                        <p className="title contacts-title">{contact.contact.length > 11 ? contact.contact.substring(0,11)+"..." :  contact.contact}</p>
-                      </div>
-                    </Link>
-                      <div className="edit-card-action card-action">
-
-                      </div>
-                    </div>
-                  </div>
-              </div>
-
+                </li>
+              </ul>
             )
           })
         }
@@ -278,11 +287,10 @@ export default class SharedSheets extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="http://www.iconsplace.com/icons/preview/white/pencil-256.png" alt="pencil" /></a>
+              <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
 
               <ul id="nav-mobile" className="right">
               <ul id="dropdown1" className="dropdown-content">
-                <li><a href="/profile">Profile</a></li>
                 <li><a href="/shared-sheets">Shared Files</a></li>
                 <li><a href="/export">Export All Data</a></li>
                 <li className="divider"></li>
@@ -292,7 +300,6 @@ export default class SharedSheets extends Component {
               <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
               <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
               <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-              <li><a href="/conversations"><img src="https://i.imgur.com/cuXF1V5.png" alt="conversations-icon" className="dropdown-icon-bigger" /><br />Conversations</a></li>
               <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
               </ul>
                 <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
@@ -302,10 +309,12 @@ export default class SharedSheets extends Component {
           </nav>
         </div>
         <div className="shared-docs-page">
-          <div className="share-buttons center-align">
-            <button onClick={() => this.setState({ sharedWithMe: true })} className="share-button">Shared with me</button>
-            <button onClick={() => this.setState({ sharedWithMe: false })} className="share-button">Shared with others</button>
-          </div>
+        <div className="share-buttons center-align">
+          <ul className="tabs">
+            <li className="tab col s3"><a onClick={() => this.setState({ sharedWithMe: true })} className="active" >Shared With Me</a></li>
+            <li className="tab col s3"><a onClick={() => this.setState({ sharedWithMe: false })}>Shared With Others</a></li>
+          </ul>
+        </div>
         </div>
         {this.renderView()}
       </div>

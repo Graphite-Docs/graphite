@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Signin from '../Signin';
 import Contacts from './Contacts';
+import TestContacts from './TestContacts';
 import {
   isSignInPending,
   isUserSignedIn,

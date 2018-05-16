@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import Signin from '../Signin';
 import Collections from './Collections';
+import TestDoc from './TestDoc';
 import {
   isSignInPending,
   isUserSignedIn,

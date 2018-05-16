@@ -70,7 +70,7 @@ export default class App extends Component {
             <Route exact path="/documents/blog" component={Blog} />
             <Route exact path="/test" component={TestDoc} />
             <Route exact path="/documents/doc/new" component={Doc} />
-            <Route exact path="/documents/doc/:id" component={TestDoc} />
+            <Route exact path="/documents/doc/:id" component={SingleDoc} />
             <Route exact path="/documents/doc/delete/:id" component={DeleteDoc} />
             <Route exact path="/documents/shared/:id" component={SharedCollection} />
             <Route exact path="/documents/sent/:id" component={SentCollection} />
@@ -88,10 +88,8 @@ export default class App extends Component {
             <Route exact path="/shared-sheets" component={SharedSheets} />
             <Route exact path="/export" component={Export} />
             <Route exact path="/contacts" component={MainContacts} />
-            <Route exact path="/conversations" component={Conversations} />
             <Route exact path="/contacts/profile/:id" component={ContactsProfile} />
             <Route exact path="/contacts/delete/:id" component={DeleteContact} />
-            <Route exact path="/contacts/conversations/:id" component={SingleConversation} />
             <Route exact path="/vault" component={MainVault} />
             <Route exact path="/vault/new/file" component={NewVaultFile} />
             <Route exact path="/vault/:id" component={SingleVaultFile} />

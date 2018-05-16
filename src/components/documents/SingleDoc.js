@@ -1,16 +1,22 @@
 import React, { Component } from "react";
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill/dist/quill.bubble.css';
 import {
   loadUserData,
   getFile,
   putFile
 } from 'blockstack';
 import update from 'immutability-helper';
+import RemoteStorage from 'remotestoragejs';
+import Widget from 'remotestorage-widget';
 const wordcount = require("wordcount");
 const Font = ReactQuill.Quill.import('formats/font');
 const { encryptECIES } = require('blockstack/lib/encryption');
-Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
+const { decryptECIES } = require('blockstack/lib/encryption');
+const { getPublicKeyFromPrivate } = require('blockstack');
+const remoteStorage = new RemoteStorage({logging: false});
+const widget = new Widget(remoteStorage);
+Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
 ReactQuill.Quill.register(Font, true);
 
 export default class SingleDoc extends Component {
@@ -20,6 +26,7 @@ export default class SingleDoc extends Component {
       team: [],
       value: [],
       contacts: [],
+      tags: [],
       title : "",
       content:"",
       updated: "",
@@ -32,6 +39,7 @@ export default class SingleDoc extends Component {
       receiverID: "",
       shareModal: "hide",
       shareFile: [],
+      sharedWith: [],
       show: "",
       pubKey: "",
       singleDoc: {},
@@ -46,7 +54,40 @@ export default class SingleDoc extends Component {
       blogPost: {},
       blogIndex: [],
       blogModal: "hide",
-      docFlex: "card doc-card"
+      docFlex: "test-doc-card",
+      remoteStorage: false,
+      remoteTitle: "",
+      remoteContent: "",
+      remoteWords: "",
+      remoteId: "",
+      remoteUpdated: "",
+      highlightedText: "",
+      selection: "",
+      showCommentModal: "hide",
+      comments: [],
+      commentInput: "",
+      notificationCount: 0,
+      listComments: "hide",
+      reviewSelection: "",
+      commentId: "",
+      deleteIndex: "",
+      enterpriseUser: false,
+      journalismUser: false,
+      submittedArticle: {},
+      submitted: [],
+      send: false,
+      graphitePublicKey: "",
+      clientList: [],
+      team: [],
+      editorShare: false,
+      editorPublish: false,
+      editorComment: false,
+      editorAssign: false,
+      journoShare: false,
+      journoPublish: false,
+      journoComment: false,
+      journoAssign: false,
+      role: ""
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleAutoAdd = this.handleAutoAdd.bind(this);
@@ -61,41 +102,134 @@ export default class SingleDoc extends Component {
     this.savePublic = this.savePublic.bind(this);
     this.stopSharing = this.stopSharing.bind(this);
     this.saveStop = this.saveStop.bind(this);
-    this.postBlog = this.postBlog.bind(this);
-    this.saveBlogIndex = this.saveBlogIndex.bind(this);
-    this.saveBlogPost = this.saveBlogPost.bind(this);
+    this.quillRef = null;      // Quill instance
+    this.reactQuillRef = null; // ReactQuill component
+    this.addComment = this.addComment.bind(this);
+    this.saveComment = this.saveComment.bind(this);
+    this.handleCommentInput = this.handleCommentInput.bind(this);
+    this.cancelComment = this.cancelComment.bind(this);
+    this.resolveComment = this.resolveComment.bind(this);
+    this.deleteComment = this.deleteComment.bind(this);
+    this.saveNewCommentsArray = this.saveNewCommentsArray.bind(this);
+    // this.loadTeamFile = this.loadTeamFile.bind(this);
+    // this.loadPermissions = this.loadPermissions.bind(this);
   }
 
 
 
   componentDidMount() {
-
-    // const options = { username: "jehunter5811.id", zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    //   getFile("blogteam.json", options)
-    //    .then((fileContents) => {
-    //      if(JSON.parse(fileContents || '{}').length > 0) {
-    //        this.setState({ team: JSON.parse(fileContents || '{}') });
-    //      } else {
-    //        this.setState({ team: []});
-    //      }
-    //    })
+    //Checking root username domain to see if user is enterprise
+    //TODO this will need to be dynamic
+    // loadUserData().username.indexOf("personal") ? this.setState({ enterpriseUser: true, journalismUser: true }) : console.log("User logged in: " + loadUserData().username);
+    //getting Graphite.id public key
+    // const user = "graphite.id";
+    // const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    // getFile('key.json', options)
+    //   .then((file) => {
+    //     this.setState({ graphitePublicKey: JSON.parse(file)})
+    //   })
+    //     .then(() => {
+    //       // this.loadClientList();
+    //     })
     //     .catch(error => {
-    //       console.log(error);
+    //       console.log("No key: " + error);
     //     });
 
-    // let file = 'blogposts/index.json';
-    // getFile(file, {decrypt: false})
-    //  .then((fileContents) => {
-    //    let indexFile = JSON.parse(fileContents || '{}');
-    //    if(indexFile.length > 0) {
-    //      this.setState({ blogIndex: JSON.parse(fileContents || '{}') });
-    //    } else {
-    //      this.setState({ blogIndex: [] });
-    //    }
-    //  })
-    //   .catch(error => {
-    //     console.log(error);
-    //   });
+    // getFile('key.json', options)
+    //   .then((file) => {
+    //     this.setState({ graphitePublicKey: JSON.parse(file)})
+    //   })
+    //     .then(() => {
+    //       // this.loadClientList();
+    //     })
+    //     .catch(error => {
+    //       console.log("No key: " + error);
+    //     });
+
+    window.$('.dropdown-button').dropdown({
+      inDuration: 300,
+      outDuration: 225,
+      constrainWidth: false, // Does not change width of dropdown to that of the activator
+      hover: false, // Activate on hover
+      gutter: 0, // Spacing from edge
+      belowOrigin: false, // Displays dropdown below the button
+      alignment: 'left', // Displays dropdown with edge aligned to the left of button
+      stopPropagation: false // Stops event propagation
+    }
+  );
+    let privateKey = loadUserData().appPrivateKey;
+    const span = document.createElement("span");
+    span.className += "ql-formats";
+    const button = document.createElement("button");
+    button.innerHTML = "&#x1F4AC;";
+    button.className += "comment-button";
+    span.appendChild(button);
+    const commentButton = document.getElementsByClassName("comment-button");
+    const element = document.getElementsByClassName("ql-toolbar")[0];
+    element.appendChild(span);
+
+    window.$('.button-collapse').sideNav({
+      menuWidth: 400, // Default is 300
+      edge: 'right', // Choose the horizontal origin
+      closeOnClick: true, // Closes side-nav on <a> clicks, useful for Angular/Meteor
+      draggable: true, // Choose whether you can drag to open on touch screens
+    }
+  );
+
+    const thisFile = this.props.match.params.id;
+    const fullFile = '/documents/' + thisFile + '.json';
+    remoteStorage.access.claim(this.props.match.params.id, 'rw');
+    remoteStorage.caching.enable('/' + this.props.match.params.id + '/');
+    const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
+    widget.attach('remote-storage-element-id');
+    remoteStorage.on('connected', () => {
+    const userAddress = remoteStorage.remote.userAddress;
+    console.debug(`${userAddress} connected their remote storage.`);
+  })
+
+  remoteStorage.on('network-offline', () => {
+    console.debug(`We're offline now.`);
+  })
+
+  remoteStorage.on('network-online', () => {
+    console.debug(`Hooray, we're back online.`);
+  })
+  client.getFile('title.txt').then(file => {
+    if(file.data !=null) {
+      this.setState({ remoteTitle: file.data });
+    }
+  });
+  client.getFile('content.txt').then(file => {
+    if(file.data !=null) {
+      this.setState({ remoteContent: decryptECIES(privateKey, JSON.parse(file.data)) });
+    }
+  });
+  client.getFile('wordCount.txt').then(file => {
+    if(file.data !=null) {
+      this.setState({ remoteWords: decryptECIES(privateKey, JSON.parse(file.data)) });
+    }
+  });
+  client.getFile('id.txt').then(file => {
+    if(file.data !=null) {
+      this.setState({ remoteId: decryptECIES(privateKey, JSON.parse(file.data)) });
+    }
+  });
+  client.getFile('updated.txt').then(file => {
+    if(file.data !=null) {
+      this.setState({ remoteUpdated: decryptECIES(privateKey, JSON.parse(file.data)) });
+    }
+  });
+
+    getFile(thisFile + 'comments.json', {decrypt: true})
+      .then((fileContents) => {
+        let comments = JSON.parse(fileContents || '{}');
+        if(comments.length > 0) {
+          this.setState({ comments: JSON.parse(fileContents || '{}') });
+        } else {
+          this.setState({ comments: [] });
+        }
+      })
+
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
        let file = JSON.parse(fileContents || '{}');
@@ -112,7 +246,11 @@ export default class SingleDoc extends Component {
 
       getFile(this.props.match.params.id + 'sharedwith.json', {decrypt: true})
        .then((fileContents) => {
-          this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
+         if(fileContents) {
+           this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
+         } else {
+           this.setState({ sharedWith: [] })
+         }
        })
         .catch(error => {
           console.log("shared with doc error: ")
@@ -135,14 +273,13 @@ export default class SingleDoc extends Component {
           console.log(error);
         });
 
-    const thisFile = this.props.match.params.id;
-    const fullFile = '/documents/' + thisFile + '.json';
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
-       console.log(fileContents);
+       console.log(JSON.parse(fileContents || '{}'));
         this.setState({
           title: JSON.parse(fileContents || '{}').title,
-          content: JSON.parse(fileContents || '{}').content
+          content: JSON.parse(fileContents || '{}').content,
+          tags: JSON.parse(fileContents || '{}').tags
        })
      })
       .catch(error => {
@@ -161,51 +298,110 @@ export default class SingleDoc extends Component {
     if(this.state.confirmAdd === true) {
       this.sharedInfo();
     }
+
+    this.attachQuillRefs();
+    //TODO work on comment permission here
+    document.getElementsByClassName("comment-button")[0].onclick = () => {
+       var range = this.quillRef.getSelection();
+       var text = this.quillRef.getText(range.index, range.length);
+       this.quillRef.format('background', 'yellow');
+       this.setState({ highlightedText: text, showCommentModal: "", selection: range });
+    };
+    window.$('.button-collapse').sideNav({
+        menuWidth: 400, // Default is 300
+        edge: 'right', // Choose the horizontal origin
+        closeOnClick: true, // Closes side-nav on <a> clicks, useful for Angular/Meteor
+        draggable: true, // Choose whether you can drag to open on touch screens
+      }
+    );
   }
 
-//Pick up blog work here
+  // loadTeamFile() {
+  //   //TODO Fix all this...it's nothing but mockup and hard coding right now for demo
+  //   const user = "graphite.id";
+  //   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  //   getFile("team.json", options)
+  //   .then((fileContents) => {
+  //     if(JSON.parse(fileContents || '{}').length > 0){
+  //       this.setState({ team: JSON.parse(fileContents || '{}') });
+  //     } else {
+  //       console.log("No team yet")
+  //     }
+  //   })
+  //    .then(() => {
+  //      if(this.state.team.indexOf(loadUserData().username)) {
+  //        let team = this.state.team;
+  //        const thisUser = team.find((a) => { return a.name == loadUserData().username});
+  //        let index = thisUser && thisUser.name;
+  //        function findObjectIndex(a) {
+  //            return a.name === index;
+  //        }
+  //        this.setState({ role: thisUser && thisUser.role })
+  //        this.loadPermissions();
+  //      } else {
+  //        console.log("nothing to load");
+  //      }
+  //    })
+  //    .catch(error => {
+  //      console.log(error);
+  //    });
+  // }
 
-  postBlog() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const object = {};
-    object.title = this.state.title;
-    object.content = this.state.content;
-    object.words = wordcount(this.state.content);
-    object.posted = month + "/" + day + "/" + year;
-    object.author = loadUserData().username;
-    this.setState({ blogPost: object });
-    setTimeout(this.saveBlogPost, 500);
-  }
+  // loadPermissions() {
+  //   //TODO Fix all this...it's nothing but mockup and hard coding right now for demo
+  //   const user = "graphite.id";
+  //   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  //   getFile("permissions.json", options)
+  //   .then((fileContents) => {
+  //     if(JSON.parse(fileContents || '{}')){
+  //       this.setState({ permissions: JSON.parse(fileContents || '{}') });
+  //       this.setState({
+  //         editorShare: JSON.parse(fileContents || '{}').editorShare,
+  //         editorAssign: JSON.parse(fileContents || '{}').editorAssign,
+  //         editorComment: JSON.parse(fileContents || '{}').editorComment,
+  //         editorPublish: JSON.parse(fileContents || '{}').editorPublish,
+  //         journoShare: JSON.parse(fileContents || '{}').journoShare,
+  //         journoAssign: JSON.parse(fileContents || '{}').journoAssign,
+  //         journoComment: JSON.parse(fileContents || '{}').journoComment,
+  //         journoPublish: JSON.parse(fileContents || '{}').journoPublish
+  //       });
+  //     } else {
+  //       console.log("Permissions not set yet")
+  //     }
+  //   })
+  //    .catch(error => {
+  //      console.log(error);
+  //    });
+  // }
 
-  saveBlogPost() {
-    const params = this.props.match.params.id;
-    let file = params + '/' + this.state.title.replace(/\s+/g, '-').toLowerCase();
-    putFile(file + '.json', JSON.stringify(this.state.blogPost), {encrypt: false})
-      .then(() => {
-        this.saveBlogIndex();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
+//TODO Client list needs to be decrypted which means it will need to be encrypted with the public key of each user that should access...
+  // loadClientList() {
+  //   //Loading enterprise account list
+  //   getFile("clients.json", options)
+  //    .then((fileContents) => {
+  //      let privateKey = loadUserData().appPrivateKey;
+  //       this.setState({ clientList: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
+  //    })
+  //     .catch(error => {
+  //       console.log(error);
+  //     });
+  // }
 
-  saveBlogIndex() {
-    let file = 'blogposts/index.json';
-    putFile(file, JSON.stringify(this.state.blogIndex), {encrypt: false})
-      .then(() => {
-        console.log("done saving blog");
-        this.setState({ blogModal: "hide" });
-        window.Materialize.toast('Document posted!', 4000)
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
+  attachQuillRefs = () => {
+   if (typeof this.reactQuillRef.getEditor !== 'function') return;
+   this.quillRef = this.reactQuillRef.getEditor();
+ }
+
+ insertText = () => {
+    var range = this.quillRef.getSelection();
+    var text = this.quillRef.getText(range.index, range.length);
+    this.setState({ highlightedText: text, showCommentModal: "", selection: range });
+ }
+
+ cancelComment = () => {
+   this.quillRef.format('background', 'white');
+   this.setState({showCommentModal: "hide", commentInput: "" });
+ }
 
   sharePublicly() {
     const today = new Date();
@@ -316,9 +512,7 @@ export default class SingleDoc extends Component {
         object.receiverID = this.state.receiverID;
         object.words = wordcount(this.state.content);
         object.shared = month + "/" + day + "/" + year;
-        const objectTwo = {};
-        objectTwo.contact = this.state.receiverID;
-        this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, objectTwo] });
+        this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
         setTimeout(this.shareDoc, 700);
      })
       .catch(error => {
@@ -361,7 +555,7 @@ export default class SingleDoc extends Component {
       const directory = '/shared/' + file;
       putFile(directory, encryptedData, {encrypt: false})
         .then(() => {
-          console.log("Shared encrypted file " + directory);
+          console.log("Shared encrypted file ");
           window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
         })
         .catch(e => {
@@ -370,6 +564,7 @@ export default class SingleDoc extends Component {
       putFile(this.props.match.params.id + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
         .then(() => {
           console.log("Shared With File Updated")
+          this.handleAutoAdd();
         })
         .catch(e => {
           console.log(e);
@@ -424,24 +619,32 @@ export default class SingleDoc extends Component {
     object.content = this.state.content;
     object.id = parseInt(this.props.match.params.id, 10);
     object.updated = month + "/" + day + "/" + year;
+    object.sharedWith = [];
+    // object.sharedWith = this.state.sharedWith;
     object.words = wordcount(this.state.content);
+    object.tags = this.state.tags;
     this.setState({singleDoc: object});
     this.setState({autoSave: "Saving..."});
     const objectTwo = {};
     objectTwo.title = this.state.title;
-    objectTwo.contacts = this.state.sharedWith;
     objectTwo.id = parseInt(this.props.match.params.id, 10);
     objectTwo.updated = month + "/" + day + "/" + year;
     objectTwo.words = wordcount(this.state.content);
+    objectTwo.sharedWith = [];
+    // objectTwo.sharedWith = this.state.sharedWith;
+    objectTwo.tags = this.state.tags;
     const index = this.state.index;
     const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
     this.setState({value: updatedDoc});
     this.autoSave();
     console.log("after save")
-    console.log(this.state.value);
   };
 
   autoSave() {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
     const file = this.props.match.params.id;
     const fullFile = '/documents/' + file + '.json';
     putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
@@ -452,8 +655,26 @@ export default class SingleDoc extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-
       });
+      remoteStorage.access.claim(this.props.match.params.id, 'rw');
+      remoteStorage.caching.enable('/' + this.props.match.params.id + '/');
+      const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
+      const content = this.state.content;
+      const title = this.state.title;
+      const words = wordcount(this.state.content);
+      const updated = month + "/" + day + "/" + year;
+      const id = parseInt(this.props.match.params.id, 10);
+      const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+      client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
+      .then(() => { console.log("Upload done") });
+      client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
+      .then(() => { console.log("Upload done") });
+      client.storeFile('text/plain', 'wordCount.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(words))))
+      .then(() => { console.log("Upload done") });
+      client.storeFile('text/plain', 'updated.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
+      .then(() => { console.log("Upload done") });
+      client.storeFile('text/plain', 'id.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(id))))
+      .then(() => { console.log("Upload done") });
   }
 
   saveCollection() {
@@ -464,45 +685,135 @@ export default class SingleDoc extends Component {
       .catch(e => {
         console.log("e");
         console.log(e);
-
       });
 
   }
 
-
-  print(){
-    const curURL = window.location.href;
-    window.replaceState(window.state, '', '/');
-    window.print();
-    window.replaceState(window.state, '', curURL);
+  handleCommentInput(e) {
+    this.setState({ commentInput: e.target.value });
   }
 
-  renderView() {
+  addComment() {
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const object = {};
+    object.id = Date.now();
+    object.commenter = loadUserData().username;
+    object.date = month + '/' + day + '/' + year;
+    object.selection = this.state.selection;
+    object.highlightedText = this.state.highlightedText;
+    object.comment = this.state.commentInput;
+    this.setState({ comments: [...this.state.comments, object ]});
+    setTimeout(this.saveComment, 700);
+  }
 
+  saveComment() {
+    const file = this.props.match.params.id;
+    const fullFile = file + 'comments.json';
+    putFile(fullFile, JSON.stringify(this.state.comments), {encrypt: true})
+      .then(() => {
+        this.setState({
+          showCommentModal: "hide",
+          commentInput: "",
+          highlightedText: "",
+          selection: ""
+        });
+        window.Materialize.toast("Comment saved", 3000);
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
+  getCommentSelection() {
+    this.quillRef.setSelection(this.state.reviewSelection);
+    window.$('.button-collapse').sideNav('hide');
+  }
+
+  resolveComment() {
+    this.quillRef.setSelection(this.state.reviewSelection);
+    let value = this.state.comments;
+    const thisDoc = value.find((doc) => { return doc.id == this.state.commentId});
+    let index = thisDoc && thisDoc.id;
+    function findObjectIndex(doc) {
+        return doc.id == index;
+    }
+    this.setState({ deleteIndex: value.findIndex(findObjectIndex) });
+    this.deleteComment();
+  }
+
+  deleteComment() {
+    // var text = this.quillRef.getText(range.index, range.length);
+    this.quillRef.format('background', 'white');
+    const updatedComments = update(this.state.comments, {$splice: [[this.state.deleteIndex, 1]]});
+    this.setState({comments: updatedComments, commentId: "" });
+    window.$('.button-collapse').sideNav('hide');
+    setTimeout(this.saveNewCommentsArray, 500);
+  }
+
+  saveNewCommentsArray() {
+    const file = this.props.match.params.id;
+    const fullFile = file + 'comments.json';
+    putFile(fullFile, JSON.stringify(this.state.comments), {encrypt: true})
+      .then(() => {
+        this.setState({
+          showCommentModal: "hide",
+          commentInput: "",
+          highlightedText: "",
+          selection: ""
+        });
+        window.Materialize.toast("Resolved!", 3000);
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
+
+  print(){
+    window.print();
+  }
+
+
+  render() {
+    // this.state.enterpriseUser === true && this.state.team.length === 0 ? this.loadTeamFile() : console.log("no team");
+    this.state.commentId === "" ? console.log("no index set") : this.resolveComment();
+    this.state.reviewSelection === "" ? console.log("no comment selected") : this.getCommentSelection();
+    this.state.send === false ? console.log("No article sent") : this.sendArticle();
     SingleDoc.modules = {
       toolbar: [
-        [{ 'header': '1'}, {'header': '2'}, { 'font': Font.whitelist }],
-        [{size: []}],
-        ['bold', 'italic', 'underline', 'strike', 'blockquote'],
-        [{'list': 'ordered'}, {'list': 'bullet'},
-         {'indent': '-1'}, {'indent': '+1'}],
-        ['link', 'image', 'video'],
-        ['clean']
+        //[{ font: Font.whitelist }],
+        [{ header: 1 }, { header: 2 }],
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ align: [] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
+        [{ script: 'sub' }, { script: 'super' }],
+        [{ indent: '-1' }, { indent: '+1' }],
+        [{ color: [] }, { background: [] }],
+        ['video'],
+        ['image'],
+        ['link'],
       ],
       clipboard: {
         // toggle to add extra line breaks when pasting HTML:
         matchVisual: false,
       }
     }
-    SingleDoc.formats = [
-      'header', 'font', 'size',
-      'bold', 'italic', 'underline', 'strike', 'blockquote',
-      'list', 'bullet', 'indent',
-      'link', 'image', 'video'
-    ]
     const user = loadUserData().username;
-    const words = wordcount(this.state.content.replace(/<(?:.|\n)*?>/gm, ''));
-    const {blogModal, loading, save, autoSave, shareModal, publicShare, show, contacts, hideStealthy, revealModule} = this.state
+    let words;
+    if(this.state.content) {
+      words = wordcount(this.state.content.replace(/<(?:.|\n)*?>/gm, ''));
+    } else {
+      words = 0;
+    }
+
+    const {listComments, showCommentModal, comments, remoteStorage, blogModal, loading, save, autoSave, shareModal, publicShare, show, contacts, hideStealthy, revealModule} = this.state
     const stealthy = (hideStealthy) ? "hide" : ""
     let blogTags = [
       "Technology",
@@ -510,6 +821,7 @@ export default class SingleDoc extends Component {
       "Decentralization",
       "Art"
     ]
+    const remoteStorageActivator = remoteStorage === true ? "" : "hide";
     var content = "<p style='text-align: center;'>" + this.state.title + "</p>" + "<div style='text-indent: 30px;'>" + this.state.content + "</div>";
     var htmlString = window.$('<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">').html('<body>' +
 
@@ -522,133 +834,6 @@ export default class SingleDoc extends Component {
     var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + content + '</body></html>';
     var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
 
-    if(this.state.printPreview === true) {
-      return (
-        <div>
-        <div className="navbar-fixed toolbar">
-          <nav className="toolbar-nav">
-            <div className="nav-wrapper">
-              <a onClick={this.handleBack} className="arrow-back left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
-
-
-                <ul className="left toolbar-menu">
-                  <li><a className="small-menu" onClick={this.printPreview}>Back to Editing</a></li>
-                  <li><a onClick={this.print}><i className="material-icons">local_printshop</i></a></li>
-                  <li><a download={this.state.title + ".doc"}  href={dataUri}><img className="wordlogo" src="https://png.icons8.com/metro/540//doc.png" alt="download" /></a></li>
-                  <li><a onClick={this.shareModal}><i className="material-icons">share</i></a></li>
-                  {/* TODO fix hard-coded username
-                  {loadUserData().username === "jehunter5811.id" ? <li><a onClick={() => this.setState({ blogModal: "" })}>Blog</a></li> : <li />}
-                  */}
-                </ul>
-
-            </div>
-          </nav>
-        </div>
-
-        <div className={publicShare}>
-        <div id="modal1" className="modal bottom-sheet">
-          <div className="modal-content">
-
-            <div className={show}>
-
-              <button onClick={() => this.setState({ publicShare: "hide" })} className="btn grey">Done</button>
-            </div>
-            <div className={show}>
-              <div className="container">
-                <h4 className="contacts-share center-align">Public Link</h4>
-                <p>Ask the person you are sharing with to visit <a href="https://app.graphitedocs.com/publicdoc" target="_blank" rel="noopener">https://app.graphitedocs.com/publicdoc</a> and provide this link to them: </p>
-                <p><input type="text" value={this.state.gaiaLink} id="gaia" /><button className="btn" onClick={this.copyLink}>Copy Link</button></p>
-              </div>
-            </div>
-          </div>
-        </div>
-        </div>
-
-        {/* Share modal */}
-        <div className={shareModal}>
-          <div id="modal1" className="modal bottom-sheet">
-            <div className="modal-content">
-              <h4>Share</h4>
-              <p>Select the person to share with or <a onClick={this.sharePublicly}>share publicly</a>*</p>
-              <p><span className="note"><a onClick={() => window.Materialize.toast('Public files are not encrypted but will be available to anyone with the share link, even if they are not on Blockstack', 4000)}>*Learn more</a></span></p>
-              <div className={show}>
-                <button className="btn" onClick={this.stopSharing}>Stop Sharing Publicly</button>
-                <button onClick={this.hideModal} className="btn grey">Cancel</button>
-              </div>
-              <div className={show}>
-                <div className="container">
-                  <h4 className="contacts-share center-align">Your Contacts</h4>
-                  <ul className="collection cointainer">
-                  {contacts.slice(0).reverse().map(contact => {
-                      return (
-                        <li key={contact.contact}className="collection-item avatar">
-                          <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
-                          <p><img src={contact.img} alt="avatar" className="circle" /></p>
-                          <span className="title black-text">{contact.contact}</span>
-                          </a>
-                        </li>
-                      )
-                    })
-                  }
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            <div className={loading}>
-              <div className="preloader-wrapper small active">
-                <div className="spinner-layer spinner-green-only">
-                  <div className="circle-clipper left">
-                    <div className="circle"></div>
-                  </div><div className="gap-patch">
-                    <div className="circle"></div>
-                  </div><div className="circle-clipper right">
-                    <div className="circle"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          </div>
-
-          {/* End share modal */}
-
-          {/* Blog Modal */}
-          <div className={blogModal}>
-            <div id="modal1" className="modal">
-              <div className="modal-content">
-                <h4>Post Blog</h4>
-                <p>You are a user on your team's blog, so you can post this document to your team's public-facing blog.</p>
-              </div>
-              <div className="modal-footer">
-                <a onClick={this.postBlog} className="modal-action modal-close waves-effect waves-green btn-flat">Post</a>
-                <a onClick={() => this.setState({blogModal: "hide"})} className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
-              </div>
-            </div>
-          </div>
-          {/* Blog Modal */}
-
-        <div className="container docs">
-          <div className="card doc-card">
-            <div className="double-space doc-margin">
-              <p className="center-align print-view">
-              {this.state.title}
-              </p>
-              <div>
-                <div
-                  className="print-view no-edit"
-                  dangerouslySetInnerHTML={{ __html: this.state.content }}
-                />
-              </div>
-              </div>
-              </div>
-        </div>
-
-        </div>
-      );
-    } else {
-
-      const {contacts} = this.state
       const {length} = contacts
       let users = '&length=' + length
       let k = 0
@@ -663,21 +848,22 @@ export default class SingleDoc extends Component {
       const stealthyUrl = stealthyUrlStub + users;
 
       // const stealthyModule = (length > 0) ? (
-      const stealthyModule =  (<div className={stealthy}>
+      const stealthyModule =  (
+        <div className={stealthy}>
           <div id='stealthyCol' className='card'>
           <div className={revealModule}>
             <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
           </div>
-        </div>
+          </div>
         </div>
       )
       // ) : null
 
       let docFlex;
       if(this.state.hideStealthy === true) {
-        docFlex = "card doc-card";
+        docFlex = "test-doc-card";
       } else {
-        docFlex = "card with-module";
+        docFlex = "test-with-module";
       }
 
       return (
@@ -688,30 +874,114 @@ export default class SingleDoc extends Component {
               <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
 
                 <ul className="left toolbar-menu">
-                <li><input className="print-title small-menu" placeholder="Title" type="text" value={this.state.title} onChange={this.handleTitleChange} /></li>
-                <li><a className="small-menu" onClick={this.printPreview}>Options</a></li>
-                </ul>
-                <ul className="right toolbar-menu small-toolbar-menu auto-save">
-                <li><a className="small-menu stealthy-logo"  onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
+                <li className="document-title">{this.state.title.length > 15 ? this.state.title.substring(0,15)+"..." :  this.state.title}</li>
                 <li><a className="small-menu muted">{autoSave}</a></li>
                 </ul>
+                <ul className="right toolbar-menu small-toolbar-menu auto-save">
+                {/*this.state.notificationCount >0 ? <li><a><i className="small-menu red-text material-icons">notifications_active</i></a></li> : <li><a><i className="small-menu material-icons">notifications_none</i></a></li>*/}
+                {/*this.state.role === "Editor" && this.state.editorShare === true || this.state.role === "Journalist" && this.state.journoShare === true ? <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li> : <li className="hide"/>*/}
+                <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
+                <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
+                <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
+                </ul>
 
+                {/*Share Menu Dropdown*/}
+                <ul id="dropdown2"className="dropdown-content collection cointainer">
+                <li><span className="center-align">Select a contact to share with</span></li>
+                <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
+                <li className="divider" />
+                {contacts.slice(0).reverse().map(contact => {
+                    return (
+                      <li key={contact.contact}className="collection-item">
+                        <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
+                        <p>{contact.contact}</p>
+                        </a>
+                      </li>
+                    )
+                  })
+                }
+                </ul>
+                {/*Share Menu Dropdown*/}
+
+                {/* Dropdown menu content */}
+                <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
+                  <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
+                  <li className="divider"></li>
+                  <li><a onClick={this.print}>Print</a></li>
+                  <li><a download={this.state.title + ".docx"}  href={dataUri}>Download</a></li>
+                  {/*this.state.role === "Editor" && this.state.editorAssign === true || this.state.role === "Journalist" && this.state.journoAssign === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>*/}
+                  <li className="divider"></li>
+                  {/*this.state.role === "Editor" && this.state.editorComment === true || this.state.role === "Journalist" && this.state.journoComment === true ? <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li> : <li className="hide"/>*/}
+                  <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
+                  {/*this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>*/}
+                  {/*this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>*/}
+                </ul>
+              {/* End dropdown menu content */}
+
+              {/*Show Comments Modal*/}
+              <ul id="slide-out" className="comments-side-nav side-nav">
+                {comments.slice(0).reverse().map(comment => {
+                    return (
+                      <li key={comment.id}>
+                        <p className="black-text commenter">From {comment.commenter}</p>
+                        <p className="black-text highlightedComment">{comment.highlightedText}</p>
+                        <p className="black-text comment">{comment.comment}</p>
+                        <button onClick={() => this.setState({ reviewSelection: comment.selection })} className="black-text btn-flat">Review</button>
+                        <button onClick={() => this.setState({ reviewSelection: comment.selection, commentId: comment.id })} className="btn-flat">Resolve</button>
+                        <p className="divider"></p>
+                      </li>
+                    )
+                  })
+                }
+              </ul>
+              {/*End Show Comments Modal*/}
+
+              {/*Add Comment Modal*/}
+              <div className={showCommentModal}>
+                <div id="modal1" className="modal">
+                  <div className="">
+                    <div className="modal-content">
+                      <blockquote className="black-text">
+                        {this.state.highlightedText}
+                      </blockquote>
+                      <h5 className="black-text">Add Comment</h5>
+
+                        <textarea defaultValue={this.state.commentInput} onChange={this.handleCommentInput} className="materialize-textarea black-text" placeholder="Your comment"/>
+
+                    </div>
+                    <div className="modal-footer">
+                      <a onClick={this.addComment} className="btn-flat modal-action">Save Comment</a>
+                      <a onClick={this.cancelComment} className="modal-action grey-text btn-flat">Cancel</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/*End Add Comment Modal*/}
             </div>
           </nav>
         </div>
-          <div className="container docs">
+        {/*Remote storae widget*/}
+          <div className={remoteStorageActivator} id="remotestorage">
+            <div id='remote-storage-element-id'></div>
+          </div>
+          {/*Remote storae widget*/}
+          <div className="test-docs">
             <div className={docFlex}>
               <div className="double-space doc-margin">
-              <h4 className="align-left">
-              </h4>
-              <ReactQuill
-                modules={SingleDoc.modules}
-                formats={SingleDoc.formats}
-                id="textarea1"
-                className="materialize-textarea"
-                placeholder="Write something great"
-                value={this.state.content}
-                onChange={this.handleChange} />
+
+                {this.state.title === "Untitled" ? <textarea className="doc-title materialize-textarea" placeholder="Give it a title" type="text" onChange={this.handleTitleChange} /> : <textarea className="doc-title materialize-textarea" placeholder="Title" type="text" value={this.state.title} onChange={this.handleTitleChange} />}
+
+
+                  <ReactQuill
+                    ref={(el) => { this.reactQuillRef = el }}
+                    modules={SingleDoc.modules}
+                    id="textarea1"
+                    className="materialize-textarea"
+                    placeholder="Write something great"
+                    value={this.state.content}
+                    onChange={this.handleChange}
+                    theme="bubble" />
+
 
               <div className="right-align wordcounter">
                 <p className="wordcount">{words} words</p>
@@ -737,15 +1007,5 @@ export default class SingleDoc extends Component {
           </div>
           </div>
       );
-    }
-  }
-
-  render() {
-
-    return (
-      <div>
-        {this.renderView()}
-      </div>
-    );
   }
 }

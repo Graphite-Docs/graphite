@@ -121,11 +121,11 @@ export default class Admin extends Component {
       <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="http://www.iconsplace.com/icons/preview/white/pencil-256.png" alt="pencil" /></a>
+            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
 
             <ul id="nav-mobile" className="right">
             <ul id="dropdown1" className="dropdown-content">
-              <li><a href="/profile">Profile</a></li>
+
               <li><a href="/shared-docs">Shared Files</a></li>
               <li><a href="/export">Export All Data</a></li>
               <li className="divider"></li>
