@@ -1097,9 +1097,31 @@ h5, h6 {
   padding: 25px;
 }
 
+.destination {
+  height: 40px;
+  margin: 40px;
+}
+
+.publish-modal-close {
+  margin-top: -11px;
+}
+
 .files-card:hover p, .files-card:hover h4, .files-card:hover h5, .files-card:hover button, .files-card:hover h3{
   top: 25%;
   display: block;
+}
+
+.save-permissions {
+  margin-top: 25px;
+}
+
+.integrations-div {
+  width: 85%;
+  margin: auto;
+}
+
+.integrations-collection {
+  border: none;
 }
 
 .files-card:hover p div {
@@ -2047,6 +2069,17 @@ nav ul a {
   width: 20px;
   margin-bottom: 8px;
   margin-right: 3px;
+}
+
+.settings-icon {
+  position: fixed;
+  right: 20px;
+  top: 75px;
+}
+
+.add-modal {
+  position: fixed;
+  top: 100px;
 }
 
 .people {

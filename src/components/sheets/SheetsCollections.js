@@ -749,6 +749,7 @@ migrationComplete() {
     const indexOfLastSheet = currentPage * sheetsPerPage;
     const indexOfFirstSheet = indexOfLastSheet - sheetsPerPage;
     const currentSheets = sheets.slice(0).reverse();
+    console.log(currentSheets);
 
     let shared = currentSheets.map(a => a.sharedWith);
     let newShared = shared.filter(function(n){ return n != undefined });
@@ -845,7 +846,6 @@ migrationComplete() {
                 <ul className={tagList}>
                 {
                   uniqueTags.map(tag => {
-                    console.log(uniqueTags);
                     return (
                       <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedTag: tag, tagList: "hide", applyFilter: true})}>{tag}</a></li>
                     )

@@ -38,6 +38,7 @@ export default class Contacts extends Component {
       newContact: "",
       addContact: "",
       confirmAdd: false,
+      confirmManualAdd: false,
       add: false,
       loading: "hide",
       show: "",
@@ -64,7 +65,8 @@ export default class Contacts extends Component {
       dateList: "hide",
       selectedType: "",
       selectedDate: "",
-      applyFilter: false
+      applyFilter: false,
+      manualResults: {}
     }
     this.handleaddItem = this.handleaddItem.bind(this);
     this.saveNewFile = this.saveNewFile.bind(this);
@@ -135,6 +137,9 @@ export default class Contacts extends Component {
     if(this.state.confirmAdd === true) {
       this.handleaddItem();
     }
+    if(this.state.confirmManualAdd === true) {
+      this.handleManualAdd();
+    }
   }
 
   newContact() {
@@ -197,7 +202,20 @@ export default class Contacts extends Component {
         link + this.state.newContact
       )
       .then(res => {
-        this.setState({ results: res.data.results });
+        if(res.data.results.length > 0){
+          this.setState({ results: res.data.results });
+        } else {
+          this.setState({ results: [] })
+          lookupProfile(this.state.newContact, "https://core.blockstack.org/v1/names")
+            .then((profile) => {
+              let image = profile.image;
+              console.log(profile);
+              this.setState({ manualResults: profile });
+            })
+            .catch((error) => {
+              console.log('could not resolve profile')
+            })
+        }
       })
       .catch(error => {
         console.log(error);
@@ -205,7 +223,35 @@ export default class Contacts extends Component {
   }
 
   handleManualAdd(e) {
-    this.setState({ newContact: e.target.value })
+    this.setState({ showResults: "hide", loading: "", show: "hide", confirmManualAdd: false })
+    console.log("adding...");
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.getMonth() + 1;
+    const year = today.getFullYear();
+    const object = {};
+    object.contact = this.state.addContact;
+    object.img = this.state.newContactImg;
+    object.name = this.state.name;
+    object.dateAdded = month + "/" + day + "/" + year;
+    object.types = [];
+    let link = 'https://core.blockstack.org/v1/names/' + object.contact;
+    axios
+      .get(
+        link
+      )
+      .then(res => {
+        if(res.data.zonefile.indexOf('https://blockstack.s3.amazonaws.com/') >= 0){
+          window.Materialize.toast(object.contact + " is a legacy Blockstack ID and cannot access Graphite.", 3000);
+        } else {
+          this.setState({ contacts: [...this.state.contacts, object], add: false });
+          this.setState({ filteredContacts: this.state.contacts });
+          setTimeout(this.saveNewFile, 500);
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
   manualAdd() {
@@ -401,7 +447,7 @@ export default class Contacts extends Component {
 
   renderView() {
     this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
-    const {selectedType, selectedDate, typesList, dateList, appliedFilter, deleteState, typeDownload, loadingTwo, typeModal, currentPage, contactsPerPage} = this.state;
+    const {manualResults, electedType, selectedDate, typesList, dateList, appliedFilter, deleteState, typeDownload, loadingTwo, typeModal, currentPage, contactsPerPage} = this.state;
     let contacts = this.state.filteredContacts;
     let show = this.state.show;
     let showResults = "";
@@ -449,6 +495,12 @@ export default class Contacts extends Component {
     const indexOfLastContact = currentPage * contactsPerPage;
     const indexOfFirstContact = indexOfLastContact - contactsPerPage;
     const currentContacts = contacts.slice(0).reverse();
+    let searchImg;
+    if(manualResults.image) {
+      searchImg = manualResults.image[0].contentUrl;
+    } else {
+      searchImg = avatarFallbackImage;
+    }
 
     let contactTypes = currentContacts.map(a => a.types);
     let mergedTypes = [].concat.apply([], contactTypes);
@@ -469,17 +521,8 @@ export default class Contacts extends Component {
       <div className="add-contact row">
         <h3 className="center-align">Add a new contact</h3>
 
-        <div className="card-add col s6">
-          <div className="add-new">
-            <div>
-              <p>If you know your contact's Blockstack ID, add it here.</p>
-              <input type="text" placeholder="Ex: Johnny Cash" onChange={this.handleManualAdd} />
-              <button onClick={this.manualAdd} className="btn black">Add Contact</button>
-            </div>
-          </div>
-        </div>
 
-        <div className="card-add col s6">
+        <div className="card-add col s12">
           <div className="add-new">
             <div>
               <p>Search for a contact</p>
@@ -517,6 +560,20 @@ export default class Contacts extends Component {
                   </div>
                 )
               })
+            }
+            {
+              manualResults !== {} ?
+              <div key={this.state.newContact} className={showFirstLink}>
+              <a className="contact-add" onClick={() => this.setState({ addContact: this.state.newContact, newContactImg: manualResults.img, name: manualResults.name, confirmManualAdd: true })}>
+                <li className="collection-item avatar">
+                  <img src={searchImg} alt="avatar" className="circle" />
+                  <span className="title">{manualResults.name}</span>
+                  <p>{this.state.newContact}</p>
+                </li>
+              </a>
+              </div>:
+              <div />
+
             }
             </ul>
 

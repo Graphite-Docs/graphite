@@ -5,6 +5,7 @@ import {
   putFile
 } from 'blockstack';
 import HotTable from 'react-handsontable';
+import Handsontable from 'handsontable';
 import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
 import RemoteStorage from 'remotestoragejs';
@@ -71,6 +72,7 @@ export default class SingleSheet extends Component {
     this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
   }
   componentDidMount() {
+
     window.$('.dropdown-button').dropdown({
       inDuration: 300,
       outDuration: 225,
@@ -715,6 +717,7 @@ renderView() {
         </div>
         </div>
         <div>
+          <div id='spreadsheet' />
           <div className={hideSheet}>
             <div className="spreadsheet-table">
               <HotTable root="hot" settings={{
@@ -739,13 +742,13 @@ renderView() {
                 fixedRowsTop: 0,
                 minSpareRows: 1,
                 comments: true,
+                licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
                 onAfterChange: (changes, source) => {if(changes){
                   clearTimeout(this.timeout);
                   this.timeout = setTimeout(this.handleAddItem, 1000)
                 }}
               }}
                />
-
             </div>
           </div>
           {stealthyModule}

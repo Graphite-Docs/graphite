@@ -33,8 +33,17 @@ import DeleteVaultFile from './vault/DeleteVaultFile';
 import SharedVault from './vault/SharedVault';
 import SharedVaultCollection from './vault/SharedVaultCollection';
 import SingleSharedFile from './vault/SingleSharedFile';
+import MainProject from './projects/MainProject';
+import SingleProject from './projects/SingleProject';
+import MainJournalism from './journalism/MainJournalism';
+import SingleJournoDoc from './journalism/SingleJournoDoc';
+import EditorAdmin from './journalism/EditorAdmin';
 import Export from './Export';
 import PublicDoc from './PublicDoc';
+import MainGraphiteScreen from './graphite/MainGraphiteScreen';
+import AccountSettings from './graphite/AccountSettings';
+import DeleteClient from './graphite/DeleteClient';
+import Yjs from './graphite/Yjs';
 import {
   isSignInPending,
   loadUserData,
@@ -57,7 +66,6 @@ export default class App extends Component {
   }
 
   render() {
-    console.log(loadUserData());
     console.log('Build Date: ', Config.BUILD_DATE_STAMP)
     console.log('Build Time: ', Config.BUILD_TIME_STAMP)
     return (
@@ -98,6 +106,15 @@ export default class App extends Component {
             <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
             <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
             <Route exact path="/publicdoc" component={PublicDoc} />
+            <Route exact path="/projects" component={MainProject} />
+            <Route exact path="/projects/:id" component={SingleProject} />
+            <Route exact path="/journalism" component={MainJournalism} />
+            <Route exact path="/journalism/:id" component={SingleJournoDoc} />
+            <Route exact path="/journalism-admin" component={EditorAdmin} />
+            <Route exact path="/admin" component={MainGraphiteScreen} />
+            <Route exact path="/admin/settings" component={AccountSettings} />
+            <Route exact path="/admin/delete/:id" component={DeleteClient} />
+            <Route exact path="/admin/yjs" component={Yjs} />
           </div>
         </BrowserRouter>
       </div>

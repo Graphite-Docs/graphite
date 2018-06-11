@@ -87,7 +87,9 @@ export default class SingleDoc extends Component {
       journoPublish: false,
       journoComment: false,
       journoAssign: false,
-      role: ""
+      role: "",
+      clientType: "",
+      sentArticles: [],
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleAutoAdd = this.handleAutoAdd.bind(this);
@@ -111,40 +113,56 @@ export default class SingleDoc extends Component {
     this.resolveComment = this.resolveComment.bind(this);
     this.deleteComment = this.deleteComment.bind(this);
     this.saveNewCommentsArray = this.saveNewCommentsArray.bind(this);
-    // this.loadTeamFile = this.loadTeamFile.bind(this);
-    // this.loadPermissions = this.loadPermissions.bind(this);
+    this.sendArticle = this.sendArticle.bind(this);
+    this.sentToEditor = this.sentToEditor.bind(this);
+    this.saveSend = this.saveSend.bind(this);
   }
 
 
 
   componentDidMount() {
-    //Checking root username domain to see if user is enterprise
-    //TODO this will need to be dynamic
-    // loadUserData().username.indexOf("personal") ? this.setState({ enterpriseUser: true, journalismUser: true }) : console.log("User logged in: " + loadUserData().username);
-    //getting Graphite.id public key
-    // const user = "graphite.id";
-    // const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    // getFile('key.json', options)
-    //   .then((file) => {
-    //     this.setState({ graphitePublicKey: JSON.parse(file)})
-    //   })
-    //     .then(() => {
-    //       // this.loadClientList();
-    //     })
-    //     .catch(error => {
-    //       console.log("No key: " + error);
-    //     });
 
-    // getFile('key.json', options)
-    //   .then((file) => {
-    //     this.setState({ graphitePublicKey: JSON.parse(file)})
-    //   })
-    //     .then(() => {
-    //       // this.loadClientList();
-    //     })
-    //     .catch(error => {
-    //       console.log("No key: " + error);
-    //     });
+    const user = "admin.graphite";
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    getFile('clientlist.json', options)
+      .then((fileContents) => {
+        if(JSON.parse(fileContents || '{}').length > 0) {
+          this.setState({ clientList: JSON.parse(fileContents || '{}') })
+        } else {
+          this.setState({ clientList: [] })
+        }
+
+      })
+      .catch(error => {
+        console.log(error);
+      })
+
+    getFile("sentarticles.json", {decrypt: true})
+      .then((fileContents) => {
+        let articles = JSON.parse(fileContents || '{}');
+        if(articles.length > 0) {
+          this.setState({ sentArticles: JSON.parse(fileContents || '{}') });
+        } else {
+          this.setState({ sentArticles: [] });
+        }
+      })
+
+    //This won't work yet
+    // let substrings = this.state.clientList.name;
+    let substrings = [".id"];
+    // if (substrings.some(function(v) { return loadUserData().username.indexOf(v) >= 0; })) {
+    if(loadUserData().username === "jehunter5811.id" || loadUserData().username === "khunter.id") {
+      //Here we would load the correct permission file based on the root of the username (i.e. admin.graphite)
+      //But for now, we will fake it to load permissions
+      let clientType = "Journalism";
+      if(clientType === "Journalism") {
+        this.setState({ clientType: "Journalism", role: "Administrator"})
+      }
+    }
+    else {
+    console.log("nope");
+    }
+    //end of test code that won't work
 
     window.$('.dropdown-button').dropdown({
       inDuration: 300,
@@ -316,76 +334,6 @@ export default class SingleDoc extends Component {
     );
   }
 
-  // loadTeamFile() {
-  //   //TODO Fix all this...it's nothing but mockup and hard coding right now for demo
-  //   const user = "graphite.id";
-  //   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  //   getFile("team.json", options)
-  //   .then((fileContents) => {
-  //     if(JSON.parse(fileContents || '{}').length > 0){
-  //       this.setState({ team: JSON.parse(fileContents || '{}') });
-  //     } else {
-  //       console.log("No team yet")
-  //     }
-  //   })
-  //    .then(() => {
-  //      if(this.state.team.indexOf(loadUserData().username)) {
-  //        let team = this.state.team;
-  //        const thisUser = team.find((a) => { return a.name == loadUserData().username});
-  //        let index = thisUser && thisUser.name;
-  //        function findObjectIndex(a) {
-  //            return a.name === index;
-  //        }
-  //        this.setState({ role: thisUser && thisUser.role })
-  //        this.loadPermissions();
-  //      } else {
-  //        console.log("nothing to load");
-  //      }
-  //    })
-  //    .catch(error => {
-  //      console.log(error);
-  //    });
-  // }
-
-  // loadPermissions() {
-  //   //TODO Fix all this...it's nothing but mockup and hard coding right now for demo
-  //   const user = "graphite.id";
-  //   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  //   getFile("permissions.json", options)
-  //   .then((fileContents) => {
-  //     if(JSON.parse(fileContents || '{}')){
-  //       this.setState({ permissions: JSON.parse(fileContents || '{}') });
-  //       this.setState({
-  //         editorShare: JSON.parse(fileContents || '{}').editorShare,
-  //         editorAssign: JSON.parse(fileContents || '{}').editorAssign,
-  //         editorComment: JSON.parse(fileContents || '{}').editorComment,
-  //         editorPublish: JSON.parse(fileContents || '{}').editorPublish,
-  //         journoShare: JSON.parse(fileContents || '{}').journoShare,
-  //         journoAssign: JSON.parse(fileContents || '{}').journoAssign,
-  //         journoComment: JSON.parse(fileContents || '{}').journoComment,
-  //         journoPublish: JSON.parse(fileContents || '{}').journoPublish
-  //       });
-  //     } else {
-  //       console.log("Permissions not set yet")
-  //     }
-  //   })
-  //    .catch(error => {
-  //      console.log(error);
-  //    });
-  // }
-
-//TODO Client list needs to be decrypted which means it will need to be encrypted with the public key of each user that should access...
-  // loadClientList() {
-  //   //Loading enterprise account list
-  //   getFile("clients.json", options)
-  //    .then((fileContents) => {
-  //      let privateKey = loadUserData().appPrivateKey;
-  //       this.setState({ clientList: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
-  //    })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
-  // }
 
   attachQuillRefs = () => {
    if (typeof this.reactQuillRef.getEditor !== 'function') return;
@@ -620,6 +568,7 @@ export default class SingleDoc extends Component {
     object.id = parseInt(this.props.match.params.id, 10);
     object.updated = month + "/" + day + "/" + year;
     object.sharedWith = [];
+    object.author = loadUserData().username;
     // object.sharedWith = this.state.sharedWith;
     object.words = wordcount(this.state.content);
     object.tags = this.state.tags;
@@ -631,6 +580,7 @@ export default class SingleDoc extends Component {
     objectTwo.updated = month + "/" + day + "/" + year;
     objectTwo.words = wordcount(this.state.content);
     objectTwo.sharedWith = [];
+    objectTwo.author = loadUserData().username;
     // objectTwo.sharedWith = this.state.sharedWith;
     objectTwo.tags = this.state.tags;
     const index = this.state.index;
@@ -778,8 +728,60 @@ export default class SingleDoc extends Component {
     window.print();
   }
 
+  sendArticle() {
+    this.setState({sentArticles: [...this.state.sentArticles, this.state.singleDoc]})
+    //this is test code only to get the pubKey we need
+    const user = "justin.personal.id";
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+
+    getFile('key.json', options)
+      .then((file) => {
+        this.setState({ pubKey: JSON.parse(file)})
+        console.log("Step One: PubKey Loaded");
+        this.saveSend();
+      })
+        .catch(error => {
+          console.log("No key: " + error);
+        });
+
+
+    this.setState({send: false})
+
+  }
+
+  saveSend() {
+    putFile("sentarticles.json", JSON.stringify(this.state.sentArticles), {encrypt: true})
+      .then(() => {
+        this.sentToEditor();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
+  sentToEditor() {
+    //Here we will want to cycle through the team file and send/encrypt the file to all teammates
+    const publicKey = this.state.pubKey;
+    const data = this.state.sentArticles;
+    const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
+    const file = "submitted.json";
+    putFile(file, encryptedData, {encrypt: false})
+      .then(() => {
+        console.log("Sent!");
+        window.Materialize.toast('Article Submitted', 4000);
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
+
 
   render() {
+    console.log("Title: ");
+    console.log(this.state.title);
+    console.log("Content: ");
+    console.log(this.state.content);
     // this.state.enterpriseUser === true && this.state.team.length === 0 ? this.loadTeamFile() : console.log("no team");
     this.state.commentId === "" ? console.log("no index set") : this.resolveComment();
     this.state.reviewSelection === "" ? console.log("no comment selected") : this.getCommentSelection();
@@ -909,7 +911,7 @@ export default class SingleDoc extends Component {
                   <li className="divider"></li>
                   <li><a onClick={this.print}>Print</a></li>
                   <li><a download={this.state.title + ".docx"}  href={dataUri}>Download</a></li>
-                  {/*this.state.role === "Editor" && this.state.editorAssign === true || this.state.role === "Journalist" && this.state.journoAssign === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>*/}
+                  {this.state.role === "Editor" && this.state.editorAssign === true || this.state.role === "Journalist" && this.state.journoAssign === true || this.state.role === "Administrator" ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
                   <li className="divider"></li>
                   {/*this.state.role === "Editor" && this.state.editorComment === true || this.state.role === "Journalist" && this.state.journoComment === true ? <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li> : <li className="hide"/>*/}
                   <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>

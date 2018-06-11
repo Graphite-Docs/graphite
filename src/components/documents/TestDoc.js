@@ -13,11 +13,21 @@ import {
 import update from 'immutability-helper';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
+import ReactQuill from 'react-quill';
+const Font = ReactQuill.Quill.import('formats/font');
 const remoteStorage = new RemoteStorage({logging: false});
 const widget = new Widget(remoteStorage);
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+const Y = require('yjs')
+require('y-memory')(Y) // extend Y with the memory module
+require('y-websockets-client')(Y)
+require('y-array')(Y)
+require('y-map')(Y)
+
+Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
+ReactQuill.Quill.register(Font, true);
 
 export default class TestDoc extends Component {
   constructor(props) {
@@ -126,13 +136,49 @@ export default class TestDoc extends Component {
 
   }
 
+
   componentDidMount() {
+    Y({
+      db: {
+        name: 'memory' // store the shared data in memory
+      },
+      connector: {
+        name: 'websockets-client', // use the websockets connector
+        room: 'my room'            // Instances connected to the same room share data
+        // url: 'localhost:1234' // specify your own server destination
+      },
+      share: { // specify the shared content
+        map: 'Map',    // y.share.map is of type Y.Map
+        array: 'Array' // y.share.array is of type Y.Array
+      },
+      sourceDir: '/bower_components' // where the modules are (browser only)
+    }).then(function (y) {
+      /*
+        At this point Yjs is successfully initialized.
+        Try it out in your browser console!
+      */
+      window.y = y
+      console.log('Yjs instance ready!')
+      y.share.map // is an Y.Map instance
+      y.share.array // is an Y.Array instance
+      var map = y.share.map
+
+      // Set an observer
+      map.observe(function(event){
+        console.dir(event)
+      })
+
+      // create a new property (add)
+      map.set('number', JSON.stringify(this.state.content))
+      map.get('number')
+    })
     window.$('.button-collapse').sideNav({
       menuWidth: 400, // Default is 300
       edge: 'left', // Choose the horizontal origin
       closeOnClick: false, // Closes side-nav on <a> clicks, useful for Angular/Meteor
       draggable: true, // Choose whether you can drag to open on touch screens
     }
+
   );
 
     const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
@@ -638,347 +684,39 @@ getCollection() {
 
 
   render() {
-    this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
-    this.state.deleteState === true ? this.deleteTag() : console.log("no delete");
-    this.state.tagDownload === true ? this.loadSingleTags() : console.log("no document selected");
-    let value;
-    this.state.filteredValue === [] ? value = [] : value = this.state.filteredValue;
-    const { appliedFilter, selectedDate, selectedCollab, selectedTag, dateList, tagList, collaboratorsModal, singleDocTags, contactDisplay, loadingTwo, confirmAdd, contacts, shareModal, tagModal, currentPage, docsPerPage, loading } = this.state;
-    const link = '/documents/doc/' + this.state.tempDocId;
-    if (this.state.redirect) {
-      return <Redirect push to={link} />;
-    } else {
-      console.log("No redirect");
+    TestDoc.modules = {
+      toolbar: [
+        //[{ font: Font.whitelist }],
+        [{ header: 1 }, { header: 2 }],
+        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ align: [] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
+        [{ script: 'sub' }, { script: 'super' }],
+        [{ indent: '-1' }, { indent: '+1' }],
+        [{ color: [] }, { background: [] }],
+        ['video'],
+        ['image'],
+        ['link'],
+      ],
+      clipboard: {
+        // toggle to add extra line breaks when pasting HTML:
+        matchVisual: false,
+      }
     }
-    confirmAdd === false ? console.log("Not sharing") : this.sharedInfo();
-    const userData = loadUserData();
-    const person = new Person(userData.profile);
-
-    const indexOfLastDoc = currentPage * docsPerPage;
-    const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
-    const currentDocs = value.slice(0).reverse();
-
-    let shared = currentDocs.map(a => a.sharedWith);
-    console.log("shared");
-    console.log(shared);
-    let mergedShared = [].concat.apply([], shared);
-    console.log("merge shared");
-    console.log(mergedShared);
-    let uniqueCollabs = [];
-    window.$.each(mergedShared, function(i, el){
-      if(window.$.inArray(el, uniqueCollabs) === -1) uniqueCollabs.push(el);
-    });
-
-    let tags = currentDocs.map(a => a.tags);
-    let mergedTags = [].concat.apply([], tags);
-    let uniqueTags = [];
-    window.$.each(mergedTags, function(i, el) {
-      if(window.$.inArray(el, uniqueTags) === -1) uniqueTags.push(el);
-    })
-
-    let date = currentDocs.map(a => a.updated);
-    let mergedDate = [].concat.apply([], date);
-    let uniqueDate = [];
-    window.$.each(mergedDate, function(i, el) {
-      if(window.$.inArray(el, uniqueDate) === -1) uniqueDate.push(el);
-    })
-
-
-    // Logic for displaying page numbers
-   const pageNumbers = [];
-   for (let i = 1; i <= Math.ceil(value.length / docsPerPage); i++) {
-     pageNumbers.push(i);
-   }
-
-   const renderPageNumbers = pageNumbers.map(number => {
-          return (
-            <li
-              key={number}
-              id={number}
-              className={number === this.state.currentPage ? "active" : ""}
-            >
-              <a id={number} onClick={this.handlePageChange}>{number}</a>
-            </li>
-          );
-        });
 
     return (
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
-
-            <ul id="nav-mobile" className="right">
-              <ul id="dropdown1" className="dropdown-content">
-                <li><a href="/shared-docs">Shared Files</a></li>
-                <li><a href="/export">Export All Data</a></li>
-                <li className="divider"></li>
-                <li><a onClick={ this.handleSignOut }>Sign out</a></li>
-              </ul>
-              <ul id="dropdown2" className="dropdown-content">
-                <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
-                <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
-                <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-                <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
-              </ul>
-                <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
-            </ul>
-          </div>
-        </nav>
-        </div>
-
-        <div className="docs">
-        <div className="row container">
-          <div className="col s12 m6">
-            <h5>Documents ({currentDocs.length})
-              {appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
-              {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.value})}>Clear</a></span> : <div />}
-            </h5>
-            {/* Filter Dropdown */}
-            <ul id="slide-out" className="comments-side-nav side-nav">
-              <h5 className="center-align">Filter</h5>
-              <li><a onClick={() => this.setState({collaboratorsModal: ""})}>Collaborators</a></li>
-                {/* Collaborator list */}
-                  <ul className={collaboratorsModal}>
-                  {
-                    uniqueCollabs.map(collab => {
-                      return (
-                        <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedCollab: collab, collaboratorsModal: "hide", applyFilter: true})}>{collab}</a></li>
-                      )
-                    })
-                  }
-                  </ul>
-                {/* End Collaborator list */}
-              <li><a onClick={() => this.setState({tagList: ""})}>Tags</a></li>
-              {/* Tags list */}
-                <ul className={tagList}>
-                {
-                  uniqueTags.map(tag => {
-                    return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedTag: tag, tagList: "hide", applyFilter: true})}>{tag}</a></li>
-                    )
-                  })
-                }
-                </ul>
-              {/* End Tag list */}
-              <li><a onClick={() => this.setState({dateList: ""})}>Updated</a></li>
-              {/* Date list */}
-                <ul className={dateList}>
-                {
-                  uniqueDate.map(date => {
-                    return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedDate: date, dateList: "hide", applyFilter: true})}>{date}</a></li>
-                    )
-                  })
-                }
-                </ul>
-              {/* End Date list */}
-            </ul>
-            {/* End Filter Dropdown */}
-          </div>
-          <div className="col right s12 m6">
-          <form className="searchform">
-          <fieldset className=" form-group searchfield">
-          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Documents" onChange={this.filterList}/>
-          </fieldset>
-          </form>
-          </div>
-        </div>
-          <div className="container">
-            <div className={loading}>
-              <div className="progress center-align">
-                <p>Loading...</p>
-                <div className="indeterminate"></div>
-              </div>
-            </div>
-          </div>
-        {/* Add button */}
-        <div className="container">
-          <div className="fixed-action-btn">
-            <a onClick={this.handleaddItem} className="btn-floating btn-large black">
-              <i className="large material-icons">add</i>
-            </a>
-        </div>
-        {/* End Add Button */}
-          {
-            this.state.activeIndicator === true ?
-              <ul className="pagination action-items">
-                <li><a onClick={() => this.setState({shareModal: ""})}>Share</a></li>
-                <li><a onClick={() => this.setState({tagDownload: true })}>Tag</a></li>
-                <li><a onClick={this.download}>Download</a></li>
-                <ul className="right">
-                  <li><a><i className="tiny shared-files-table-selector material-icons">people</i></a></li>
-                </ul>
-              </ul>
-           :
-              <ul className="pagination inactive action-items">
-                <li><a>Share</a></li>
-                <li><a>Tag</a></li>
-                <li><a>Download</a></li>
-                <ul className="right">
-                  <li><a><i className="tiny shared-files-table-selector material-icons">people</i></a></li>
-                </ul>
-              </ul>
-
-          }
-
-          <table className="bordered">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Title</th>
-                <th>Collaborators</th>
-                <th>Updated</th>
-                <th>Tags</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-          {
-            currentDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
-              var tags;
-              var collabs;
-              if(doc.tags) {
-                tags = Array.prototype.slice.call(doc.tags);
-              } else {
-                tags = "";
-              }
-              if(doc.sharedWith) {
-                collabs = Array.prototype.slice.call(doc.sharedWith);
-              } else {
-                collabs = "";
-              }
-            return(
-              <tr key={doc.id}>
-                <td><input type="checkbox" checked={this.state.checked} value={doc.id} id={doc.id} onChange={this.handleCheckbox} /><label htmlFor={doc.id}></label></td>
-                <td><Link to={'/documents/doc/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
-                <td>{collabs === "" ? collabs : collabs.join(', ')}</td>
-                <td>{doc.updated}</td>
-                <td>{tags === "" ? tags : tags.join(', ')}</td>
-                <td><Link to={'/documents/doc/delete/'+ doc.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
-              </tr>
-            );
-            })
-          }
-          </tbody>
-        </table>
-
-        <div>
-          <ul className="center-align pagination">
-          {renderPageNumbers}
-          </ul>
-          <div className="docs-per-page right-align">
-            <label>Docs per page</label>
-            <select value={this.state.docsPerPage} onChange={(event) => this.setState({ docsPerPage: event.target.value})}>
-              <option value={10}>
-              10
-              </option>
-              <option value={20}>
-              20
-              </option>
-              <option value={50}>
-              50
-              </option>
-            </select>
-          </div>
-        </div>
-        {/* Share Modal */}
-          <div className={shareModal}>
-            <div id="modal1" className="project-page-modal modal">
-              <div className="modal-content">
-                <a onClick={() => this.setState({shareModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
-                <div className={contactDisplay}>
-                  <h4>Select Contact</h4>
-                  <ul className="collection">
-                  {contacts.slice(0).reverse().map(contact => {
-                      return (
-                        <li key={contact.contact}className="collection-item">
-                          <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true, contactDisplay: "hide", loadingTwo: "" })}>
-                          <p>{contact.contact}</p>
-                          </a>
-                        </li>
-                      )
-                    })
-                  }
-                  </ul>
-                </div>
-              </div>
-              {/*loading */}
-              <div className={loadingTwo}>
-                <div className="center">
-                  <div className="preloader-wrapper small active">
-                    <div className="spinner-layer spinner-green-only">
-                      <div className="circle-clipper left">
-                        <div className="circle"></div>
-                      </div><div className="gap-patch">
-                        <div className="circle"></div>
-                      </div><div className="circle-clipper right">
-                        <div className="circle"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/*end loading */}
-            </div>
-          </div>
-        {/* End Share Modal */}
-
-        {/* Tag Modal */}
-          <div className={tagModal}>
-            <div id="modal1" className="project-page-modal modal">
-              <div className="modal-content">
-                <a onClick={() => this.setState({tagModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
-
-                  <h4>Tags</h4>
-                  <p>Add a new tag or remove an existing tag.</p>
-                  <div className="row">
-                    <div className="col s9">
-                      <input type="text" value={this.state.tag} onChange={this.setTags} onKeyPress={this.handleKeyPress} />
-                    </div>
-                    <div className="col s3">
-                      <a onClick={this.addTagManual}><i className="material-icons">check</i></a>
-                    </div>
-                  </div>
-                  <div>
-                  {singleDocTags.slice(0).reverse().map(tag => {
-                      return (
-                        <div key={tag} className="chip">
-                          {tag}<a onClick={() => this.setState({selectedTagId: tag, deleteState: true})}><i className="close material-icons">close</i></a>
-                        </div>
-                      )
-                    })
-                  }
-                  </div>
-                  <div>
-                    <button onClick={this.saveNewTags} className="btn">Save</button>
-                  </div>
-              </div>
-              {/*loading */}
-              <div className={loadingTwo}>
-                <div className="center">
-                  <div className="preloader-wrapper small active">
-                    <div className="spinner-layer spinner-green-only">
-                      <div className="circle-clipper left">
-                        <div className="circle"></div>
-                      </div><div className="gap-patch">
-                        <div className="circle"></div>
-                      </div><div className="circle-clipper right">
-                        <div className="circle"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/*end loading */}
-            </div>
-          </div>
-        {/* End tag Modal */}
-
-        </div>
-      </div>
+      <ReactQuill
+        ref={(el) => { this.reactQuillRef = el }}
+        modules={TestDoc.modules}
+        id="textarea1"
+        className="materialize-textarea"
+        placeholder="Write something great"
+        value={this.state.content}
+        onChange={this.handleChange}
+        theme="bubble" />
       </div>
     );
   }
