@@ -6,19 +6,13 @@ import {
   getFile,
   putFile,
   lookupProfile,
-  signUserOut
 } from "blockstack";
-import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { Link } from "react-router-dom";
-import Dropzone from "react-dropzone";
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import XLSX from "xlsx";
 import HotTable from "react-handsontable";
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
-const Quill = ReactQuill.Quill;
+const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage =
   "https://s3.amazonaws.com/onename/avatar-placeholder.png";
 const mammoth = require("mammoth");
@@ -131,7 +125,6 @@ export default class SingleSharedFile extends Component {
                .convertToHtml({ arrayBuffer: abuf4 })
                .then(result => {
                  var html = result.value; // The generated HTML
-                 var messages = result.messages;
                  this.setState({ content: html });
                  console.log(this.state.content);
                  this.setState({ loading: "hide", show: "" });
@@ -158,7 +151,7 @@ export default class SingleSharedFile extends Component {
            }
 
            else if (this.state.type.includes("sheet")) {
-             var abuf4 = str2ab(this.state.link);
+             // var abuf4 = str2ab(this.state.link);
              var wb = XLSX.read(abuf4, { type: "buffer" });
              var first_worksheet = wb.Sheets[wb.SheetNames[0]];
              var data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
@@ -279,7 +272,7 @@ export default class SingleSharedFile extends Component {
   renderPagination(page, pages) {
     let previousButton = (
       <li className="previous" onClick={this.handlePrevious}>
-        <a href="#">
+        <a>
           <i className="fa fa-arrow-left" /> Previous
         </a>
       </li>
@@ -287,7 +280,7 @@ export default class SingleSharedFile extends Component {
     if (page === 1) {
       previousButton = (
         <li className="previous disabled">
-          <a href="#">
+          <a>
             <i className="fa fa-arrow-left" /> Previous
           </a>
         </li>
@@ -295,7 +288,7 @@ export default class SingleSharedFile extends Component {
     }
     let nextButton = (
       <li className="next" onClick={this.handleNext}>
-        <a href="#">
+        <a>
           Next <i className="fa fa-arrow-right" />
         </a>
       </li>
@@ -303,7 +296,7 @@ export default class SingleSharedFile extends Component {
     if (page === pages) {
       nextButton = (
         <li className="next disabled">
-          <a href="#">
+          <a>
             Next <i className="fa fa-arrow-right" />
           </a>
         </li>
@@ -325,13 +318,8 @@ export default class SingleSharedFile extends Component {
       display: "none"
     };
     const type = this.state.type;
-    const { handleSignOut } = this.props;
-    const { person } = this.state;
     const loading = this.state.loading;
     const show = this.state.show;
-    const hideButton = this.state.hideButton;
-    const shareModal = this.state.shareModal;
-    const contacts = this.state.contacts;
     let pagination = null;
     if (this.state.pages) {
       pagination = this.renderPagination(this.state.page, this.state.pages);
@@ -365,7 +353,6 @@ export default class SingleSharedFile extends Component {
                 ) : type.includes("application/pdf") ? (
                   <li>
                     <a
-                      href="#"
                       onClick={this.downloadPDF}
                       title={this.state.name}
                     >
@@ -375,7 +362,6 @@ export default class SingleSharedFile extends Component {
                 ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
                   <li>
                     <a
-                      href="#"
                       onClick={this.downloadPDF}
                       title={this.state.name}
                     >
@@ -385,7 +371,6 @@ export default class SingleSharedFile extends Component {
                 ) : type.includes("sheet")|| type.includes("csv") ? (
                   <li>
                     <a
-                      href="#"
                       onClick={this.downloadPDF}
                       title={this.state.name}
                     >
@@ -503,7 +488,6 @@ export default class SingleSharedFile extends Component {
                           contextMenu: true,
                           formulas: true,
                           columnSorting: true,
-                          contextMenu: true,
                           autoRowSize: true,
                           manualColumnMove: true,
                           manualRowMove: true,

@@ -78,7 +78,7 @@ componentDidMount() {
          console.log("Contacts are here");
          this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
          let contact = this.state.contacts;
-         const thisContact = contact.find((a) => { return a.contact === this.props.match.params.id});
+         const thisContact = contact.find((a) => { return a.contact == this.props.match.params.id});
          this.setState({ conversationUser: thisContact && thisContact.contact});
        } else {
          console.log("No contacts");

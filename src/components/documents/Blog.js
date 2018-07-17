@@ -1,18 +1,12 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
 import {
   isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile,
-  signUserOut,
   handlePendingSignIn,
 } from "blockstack";
-import axios from 'axios';
 
-const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Blog extends Component {
@@ -71,8 +65,8 @@ export default class Blog extends Component {
       window.$.each(team, function(i){
         if(team[i].name === deleteName) {
             team.splice(i,1);
-            return false;
             this.setState({ team: [...this.state.team, team.splice(i, 1)]})
+            return false;
         }
       });
       setTimeout(this.delete, 500);
@@ -162,7 +156,7 @@ export default class Blog extends Component {
             <h3 className="center-align">Manage your blog settings</h3>
             <div className="row">
               <div className="col s6">
-                <h5>Your Team <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ hideMain: "hide", teammateModal: "" })}><i role="Add new blog team member" className="material-icons white-text">add</i></button></h5>
+                <h5>Your Team <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ hideMain: "hide", teammateModal: "" })}><i aria-labelledby="Add new blog team member" className="material-icons white-text">add</i></button></h5>
 
                 <table className="bordered">
                   <thead>
@@ -190,7 +184,7 @@ export default class Blog extends Component {
               </div>
               <div className="col s6">
                 <h5>Blog URL</h5>
-                <p><i role="Link to blog" className="material-icons black-text">insert_link</i><a href={blogLink}>{blogLink}</a></p>
+                <p><i aria-labelledby="Link to blog" className="material-icons black-text">insert_link</i><a href={blogLink}>{blogLink}</a></p>
                 <button className="btn-flat">Request Custom Domain</button>
               </div>
               <div className="col stats s12">

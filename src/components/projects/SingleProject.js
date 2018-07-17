@@ -1,12 +1,9 @@
 import React, { Component } from "react";
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 import {
-  loadUserData,
   getFile,
   putFile
 } from 'blockstack';
-import update from 'immutability-helper';
 
 export default class SingleProject extends Component {
   constructor(props) {
@@ -65,9 +62,9 @@ export default class SingleProject extends Component {
          eventsObject.media.caption = "";
          eventsObject.media.credit = "";
          eventsObject.start_date = {};
-         eventsObject.start_date.month = parseInt(JSON.parse(fileContents || '{}').createdMonth);
-         eventsObject.start_date.day = parseInt(JSON.parse(fileContents || '{}').createdDay);
-         eventsObject.start_date.year = parseInt(JSON.parse(fileContents || '{}').createdYear);
+         eventsObject.start_date.month = parseInt(JSON.parse(fileContents || '{}').createdMonth, 10);
+         eventsObject.start_date.day = parseInt(JSON.parse(fileContents || '{}').createdDay, 10);
+         eventsObject.start_date.year = parseInt(JSON.parse(fileContents || '{}').createdYear, 10);
          eventsObject.text = {};
          eventsObject.text.headline = "Project created";
          eventsObject.text.text = "Project created with the following tag(s):  " + JSON.parse(fileContents || '{}').tags;
@@ -116,9 +113,9 @@ export default class SingleProject extends Component {
     eventObject.media.caption = "";
     eventObject.media.credit = "";
     eventObject.start_date = {};
-    eventObject.start_date.month = parseInt(month);
-    eventObject.start_date.day = parseInt(day);
-    eventObject.start_date.year = parseInt(year);
+    eventObject.start_date.month = parseInt(month, 10);
+    eventObject.start_date.day = parseInt(day, 10);
+    eventObject.start_date.year = parseInt(year, 10);
     eventObject.text = {};
     eventObject.text.headline = this.state.commentTitle;
     eventObject.text.text = this.state.timelineComment;
@@ -167,26 +164,45 @@ export default class SingleProject extends Component {
   }
 
   render() {
-    const { timelineModal, addToProjectModal, collabModal } = this.state;
+    const { timelineModal } = this.state;
     console.log(this.state.timeline.events);
     console.log(this.state.eventsUpdate);
     return (
       <div>
         {this.renderView()}
         <div className="main-content">
-          <h3 className="center-align">Project Timeline</h3>
-          <div role="Project timeline" id='timeline-embed'></div>
-          <h3 className="center-align">Project</h3>
-
+          <h3 className="center-align">File Timeline</h3>
+          <div aria-labelledby="Project timeline" id='timeline-embed'></div>
+          <h3 className="center-align">Notes</h3>
+          <div className="container">
+          <table className="bordered">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Note</th>
+                <th>Name</th>
+                <th>Signature Key</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>4/10/2017</td>
+                <td>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</td>
+                <td>Carla Rodriguez</td>
+                <td>173894ehrt84028dhs49568261hgkdurh</td>
+              </tr>
+            </tbody>
+          </table>
+          </div>
           {/*Project Control Button */}
-          <div role="Project actions menu" className="fixed-action-btn horizontal click-to-toggle">
+          <div aria-labelledby="Project actions menu" className="fixed-action-btn horizontal click-to-toggle">
             <a className="btn-floating btn-large black">
               <i className="material-icons">menu</i>
             </a>
-            <ul role="project actions">
-              <li role="project button"><a onClick={() => this.setState({ timelineModal: "" })} className="btn-floating red"><i role="Add to timeline" className="material-icons">add</i></a></li>
-              <li role="project button"><a onClick={() => this.setState({addToProjectModal: ""})} className="btn-floating green"><i role="Upload to project" className="material-icons">publish</i></a></li>
-              <li role="project button"><a onClick={() => this.setState({collabModal: ""})} className="btn-floating blue"><i role="Add collaborator" className="material-icons">people</i></a></li>
+            <ul aria-labelledby="project actions">
+              <li aria-labelledby="project button"><a onClick={() => this.setState({ timelineModal: "" })} className="btn-floating red"><i aria-labelledby="Add to timeline" className="material-icons">add</i></a></li>
+              <li aria-labelledby="project button"><a onClick={() => this.setState({addToProjectModal: ""})} className="btn-floating green"><i aria-labelledby="Upload to project" className="material-icons">publish</i></a></li>
+              <li aria-labelledby="project button"><a onClick={() => this.setState({collabModal: ""})} className="btn-floating blue"><i aria-labelledby="Add collaborator" className="material-icons">people</i></a></li>
             </ul>
           </div>
           {/* End Project Control Button */}

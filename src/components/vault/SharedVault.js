@@ -88,11 +88,7 @@ export default class SharedVault extends Component {
   renderView() {
     const show = this.state.show;
     console.log(loadUserData().username);
-    const loading = this.state.loading;
     let contacts = this.state.filteredContacts;
-    let link = '/sheets/shared/';
-    let user = this.state.senderID;
-    const userData = blockstack.loadUserData();
 
     if(this.state.sharedWithMe === true) {
       return(
@@ -182,8 +178,6 @@ export default class SharedVault extends Component {
 
   render() {
       console.log(loadUserData().username);
-      let link = '/vault/shared/';
-      let user = this.state.senderID;
       const userData = blockstack.loadUserData();
       const person = new blockstack.Person(userData.profile);
 
@@ -208,7 +202,7 @@ export default class SharedVault extends Component {
               <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
               </ul>
                 <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
+                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" alt="img"/><i className="material-icons right">arrow_drop_down</i></a></li>
               </ul>
             </div>
           </nav>

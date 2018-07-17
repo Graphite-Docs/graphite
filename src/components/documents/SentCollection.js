@@ -89,10 +89,10 @@ export default class SentCollection extends Component {
     this.deleteShareDoc = () => {
       this.setState({deleteId: ""})
       let docs = this.state.docs;
-      const thisDoc = docs.find((doc) => { return doc.id === this.state.deleteId});
+      const thisDoc = docs.find((doc) => { return doc.id == this.state.deleteId});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
-        return doc.id === index;
+        return doc.id == index;
       }
       let deleteIndex = docs.findIndex(findObjectIndex)
       let updatedDoc = update(this.state.docs, {$splice: [[deleteIndex, 1, ]]})
@@ -137,7 +137,6 @@ export default class SentCollection extends Component {
   renderView() {
 
     let docs = this.state.docs;
-    const img = this.state.img;
     if(this.state.deleteId !== "") {
       this.deleteShareDoc();
     }

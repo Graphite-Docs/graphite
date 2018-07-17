@@ -67,19 +67,21 @@ export default class NewVaultFile extends Component {
        object.name = file.name;
        object.size = file.size;
        object.type = file.type;
-       object.tags = this.state.tags,
+       object.tags = this.state.tags;
        object.sharedWithSingle = this.state.sharedWithSingle;
        object.lastModified = file.lastModified;
        object.lastModifiedDate = file.lastModifiedDate;
        object.id = Date.now();
+       object.vault = "vault";
        const objectTwo = {};
        objectTwo.uploaded = month + "/" + day + "/" + year;
        objectTwo.id = object.id;
        objectTwo.name = object.name;
        objectTwo.type = object.type;
-       objectTwo.tags = this.state.tags,
+       objectTwo.tags = this.state.tags;
        objectTwo.sharedWithSingle = this.state.sharedWithSingle;
        objectTwo.lastModifiedDate = object.lastModifiedDate;
+       objectTwo.fileType = "vault";
 
        this.setState({id: objectTwo.id, name: objectTwo.name});
        console.log(object.type);

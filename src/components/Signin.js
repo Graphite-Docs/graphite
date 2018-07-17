@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-const civicSip = new window.civic.sip({ appId: 'rJ-YXevoG' });
+// const civicSip = new window.civic.sip({ appId: 'rJ-YXevoG' });
 
 export default class Signin extends Component {
   render() {
-    const { handleSignIn } = this.props; 
+    const { handleSignIn } = this.props;
 
     return (
       <div className="welcome center-align" id="section-1">

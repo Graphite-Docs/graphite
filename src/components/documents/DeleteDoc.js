@@ -67,7 +67,7 @@ export default class DeleteDoc extends Component {
     const object = {};
     object.title = this.state.textvalue;
     object.content = this.state.test;
-    object.id = parseInt(this.props.match.params.id);
+    object.id = parseInt(this.props.match.params.id, 10);
     this.setState({ value: [...this.state.value, this.state.value.splice(this.state.index, 1)]})
     this.setState({ singleDoc: {} });
     this.setState({ loading: "show", save: "hide" });

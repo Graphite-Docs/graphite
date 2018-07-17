@@ -1,103 +1,83 @@
-import React, { Component, Link } from 'react';
+import React, { Component } from 'react';
 import Header from './Header';
-import axios from 'axios';
+import TextEdit from './TextEdit.js'; //this will render Yjs...
 
 export default class PublicDoc extends Component {
 
-  constructor(props) {
-  	super(props);
-    this.state = {
-      gaiaLink: "",
-      title: "",
-      content: "",
-      view: false
-    }
-    this.fetchData = this.fetchData.bind(this);
-    this.handleLinkChange = this.handleLinkChange.bind(this);
-    this.sendLink = this.sendLink.bind(this);
-    this.newLink = this.newLink.bind(this);
-  }
-
   componentDidMount() {
-    // this.refresh = setInterval(() => this.fetchData(), 1000);
-  }
-
-  fetchData() {
-    axios
-      .get(
-        this.state.gaiaLink
-      )
-      .then(res => {
-        this.setState({ title: res.data.title, content: res.data.content})
-        console.log(res.data);
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-  handleLinkChange(e) {
-    this.setState({
-      gaiaLink: e.target.value
+    window.$('.summernote').summernote({
+      placeholder: "Write something great",
+      value: this.props.content,
+      roomId: this.props.idToLoad.toString(), //this needs to be a string!
+      docLoaded: this.props.docLoaded
     });
+    this.props.loadInitial(window.location.pathname.split('/shared/docs/')[1]);
   }
 
-  sendLink() {
-    this.fetchData();
-    this.setState({ view: true })
-  }
-
-  newLink() {
-    this.setState({ view: false, gaiaLink: "" })
-  }
-
-  renderView() {
-
-    if (this.state.view == false) {
-      return(
-        <div>
-        <h2>Enter the link shared with you</h2>
-          <input placeholder="Public Link" type="text" onChange={this.handleLinkChange} />
-          <button className="btn" onClick={this.sendLink}>View Document</button>
-        </div>
-      )
-
-    } else {
-      return (
-        <div>
-        <div className="card sharing-notice">
-          <p>This is Graphite's public sharing feature. Public sharing is view-only. If you'd like to edit this document and collaborate, <a href="https://app.graphite.com" target="_blank">sign into Graphite or create an account.</a></p>
-          <button className="btn" onClick={this.newLink}>Enter New Share Link</button>
-        </div>
-        <div />
-        <div className="card doc-card">
-          <div className="double-space doc-margin">
-          <div
-            className="print-view no-edit center-align"
-            dangerouslySetInnerHTML={{ __html: this.state.title }}
-            />
-            <div
-            className="print-view no-edit"
-            dangerouslySetInnerHTML={{ __html: this.state.content }}
-            />
-          </div>
-          </div>
-        </div>
-      )
-
-    }
-  }
 
   render() {
-    console.log(this.state.gaiaLink);
     return (
       <div>
-      <Header />
-        <div className="container">
-          {this.renderView()}
+        <Header />
+        <div className="test-docs">
+          {/* <div className={docFlex}> */}
+          <div className="test-doc-card">
+            <div className="double-space doc-margin">
+
+              {/* <p>
+                <span style={{background: 'yellow'}}>Public Doc:</span> {this.state.idToLoad}
+              </p> */}
+
+              {
+                this.props.title === "Untitled" ?
+                <textarea
+                  className="doc-title materialize-textarea"
+                  placeholder="Give it a title"
+                  type="text"
+                  onChange={this.props.handlePubTitleChange}
+                />
+                :
+                <textarea
+                  className="doc-title materialize-textarea"
+                  placeholder="Title"
+                  type="text"
+                  value={this.props.title}
+                  onChange={this.props.handlePubTitleChange}
+                />
+              }
+
+              <p>
+                This document last updated: {this.props.lastUpdated}
+              </p>
+
+              <p>
+                Note: the original version of this document will be synced and autosaved whenever its author is signed into Graphite Docs.
+                If the author is not signed in, changes made below will be lost.
+              </p>
+
+              <TextEdit
+                roomId={this.props.idToLoad} //this is a string!
+                docLoaded={this.props.docLoaded} //this is set by loadDoc
+                value={this.props.content}
+                onChange={this.handlePubChange}
+              />
+
+              {/* {
+                (this.state.docLoaded === true) ?
+                <ReactQuillTextEditor
+                // ref={(el) => { this.reactQuillRef = el }}
+                roomId={this.state.idToLoad} //this is a string!
+                docLoaded={this.state.docLoaded}
+                value={this.state.content}
+                onChange={this.handleChange}
+              />
+              :
+              "ReactQuillTextEditor will go here..."
+            } */}
+          </div>
         </div>
       </div>
+    </div>
     );
   }
-
 }

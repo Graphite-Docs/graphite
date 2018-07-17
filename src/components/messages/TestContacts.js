@@ -287,7 +287,7 @@ export default class TestContacts extends Component {
 
   handleKeyPress(e) {
     if (e.key === 'Enter') {
-      const object = {};
+      // const object = {};
       this.setState({ types: [...this.state.types, this.state.type]});
       this.setState({ type: "" });
     }
@@ -301,17 +301,17 @@ export default class TestContacts extends Component {
   loadSingleTypes() {
 
     this.setState({typeDownload: false});
-    const thisFile = this.state.contactsSelected[0];
+    // const thisFile = this.state.contactsSelected[0];
     getFile("contact.json", {decrypt: true})
     .then((fileContents) => {
       this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
       this.setState({ filteredContacts: this.state.contacts });
     }).then(() =>{
       let contacts = this.state.contacts;
-      const thisContact = contacts.find((contact) => { return contact.contact == this.state.contactsSelected[0]});
+      const thisContact = contacts.find((contact) => { return contact.contact === this.state.contactsSelected[0]});
       let index = thisContact && thisContact.contact;
       function findObjectIndex(contact) {
-          return contact.contact == index;
+          return contact.contact === index;
       }
       if(thisContact && thisContact.types) {
         this.setState({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: thisContact && thisContact.types, name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
@@ -366,10 +366,10 @@ export default class TestContacts extends Component {
     this.setState({ deleteState: false });
 
     let types = this.state.types;
-    const thisType = types.find((type) => { return type.id == this.state.selectedTypeId});
+    const thisType = types.find((type) => { return type.id === this.state.selectedTypeId});
     let index = thisType && thisType.id;
     function findObjectIndex(type) {
-        return type.id == index;
+        return type.id === index;
     }
     this.setState({ typeIndex: types.findIndex(findObjectIndex) });
     const updatedTypes = update(this.state.types, {$splice: [[this.state.typeIndex, 1]]});
@@ -385,11 +385,11 @@ export default class TestContacts extends Component {
   filterNow() {
     let contacts = this.state.contacts;
 
-    if(this.state.selectedType != "") {
+    if(this.state.selectedType !== "") {
       let typeFilter = contacts.filter(x => x.types.includes(this.state.selectedType));
       this.setState({ filteredContacts: typeFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate != "") {
+    } else if (this.state.selectedDate !== "") {
       let dateFilter = contacts.filter(x => x.dateAdded.includes(this.state.selectedDate));
       this.setState({ filteredContacts: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
@@ -399,7 +399,7 @@ export default class TestContacts extends Component {
 
   renderView() {
     this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
-    const {selectedType, selectedDate, typesList, dateList, appliedFilter, deleteState, typeDownload, loadingTwo, typeModal, currentPage, contactsPerPage} = this.state;
+    const {typesList, dateList, appliedFilter, deleteState, typeDownload, loadingTwo, typeModal, currentPage, contactsPerPage} = this.state;
     let contacts = this.state.filteredContacts;
     let show = this.state.show;
     let showResults = "";
@@ -491,7 +491,6 @@ export default class TestContacts extends Component {
               console.log(results);
               let profile = result.profile;
               let image = profile.image;
-              let name = profile.name;
               let imageLink;
               if(image !=null) {
                 if(image[0]){
@@ -555,7 +554,7 @@ export default class TestContacts extends Component {
         <div className="row">
           <div className="col s12 m6">
             <h5>Contacts ({currentContacts.length})
-              {appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+              {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
               {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredContacts: this.state.contacts})}>Clear</a></span> : <div />}
             </h5>
             {/* Filter Dropdown */}
@@ -632,7 +631,7 @@ export default class TestContacts extends Component {
               return(
                 <tr key={contact.contact}>
                   <td><input type="checkbox" checked={this.state.checked} value={contact.contact} id={contact.contact} onChange={this.handleCheckbox} /><label htmlFor={contact.contact}></label></td>
-                  <td><img src={contact.img || avatarFallbackImage} className="profile-grid-img circle" />
+                  <td><img src={contact.img || avatarFallbackImage} className="profile-grid-img circle" alt="img" />
                     <Link className="profile-name-link" to={'/contacts/profile/'+ contact.contact}>
                       {contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact}
                     </Link>

@@ -1,19 +1,19 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
+import { Link } from 'react-router-dom';
+import { Redirect } from 'react-router';
 import {
   isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
-  lookupProfile,
   signUserOut,
   handlePendingSignIn,
-} from "blockstack";
+} from 'blockstack';
 import update from 'immutability-helper';
-import axios from 'axios';
-const { encryptECIES } = require('blockstack/lib/encryption');
+
 const { getPublicKeyFromPrivate } = require('blockstack');
+const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class EditorAdmin extends Component {
@@ -27,90 +27,88 @@ export default class EditorAdmin extends Component {
   	  	avatarUrl() {
   	  	  return avatarFallbackImage;
   	  	},
+        team: [],
+        contacts: [],
+        editorView: "",
+        editorName: "",
+        editorRoles: "",
+        editorPermissions: "",
+        editorIntegrations: "",
+        editorPublish: "",
+        journoView: "",
+        journoName: "",
+        journoRoles: "",
+        journoPermissions: "",
+        journoIntegrations: "",
+        journoPublish: "",
+        teamLength: 0,
+        lastUpdated: 0,
+        accountSettings: "",
+        count: 0,
+        file: [],
+        teamMateMostRecent: "",
+        pubKey: "",
+        clients: [],
+        deleteContact: "",
+        integrationsModal: "hide",
+        integrationUrl: "",
+        integrationName: "",
+        accountNameModal: "hide",
+        accountPlanModal: "hide",
+        updateTeammateModal: "hide",
+        teammateModal: "hide",
+        hideMain: "",
+        confirmAdd: false,
+        teammateName: "",
+        newUserRole: "",
+        updatedCheck: 0,
+        mainAdminAdd: false,
+        editing: false,
+        confirmUpdate: false,
+        deleteTeammateModal: "hide",
+        index: "",
+        selectedTeammate: "",
+        updatedAccountName: "",
+        integrations: [],
+        deleteIntegration: "",
+        deleteIntName: "",
+        deleteIntegrationModal: "hide"
   	  },
-      contacts: [],
-      team: [],
-      hideMain: "",
-      teammateModal: "hide",
-      teammateName: "",
-      deleteContact: "",
-      contact: "",
-      index: "",
-      confirmAdd: false,
-      confirmUpdate: false,
-      newUserRole: "",
-      checkboxState: true,
-      selectedTeammate: "",
-      updateTeammateModal: "hide",
-      index: "",
-      editorShare: false,
-      editorPublish: false,
-      editorComment: false,
-      editorAssign: false,
-      journoShare: false,
-      journoPublish: false,
-      journoComment: false,
-      journoAssign: false,
-      permissions: {},
-      accountName: "",
-      accountPlan: "",
-      accountNameModal: "hide",
-      accountPlanModal: "hide",
-      updatedAccountName: "",
-      updatedAccountPlan: "",
-      accountDetails: {},
-      clients: [],
-      pubKey: "",
-      teamUpdated: 0,
-      otherTeamUpdated: 0,
-      permissionsUpdate: 0,
-      otherPermissionsUpdate: 0,
-      accountDetailsUpdate: 0,
-      otherAccountDetailsUpdate: 0,
-      integrations: [],
-      deleteIntegration: "",
-      integrationsModal: "hide",
-      integrationURL: "",
-      integrationName: ""
     }
-    this.delete = this.delete.bind(this);
-    this.saveTeam = this.saveTeam.bind(this);
+    this.combineFile = this.combineFile.bind(this);
+    this.checkForLatest = this.checkForLatest.bind(this);
+    this.saveToEveryone = this.saveToEveryone.bind(this);
+    this.loadOther = this.loadOther.bind(this);
+    this.loadMain = this.loadMain.bind(this);
+    this.accountNameChange = this.accountNameChange.bind(this);
     this.addTeammate = this.addTeammate.bind(this);
+    this.saveFile = this.saveFile.bind(this);
+    this.delete = this.delete.bind(this);
+    this.setLoadedFile = this.setLoadedFile.bind(this);
     this.updateTeammate = this.updateTeammate.bind(this);
     this.updateRole = this.updateRole.bind(this);
-    this.setPermissions = this.setPermissions.bind(this);
-    this.savePermissions = this.savePermissions.bind(this);
-    this.accountNameChange = this.accountNameChange.bind(this);
-    this.saveAccountDetails = this.saveAccountDetails.bind(this);
-    this.updateAccount = this.updateAccount.bind(this);
-    this.getTeamMemberKey = this.getTeamMemberKey.bind(this);
-    this.saveToTeamMember = this.saveToTeamMember.bind(this);
-    this.saveTeamUpdateFile = this.saveTeamUpdateFile.bind(this);
-    this.savePermissionsUpdateFile = this.savePermissionsUpdateFile.bind(this);
-    this.handleIntName = this.handleIntName.bind(this);
+    this.saveToAdmin = this.saveToAdmin.bind(this);
     this.handleIntURL = this.handleIntURL.bind(this);
+    this.handleIntName = this.handleIntName.bind(this);
     this.addInt = this.addInt.bind(this);
-    this.saveInt = this.saveInt.bind(this);
     this.deleteInt = this.deleteInt.bind(this);
-    this.loadSettings = this.loadSettings.bind(this);
-    this.loadMainAccountDetails = this.loadMainAccountDetails.bind(this);
-  }
-
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
-    }
   }
 
   componentDidUpdate() {
+
+    if(this.state.confirmUpdate === true){
+      this.updateTeammate();
+    }
+
     if(this.state.confirmAdd === true) {
       const team = this.state.team;
       if(team.length > 0){
-        if(team.includes(this.state.teammateName)){
+        let teamNames =  team.map(a => a.name);
+        if(teamNames.includes(this.state.teammateName)){
           console.log("Nope");
           window.Materialize.toast('That person is already on your team.', 4000)
+          this.setState({confirmAdd: false});
+
         } else {
           this.addTeammate();
         }
@@ -118,88 +116,10 @@ export default class EditorAdmin extends Component {
           this.addTeammate();
       }
     }
-
-    if(this.state.confirmUpdate === true){
-      this.updateTeammate();
-    }
-
-    if(this.state.deleteContact !== "") {
-      let deleteName = this.state.deleteContact;
-      let team = this.state.team;
-      window.$.each(team, function(i){
-        if(team[i].name === deleteName) {
-            team.splice(i,1);
-            return false;
-            this.setState({ team: [...this.state.team, team.splice(i, 1)]})
-        }
-      });
-      setTimeout(this.delete, 500);
-    }
-
-    if(this.state.deleteIntegration !== "") {
-      let deleteId = this.state.deleteIntegration;
-      let integrations = this.state.integrations;
-      window.$.each(integrations, function(i){
-        if(integrations[i].id === deleteId) {
-            integrations.splice(i,1);
-            return false;
-            this.setState({ integrations: [...this.state.integrations, integrations.splice(i, 1)]})
-        }
-      });
-      setTimeout(this.deleteInt, 500);
-    }
   }
 
   componentDidMount() {
-
-    //Loading Main Clients List
-    const user = 'admin.graphite';
-    const options = { username: 'admin.graphite', zoneFileLookupURL: 'https://core.blockstack.org/v1/names', decrypt: false}
-    getFile('clientlist.json', options)
-      .then((fileContents) => {
-        if(JSON.parse(fileContents || '{}').length > 0) {
-          this.setState({ clients: JSON.parse(fileContents || '{}') });
-          this.loadSettings();
-        } else {
-          this.setState({ clients: [] });
-          this.loadSettings();
-        }
-
-      })
-      .catch(error => {
-        console.log(error);
-      });
-
-    }
-
-    loadSettings() {
-
-    //Loading Account Specific Account Details File
-     getFile("accountdetails.json", {decrypt: false})
-     .then((fileContents) => {
-       if(fileContents){
-         this.setState({ accountName: JSON.parse(fileContents || '{}').accountName, accountPlan: JSON.parse(fileContents || '{}').accountPlan });
-       } else {
-         //If the logged in user has never saved an account details file, we are going to load the main admin's file.
-         console.log("No account details yet");
-         this.loadMainAccountDetails();
-       }
-     })
-      .catch(error => {
-        console.log(error);
-      });
-
-    //Loading account-specific Integrations
-    getFile('integrations.json', {decrypt: true})
-      .then((fileContents) => {
-        if(fileContents) {
-          this.setState({ integrations: JSON.parse(fileContents || '{}') });
-        } else {
-          this.setState({ integrations: [] });
-        }
-      })
-
-    //Loading Account Specific Contacts
+    //Loading Contacts List
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
        let file = JSON.parse(fileContents || '{}');
@@ -213,320 +133,551 @@ export default class EditorAdmin extends Component {
       .catch(error => {
         console.log(error);
       });
-
-    //Loading Account Specific Team
-    getFile("team.json", {decrypt: true})
-    .then((fileContents) => {
-      if(JSON.parse(fileContents || '{}').length > 0){
-        this.setState({ team: JSON.parse(fileContents || '{}') });
-      } else {
-        console.log("No team yet")
-      }
-    })
-     .catch(error => {
-       console.log(error);
-     });
-
-     //Loading Account Specific Update File
-     getFile("teamUpdate.json", {decrypt: false})
-     .then((fileContents) => {
-       if(fileContents){
-         this.setState({ teamUpdated: JSON.parse(fileContents || '{}') });
-       } else {
-         this.setState({ teamUpdated: 0 });
-       }
-     })
-      .catch(error => {
-        console.log(error);
-      });
-
-      //Loading Account Specific Account Details Update File
-      getFile("accountdetailsUpdate.json", {decrypt: false})
-      .then((fileContents) => {
-        if(fileContents){
-          this.setState({ accountDetailsUpdate: JSON.parse(fileContents || '{}') });
-        } else {
-          this.setState({ accountDetailsUpdate: 0 });
-        }
-      })
-       .catch(error => {
-         console.log(error);
-       });
-
-    //Loading Account Specific Permissions File
-     getFile("permissions.json", {decrypt: false})
-     .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}')){
-         this.setState({ permissions: JSON.parse(fileContents || '{}') });
-         this.setState({
-           editorShare: JSON.parse(fileContents || '{}').editorShare,
-           editorAssign: JSON.parse(fileContents || '{}').editorAssign,
-           editorComment: JSON.parse(fileContents || '{}').editorComment,
-           editorPublish: JSON.parse(fileContents || '{}').editorPublish,
-           journoShare: JSON.parse(fileContents || '{}').journoShare,
-           journoAssign: JSON.parse(fileContents || '{}').journoAssign,
-           journoComment: JSON.parse(fileContents || '{}').journoComment,
-           journoPublish: JSON.parse(fileContents || '{}').journoPublish
-         });
-       } else {
-         console.log("Permissions not set yet")
-       }
-     })
-      .catch(error => {
-        console.log(error);
-      });
-
-      //Loading Account Specific Permissions Update File
-      getFile("permissionsUpdate.json", {decrypt: true})
-      .then((fileContents) => {
-        if(JSON.parse(fileContents || '{}')){
-          this.setState({ permissionsUpdate: JSON.parse(fileContents || '{}')})
-        } else {
-          this.setState({ permissionsUpdate: 0})
-        }
-      })
-       .catch(error => {
-         console.log(error);
-       });
-
-       this.loadTeam();
-
-   }
-
-   loadMainAccountDetails() {
-     //TODO continue work here
-   }
-
-   loadNewFile() {
-     const name = this.state.mateToLoad;
-     const options = { username: name, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-     getFile('team.json', options)
+    //Setting initial state on some states for rendering
+    this.setState({
+      integrationsModal: "hide",
+      accountNameModal: "hide",
+      accountPlanModal: "hide",
+      updateTeammateModal: "hide",
+      teamMateMostRecent: "",
+      teammateModal: "hide",
+      teammateName: "",
+      hideMain: "",
+      count: 0,
+      mainAdminAdd: true,
+      editing: false,
+      deleteContact: "",
+      deleteTeammateModal: "hide",
+      confirmUpdate: false,
+      index: "",
+      selectedTeammate: "",
+      updatedAccountName: "",
+      integrations: [],
+      deleteIntegration: "",
+      deleteIntegrationModal: "hide"
+    });
+    //Loading Main Clients List
+    const user = 'admin.graphite';
+    const options = { username: user, zoneFileLookupURL: 'https://core.blockstack.org/v1/names', decrypt: false}
+    getFile('clientlist.json', options)
       .then((fileContents) => {
         if(JSON.parse(fileContents || '{}').length > 0) {
-          this.setState({ teamMine: JSON.parse(fileContents || '{}'), teamLength: JSON.parse(fileContents || '{}').length })
+          this.setState({ clients: JSON.parse(fileContents || '{}') });
+          this.loadOther();
         } else {
-          this.setState({ teamMine: [] })
+          this.setState({ clients: [] });
+          this.loadOther();
         }
-      })
-       .catch(error => {
-         console.log(error);
-       });
-   }
 
-   loadTeam() {
-     getFile("team.json", {decrypt: false})
-     .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}').length > 0){
-         this.setState({
-           teamMine: JSON.parse(fileContents || '{}'),
-           teamLength: JSON.parse(fileContents || '{}').length
-           });
-       } else {
-         this.loadMain();
-       }
-     })
+      })
       .catch(error => {
         console.log(error);
       });
 
-      getFile("teamUpdated.json", {decrypt: false})
+    }
+
+    loadOther() {
+    //Load File and set individual states
+    getFile('journoFileTest.json', {decrypt: true})
       .then((fileContents) => {
-        if(JSON.parse(fileContents || '{}')){
+        if(fileContents) {
+          console.log("Found your file");
+          console.log(JSON.parse(fileContents || '{}'));
           this.setState({
-            lastUpdated: JSON.parse(fileContents || '{}')
-            });
+            team: JSON.parse(fileContents || '{}').team,
+            integrations: JSON.parse(fileContents || '{}').integrations || [],
+            editorView: JSON.parse(fileContents || '{}').editorView,
+            editorName: JSON.parse(fileContents || '{}').editorName,
+            editorRoles: JSON.parse(fileContents || '{}').editorRoles,
+            editorPermissions: JSON.parse(fileContents || '{}').editorPermissions,
+            editorIntegrations: JSON.parse(fileContents || '{}').editorIntegrations,
+            editorPublish: JSON.parse(fileContents || '{}').editorPublish,
+            journoView: JSON.parse(fileContents || '{}').journoView,
+            journoName: JSON.parse(fileContents || '{}').journoName,
+            journoRoles: JSON.parse(fileContents || '{}').journoRoles,
+            journoPermissions: JSON.parse(fileContents || '{}').journoPermissions,
+            journoIntegrations: JSON.parse(fileContents || '{}').journoIntegrations,
+            journoPublish: JSON.parse(fileContents || '{}').journoPublish,
+            accountSettings: JSON.parse(fileContents || '{}').accountSettings,
+            lastUpdated: JSON.parse(fileContents || '{}').lastUpdated
+          })
         } else {
-          console.log("No team yet")
+          console.log("No file created yet");
+          this.setState({
+            team: [],
+            integrations: [],
+            editorView: false,
+            editorName: false,
+            editorRoles: false,
+            editorPermissions: false,
+            editorIntegrations: false,
+            editorPublish: false,
+            journoView: false,
+            journoName: false,
+            journoRoles: false,
+            journoPermissions: false,
+            journoIntegrations: false,
+            journoPublish: false,
+            accountSettings: "",
+            lastUpdated: 0
+          })
         }
       })
       .then(() => {
-        this.checkTeam();
-      })
-       .catch(error => {
-         console.log(error);
-       });
-   }
-
-   loadMain() {
-     const userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
-     const name = 'admin.graphite';
-     const options = { username: userRoot, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-       getFile('team.json', options)
-        .then((fileContents) => {
-          if(JSON.parse(fileContents || '{}').length > 0) {
-            this.setState({ teamMine: JSON.parse(fileContents || '{}'), teamLength: JSON.parse(fileContents || '{}').length })
+        if(this.state.team.length < 1) {
+          console.log("loading main");
+          this.loadMain();
+        } else {
+          console.log("combining");
+          // this.combineFile();
+          const object = {}
+          object.team = this.state.team;
+          object.integrations = this.state.integrations;
+          object.lastUpdated = this.state.lastUpdated;
+          if(this.state.updatedAccountName !== ""){
+            object.accountSettings = this.state.updatedAccountName;
+            // this.setState({ accountSettings: this.state.updatedAccountName });
           } else {
-            this.setState({ teamMine: [] })
+            object.accountSettings = this.state.accountSettings;
+          }
+          object.editorView = this.state.editorView;
+          object.editorName = this.state.editorName;
+          object.editorRoles = this.state.editorRoles;
+          object.editorPermissions = this.state.editorPermissions;
+          object.editorIntegrations = this.state.editorIntegrations;
+          object.editorPublish = this.state.editorPublish;
+          object.journoView = this.state.journoView;
+          object.journoName = this.state.journoName;
+          object.journoRoles = this.state.journoRoles;
+          object.journoPermissions = this.state.journoPermissions;
+          object.journoIntegrations = this.state.journoIntegrations;
+          object.journoPublish = this.state.journoPublish;
+          this.setState({ file: object})
+        }
+      })
+      .then(() => {
+        this.checkForLatest();
+      })
+      .catch(error => {
+        console.log(error)
+      })
+      // this.refresh = setInterval(() => this.checkForLatest(), 10000);
+      setTimeout(this.checkForLatest, 10000);
+  }
+
+  combineFile() {
+    console.log("Starting the saving process...")
+    this.setState({ hideMain: "", updateTeammateModal: "hide", teammateName: "", newUserRole: "" });
+    //Take loaded states and combine them into a single file
+    const object = {}
+    object.team = this.state.team;
+    object.integrations = this.state.integrations;
+    object.lastUpdated = this.state.lastUpdated;
+    if(this.state.updatedAccountName !== ""){
+      object.accountSettings = this.state.updatedAccountName;
+      this.setState({ accountSettings: this.state.updatedAccountName });
+    } else {
+      object.accountSettings = this.state.accountSettings;
+    }
+    object.editorView = this.state.editorView;
+    object.editorName = this.state.editorName;
+    object.editorRoles = this.state.editorRoles;
+    object.editorPermissions = this.state.editorPermissions;
+    object.editorIntegrations = this.state.editorIntegrations;
+    object.editorPublish = this.state.editorPublish;
+    object.journoView = this.state.journoView;
+    object.journoName = this.state.journoName;
+    object.journoRoles = this.state.journoRoles;
+    object.journoPermissions = this.state.journoPermissions;
+    object.journoIntegrations = this.state.journoIntegrations;
+    object.journoPublish = this.state.journoPublish;
+    this.setState({ file: object})
+    //Start the process to check for the latest file among team members
+    setTimeout(this.saveFile, 300);
+    this.setState({ editing: false})
+    console.log("Here's what's being saved: ");
+    console.log(this.state.file);
+  }
+
+  loadMain() {
+    let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+    const options = {username: userRoot, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false };
+    const privateKey = loadUserData().appPrivateKey;
+    getFile(getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json', options)
+     .then((fileContents) => {
+       if(fileContents) {
+         console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
+         this.setState({
+           team: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+           integrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+           editorView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorView,
+           editorName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorName,
+           editorRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorRoles,
+           editorPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPermissions,
+           editorIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorIntegrations,
+           editorPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPublish,
+           journoView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoView,
+           journoName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoName,
+           journoRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoRoles,
+           journoPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPermissions,
+           journoIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoIntegrations,
+           journoPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPublish,
+           accountSettings: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountSettings,
+           lastUpdated: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated
+         })
+       } else {
+         this.setState({
+           team: [],
+           integrations: [],
+           editorView: false,
+           editorRoles: false,
+           editorPermissions: false,
+           editorIntegrations: false,
+           editorPublish: false,
+           journoView: false,
+           journoRoles: false,
+           journoPermissions: false,
+           journoIntegrations: false,
+           journoPublish: false,
+           accountSettings: "",
+           lastUpdated: 0
+         })
+       }
+     })
+      .then(() => {
+        this.combineFile();
+      })
+      .catch(error => {
+        this.combineFile();
+        console.log(error);
+      });
+  }
+
+  checkForLatest() {
+
+    console.log("Polling teammates...")
+    if(this.state.editing === false) {
+      const { teamMateMostRecent, team, count } = this.state;
+      console.log("Team length:");
+      console.log(team.length);
+      console.log("Current count:");
+      console.log(count);
+      console.log("Team length greater than count?");
+      console.log(team.length > count);
+      if(team.length > count) {
+        let user = team[count].name;
+        const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false };
+        const privateKey = loadUserData().appPrivateKey;
+
+        if(loadUserData().username !== user) {
+          console.log("File name to load: ");
+          console.log(getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json');
+          console.log("Loading from: ");
+          console.log(team[count].name);
+          const file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json';
+          getFile(file, options)
+            .then((fileContents) => {
+              if(fileContents){
+                console.log('file loaded number ' + count);
+                console.log("Last Updated: ");
+                console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated);
+                console.log("Compared to my last updated: ");
+                console.log(this.state.lastUpdated);
+                console.log("Teammate's file newer?");
+                console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated + '>' + this.state.lastUpdated)
+                console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated > this.state.lastUpdated);
+                if(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated > this.state.lastUpdated) {
+                  console.log("Setting teammate with the most recent file: ");
+                  console.log(user);
+                  this.setState({
+                    teamMateMostRecent: user,
+                    count: this.state.count + 1
+                  });
+                  setTimeout(this.checkForLatest, 300);
+                } else {
+                  this.setState({ count: this.state.count + 1 });
+                  setTimeout(this.checkForLatest, 300);
+                }
+              } else {
+                console.log('No file found');
+                this.setState({ count: this.state.count + 1 });
+                setTimeout(this.checkForLatest, 300);
+              }
+            })
+            .catch(error => {
+              console.log(error);
+              this.setState({ count: this.state.count + 1 });
+              setTimeout(this.checkForLatest, 300);
+            })
+        } else {
+          console.log("Teammate to be loaded is logged in user");
+          this.setState({ count: this.state.count + 1 });
+          setTimeout(this.checkForLatest, 300);
+        }
+      } else {
+        const userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+        const options = { username: userRoot, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false };
+        const file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json';
+        const { teamMateMostRecent, team, count } = this.state;
+        const privateKey = loadUserData().appPrivateKey;
+
+        getFile(file, options)
+          .then((fileContents) => {
+            if(fileContents) {
+              console.log("Loading root user's file");
+              console.log("Last Updated: ");
+              console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated);
+              console.log("Compared to my last updated: ");
+              console.log(this.state.lastUpdated);
+              console.log("Root user's file newer?");
+              console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated > this.state.lastUpdated);
+
+              if(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated > this.state.lastUpdated) {
+                console.log("Setting root user with the most recent file: ");
+                console.log(userRoot);
+                this.setState({
+                  teamMateMostRecent: userRoot,
+                });
+                setTimeout(this.setLoadedFile, 300);
+              } else {
+                console.log("Not newer");
+                setTimeout(this.setLoadedFile, 300);
+              }
+            } else {
+              console.log("File not found");
+              setTimeout(this.setLoadedFile, 300);
+            }
+          })
+          .catch(error => {
+            console.log(error);
+            setTimeout(this.setLoadedFile, 300);
+          })
+      }
+    } else {
+      setTimeout(this.checkForLatest, 10000);
+    }
+  }
+
+  setLoadedFile() {
+    const { teamMateMostRecent, team, count } = this.state;
+    console.log("No more teammates");
+    this.setState({ count: 0 });
+    console.log(teamMateMostRecent !== "");
+    if(teamMateMostRecent !== "") {
+      console.log("There is a more recent file from: ");
+      console.log(teamMateMostRecent);
+      let user = teamMateMostRecent;
+      const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false };
+      const privateKey = loadUserData().appPrivateKey;
+      const file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json';
+      getFile(file, options)
+        .then((fileContents) => {
+          if(fileContents){
+            console.log("Loading file from: ");
+            console.log(teamMateMostRecent);
+            this.setState({
+              team: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+              integrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).integrations,
+              editorView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorView,
+              editorName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorName,
+              editorRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorRoles,
+              editorPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPermissions,
+              editorIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorIntegrations,
+              editorPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPublish,
+              journoView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoView,
+              journoName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoName,
+              journoRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoRoles,
+              journoPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPermissions,
+              journoIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoIntegrations,
+              journoPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPublish,
+              accountSettings: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountSettings,
+              lastUpdated: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated
+            })
+            setTimeout(this.combineFile, 300);
+          } else {
+            console.log('No file found');
           }
         })
-         .catch(error => {
-           console.log(error);
-         });
-   }
+        .then(() => {
+          console.log("All done!")
+          setTimeout(this.checkForLatest, 10000);
+        })
+        .catch(error => {
+          console.log(error);
+        })
+    } else {
+      setTimeout(this.checkForLatest, 10000);
+    }
+  }
 
-   checkTeam() {
-     const team = this.state.teamMine;
-     if(team[this.state.count]) {
-       const user = team[this.state.count].name;
-       console.log(user);
-       //TODO keep working here
+  saveFile() {
+    console.log("Saving logged in user's file")
+    this.setState({count: 0, updatedAccountName: "" });
+    putFile('journoFileTest.json', JSON.stringify(this.state.file), {encrypt: true})
+      .then(() => {
+        console.log("file saved");
+        this.setState({
+          integrationsModal: "hide",
+          accountNameModal: "hide",
+          accountPlanModal: "hide",
+          updateTeammateModal: "hide",
+          teammateModal: "hide"
+        });
+        //Since this method will be reused for all saves made by the logged in user, it's helpful to always save to the other team members, so we start by loading their public keys
+        this.saveToEveryone();
+      })
+      .catch(error => {
+        console.log(error);
+      })
+  }
 
-       const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  saveToEveryone() {
+    const { teamMateMostRecent, team, count } = this.state;
+    if(team.length > count) {
+      let user = team[count].name;
+      let pubKey = team[count].key;
+      console.log('Saving to ' + user);
+      if(loadUserData().username !== user) {
+        // const publicKey = this.state.pubKey;
+        console.log("Here's the public key: ");
+        console.log(team[count]);
+        const data = this.state.file;
+        const encryptedData = JSON.stringify(encryptECIES(pubKey, JSON.stringify(data)));
+        const file = pubKey + '.json';
+        console.log(file);
+        putFile(file, encryptedData, {encrypt: false})
+          .then(() => {
+            console.log("Shared encrypted file ");
+            this.setState({ count: count + 1 });
+            setTimeout(this.saveToEveryone, 300)
+          })
+          .catch(error => {
+            console.log(error)
+          })
+      } else {
+        console.log("Teammate is logged in user");
+        this.setState({ count: count + 1 });
+        setTimeout(this.saveToEveryone, 300)
+      }
+    } else {
+      console.log("Loading main admin's pubKey");
+      const user = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+      const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+      getFile('key.json', options)
+        .then((fileContents) => {
+          if(fileContents) {
+            this.setState({ pubKey: JSON.parse(fileContents || '{}')});
+          } else {
+            console.log("No key for main admin")
+          }
+        })
+        .then(() => {
+          this.setState({ count: 0 });
+          this.saveToAdmin();
+        })
+        .catch(error => {
+          console.log(error);
+        })
+    }
+  }
 
-       getFile('teamUpdated.json', options)
-         .then((file) => {
-           if(file) {
-             if(JSON.parse(file || '{}') > this.state.lastUpdated) {
-               //set lastUpdated to this person's last updated
-               this.setState({ lastUpdated: JSON.parse(file || '{}'), mateToLoad: user});
-               this.loadNewFile();
-             } else {
-               if(this.state.count < this.state.teamLength) {
-                 this.setState({ count: this.state.count + 1});
-                 this.checkTeam();
-               } else {
-                 console.log("done");
-               }
-             }
-           } else {
-             if(this.state.count < this.state.teamLength) {
-               this.setState({ count: this.state.count + 1});
-               this.checkTeam();
-             } else {
-               console.log("done");
-             }
-           }
-         })
-           .catch(error => {
-             console.log(error);
-             this.setState({ count: this.state.count + 1});
-             this.checkTeam();
-           });
-     } else {
-       console.log("No more teammates");
-     }
-   }
+  saveToAdmin() {
+    console.log("Saving to main admin");
+    console.log("Here's the public key: ");
+    const pubKey = this.state.pubKey;
+    console.log(pubKey);
+    const data = this.state.file;
+    const encryptedData = JSON.stringify(encryptECIES(pubKey, JSON.stringify(data)));
+    const file = this.state.pubKey + '.json';
+    console.log(file);
+    putFile(file, encryptedData, {encrypt: false})
+      .then(() => {
+        console.log("Shared encrypted file to main admin");
+        console.log("No more teammates");
+        this.setState({ editing: false, count: 0})
+      })
+      .catch(error => {
+        console.log(error);
+        this.setState({ editing: false, count: 0})
+      })
+  }
 
+  //Account Setting (Org Name)
+
+  accountNameChange(e) {
+    this.setState({ editing: true });
+    this.setState({ updatedAccountName: e.target.value });
+    this.setState({ lastUpdated: Date.now()});
+  }
+
+  //Team management
   addTeammate() {
+    this.setState({ editing: true });
     this.setState({confirmAdd: false, hideMain: "", teammateModal: "hide" });
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const object = {};
-    object.name = this.state.teammateName;
-    object.role = this.state.newUserRole;
-    object.added = month + "/" + day + "/" + year;
-    this.setState({ team: [...this.state.team, object] });
-    this.setState({ teamUpdated: Date.now() });
-    setTimeout(this.saveTeam, 500);
+    const options = { username: this.state.teammateName, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    const file = 'key.json';
+    getFile('key.json', options)
+      .then((fileContents) => {
+        console.log("Loading public key");
+        if(fileContents) {
+          this.setState({ pubKey: JSON.parse(fileContents || '{}') })
+        } else {
+          console.log("No key found");
+          this.setState({ pubKey: "" });
+        }
+      })
+      .then(() => {
+        if(this.state.pubKey !== "") {
+          const today = new Date();
+          const day = today.getDate();
+          const month = today.getMonth() + 1;
+          const year = today.getFullYear();
+          const object = {};
+          object.name = this.state.teammateName;
+          object.role = this.state.newUserRole;
+          object.added = month + "/" + day + "/" + year;
+          object.key = this.state.pubKey;
+          this.setState({ team: [...this.state.team, object], lastUpdated: Date.now() });
+          setTimeout(this.combineFile, 300);
+        } else {
+          window.Materialize.toast('This person must log into Graphite at least once before you can add them.', 4000)
+          this.setState({ teammateName: "", newUserRole: "", teammateModal: "hide", editing: false})
+        }
+
+      })
+      .catch(error => {
+        console.log("Nope")
+        console.log(error);
+        window.Materialize.toast('This person must log into Graphite at least once before you can add them.', 4000)
+        this.setState({ teammateName: "", newUserRole: "", teammateModal: "hide", editing: false})
+      })
   }
 
   delete() {
-    this.setState({team: this.state.team, deleteContact: "" })
-    this.setState({ teamUpdated: Date.now() })
-    this.saveTeam();
-  }
-
-  deleteInt() {
-    this.setState({integrations: this.state.integrations, deleteIntegration: "" })
-    // this.setState({ teamUpdated: Date.now() })
-    this.saveInt();
-  }
-
-  saveTeam() {
-    this.setState({updateTeammateModal: "hide"});
-
-    putFile('team.json', JSON.stringify(this.state.team), {encrypt: true})
-    .then(() => {
-        console.log("Saved!");
-        this.toggle();
-        this.getTeamMemberKey();
-        this.saveTeamUpdateFile();
-        this.savePermissions();
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  saveTeamUpdateFile() {
-    putFile('teamUpdate.json', JSON.stringify(this.state.teamUpdated), {encrypt: true})
-    .then(() => {
-        console.log("Saved!");
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  savePermissionsUpdateFile() {
-    putFile('permissionsUpdate.json', JSON.stringify(this.state.permissionsUpdate), {encrypt: true})
-    .then(() => {
-        console.log("Saved!");
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  saveAccountDetailsUpdateFile() {
-    putFile('accountdetailsUpdate.json', JSON.stringify(this.state.accountDetailsUpdate), {encrypt: true})
-    .then(() => {
-        console.log("Saved!");
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  getTeamMemberKey() {
-    const user = this.state.teammateName;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-
-    getFile('key.json', options)
-      .then((file) => {
-        if(file) {
-          this.setState({ pubKey: JSON.parse(file)})
-          this.saveToTeamMember();
-        } else {
-          window.Materialize.toast(this.state.teammateName + " has not logged into Graphite yet. Ask them to log in.", 4000);
-          this.setState({index: "", newUserRole: "", teammateName: "", selectedTeammate: "", hideMain: "", updateTeammateModal: "hide"});
-        }
-      })
-        .catch(error => {
-          console.log("No key: " + error);
-          this.setState({ shareModal: "hide", loading: "hide", show: "" });
-        });
-  }
-
-  saveToTeamMember() {
-    const publicKey = this.state.pubKey;
-    const data = this.state.team;
-    const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-    const directory = 'sharedTeamFile.json';
-    putFile(directory, encryptedData, {encrypt: false})
-      .then(() => {
-        this.setState({index: "", newUserRole: "", teammateName: "", selectedTeammate: "", hideMain: "", updateTeammateModal: "hide"});
-        window.Materialize.toast('Saved', 4000);
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  toggle(event) {
-    if(event) {
-      this.setState({
-        checkboxState: !this.state.checkboxState,
-        selectedTeammate: event.target.value
-      });
-    } else {
-      this.setState({
-        checkboxState: !this.state.checkboxState
-      });
-    }
-
+    let deleteName = this.state.deleteContact;
+    let team = this.state.team;
+    let result = window.$.grep(team, function(e){
+      return e.name != deleteName;
+    });
+    // window.$.each(team, function(i){
+    //   if(team[i].name === deleteName) {
+    //     console.log(team[i].name)
+    //       team.splice(i,1);
+    //
+    //       let array = [];
+    //       array = team;
+    //       console.log(array);
+    //       this.setState({ team: array, lastUpdated: Date.now()})
+    //       // return false;
+    //   }
+    // }.bind(this));
+    this.setState({
+      team: result,
+      lastUpdated: Date.now(),
+      deleteTeammateModal: "hide",
+      deleteContact: ""
+    })
+    setTimeout(this.combineFile, 300);
   }
 
   updateTeammate() {
@@ -547,71 +698,18 @@ export default class EditorAdmin extends Component {
     const day = today.getDate();
     const month = today.getMonth() + 1;
     const year = today.getFullYear();
+    const index = this.state.index;
     object.name = this.state.selectedTeammate;
     object.role = this.state.newUserRole;
     object.added = month + "/" + day + "/" + year;
-    object.updated = Date.now()
-    const index = this.state.index;
+    object.key = this.state.team[index].key;
+
     const updatedTeam = update(this.state.team, {$splice: [[index, 1, object]]});
-    this.setState({ team: updatedTeam });
-    this.setState({ teamUpdated: Date.now() })
-    setTimeout(this.saveTeam, 500);
+    this.setState({ team: updatedTeam, lastUpdated: Date.now() });
+    setTimeout(this.combineFile, 300);
   }
 
-  setPermissions() {
-    const object = {};
-    object.editorShare = this.state.editorShare;
-    object.editorAssign = this.state.editorAssign;
-    object.editorComment = this.state.editorComment;
-    object.editorPublish = this.state.editorPublish;
-    object.journoShare = this.state.journoShare;
-    object.journoAssign = this.state.journoAssign;
-    object.journoComment = this.state.journoComment;
-    object.journoPublish = this.state.journoPublish;
-    this.setState({ permissionsUpdate: Date.now() })
-    this.setState({ permissions: object });
-    setTimeout(this.savePermissions, 500);
-  }
-
-  savePermissions() {
-      //TODO remember to set encryption back to true
-    putFile('permissions.json', JSON.stringify(this.state.permissions), {encrypt: false})
-    .then(() => {
-        console.log("Saved!");
-        window.Materialize.toast('Permissions saved.', 4000);
-        this.savePermissionsUpdateFile();
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  accountNameChange(e) {
-    this.setState({ updatedAccountName: e.target.value });
-    this.setState({ accountDetailsUpdate: Date.now()})
-  }
-
-  updateAccount() {
-    const object = {};
-    object.accountName = this.state.updatedAccountName;
-    object.accountPlan = this.state.accountPlan;
-    this.setState({ accountDetails: object });
-    setTimeout(this.saveAccountDetails, 500);
-  }
-
-  saveAccountDetails() {
-    //TODO remember to set encryption back to true
-    putFile('accountdetails.json', JSON.stringify(this.state.accountDetails), {encrypt: false})
-    .then(() => {
-        console.log("Saved!");
-        window.Materialize.toast('Account updated.', 4000);
-        this.setState({ accountName: this.state.updatedAccountName, accountNameModal: "hide", accountPlanModal: "hide", updatedAccountName: "", updatedAccountPlan: "" })
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
+  //Integrations
   handleIntURL(e) {
     this.setState({ integrationURL: e.target.value})
   }
@@ -621,6 +719,8 @@ export default class EditorAdmin extends Component {
   }
 
   addInt() {
+    console.log("Integrations: ");
+    console.log(this.state.integrations);
     const today = new Date();
     const day = today.getDate();
     const month = today.getMonth() + 1;
@@ -630,25 +730,56 @@ export default class EditorAdmin extends Component {
     object.name = this.state.integrationName;
     object.url = this.state.integrationURL;
     object.added = month + '/' + day + '/' + year;
-    this.setState({integrations: [...this.state.integrations, object]})
-    setTimeout(this.saveInt, 300);
+    this.setState({integrations: [...this.state.integrations, object], lastUpdated: Date.now()})
+    setTimeout(this.combineFile, 300);
   }
 
-  saveInt() {
-    putFile('integrations.json', JSON.stringify(this.state.integrations), {encrypt: true})
-      .then(() => {
-        console.log("Saved");
-        this.setState({ integrationURL: "", integrationName: "", integrationsModal: "hide"})
-      })
+  deleteInt() {
+    let deleteId = this.state.deleteIntegration;
+    let integrations = this.state.integrations;
+    window.$.each(integrations, function(i){
+      if(integrations[i].id === deleteId) {
+          integrations.splice(i,1);
+
+          let array = [];
+          array = integrations;
+          this.setState({ integrations: array, lastUpdated: Date.now()})
+          // return false;
+      }
+    }.bind(this));
+    this.setState({
+      deleteIntegrationModal: "hide",
+      deleteIntegration: "",
+    })
+    setTimeout(this.combineFile, 300);
   }
 
   renderView() {
+    console.log(this.state.team);
     const user = loadUserData().username;
-    const { integrationsModal, integrations, clients, accountNameModal, accountPlanModal, journoAssign, journoShare, journoComment, journoPublish, editorAssign, editorShare, editorComment, editorPublish, updateTeammateModal, selectedTeammate, ammateName, newUserRole, team, hideMain, teammateModal, contacts } = this.state;
+    const { deleteIntegrationModal, deleteTeammateModal, integrationsModal, integrations, clients, accountNameModal, accountPlanModal, journoView, journoName, journoRoles, journoPermissions, journoIntegrations, journoPublish, editorView, editorName, editorRoles, editorPermissions, editorIntegrations, editorPublish, updateTeammateModal, selectedTeammate, teammateName, newUserRole, team, hideMain, teammateModal, contacts } = this.state;
     let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
-    const clientIDs =  clients.map(a => a.clientID);
-    console.log(user);
-    if(clientIDs.includes(userRoot) || clientIDs.includes(user)) {
+    let clientList;
+    if(clients) {
+      clientList = clients;
+    } else {
+      clientList = [];
+    }
+    let clientIDs =  clientList.map(a => a.clientID);
+    let teamList;
+    if(team) {
+      teamList = team;
+    } else {
+      teamList = [];
+    }
+    let integrationsList;
+    integrations ? integrationsList = integrations : integrationsList = [];
+    let contactsList;
+    contacts ? contactsList = contacts : contactsList = [];
+
+    //Temporarily removed view access to the account settings page. Only main admin can access
+    // if(clientIDs.includes(userRoot) || clientIDs.includes(user)) {
+    if(clientIDs.includes(user)) {
       return(
         <div>
         <div className="container blog-settings">
@@ -659,11 +790,11 @@ export default class EditorAdmin extends Component {
 
               <div className="col account-details center-align s12">
                 <h5>Account Name</h5>
-                <h6>{this.state.accountName} <a onClick={() => this.setState({ accountNameModal: "" })}><i className="tiny material-icons">edit</i></a></h6>
+                <h6>{this.state.accountSettings} <a onClick={() => this.setState({ accountNameModal: "", editing: true })}><i className="tiny material-icons">edit</i></a></h6>
               </div>
 
               <div className="col s12">
-                <h5>Your Team <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ hideMain: "hide", teammateModal: "" })}><i role="Add new blog team member" className="material-icons white-text">add</i></button></h5>
+                <h5>Your Team {clientIDs.includes(loadUserData().username) ? <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ editing: true, hideMain: "hide", teammateModal: "" })}><i role="Add new team member" className="material-icons white-text">add</i></button> : <span className="note"><a className="note-link" onClick={() => window.Materialize.toast('Your main account admin can add teammates.', 4000)}>?</a></span>}</h5>
 
                 <table className="bordered">
                   <thead>
@@ -671,17 +802,17 @@ export default class EditorAdmin extends Component {
                       <th>Name</th>
                       <th>Date Added</th>
                       <th>Role</th>
-                      <th></th>
+                      {clientIDs.includes(loadUserData().username) ? <th></th> : <div />}
                     </tr>
                   </thead>
                   <tbody>
-                      {team.slice(0).reverse().map(mate => {
+                      {teamList.slice(0).reverse().map(mate => {
                           return (
                             <tr key={mate.name}>
-                              <td><a onClick={() => this.setState({ selectedTeammate: mate.name, updateTeammateModal: "", hideMain: "hide"})}>{mate.name}</a></td>
+                              <td><a onClick={() => this.setState({ selectedTeammate: mate.name, updateTeammateModal: "", hideMain: "hide", editing: true})}>{mate.name}</a></td>
                               <td>{mate.added}</td>
                               <td>{mate.role}</td>
-                              <td><a onClick={() => this.setState({ deleteContact: mate.name })} ><i className="material-icons red-text">delete</i></a></td>
+                              {clientIDs.includes(loadUserData().username) ? <td><a onClick={() => this.setState({ deleteContact: mate.name, deleteTeammateModal: "" })} ><i className="material-icons red-text">delete</i></a></td> : <div />}
                             </tr>
                           )
                         })
@@ -694,23 +825,74 @@ export default class EditorAdmin extends Component {
               {/*Permissions*/}
               <div className="col permissions container s12">
                 <div className="row">
-                <h5>Permissions <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ hideMain: "hide", teammateModal: "" })}><i role="Add new blog team member" className="material-icons white-text">add</i></button></h5>
+                <h5>Permissions</h5>
                 <table className="permissions">
                   <thead>
                     <tr>
                       <th></th>
                       <th>Editor</th>
-                      <th>Journalist</th>
+                      <th>Writer</th>
                     </tr>
                   </thead>
                   <tbody>
+                  {/*View Settings*/}
+                  <tr>
+                    <td className="permission-types">View Settings</td>
+                    <td>
+                      <div className="switch">
+                        <label>
+                          Off
+                          <input id="view-editor" checked={this.state.editorView} onChange={() => this.setState({editorView: !editorView, lastUpdated: Date.now(), editing: true })} type="checkbox" />
+                          <span className="lever"></span>
+                          On
+                        </label>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="switch">
+                        <label>
+                          Off
+                          <input id="view-journalist" checked={this.state.journoView} onChange={() => this.setState({journoView: !journoView, lastUpdated: Date.now(), editing: true})} type="checkbox" />
+                          <span className="lever"></span>
+                          On
+                        </label>
+                      </div>
+                    </td>
+                  </tr>
+
+                  {/*Account Name*/}
+                  <tr>
+                    <td className="permission-types">Update Name</td>
+                    <td>
+                      <div className="switch">
+                        <label>
+                          Off
+                          <input id="name-editor" checked={this.state.editorName} onChange={() => this.setState({editorName: !editorName, lastUpdated: Date.now(), editing: true})} type="checkbox" />
+                          <span className="lever"></span>
+                          On
+                        </label>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="switch">
+                        <label>
+                          Off
+                          <input id="name-journalist" checked={this.state.journoName} onChange={() => this.setState({journoName: !journoName, lastUpdated: Date.now(), editing: true})} type="checkbox" />
+                          <span className="lever"></span>
+                          On
+                        </label>
+                      </div>
+                    </td>
+                  </tr>
+
+                    {/*Roles*/}
                     <tr>
-                      <td className="permission-types">Submit</td>
+                      <td className="permission-types">Update Roles</td>
                       <td>
                         <div className="switch">
                           <label>
                             Off
-                            <input id="assign-editor" checked={this.state.editorAssign} onChange={() => this.setState({editorAssign: !editorAssign})} type="checkbox" />
+                            <input id="roles-editor" checked={this.state.editorRoles} onChange={() => this.setState({editorRoles: !editorRoles, lastUpdated: Date.now(), editing: true})} type="checkbox" />
                             <span className="lever"></span>
                             On
                           </label>
@@ -720,7 +902,7 @@ export default class EditorAdmin extends Component {
                         <div className="switch">
                           <label>
                             Off
-                            <input id="assign-journalist" checked={this.state.journoAssign} onChange={() => this.setState({journoAssign: !journoAssign})} type="checkbox" />
+                            <input id="roles-journalist" checked={this.state.journoRoles} onChange={() => this.setState({journoRoles: !journoRoles, lastUpdated: Date.now(), editing: true})} type="checkbox" />
                             <span className="lever"></span>
                             On
                           </label>
@@ -728,13 +910,14 @@ export default class EditorAdmin extends Component {
                       </td>
                     </tr>
 
+                    {/*Permissions*/}
                     <tr>
-                      <td className="permission-types">Comment</td>
+                      <td className="permission-types">Update Permissions</td>
                       <td>
                         <div className="switch">
                           <label>
                             Off
-                            <input id="comment-editor" checked={this.state.editorComment} onChange={() => this.setState({editorComment: !editorComment})} type="checkbox" />
+                            <input id="permissions-editor" checked={this.state.editorPermissions} onChange={() => this.setState({editorPermissions: !editorPermissions, lastUpdated: Date.now(), editing: true})} type="checkbox" />
                             <span className="lever"></span>
                             On
                           </label>
@@ -744,20 +927,22 @@ export default class EditorAdmin extends Component {
                         <div className="switch">
                           <label>
                             Off
-                            <input id="comment-journalist" checked={this.state.journoComment} onChange={() => this.setState({journoComment: !journoComment})} type="checkbox" />
+                            <input id="permissions-journalist" checked={this.state.journoPermissions} onChange={() => this.setState({journoPermissions: !journoPermissions, lastUpdated: Date.now(), editing: true})} type="checkbox" />
                             <span className="lever"></span>
                             On
                           </label>
                         </div>
                       </td>
                     </tr>
+
+                    {/*Integrations*/}
                     <tr>
-                      <td className="permission-types">Publish</td>
+                      <td className="permission-types">Edit Integrations</td>
                       <td>
                         <div className="switch">
                           <label>
                             Off
-                            <input id="publish-Editor" checked={this.state.editorPublish} onChange={() => this.setState({editorPublish: !editorPublish})} type="checkbox" />
+                            <input id="integrations-editor" checked={this.state.editorIntegrations} onChange={() => this.setState({editorIntegrations: !editorIntegrations, lastUpdated: Date.now(), editing: true})} type="checkbox" />
                             <span className="lever"></span>
                             On
                           </label>
@@ -767,7 +952,32 @@ export default class EditorAdmin extends Component {
                         <div className="switch">
                           <label>
                             Off
-                            <input id="publish-journalist" checked={this.state.journoPublish} onChange={() => this.setState({journoPublish: !journoPublish})} type="checkbox" />
+                            <input id="integrations-journalist" checked={this.state.journoIntegrations} onChange={() => this.setState({journoIntegrations: !journoIntegrations, lastUpdated: Date.now(), editing: true})} type="checkbox" />
+                            <span className="lever"></span>
+                            On
+                          </label>
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/*Publish*/}
+                    <tr>
+                      <td className="permission-types">Publish Articles</td>
+                      <td>
+                        <div className="switch">
+                          <label>
+                            Off
+                            <input id="publish-Editor" checked={this.state.editorPublish} onChange={() => this.setState({editorPublish: !editorPublish, lastUpdated: Date.now(), editing: true})} type="checkbox" />
+                            <span className="lever"></span>
+                            On
+                          </label>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="switch">
+                          <label>
+                            Off
+                            <input id="publish-journalist" checked={this.state.journoPublish} onChange={() => this.setState({journoPublish: !journoPublish, lastUpdated: Date.now(), editing: true})} type="checkbox" />
                             <span className="lever"></span>
                             On
                           </label>
@@ -776,7 +986,7 @@ export default class EditorAdmin extends Component {
                     </tr>
                   </tbody>
                 </table>
-                <button onClick={this.setPermissions} className="save-permissions btn">Save</button>
+                <button onClick={this.combineFile} className="save-permissions btn">Save</button>
                 </div>
               </div>
                 {/*End Permissions*/}
@@ -784,7 +994,7 @@ export default class EditorAdmin extends Component {
                 {/* Integrations */}
                 <div className="col permissions container s12">
                   <div className="row">
-                  <h5>Integrations <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ integrationsModal: "" })}><i role="Add new blog team member" className="material-icons white-text">add</i></button></h5>
+                  <h5>Integrations <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ integrationsModal: "", editing: true })}><i role="Add new blog team member" className="material-icons white-text">add</i></button></h5>
                   <table className="permissions">
                     <thead>
                       <tr>
@@ -794,12 +1004,12 @@ export default class EditorAdmin extends Component {
                       </tr>
                     </thead>
                     <tbody>
-                    {integrations.slice(0).reverse().map(int => {
+                    {integrationsList.slice(0).reverse().map(int => {
                         return (
                           <tr key={int.id}>
                             <td>{int.name}</td>
                             <td>{int.added}</td>
-                            <td><a onClick={() => this.setState({ deleteIntegration: int.id })} ><i className="material-icons red-text">delete</i></a></td>
+                            <td><a onClick={() => this.setState({ deleteIntegration: int.id, deleteIntName: int.name, deleteIntegrationModal: "" })} ><i className="material-icons red-text">delete</i></a></td>
                           </tr>
                         )
                       })
@@ -823,16 +1033,32 @@ export default class EditorAdmin extends Component {
                 <h4>Add Webhook Integration</h4>
                 <label>Integration Name</label>
                 <input type="text" value={this.state.integrationName} onChange={this.handleIntName} />
-                <label>Integration URL</label>
+                <label>Webhook URL</label>
                 <input type="text" value={this.state.integrationURL} onChange={this.handleIntURL} />
               </div>
               <div className="modal-footer">
                 <a onClick={this.addInt} className="modal-action modal-close btn-flat">Add</a>
-                <a onClick={() => this.setState({ integrationsModal: "hide", integrationName: "", integrationURL: ""})} className="modal-action modal-close btn-flat">Cancel</a>
+                <a onClick={() => this.setState({ integrationsModal: "hide", integrationName: "", integrationURL: "", editing: false})} className="modal-action modal-close btn-flat">Cancel</a>
               </div>
             </div>
           </div>
           {/* End Add Integration Modal */}
+
+          {/* Delete Integration Modal */}
+          <div className={deleteIntegrationModal}>
+            <div className="project-page-modal modal">
+              <div className="modal-content">
+                <div className="container">
+                  <h4>Are you sure you want to delete {this.state.deleteIntName}</h4>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <a onClick={this.deleteInt} className="modal-action modal-close btn-flat">Delete</a>
+                <a onClick={() => this.setState({ deleteIntegrationModal: "hide", editing: false, deleteIntegration: "" })} className="modal-action modal-close btn-flat">Cancel</a>
+              </div>
+            </div>
+          </div>
+          {/* End Delete Integration Modal */}
 
           {/*Account Name Modal */}
           <div className={accountNameModal}>
@@ -840,13 +1066,13 @@ export default class EditorAdmin extends Component {
               <div className="modal-content">
                 <div className="container">
                   <h4>Update Account Name</h4>
-                  <p>Current account name: <strong>{this.state.accountName}</strong></p>
+                  <p>Current account name: <strong>{this.state.accountSettings}</strong></p>
                   <input type="text" placeholder="New account name" value={this.state.updatedAccountName} onChange={this.accountNameChange} />
                 </div>
               </div>
               <div className="modal-footer">
-                <a onClick={this.updateAccount} className="modal-action modal-close btn-flat">Save</a>
-                <a onClick={() => this.setState({ accountNameModal: "hide" })} className="modal-action modal-close btn-flat">Cancel</a>
+                <a onClick={this.combineFile} className="modal-action modal-close btn-flat">Save</a>
+                <a onClick={() => this.setState({ accountNameModal: "hide", editing: false, updatedAccountName: "" })} className="modal-action modal-close btn-flat">Cancel</a>
               </div>
             </div>
           </div>
@@ -862,7 +1088,7 @@ export default class EditorAdmin extends Component {
                 <div>
                   <select value={this.state.teammateName} onChange={(event) => this.setState({ teammateName: event.target.value})}>
                     <option value="" disabled>Select a teammate</option>
-                  {contacts.slice(0).reverse().map(contact => {
+                  {contactsList.slice(0).reverse().map(contact => {
                       return (
                         <option key={contact.contact} value={contact.contact}>{contact.contact}</option>
                       )
@@ -886,12 +1112,28 @@ export default class EditorAdmin extends Component {
                 </div>
               </div>
               <div className="modal-footer">
-                <a onClick={() => this.setState({ confirmAdd: true })} className="modal-action modal-close waves-effect waves-green btn-flat"><strong>Add</strong></a>
-                <a onClick={() => this.setState({ teammateModal: "hide", hideMain: "" })} className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a onClick={() => this.setState({ confirmAdd: true, lastUpdated: Date.now() })} className="modal-action modal-close waves-effect waves-green btn-flat"><strong>Add</strong></a>
+                <a onClick={() => this.setState({ editing: false, teammateModal: "hide", hideMain: "", newUserRole: "", teammateName: "" })} className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
               </div>
             </div>
           </div>
           {/* End Teammate Modal */}
+
+          {/* Delete Teammate Modal */}
+          <div className={deleteTeammateModal}>
+            <div className="project-page-modal modal">
+              <div className="modal-content">
+                <div className="container">
+                  <h4>Are you sure you want to delete {this.state.deleteContact}</h4>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <a onClick={this.delete} className="modal-action modal-close btn-flat">Delete</a>
+                <a onClick={() => this.setState({ deleteTeammateModal: "hide", editing: false, deleteContact: "" })} className="modal-action modal-close btn-flat">Cancel</a>
+              </div>
+            </div>
+          </div>
+          {/* End Delete Teammate Modal */}
 
           {/*Update Teammate Modal */}
           <div className={updateTeammateModal}>
@@ -917,7 +1159,7 @@ export default class EditorAdmin extends Component {
                 </div>
               <div className="modal-footer">
                 <a onClick={() => this.setState({ confirmUpdate: true })} className="modal-action modal-close waves-effect waves-green btn-flat"><strong>Update</strong></a>
-                <a onClick={() => this.setState({ updateTeammateModal: "hide", hideMain: "" })} className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+                <a onClick={() => this.setState({ updateTeammateModal: "hide", hideMain: "", editing: false })} className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
               </div>
             </div>
           </div>
@@ -940,11 +1182,6 @@ export default class EditorAdmin extends Component {
   render(){
 
     const user = loadUserData().username;
-    const { clients, accountNameModal, accountPlanModal, journoAssign, journoShare, journoComment, journoPublish, editorAssign, editorShare, editorComment, editorPublish, updateTeammateModal, selectedTeammate, ammateName, newUserRole, team, hideMain, teammateModal, contacts } = this.state;
-    let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
-    const clientIDs =  clients.map(a => a.clientID);
-    clientIDs.includes(userRoot) ? console.log(true) : console.log(false);
-    console.log(clients);
 
       return(
         <div>
@@ -964,4 +1201,4 @@ export default class EditorAdmin extends Component {
         </div>
       )
   }
-}
+  }

@@ -37,10 +37,10 @@ export default class DeleteContact extends Component {
         console.log("loaded");
      }).then(() =>{
        let contact = this.state.contacts;
-       const thisContact = contact.find((a) => { return a.contact === this.props.match.params.id});
+       const thisContact = contact.find((a) => { return a.contact == this.props.match.params.id});
        let index = thisContact && thisContact.contact;
        function findObjectIndex(contact) {
-           return contact.contact === index;
+           return contact.contact == index;
        }
        this.setState({ contact: thisContact && thisContact.contact, contactImg: thisContact && thisContact.img, index: contact.findIndex(findObjectIndex) })
      })

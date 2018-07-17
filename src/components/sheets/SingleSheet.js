@@ -5,7 +5,6 @@ import {
   putFile
 } from 'blockstack';
 import HotTable from 'react-handsontable';
-import Handsontable from 'handsontable';
 import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
 import RemoteStorage from 'remotestoragejs';
@@ -147,7 +146,7 @@ export default class SingleSheet extends Component {
       });
 
       this.printPreview = () => {
-        if(this.state.printPreview == true) {
+        if(this.state.printPreview === true) {
           this.setState({printPreview: false});
         } else {
           this.setState({printPreview: true});
@@ -211,14 +210,16 @@ export default class SingleSheet extends Component {
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
-      object.id = parseInt(this.props.match.params.id);
+      object.id = parseInt(this.props.match.params.id, 10);
       object.updated = month + "/" + day + "/" + year;
       object.sharedWith = this.state.sharedWith;
+      object.fileType = "sheets";
       const objectTwo = {};
       objectTwo.title = object.title;
       objectTwo.id = object.id;
       objectTwo.updated = object.updated;
       objectTwo.sharedWith = object.sharedWith;
+      objectTwo.fileType = "sheets";
       const index = this.state.index;
       const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});  // array.splice(start, deleteCount, item1)
       this.setState({sheets: updatedSheet, singleSheet: object });
@@ -375,9 +376,9 @@ copyLink() {
 sharedInfo(){
   this.setState({ confirmAdd: false});
   const user = this.state.receiverID;
-  const userShort = user.slice(0, -3);
-  const fileName = 'sharedsheets.json'
-  const file = userShort + fileName;
+  // const userShort = user.slice(0, -3);
+  // const fileName = 'sharedsheets.json'
+  // const file = userShort + fileName;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
   getFile('key.json', options)
@@ -400,7 +401,7 @@ loadMyFile() {
   const userShort = user.slice(0, -3);
   const fileName = 'sharedsheets.json'
   const file = userShort + fileName;
-  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
+  // const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names"}
 
   getFile(file, {decrypt: true})
    .then((fileContents) => {
@@ -489,8 +490,7 @@ print(){
 
 
 renderView() {
-  console.log(this.state.grid);
-  const { revealModule, hideStealthy, loading, save, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
+  const { revealModule, hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
   const {length} = contacts
   const stealthy = (hideStealthy) ? "hide" : ""
@@ -561,7 +561,7 @@ renderView() {
                 <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
                 {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
                 <li className="divider"></li>
-                <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
+                <li><a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
                 {this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>}
                 {this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>}
               </ul>
@@ -638,7 +638,7 @@ renderView() {
                 <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
                 {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
                 <li className="divider"></li>
-                <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
+                <li><a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
                 {this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>}
                 {this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>}
               </ul>
@@ -664,7 +664,7 @@ renderView() {
             <div className={show}>
               <div className="container">
                 <h4 className="contacts-share center-align">Public Link</h4>
-                <p>Ask the person you are sharing with to visit <a href="https://app.graphitedocs.com/publicdoc" target="_blank">https://app.graphitedocs.com/publicdoc</a> and provide this link to them: </p>
+                <p>Ask the person you are sharing with to visit <a href="https://app.graphitedocs.com/publicdoc" target="_blank" rel="noopener noreferrer">https://app.graphitedocs.com/publicdoc</a> and provide this link to them: </p>
                 <p><input type="text" value={this.state.gaiaLink} id="gaia" /><button className="btn" onClick={this.copyLink}>Copy Link</button></p>
               </div>
             </div>
@@ -734,7 +734,6 @@ renderView() {
                 contextMenu: true,
                 formulas: true,
                 columnSorting: true,
-                contextMenu: true,
                 autoRowSize: true,
                 manualColumnMove: true,
                 manualRowMove: true,

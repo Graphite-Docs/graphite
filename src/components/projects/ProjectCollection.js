@@ -1,14 +1,11 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
-import { Redirect } from 'react-router';
 import {
-  isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
   signUserOut,
-  handlePendingSignIn,
 } from 'blockstack';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -217,12 +214,6 @@ export default class ProjectCollection extends Component {
 
   sidebarFilter() {
     let projects = this.state.projects;
-    let updated = projects.map(project => {
-      return project.updated;
-    });
-    let goodDate = updated.map(update => {
-      return new Date(update);
-    });
     let topicFilter = projects.filter(x => x.topic.includes(this.state.topicSelect));
     let tagFilter = projects.filter(x => x.tags.includes(this.state.tagSelect));
     let dateFilter = projects.filter(x => new Date(x.updated) >= this.state.dateSelect);
@@ -248,9 +239,6 @@ export default class ProjectCollection extends Component {
     });
     let collaborators = projects.map(project => {
       return project.collaborators;
-    });
-    let updated = projects.map(project => {
-      return project.updated;
     });
     let status = projects.map(project => {
       return project.status;
@@ -278,10 +266,7 @@ export default class ProjectCollection extends Component {
         if(window.$.inArray(el, uniqueTags) === -1) uniqueTags.push(el);
     });
 
-    let goodDate = updated.map(update => {
-      return new Date(update);
-    })
-    const { topicModal, tagModal, dateModal, collaboratorsModal, statusModal, singleTopic, singleTag, singleDate, singleCollaborator, singleStatus, showModal, menuBar, loading, filterModal } = this.state;
+    const { topicModal, tagModal, dateModal, collaboratorsModal, statusModal, singleTopic, singleTag, singleCollaborator, singleStatus, showModal, menuBar, loading, filterModal } = this.state;
     const userData = loadUserData();
     const person = new Person(userData.profile);
     let statusButton;

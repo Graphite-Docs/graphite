@@ -1415,11 +1415,36 @@ h5, h6 {
   margin-right: 25px!important;
 }
 
+.note-toolbar {
+  position: fixed!important;
+  top: 63px!important;
+  right: 0!important;
+  width: 100%!important;
+  z-index: 900!important;
+}
+
+.note-modal-footer {
+  display: none;
+}
+
+.note-statusbar {
+  display: none!important;
+}
+
+.note-editor.note-frame {
+  border: none!important;
+}
+
 #remotestorage {
   max-width: 60%;
   margin: auto;
   margin-top: 70px;
   float: right;
+}
+
+.note-link {
+  position: relative;
+  top: -10px;
 }
 
 .remote-storage-element-id {
@@ -1625,11 +1650,46 @@ h5, h6 {
     font-weight: normal;
 }
 
+.app-page {
+  max-width: 90%;
+  margin: auto;
+  margin-top: 75px;
+}
+
+.app-page a {
+  color: #282828;
+}
+
+.appPage {
+  background: #eee;
+}
+
+.appPageIcons {
+  width: 20%;
+  float: right;
+}
+
+.vaultIcon {
+  width: 35%;
+  float: right;
+  margin-top: -10px;
+}
+
+.allFilesTable {
+  max-width: 90%;
+  margin: auto;
+  margin-top: 35px;
+}
+
 .receiver {
   background-color: #F5F5F5;
   color: #404040;
   max-width: 100%;
   margin-bottom: 0!important;
+}
+
+.appTD {
+  max-width: 60px;
 }
 
 .sender {
@@ -1667,6 +1727,10 @@ h5, h6 {
 
 .contacts-title {
   text-transform: uppercase;
+}
+
+.no-contacts {
+  padding: 20px;
 }
 
 .contact-row {
@@ -1743,21 +1807,6 @@ h5, h6 {
   bottom: 0;
   left: 0!important;
   overflow-y: scroll;
-}
-
-.modal {
-  display: block!important;
-  position: fixed;
-  left: 0;
-  right: 0;
-  background-color: #fafafa;
-  padding: 0;
-  height: 100vh!important;
-  width: 55%;
-  margin: auto;
-  overflow-y: auto;
-  border-radius: 2px;
-  will-change: top, opacity;
 }
 
 .contacts-share {
@@ -2217,7 +2266,7 @@ nav ul a {
   text-transform: capitalize!important;
   /* resize: auto!important; */
   line-height: 35px;
-  margin-top: 35px!important;
+  margin-top: 55px!important;
 }
 
 .title {
@@ -2353,6 +2402,24 @@ nav ul a {
 
 .docform.searchinput {
   border-bottom: 1px solid #282828!important;
+}
+
+.integrations-img {
+  max-width: 30%!important;
+}
+
+.integration-options {
+  margin-top: 60px;
+}
+
+.integration-options .col {
+  margin-top: 25px;
+}
+
+.app-description h6 {
+  margin-top: 15px;
+  margin-bottom: 30px;
+  font-size: 18px;
 }
 
 .docform::placeholder {
@@ -2764,6 +2831,7 @@ polygon.ql-stroke {
 
 .single-doc-dropdown-content {
   width: auto!important;
+  z-index: 999!important;
 }
 
 #sidenav-overlay {
@@ -3095,6 +3163,11 @@ blockquote {
   padding: 20px;
   height: 90%;
 }
+.doc-title {
+  /* resize: auto!important; */
+  line-height: 35px;
+  margin-top: 75px!important;
+}
 
 #stealthyCol {
   position: fixed;
@@ -3120,6 +3193,8 @@ blockquote {
 
   .doc-title {
     font-size: 20px!important;
+    line-height: 35px;
+    margin-top: 95px!important;
   }
 
   .document-title {
@@ -3224,6 +3299,8 @@ blockquote {
 
   .doc-title {
     font-size: 20px!important;
+    line-height: 35px;
+    margin-top: 95px!important;
   }
 
   .document-title {
@@ -3315,6 +3392,11 @@ blockquote {
 }
 
 @media screen and (max-width: 325px) {
+  .doc-title {
+    font-size: 20px!important;
+    line-height: 35px;
+    margin-top: 140px!important;
+  }
 
   .toolbar-menu li input{
     width: 60px!important;
@@ -3338,6 +3420,12 @@ blockquote {
 
   .delete-buton {
     font-size: 17px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .note-toolbar {
+    top: 55px!important;
   }
 }
 
@@ -3391,6 +3479,10 @@ nav .brand-logo.left {
   .print-content {
     /* font-size: 16px!important;
     line-height: 200% */
+  }
+
+  .note-toolbar {
+    display: none;
   }
 
   .print-title {

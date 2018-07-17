@@ -1,723 +1,276 @@
 import React, { Component } from "react";
-import { Link } from 'react-router-dom';
-import { Redirect } from 'react-router';
+import 'react-quill/dist/quill.bubble.css';
 import {
-  isSignInPending,
   loadUserData,
-  Person,
-  getFile,
-  putFile,
-  signUserOut,
-  handlePendingSignIn,
 } from 'blockstack';
-import update from 'immutability-helper';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
-import ReactQuill from 'react-quill';
-const Font = ReactQuill.Quill.import('formats/font');
+const wordcount = require("wordcount");
+const { decryptECIES } = require('blockstack/lib/encryption');
 const remoteStorage = new RemoteStorage({logging: false});
 const widget = new Widget(remoteStorage);
-const { getPublicKeyFromPrivate } = require('blockstack');
-const { encryptECIES } = require('blockstack/lib/encryption');
-const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const Y = require('yjs')
-require('y-memory')(Y) // extend Y with the memory module
-require('y-websockets-client')(Y)
-require('y-array')(Y)
-require('y-map')(Y)
-
-Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
 
 export default class TestDoc extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      person: {
-  	  	name() {
-          return 'Anonymous';
-        },
-  	  	avatarUrl() {
-  	  	  return avatarFallbackImage;
-  	  	},
-  	  },
-      value: [],
-      contacts: [],
-      shareFile: [],
-      singleDoc: {},
-      filteredValue: [],
-      sharedWith: [],
-      tempDocId: "",
-      redirect: false,
-      loading: "",
-      alert: "",
-      migrationLength: 1,
-      migrationCount: 0,
-      migrationComplete: false,
-      migrateTitle: "",
-      migrateContent: "",
-      migrateID: "",
-      migrateUpdated: "",
-      migrateWords: "",
-      currentPage: 1,
-      docsPerPage: 10,
-      docsSelected: [],
-      activeIndicator: false,
-      shareModal: "hide",
-      tagModal: "hide",
-      receiverID: "",
-      confirmAdd: false,
-      pubKey: "",
-      title: "",
-      content: "",
-      id: "",
-      words: "",
-      updated: "",
-      tags: "",
-      index: "",
-      contactDisplay: "",
-      loadingTwo: "hide",
-      singleDocTags: [],
-      tag: "",
-      selectedTagId: "",
-      index: "",
-      deleteState: false,
-      sharedCollection: [],
-      sharedWithSingle: [],
-      collaboratorsModal: "hide",
-      tagDownload: false,
-      tagList: "hide",
-      dateList: "hide",
-      selectedDate: "",
-      selectedCollab: "",
-      selectedTag: "",
-      applyFilter: false,
-      appliedFilter: false
-    }
-    this.handleaddItem = this.handleaddItem.bind(this);
-    this.saveNewFile = this.saveNewFile.bind(this);
-    this.saveNewSingleDoc = this.saveNewSingleDoc.bind(this);
-    this.filterList = this.filterList.bind(this);
-    this.handleClick = this.handleClick.bind(this);
-    this.handlePageChange = this.handlePageChange.bind(this);
-    this.handleCheckbox = this.handleCheckbox.bind(this);
-    this.download = this.download.bind(this);
-    this.sharedInfo = this.sharedInfo.bind(this);
-    this.share = this.share.bind(this);
-    this.loadSingle = this.loadSingle.bind(this);
-    this.saveCollection = this.saveCollection.bind(this);
-    this.loadCollection = this.loadCollection.bind(this);
-    this.setTags = this.setTags.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.deleteTag = this.deleteTag.bind(this);
-    this.saveNewTags = this.saveNewTags.bind(this);
-    this.loadSingleTags = this.loadSingleTags.bind(this);
-    this.saveFullCollectionTags = this.saveFullCollectionTags.bind(this);
-    this.addTagManual = this.addTagManual.bind(this);
-    this.getCollection = this.getCollection.bind(this);
-    this.loadSharedCollection = this.loadSharedCollection.bind(this);
-    this.saveSingleFile = this.saveSingleFile.bind(this);
-    this.saveSharedFile = this.saveSharedFile.bind(this);
-    this.sendFile = this.sendFile.bind(this);
-    this.getCollectionTags = this.getCollectionTags.bind(this);
-    this.applyFilter = this.applyFilter.bind(this);
-    this.filterNow = this.filterNow.bind(this);
-  }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
+  componentDidMount() {
+    window.$('.modal').modal();
+    window.$('.dropdown-button').dropdown({
+      inDuration: 300,
+      outDuration: 225,
+      constrainWidth: false, // Does not change width of dropdown to that of the activator
+      hover: false, // Activate on hover
+      gutter: 0, // Spacing from edge
+      belowOrigin: false, // Displays dropdown below the button
+      alignment: 'left', // Displays dropdown with edge aligned to the left of button
+      stopPropagation: false // Stops event propagation
     }
+  );
+    let privateKey = loadUserData().appPrivateKey;
+
+    window.$('.button-collapse').sideNav({
+      menuWidth: 400, // Default is 300
+      edge: 'right', // Choose the horizontal origin
+      closeOnClick: true, // Closes side-nav on <a> clicks, useful for Angular/Meteor
+      draggable: true, // Choose whether you can drag to open on touch screens
+    }
+  );
+
+    remoteStorage.access.claim(this.props.match.params.id, 'rw');
+    remoteStorage.caching.enable('/' + this.props.match.params.id + '/');
+    const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
+    widget.attach('remote-storage-element-id');
+    remoteStorage.on('connected', () => {
+    const userAddress = remoteStorage.remote.userAddress;
+    console.debug(`${userAddress} connected their remote storage.`);
+    client.getFile('title.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteTitle: file.data });
+      }
+    });
+    client.getFile('content.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteContent: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+    client.getFile('wordCount.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteWords: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+    client.getFile('id.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteId: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+    client.getFile('updated.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteUpdated: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+  })
+
+  remoteStorage.on('network-offline', () => {
+    console.debug(`We're offline now.`);
+  })
+
+  remoteStorage.on('network-online', () => {
+    console.debug(`Hooray, we're back online.`);
+    client.getFile('title.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteTitle: file.data });
+      }
+    });
+    client.getFile('content.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteContent: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+    client.getFile('wordCount.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteWords: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+    client.getFile('id.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteId: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+    client.getFile('updated.txt').then(file => {
+      if(file.data !=null) {
+        this.setState({ remoteUpdated: decryptECIES(privateKey, JSON.parse(file.data)) });
+      }
+    });
+  })
+
+    this.props.componentDidMountData(this.props.match.params.id);
+
   }
 
   componentDidUpdate() {
-
-  }
-
-
-  componentDidMount() {
-    Y({
-      db: {
-        name: 'memory' // store the shared data in memory
-      },
-      connector: {
-        name: 'websockets-client', // use the websockets connector
-        room: 'my room'            // Instances connected to the same room share data
-        // url: 'localhost:1234' // specify your own server destination
-      },
-      share: { // specify the shared content
-        map: 'Map',    // y.share.map is of type Y.Map
-        array: 'Array' // y.share.array is of type Y.Array
-      },
-      sourceDir: '/bower_components' // where the modules are (browser only)
-    }).then(function (y) {
-      /*
-        At this point Yjs is successfully initialized.
-        Try it out in your browser console!
-      */
-      window.y = y
-      console.log('Yjs instance ready!')
-      y.share.map // is an Y.Map instance
-      y.share.array // is an Y.Array instance
-      var map = y.share.map
-
-      // Set an observer
-      map.observe(function(event){
-        console.dir(event)
-      })
-
-      // create a new property (add)
-      map.set('number', JSON.stringify(this.state.content))
-      map.get('number')
-    })
     window.$('.button-collapse').sideNav({
-      menuWidth: 400, // Default is 300
-      edge: 'left', // Choose the horizontal origin
-      closeOnClick: false, // Closes side-nav on <a> clicks, useful for Angular/Meteor
-      draggable: true, // Choose whether you can drag to open on touch screens
-    }
-
-  );
-
-    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
-    putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
-    .then(() => {
-        console.log("Saved!");
-        console.log(JSON.stringify(publicKey));
-      })
-      .catch(e => {
-        console.log(e);
-      });
-
-      getFile("contact.json", {decrypt: true})
-       .then((fileContents) => {
-         let file = JSON.parse(fileContents || '{}');
-         let contacts = file.contacts;
-         if(contacts.length > 0) {
-           this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
-         } else {
-           this.setState({ contacts: [] });
-         }
-       })
-        .catch(error => {
-          console.log(error);
-        });
-
-    this.loadCollection();
-  }
-
-  setTags(e) {
-    this.setState({ tag: e.target.value});
-  }
-
-  handleKeyPress(e) {
-    if (e.key === 'Enter') {
-      const object = {};
-      this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]});
-      this.setState({ tag: "" });
-    }
-  }
-
-  addTagManual() {
-    this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]});
-    this.setState({ tag: "" });
-  }
-
-
-  loadCollection() {
-    getFile("documentscollection.json", {decrypt: true})
-     .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}').value) {
-         this.setState({ value: JSON.parse(fileContents || '{}').value });
-         this.setState({filteredValue: this.state.value})
-         this.setState({ loading: "hide" });
-       } else {
-         console.log("No saved files");
-         this.setState({ loading: "hide" });
-       }
-     })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-
-  handleaddItem() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
-    const rando = Date.now();
-    const object = {};
-    object.title = "Untitled";
-    object.id = rando;
-    object.created = month + "/" + day + "/" + year;
-    object.tags = [];
-    object.sharedWith = [];
-    const objectTwo = {}
-    objectTwo.title = object.title;
-    objectTwo.id = object.id;
-    objectTwo.created = object.created;
-    objectTwo.content = "";
-    objectTwo.tags = [];
-    objectTwo.sharedWith = [];
-
-    this.setState({ value: [...this.state.value, object] });
-    this.setState({ filteredValue: [...this.state.filteredValue, object] });
-    this.setState({ singleDoc: objectTwo });
-    this.setState({ tempDocId: object.id });
-    setTimeout(this.saveNewFile, 500);
-  }
-  filterList(event){
-    var updatedList = this.state.value;
-    updatedList = updatedList.filter(function(item){
-      return item.title.toLowerCase().search(
-        event.target.value.toLowerCase()) !== -1;
-    });
-    this.setState({filteredValue: updatedList});
-  }
-
-  saveNewFile() {
-    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
-      .then(() => {
-        console.log("Saved Collection!");
-        this.saveNewSingleDoc();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  saveNewSingleDoc() {
-    const file = this.state.tempDocId;
-    const fullFile = '/documents/' + file + '.json'
-    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
-      .then(() => {
-        console.log("Saved!");
-        this.setState({ redirect: true });
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  handleSignOut(e) {
-    e.preventDefault();
-    signUserOut(window.location.origin);
-  }
-
-  handleClick() {
-    this.setState({ alert: "hide" })
-  }
-
-  handlePageChange(event) {
-    this.setState({
-      currentPage: Number(event.target.id)
-    });
-  }
-
-  handleCheckbox(event) {
-    let checkedArray = this.state.docsSelected;
-      let selectedValue = event.target.value;
-
-        if (event.target.checked === true) {
-        	checkedArray.push(selectedValue);
-            this.setState({
-              docsSelected: checkedArray
-            });
-          if(checkedArray.length === 1) {
-            this.setState({activeIndicator: true});
-
-          } else {
-            this.setState({activeIndicator: false});
-          }
-        } else {
-          this.setState({activeIndicator: false});
-        	let valueIndex = checkedArray.indexOf(selectedValue);
-			      checkedArray.splice(valueIndex, 1);
-
-            this.setState({
-              docsSelected: checkedArray
-            });
-            if(checkedArray.length === 1) {
-              this.setState({activeIndicator: true});
-            } else {
-              this.setState({activeIndicator: false});
-            }
-        }
-  }
-
-  download() {
-    if(this.state.docsSelected.length < 2) {
-      //download single file
-
-    } else {
-      //do some looping and download multiple files
-    }
-  }
-
-  sharedInfo() {
-    this.setState({ confirmAdd: false });
-    const user = this.state.receiverID;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-
-    getFile('key.json', options)
-      .then((file) => {
-        this.setState({ pubKey: JSON.parse(file)})
-      })
-        .then(() => {
-          this.loadSharedCollection();
-        })
-        .catch(error => {
-          console.log("No key: " + error);
-          window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-          this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
-        });
-  }
-
-loadSharedCollection () {
-  const user = this.state.receiverID;
-  const file = "shared.json";
-  getFile(user + file, {decrypt: true})
-    .then((fileContents) => {
-      if(fileContents) {
-        this.setState({ sharedCollection: JSON.parse(fileContents || '{}') })
-      } else {
-        this.setState({ sharedCollection: [] });
+        menuWidth: 400, // Default is 300
+        edge: 'right', // Choose the horizontal origin
+        closeOnClick: true, // Closes side-nav on <a> clicks, useful for Angular/Meteor
+        draggable: true, // Choose whether you can drag to open on touch screens
       }
-    })
-    .then(() => {
-      this.loadSingle();
-    })
-    .catch((error) => {
-      console.log(error)
-    });
-}
-
-loadSingle() {
-
-  if(this.state.docsSelected.length > 1) {
-    //TODO figure out how to handle this
-  } else {
-    const thisFile = this.state.docsSelected[0];
-    const fullFile = '/documents/' + thisFile + '.json';
-    const fullFileSharedWith = thisFile + 'sharedwith.json';
-
-    getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}').sharedWith) {
-         this.setState({
-           title: JSON.parse(fileContents || '{}').title,
-           content: JSON.parse(fileContents || '{}').content,
-           tags: JSON.parse(fileContents || '{}').tags,
-           updated: JSON.parse(fileContents || '{}').updated,
-           words: JSON.parse(fileContents || '{}').words,
-           id: JSON.parse(fileContents || '{}').id,
-           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
-        });
-      } else {
-        this.setState({
-          title: JSON.parse(fileContents || '{}').title,
-          content: JSON.parse(fileContents || '{}').content,
-          tags: JSON.parse(fileContents || '{}').tags,
-          updated: JSON.parse(fileContents || '{}').updated,
-          words: JSON.parse(fileContents || '{}').words,
-          id: JSON.parse(fileContents || '{}').id,
-          sharedWithSingle: []
-       });
-      }
-
-     })
-      .then(() => {
-        this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
-        setTimeout(this.getCollection, 300);
-      })
-      .catch(error => {
-        console.log(error);
-      });
-    }
-}
-
-getCollection() {
-  getFile("documentscollection.json", {decrypt: true})
-  .then((fileContents) => {
-     this.setState({ value: JSON.parse(fileContents || '{}').value })
-     this.setState({ initialLoad: "hide" });
-  }).then(() =>{
-    let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
-    let index = thisDoc && thisDoc.id;
-    function findObjectIndex(doc) {
-        return doc.id == index;
-    }
-    this.setState({index: value.findIndex(findObjectIndex) });
-  })
-    .then(() => {
-      this.share();
-    })
-    .catch(error => {
-      console.log(error);
-    });
-}
-
-  share() {
-    const object = {};
-    object.title = this.state.title;
-    object.content = this.state.content;
-    object.id = this.state.id;
-    object.updated = this.state.updated;
-    object.sharedWith = this.state.sharedWithSingle;
-    object.tags = this.state.tags;
-    const index = this.state.index;
-    const updatedDocs = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-    this.setState({value: updatedDocs, singleDoc: object, sharedCollection: [...this.state.sharedCollection, object]});
-
-    setTimeout(this.saveSharedFile, 300);
-  }
-
-  saveSharedFile() {
-    const user = this.state.receiverID;
-    const file = "shared.json";
-
-    putFile(user + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
-      .then(() => {
-        console.log("Shared Collection Saved");
-        this.saveSingleFile();
-      })
-  }
-
-  saveSingleFile() {
-    const file = this.state.docsSelected[0];
-    const fullFile = '/documents/' + file + '.json'
-    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
-      .then(() => {
-        console.log("Saved!");
-        this.saveCollection();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  saveCollection() {
-    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
-      .then(() => {
-        console.log("Saved Collection");
-        this.sendFile();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  sendFile() {
-    const user = this.state.receiverID;
-    const userShort = user.slice(0, -3);
-    const fileName = 'shareddocs.json'
-    const file = userShort + fileName;
-    const publicKey = this.state.pubKey;
-    const data = this.state.sharedCollection;
-    const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-    const directory = '/shared/' + file;
-    putFile(directory, encryptedData, {encrypt: false})
-      .then(() => {
-        console.log("Shared encrypted file ");
-        window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
-        this.loadCollection();
-        this.setState({shareModal: "hide", loadingTwo: "", contactDisplay: ""});
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  loadSingleTags() {
-
-    this.setState({tagDownload: false});
-    const thisFile = this.state.docsSelected[0];
-    const fullFile = '/documents/' + thisFile + '.json';
-
-    getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}').tags) {
-         this.setState({
-           shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-           title: JSON.parse(fileContents || '{}').title,
-           id: JSON.parse(fileContents || '{}').id,
-           updated: JSON.parse(fileContents || '{}').updated,
-           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-           singleDocTags: JSON.parse(fileContents || '{}').tags,
-           content: JSON.parse(fileContents || '{}').content
-        });
-      } else {
-        this.setState({
-          shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-          title: JSON.parse(fileContents || '{}').title,
-          id: JSON.parse(fileContents || '{}').id,
-          updated: JSON.parse(fileContents || '{}').updated,
-          sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-          singleDocTags: [],
-          content: JSON.parse(fileContents || '{}').content
-       });
-      }
-     })
-     .then(() => {
-       this.setState({ tagModal: ""});
-       setTimeout(this.getCollectionTags, 300);
-     })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-  getCollectionTags() {
-    getFile("documentscollection.json", {decrypt: true})
-    .then((fileContents) => {
-       this.setState({ value: JSON.parse(fileContents || '{}').value })
-       this.setState({ initialLoad: "hide" });
-    }).then(() =>{
-      let value = this.state.value;
-      const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
-      let index = thisDoc && thisDoc.id;
-      function findObjectIndex(doc) {
-          return doc.id == index;
-      }
-      this.setState({index: value.findIndex(findObjectIndex) });
-    })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-  saveNewTags() {
-    this.setState({ loadingTwo: ""});
-    const object = {};
-    object.id = this.state.id;
-    object.title = this.state.title;
-    object.updated = this.state.updated;
-    object.tags = this.state.singleDocTags;
-    object.content = this.state.content;
-    object.sharedWith = this.state.sharedWith;
-    const objectTwo = {};
-    objectTwo.title = this.state.title;
-    objectTwo.id = this.state.id;
-    objectTwo.updated = this.state.updated;
-    objectTwo.sharedWith = this.state.sharedWith;
-    objectTwo.tags = this.state.singleDocTags
-    const index = this.state.index;
-    const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
-    this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object });
-    setTimeout(this.saveFullCollectionTags, 500);
-  }
-
-  saveFullCollectionTags() {
-    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
-      .then(() => {
-        console.log("Saved");
-        this.saveSingleDocTags();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  saveSingleDocTags() {
-    const thisFile = this.state.docsSelected[0];
-    const fullFile = '/documents/' + thisFile + '.json';
-    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
-      .then(() => {
-        console.log("Saved tags");
-        this.setState({ tagModal: "hide", loadingTwo: "hide" });
-        this.loadCollection();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  deleteTag() {
-    console.log("Deleted");
-    this.setState({ deleteState: false });
-
-    let tags = this.state.singleDocTags;
-    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId});
-    let index = thisTag && thisTag.id;
-    function findObjectIndex(tag) {
-        return tag.id == index;
-    }
-    this.setState({ index: tags.findIndex(findObjectIndex) });
-    // setTimeout(this.finalDelete, 300);
-    const updatedTags = update(this.state.singleDocTags, {$splice: [[this.state.index, 1]]});
-    this.setState({singleDocTags: updatedTags });
-  }
-
-  applyFilter() {
-    this.setState({ applyFilter: false });
-    setTimeout(this.filterNow, 500);
-  }
-
-  filterNow() {
-    let value = this.state.value;
-
-    if(this.state.selectedTag != "") {
-      let tagFilter = value.filter(x => x.tags.includes(this.state.selectedTag));
-      this.setState({ filteredValue: tagFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate != "") {
-      let dateFilter = value.filter(x => x.updated.includes(this.state.selectedDate));
-      this.setState({ filteredValue: dateFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedCollab != "") {
-      let collaboratorFilter = value.filter(x => x.sharedWith.includes(this.state.selectedCollab));
-      this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    }
+    );
   }
 
 
   render() {
-    TestDoc.modules = {
-      toolbar: [
-        //[{ font: Font.whitelist }],
-        [{ header: 1 }, { header: 2 }],
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ align: [] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
-        [{ script: 'sub' }, { script: 'super' }],
-        [{ indent: '-1' }, { indent: '+1' }],
-        [{ color: [] }, { background: [] }],
-        ['video'],
-        ['image'],
-        ['link'],
-      ],
-      clipboard: {
-        // toggle to add extra line breaks when pasting HTML:
-        matchVisual: false,
-      }
+
+    let words;
+    if(this.props.content) {
+      words = wordcount(this.props.content.replace(/<(?:.|\n)*?>/gm, ''));
+    } else {
+      words = 0;
     }
 
-    return (
-      <div>
-      <ReactQuill
-        ref={(el) => { this.reactQuillRef = el }}
-        modules={TestDoc.modules}
-        id="textarea1"
-        className="materialize-textarea"
-        placeholder="Write something great"
-        value={this.state.content}
-        onChange={this.handleChange}
-        theme="bubble" />
-      </div>
-    );
+    const { publicShare, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule, title, content, gaiaLink} = this.props
+    console.log(publicShare)
+    const stealthy = (hideStealthy) ? "hide" : ""
+    const remoteStorageActivator = remoteStorage === true ? "" : "hide";
+    let contentString = "<p style='text-align: center;'>" + title + "</p> <div style='text-indent: 30px;'>" + content + "</div>";
+    // var htmlString = window.$('<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">').html('<body>' + content + '</body>' ).get().outerHTML;
+
+    var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + contentString + '</body></html>';
+    var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
+
+      const {length} = contacts
+      let users = '&length=' + length
+      let k = 0
+      for (const i of contacts) {
+        users += '&id' + k + "=" + i.contact
+        k += 1
+      }
+      // const to = (sharedWith && sharedWith[sharedWith.length - 1] && sharedWith[sharedWith.length - 1].contact) ? sharedWith[sharedWith.length - 1].contact : ''
+      const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
+        'http://localhost:3030/?app=gd04012018' :
+        'https://www.stealthy.im/?app=gd04012018';
+      const stealthyUrl = stealthyUrlStub + users;
+
+      // const stealthyModule = (length > 0) ? (
+      const stealthyModule =  (
+        <div className={stealthy}>
+          <div id='stealthyCol' className='card'>
+          <div className={revealModule}>
+            <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
+          </div>
+          </div>
+        </div>
+      )
+      // ) : null
+
+      let docFlex;
+      if(hideStealthy === true) {
+        docFlex = "test-doc-card";
+      } else {
+        docFlex = "test-with-module";
+      }
+
+      return (
+        <div>
+        <div className="navbar-fixed toolbar">
+          <nav className="toolbar-nav">
+            <div className="nav-wrapper">
+              <a onClick={this.props.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
+
+                <ul className="left toolbar-menu">
+                <li className="document-title">{title.length > 15 ? title.substring(0,15)+"..." :  title}</li>
+                <li><a className="small-menu muted">{autoSave}</a></li>
+                </ul>
+                <ul className="right toolbar-menu small-toolbar-menu auto-save">
+                <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
+                <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
+                <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={this.props.handleStealthy}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
+                </ul>
+
+                {/*Share Menu Dropdown*/}
+                <ul id="dropdown2"className="dropdown-content collection cointainer">
+                <li><span className="center-align">Select a contact to share with</span></li>
+                <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
+                <li className="divider" />
+                {contacts.slice(0).reverse().map(contact => {
+                    return (
+                      <li key={contact.contact}className="collection-item">
+                        <a onClick={() => this.props.sharedInfoSingleDoc(contact.contact)}>
+                        <p>{contact.contact}</p>
+                        </a>
+                      </li>
+                    )
+                  })
+                }
+                </ul>
+                {/*Share Menu Dropdown*/}
+
+                {/* Dropdown menu content */}
+                <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
+                  {/*<li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
+                  <li className="divider"></li>*/}
+                  <li><a onClick={this.props.print}>Print</a></li>
+                  <li><a download={title + ".doc"}  href={dataUri}>Download</a></li>
+                  <li><a onClick={this.props.sharePublicly}>Public Link</a></li>
+                </ul>
+              {/* End dropdown menu content */}
+
+            </div>
+          </nav>
+        </div>
+        {/*Remote storae widget*/}
+          <div className={remoteStorageActivator} id="remotestorage">
+            <div id='remote-storage-element-id'></div>
+          </div>
+          {/*Remote storae widget*/}
+
+
+          {/* Public Link Modal */}
+            <div id="publicShare" className="project-page-modal modal">
+              <div className="modal-content">
+                <h4>Share Publicly</h4>
+                <p>This data is not encrypted and can be accessed by anyone with the link below.</p>
+                <div>
+                  <p>{gaiaLink}</p>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <a onClick={() => this.setState({ publicShare: "hide"})} className="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+              </div>
+            </div>
+          {/* End Public Link Modal */}
+
+          <div className="test-docs">
+            <div className={docFlex}>
+              <div className="double-space doc-margin">
+
+                {title === "Untitled" ? <textarea className="doc-title materialize-textarea" placeholder="Give it a title" type="text" onChange={this.props.handleTitleChange} /> : <textarea className="doc-title materialize-textarea" placeholder="Title" type="text" value={title} onChange={this.handleTitleChange} />}
+
+
+                <textarea className="summernote" name="editordata"></textarea>
+
+
+              <div className="right-align wordcounter">
+                <p className="wordcount">{words} words</p>
+              </div>
+              <div className={save}>
+              </div>
+              <div className={loading}>
+              <div className="preloader-wrapper small active">
+                <div className="spinner-layer spinner-green-only">
+                  <div className="circle-clipper left">
+                    <div className="circle"></div>
+                  </div><div className="gap-patch">
+                    <div className="circle"></div>
+                  </div><div className="circle-clipper right">
+                    <div className="circle"></div>
+                  </div>
+                </div>
+              </div>
+              </div>
+              </div>
+              {stealthyModule}
+            </div>
+          </div>
+          </div>
+      );
   }
 }

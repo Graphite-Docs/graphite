@@ -40,10 +40,10 @@ export default class Header extends Component {
   renderHeader() {
     if (isUserSignedIn()) {
       const userData = loadUserData();
-      console.log('userData', userData);
+      // console.log('userData', userData);
 
       const person = new Person(userData.profile);
-      console.log('person', person);
+      // console.log('person', person);
       return (
         <ul id="nav-mobile" className="right">
         <ul id="dropdown1" className="dropdown-content">
@@ -57,7 +57,7 @@ export default class Header extends Component {
     } else {
       return(
         <ul id="nav-mobile" className="right">
-          <li><a href="http://graphitedocs.com" target="_blank" rel="noopener">About Graphite</a></li>
+          <li><a href="http://graphitedocs.com" target="_blank" rel="noopener noreferrer">About Graphite</a></li>
         </ul>
       );
     }

@@ -355,14 +355,13 @@ export default class SharedVaultCollection extends Component {
 
 
   render() {
-    if(this.state.fileID == "") {
+    if(this.state.fileID === "") {
       console.log("do nothing")
     } else {
       this.loadFile();
     }
     let files = this.state.shareFileIndex;
-    const img = this.state.img;
-    if (files.length > 0 && this.state.fileID == "") {
+    if (files.length > 0 && this.state.fileID === "") {
       return (
         <div>
           <div className="navbar-fixed toolbar">

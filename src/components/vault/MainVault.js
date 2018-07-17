@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import Signin from '../Signin';
 import VaultCollection from './VaultCollection';
-import TestVault from './TestVault';
 import {
   isSignInPending,
   isUserSignedIn,

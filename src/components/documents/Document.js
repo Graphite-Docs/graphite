@@ -89,7 +89,7 @@ export default class Doc extends Component {
     const object = {};
     object.title = this.state.textvalue;
     object.content = this.state.test;
-    object.id = parseInt(this.props.match.params.id);
+    object.id = parseInt(this.props.match.params.id, 10);
     this.setState({ value: object })
     blockstack.putFile("/autosave.json", JSON.stringify(this.state), true)
       .then(() => {

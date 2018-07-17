@@ -45,11 +45,11 @@ export default class DeleteVaultFile extends Component {
       .then((file) => {
         this.setState({files: JSON.parse(file || '{}') });
         let files = this.state.files;
-        const thisFile = files.find((file) => { return file.id === this.props.match.params.id});
+        const thisFile = files.find((file) => { return file.id == this.props.match.params.id});
         let index = thisFile && thisFile.id;
         console.log(index);
         function findObjectIndex(file) {
-          return file.id === index;
+          return file.id == index;
         }
         this.setState({index: files.findIndex(findObjectIndex)});
       })
@@ -71,7 +71,7 @@ export default class DeleteVaultFile extends Component {
     const object = {};
     object.title = this.state.textvalue;
     object.content = this.state.test;
-    object.id = parseInt(this.props.match.params.id);
+    object.id = parseInt(this.props.match.params.id, 10);
     this.setState({ singleFile: {} })
     this.setState({ files: [...this.state.files, this.state.files.splice(this.state.index, 1)]})
     this.setState({ loading: "show", save: "hide" });

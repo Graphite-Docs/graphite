@@ -1,19 +1,15 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
-import { Redirect } from 'react-router';
 import {
   isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
-  signUserOut,
   handlePendingSignIn,
 } from 'blockstack';
-import update from 'immutability-helper';
 
 const { getPublicKeyFromPrivate } = require('blockstack');
-const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class GraphiteAdmin extends Component {
@@ -150,8 +146,7 @@ export default class GraphiteAdmin extends Component {
   }
 
   renderView() {
-    const { team, addClientModal, person, orgs, loading } = this.state;
-    const teammate =  team.map(a => a.name);
+    const { addClientModal, orgs, loading } = this.state;
     console.log(orgs);
     if(loadUserData().username === 'admin.graphite') {
       return(

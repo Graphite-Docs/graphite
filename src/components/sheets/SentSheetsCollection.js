@@ -5,7 +5,6 @@ import {
   signUserOut,
 } from 'blockstack';
 import update from 'immutability-helper';
-const blockstack = require("blockstack");
 const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -131,8 +130,7 @@ export default class SharedSheetsCollection extends Component {
 
   renderView() {
     let sheets = this.state.sharedSheets;
-    const img = this.state.img;
-    if(this.state.deleteId != "") {
+    if(this.state.deleteId !== "") {
       this.deleteShareDoc();
     }
     if (sheets.length > 0) {
@@ -205,7 +203,6 @@ export default class SharedSheetsCollection extends Component {
 
 
   render() {
-    const img = this.state.img;
 
     return (
       <div>

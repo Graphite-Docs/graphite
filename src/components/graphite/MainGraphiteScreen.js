@@ -7,7 +7,6 @@ import {
   isUserSignedIn,
   redirectToSignIn,
   handlePendingSignIn,
-  loadUserData,
   signUserOut,
 } from 'blockstack';
 

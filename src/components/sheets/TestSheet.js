@@ -59,7 +59,6 @@ export default class TestSheet extends Component {
       oldValue: [],
       migrationLength: 1,
       migrationCount: 0,
-      migrationComplete: false,
       migrateTitle: "",
       migrateContent: "",
       migrateID: "",
@@ -427,7 +426,6 @@ migrationComplete() {
     } else {
       const thisFile = this.state.sheetsSelected[0];
       const fullFile = '/sheets/' + thisFile + '.json';
-      const fullFileSharedWith = thisFile + 'sharedwith.json';
 
       getFile(fullFile, {decrypt: true})
        .then((fileContents) => {
@@ -686,7 +684,6 @@ migrationComplete() {
 
   handleKeyPress(e) {
     if (e.key === 'Enter') {
-      const object = {};
       this.setState({ singleSheetTags: [...this.state.singleSheetTags, this.state.tag]});
       this.setState({ tag: "" });
     }
@@ -705,15 +702,15 @@ migrationComplete() {
   filterNow() {
     let sheets = this.state.sheets;
 
-    if(this.state.selectedTag != "") {
+    if(this.state.selectedTag !== "") {
       let tagFilter = sheets.filter(x => x.tags.includes(this.state.selectedTag));
       this.setState({ filteredVSheets: tagFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate != "") {
+    } else if (this.state.selectedDate !== "") {
       let dateFilter = sheets.filter(x => x.updated.includes(this.state.selectedDate));
       this.setState({ filteredSheets: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedCollab != "") {
+    } else if (this.state.selectedCollab !== "") {
       let collaboratorFilter = sheets.filter(x => x.sharedWith.includes(this.state.selectedCollab));
       this.setState({ filteredSheets: collaboratorFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
@@ -726,7 +723,7 @@ migrationComplete() {
     this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
     let sheets;
     this.state.filteredSheets === [] ? sheets = [] : sheets = this.state.filteredSheets;
-    const { collaboratorsModal, tagList, dateList, appliedFilter, singleSheetTags, tagDownload, contactDisplay, loadingTwo, confirmAdd, contacts, shareModal, tagModal, currentPage, sheetsPerPage, loading } = this.state;
+    const { collaboratorsModal, tagList, dateList, appliedFilter, singleSheetTags, contactDisplay, loadingTwo, confirmAdd, contacts, shareModal, tagModal, currentPage, sheetsPerPage, loading } = this.state;
     const link = '/sheets/sheet/' + this.state.tempSheetId;
     if (this.state.redirect) {
       return <Redirect push to={link} />;
@@ -812,7 +809,7 @@ migrationComplete() {
         <div className="row container">
           <div className="col s12 m6">
             <h5>Sheets ({currentSheets.length})
-            {appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+            {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
             {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredSheets: this.state.sheets})}>Clear</a></span> : <div />}
             </h5>
             {/* Filter Dropdown */}

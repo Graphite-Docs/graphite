@@ -146,7 +146,6 @@ export default class SharedCollection extends Component {
 
   renderView() {
     let docs = this.state.docs;
-    const img = this.state.img;
     if (docs.length > 0) {
       return (
         <div>

@@ -93,7 +93,7 @@ getOther() {
         const thisDoc = docs.find((doc) => { return doc.id == this.props.match.params.id});
         let index = thisDoc && thisDoc.id;
         function findObjectIndex(doc) {
-            return doc.id === index;
+            return doc.id == index;
         }
         this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex) })
      })

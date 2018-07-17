@@ -6,18 +6,11 @@ import {
   getFile,
   putFile
 } from 'blockstack';
-import update from 'immutability-helper';
 import { toXML } from 'jstoxml';
-import RemoteStorage from 'remotestoragejs';
-import Widget from 'remotestorage-widget';
 import axios from 'axios';
 const wordcount = require("wordcount");
 const Font = ReactQuill.Quill.import('formats/font');
-const { encryptECIES } = require('blockstack/lib/encryption');
 const { decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
-const remoteStorage = new RemoteStorage({logging: false});
-const widget = new Widget(remoteStorage);
 Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
 ReactQuill.Quill.register(Font, true);
 
@@ -53,6 +46,7 @@ export default class SingleJournoDoc extends Component {
     this.postJSON = this.postJSON.bind(this);
     this.publishWebhook = this.publishWebhook.bind(this);
     this.postWebhook = this.postWebhook.bind(this);
+    this.savePublished = this.savePublished.bind(this);
   }
 
 
@@ -68,7 +62,7 @@ export default class SingleJournoDoc extends Component {
         }
       })
 
-    getFile('publishedPostscollection.json', {decrypt: true})
+    getFile(loadUserData().username + 'publishedPostscollection.json', {decrypt: false})
       .then((fileContents) => {
         if(fileContents) {
           this.setState({ publishedPostCollection: JSON.parse(fileContents || '{}')})
@@ -101,14 +95,12 @@ export default class SingleJournoDoc extends Component {
       stopPropagation: false // Stops event propagation
     }
   );
-    let privateKey = loadUserData().appPrivateKey;
     const span = document.createElement("span");
     span.className += "ql-formats";
     const button = document.createElement("button");
     button.innerHTML = "&#x1F4AC;";
     button.className += "comment-button";
     span.appendChild(button);
-    const commentButton = document.getElementsByClassName("comment-button");
     const element = document.getElementsByClassName("ql-toolbar")[0];
     element.appendChild(span);
 
@@ -124,8 +116,7 @@ export default class SingleJournoDoc extends Component {
   loadFile() {
     const user = this.state.userToLoad;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    const thisFile = this.props.match.params.id;
-    const fullFile = 'submitted.json';
+    const fullFile = loadUserData().username + 'submitted.json';
     getFile(fullFile, options)
       .then((fileContents) => {
         this.setState({ loading: "hide"})
@@ -189,6 +180,17 @@ export default class SingleJournoDoc extends Component {
  //   this.setState({showCommentModal: "hide", commentInput: "" });
  // }
 
+ savePublished() {
+   putFile(loadUserData().username + 'publishedPostscollection.json', JSON.stringify(this.state.publishedPostCollection), {encrypt: false})
+     .then(() => {
+       console.log("Published post added to collection");
+       window.Materialize.toast('Published!', 4000);
+     })
+     .catch(error => {
+       console.log(error);
+     })
+ }
+
   publishWebhook() {
     this.setState({webhook: false})
     const today = new Date();
@@ -201,7 +203,11 @@ export default class SingleJournoDoc extends Component {
     object.publishDate = month + "/" + day + "/" + year;
     object.author = this.state.author;
     object.id = this.state.id;
-    this.setState({ singlePublicPost: object, publishedPostCollection: [...this.state.publishedPostCollection, object] })
+    object.published = true;
+    const objectTwo = {};
+    objectTwo.id = this.state.id;
+    objectTwo.published = true;
+    this.setState({ singlePublicPost: object, publishedPostCollection: [...this.state.publishedPostCollection, objectTwo] })
     setTimeout(this.postWebhook, 300);
   }
 
@@ -212,10 +218,12 @@ export default class SingleJournoDoc extends Component {
     .then(function (response) {
       console.log(response);
       window.Materialize.toast("Article published!", 4000);
+
     })
     .catch(function (error) {
       console.log(error);
     });
+    this.savePublished();
   }
 
   publishJSON() {
@@ -229,7 +237,11 @@ export default class SingleJournoDoc extends Component {
     object.publishDate = month + "/" + day + "/" + year;
     object.author = this.state.author;
     object.id = this.state.id;
-    this.setState({ singlePublicPost: object, publishedPostCollection: [...this.state.publishedPostCollection, object] })
+    object.published = true;
+    const objectTwo = {};
+    objectTwo.id = this.state.id;
+    objectTwo.published = true;
+    this.setState({ singlePublicPost: object, publishedPostCollection: [...this.state.publishedPostCollection, objectTwo] })
     setTimeout(this.postJSON, 300);
   }
 
@@ -240,6 +252,7 @@ export default class SingleJournoDoc extends Component {
         console.log(loadUserData())
         this.setState({publishModal: "hide"})
       })
+    this.savePublished();
   }
 
   publishRSS() {
@@ -253,6 +266,11 @@ export default class SingleJournoDoc extends Component {
     object.publishDate = month + "/" + day + "/" + year;
     object.author = this.state.author;
     object.id = this.state.id;
+    object.published = true;
+    const objectTwo = {};
+    objectTwo.id = this.state.id;
+    objectTwo.published = true;
+    this.setState({ publishedPostCollection: [...this.state.publishedPostCollection, objectTwo] })
     let XML = toXML({
       _name: 'rss',
       _attrs: {
@@ -302,6 +320,11 @@ export default class SingleJournoDoc extends Component {
         console.log(loadUserData())
         this.setState({publishModal: "hide"})
       })
+      .catch(error => {
+        console.log(error);
+      })
+
+      this.savePublished();
   }
 
   handleTitleChange(e) {
@@ -429,7 +452,6 @@ export default class SingleJournoDoc extends Component {
         matchVisual: false,
       }
     }
-    const user = loadUserData().username;
     let words;
     if(this.state.content) {
       words = wordcount(this.state.content.replace(/<(?:.|\n)*?>/gm, ''));
@@ -437,27 +459,14 @@ export default class SingleJournoDoc extends Component {
       words = 0;
     }
 
-    const {webhook, integrationURL, integrations, modalContent, integrationsList, publishModal, listComments, showCommentModal, comments, remoteStorage, blogModal, loading, save, autoSave, shareModal, publicShare, show, contacts, hideStealthy, revealModule} = this.state
+    const {webhook, integrations, modalContent, integrationsList, publishModal, comments, remoteStorage, loading, save, autoSave, contacts, hideStealthy} = this.state
     webhook === false ? console.log("No integration selected") : this.publishWebhook();
-    const stealthy = (hideStealthy) ? "hide" : ""
-    let blogTags = [
-      "Technology",
-      "Computers",
-      "Decentralization",
-      "Art"
-    ]
     const remoteStorageActivator = remoteStorage === true ? "" : "hide";
-    var content = "<p style='text-align: center;'>" + this.state.title + "</p>" + "<div style='text-indent: 30px;'>" + this.state.content + "</div>";
-    var htmlString = window.$('<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">').html('<body>' +
+    // var content = "<p style='text-align: center;'>" + this.state.title + "</p> <div style='text-indent: 30px;'>" + this.state.content + "</div>";
+    // var htmlString = window.$('<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">').html('<body>' + content + '</body>').get().outerHTML;
 
-    content +
-
-    '</body>'
-
-    ).get().outerHTML;
-
-    var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + content + '</body></html>';
-    var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
+    // var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + content + '</body></html>';
+    // var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
 
       // const {length} = contacts
       // let users = '&length=' + length
@@ -484,12 +493,12 @@ export default class SingleJournoDoc extends Component {
       // )
       // ) : null
 
-      let docFlex;
-      if(this.state.hideStealthy === true) {
-        docFlex = "test-doc-card";
-      } else {
-        docFlex = "test-with-module";
-      }
+      // let docFlex;
+      // if(this.state.hideStealthy === true) {
+      //   docFlex = "test-doc-card";
+      // } else {
+      //   docFlex = "test-with-module";
+      // }
 
       return (
         <div>
@@ -541,9 +550,9 @@ export default class SingleJournoDoc extends Component {
                     <div className={modalContent}>
                       <h4>Choose Publication Method</h4>
                       <div className="center-align container row">
-                        <p className="col s4"><a onClick={() => this.setState({ integrationsList: "", modalContent: "hide"})} className="black-text"><img className="destination" src='http://sflanders.net/wp-content/uploads/2016/11/webhook-512.png'/><br/>Webhooks</a></p>
-                        <p className="col s4"><a className="black-text" onClick={this.publishRSS}><img className="destination" src='https://www.freeiconspng.com/uploads/rss-logo-icon-png-19.png' /><br/>RSS</a></p>
-                        <p className="col s4"><a className="black-text" onClick={this.publishJSON}><img className="destination" src='http://debugonweb.com/wp-content/uploads/2017/10/logo-json.png'/><br/>JSON</a></p>
+                        <p className="col s4"><a onClick={() => this.setState({ integrationsList: "", modalContent: "hide"})} className="black-text"><img className="destination" alt="img" src="http://sflanders.net/wp-content/uploads/2016/11/webhook-512.png"/><br/>Webhooks</a></p>
+                        <p className="col s4"><a className="black-text" onClick={this.publishRSS}><img className="destination" alt="img" src="https://www.freeiconspng.com/uploads/rss-logo-icon-png-19.png"/><br/>RSS</a></p>
+                        <p className="col s4"><a className="black-text" onClick={this.publishJSON}><img className="destination" alt="img" src="http://debugonweb.com/wp-content/uploads/2017/10/logo-json.png"/><br/>JSON</a></p>
                       </div>
                     </div>
                     <div className={integrationsList}>

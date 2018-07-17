@@ -1,14 +1,11 @@
 import React, { Component } from "react";
-import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import {
-  isSignInPending,
   loadUserData,
   Person,
   getFile,
   putFile,
   signUserOut,
-  handlePendingSignIn,
 } from 'blockstack';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
@@ -47,57 +44,82 @@ export default class EditorCollection extends Component {
       collabSelect: "",
       statusSelect: "",
       team: [],
+      contacts: [],
+      editorView: "",
+      editorName: "",
+      editorRoles: "",
+      editorPermissions: "",
+      editorIntegrations: "",
+      editorPublish: "",
+      journoView: "",
+      journoName: "",
+      journoRoles: "",
+      journoPermissions: "",
+      journoIntegrations: "",
+      journoPublish: "",
+      integrations: [],
       teamLength: 0,
       count: 0,
       matePosts: [],
       userToLoad: "",
       postId: "",
-      redirect: false
+      redirect: false,
+      userRole: "",
+      publishedPostCollection: []
     }
     this.filterList = this.filterList.bind(this);
     this.loadTeamFiles = this.loadTeamFiles.bind(this);
+    this.loadPermissions = this.loadPermissions.bind(this);
+    this.loadPublishedCollections = this.loadPublishedCollections.bind(this);
+    this.loadMainAdminPublished = this.loadMainAdminPublished.bind(this);
   }
 
   componentDidMount() {
-    getFile('submitted.json', {decrypt: true})
+
+    //Get main client list to see if logged in user should have access.
+    const user = 'admin.graphite';
+    const options = { username: user, zoneFileLookupURL: 'https://core.blockstack.org/v1/names', decrypt: false}
+    getFile('clientlist.json', options)
       .then((fileContents) => {
         if(JSON.parse(fileContents || '{}').length > 0) {
-          this.setState({ posts: JSON.parse(fileContents || '{}'), loading: "hide" })
+          this.setState({ clients: JSON.parse(fileContents || '{}') });
         } else {
-          this.setState({ posts: [], loading: "hide" })
+          this.setState({ clients: [] });
         }
 
       })
-      .catch(error => {
-        console.log(error)
+      .then(() => {
+        let user = loadUserData().username;
+        let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+        let clientList;
+        if(this.state.clients) {
+          clientList = this.state.clients;
+        } else {
+          clientList = [];
+        }
+        let clientIDs =  clientList.map(a => a.clientID);
+        if(clientIDs.includes(userRoot) || clientIDs.includes(user)) {
+          this.loadPermissions();
+        }
       })
+      .catch(error => {
+        console.log(error);
+      });
 
-    //TODO re-introduce encryption here and on the admin page. Team file needs to be encrypted there then decrypted here.
 
-    getFile("team.json", {decrypt: false})
-    .then((fileContents) => {
-      if(JSON.parse(fileContents || '{}').length > 0){
-        this.setState({ team: JSON.parse(fileContents || '{}'), teamLength: JSON.parse(fileContents || '{}').length, count: 0 });
-      } else {
-        this.setState({ team: [], teamLength: 0, count: 0})
-      }
-    })
-     .then(() => {
-       this.loadTeamFiles();
-     })
-     .catch(error => {
-       console.log(error);
-     });
-    //Date picker initialization
-    window.$('.datepicker').pickadate({
-      selectMonths: true, // Creates a dropdown to control month
-      selectYears: 15, // Creates a dropdown of 15 years to control year,
-      today: 'Today',
-      clear: 'Clear',
-      close: 'Ok',
-      closeOnSelect: false, // Close upon selecting a date,
-      container: undefined, // ex. 'body' will append picker to body
-    });
+    getFile(loadUserData().username + 'publishedPostscollection.json', {decrypt: false})
+      .then((fileContents) => {
+        console.log("loading my published posts");
+        console.log(JSON.parse(fileContents || '{}'));
+        if(fileContents) {
+          this.setState({ publishedPostCollection: JSON.parse(fileContents || '{}')})
+        } else {
+          this.setState({ publishedPostCollection: []})
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      })
     //Here we are saving the public key for encrypted sharing later.
     const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
     putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
@@ -120,11 +142,208 @@ export default class EditorCollection extends Component {
     }
   }
 
-  loadTeamFiles() {
-    let check = this.state.teamLength;
-    if(this.state.count < check) {
+  loadPublishedCollections() {
+    if(this.state.count < this.state.team.length) {
       console.log(this.state.team[this.state.count].name);
-      const file = 'submitted.json';
+      const file = this.state.team[this.state.count].name + 'publishedPostscollection.json';
+      const options = { username: this.state.team[this.state.count].name, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+        getFile(file, options)
+         .then((fileContents) => {
+           if(fileContents) {
+             console.log("found a file: ");
+             console.log(JSON.parse(fileContents || "{}"))
+             this.setState({ publishedPostCollection: this.state.publishedPostCollection.concat(JSON.parse(fileContents || "{}")) })
+             this.setState({count: this.state.count + 1});
+           } else {
+             this.setState({count: this.state.count + 1});
+           }
+         })
+          .then(() => {
+            this.loadPublishedCollections();
+          })
+          .catch(error => {
+            console.log(error);
+            this.setState({count: this.state.count + 1});
+            this.loadPublishedCollections();
+          });
+    } else {
+      console.log("All published files loaded");
+      this.setState({ count: 0 });
+      this.loadMainAdminPublished();
+    }
+  }
+
+  loadMainAdminPublished() {
+    let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+    const file = userRoot + 'publishedPostscollection.json';
+    const options = { username: this.state.team[this.state.count].name, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+      getFile(file, options)
+       .then((fileContents) => {
+         if(fileContents) {
+           console.log("found a file: ");
+           console.log(JSON.parse(fileContents || "{}"))
+           this.setState({ publishedPostCollection: this.state.publishedPostCollection.concat(JSON.parse(fileContents || "{}")) })
+           this.setState({count: this.state.count + 1});
+         } else {
+           this.setState({ loading: "hide", show: ""});
+         }
+       })
+       .then(() => {
+         this.setState({ loading: "hide", show: ""})
+       })
+       .catch(error => {
+         console.log(error);
+       })
+  }
+
+  loadPermissions() {
+    let user = loadUserData().username;
+    let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+    let clientList;
+    if(this.state.clients) {
+      clientList = this.state.clients;
+    } else {
+      clientList = [];
+    }
+    let clientIDs =  clientList.map(a => a.clientID);
+
+    if(clientIDs.includes(userRoot)) {
+      const options = {username: userRoot, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false };
+      const privateKey = loadUserData().appPrivateKey;
+      getFile(getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json', options)
+       .then((fileContents) => {
+         if(fileContents) {
+           console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
+           this.setState({
+             team: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+             integrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+             editorView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorView,
+             editorName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorName,
+             editorRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorRoles,
+             editorPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPermissions,
+             editorIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorIntegrations,
+             editorPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPublish,
+             journoView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoView,
+             journoName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoName,
+             journoRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoRoles,
+             journoPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPermissions,
+             journoIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoIntegrations,
+             journoPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPublish,
+             accountSettings: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountSettings,
+             lastUpdated: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated
+           })
+         } else {
+           this.setState({
+             team: [],
+             integrations: [],
+             editorView: false,
+             editorRoles: false,
+             editorPermissions: false,
+             editorIntegrations: false,
+             editorPublish: false,
+             journoView: false,
+             journoRoles: false,
+             journoPermissions: false,
+             journoIntegrations: false,
+             journoPublish: false,
+             accountSettings: "",
+             lastUpdated: 0
+           })
+         }
+       })
+        .then(() => {
+          let teamList;
+          if(this.state.team) {
+            teamList = this.state.team;
+          } else {
+            teamList = [];
+          }
+          let teamName = teamList.map(a => a.name);
+          let teamMate = teamList.find(function (obj) { return obj.name === loadUserData().username })
+          if(teamMate) {
+            this.setState({ userRole: teamMate.role});
+          }
+        })
+        .then(() => {
+          this.loadTeamFiles();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else if(clientIDs.includes(user)) {
+      getFile('journoFileTest.json', {decrypt: true})
+        .then((fileContents) => {
+          if(fileContents) {
+            console.log("Found your file");
+            console.log(JSON.parse(fileContents || '{}'));
+            this.setState({
+              team: JSON.parse(fileContents || '{}').team,
+              integrations: JSON.parse(fileContents || '{}').integrations || [],
+              editorView: JSON.parse(fileContents || '{}').editorView,
+              editorName: JSON.parse(fileContents || '{}').editorName,
+              editorRoles: JSON.parse(fileContents || '{}').editorRoles,
+              editorPermissions: JSON.parse(fileContents || '{}').editorPermissions,
+              editorIntegrations: JSON.parse(fileContents || '{}').editorIntegrations,
+              editorPublish: JSON.parse(fileContents || '{}').editorPublish,
+              journoView: JSON.parse(fileContents || '{}').journoView,
+              journoName: JSON.parse(fileContents || '{}').journoName,
+              journoRoles: JSON.parse(fileContents || '{}').journoRoles,
+              journoPermissions: JSON.parse(fileContents || '{}').journoPermissions,
+              journoIntegrations: JSON.parse(fileContents || '{}').journoIntegrations,
+              journoPublish: JSON.parse(fileContents || '{}').journoPublish,
+              accountSettings: JSON.parse(fileContents || '{}').accountSettings,
+              lastUpdated: JSON.parse(fileContents || '{}').lastUpdated
+            })
+          } else {
+            console.log("No file created yet");
+            this.setState({
+              team: [],
+              integrations: [],
+              editorView: false,
+              editorName: false,
+              editorRoles: false,
+              editorPermissions: false,
+              editorIntegrations: false,
+              editorPublish: false,
+              journoView: false,
+              journoName: false,
+              journoRoles: false,
+              journoPermissions: false,
+              journoIntegrations: false,
+              journoPublish: false,
+              accountSettings: "",
+              lastUpdated: 0
+            })
+          }
+        })
+        .then(() => {
+          let teamList;
+          if(this.state.team) {
+            teamList = this.state.team;
+          } else {
+            teamList = [];
+          }
+          let teamName = teamList.map(a => a.name);
+          let teamMate = teamList.find(function (obj) { return obj.name === loadUserData().username })
+          if(teamMate) {
+            this.setState({ userRole: teamMate.role});
+          }
+        })
+        .then(() => {
+          this.loadTeamFiles();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
+
+  }
+
+  loadTeamFiles() {
+    if(this.state.count < this.state.team.length) {
+      console.log(this.state.team[this.state.count].name);
+      const file = loadUserData().username + 'submitted.json';
+      console.log(file);
       const options = { username: this.state.team[this.state.count].name, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
         getFile(file, options)
          .then((fileContents) => {
@@ -146,9 +365,14 @@ export default class EditorCollection extends Component {
           })
           .catch(error => {
             console.log(error);
+            this.setState({count: this.state.count + 1});
+            this.loadTeamFiles();
           });
     } else {
       console.log("All team files loaded");
+      // this.setState({ loading: "hide", show: ""})
+      this.setState({ count: 0, userToLoad: "" });
+      this.loadPublishedCollections();
     }
   }
 
@@ -170,16 +394,280 @@ export default class EditorCollection extends Component {
     this.setState({filteredProjects: updatedList});
   }
 
-
-  render() {
+  renderView() {
     if(this.state.redirect === true) {
       return <Redirect push to={'/journalism/' + this.state.postId} />
     }
-    const { matePosts, team, loading, posts } = this.state;
-    console.log(matePosts);
+    const { publishedPostCollection, editorPublish, journoPublish, userRole, team, matePosts, loading, clients } = this.state;
+    console.log("published posts collection")
+    console.log(publishedPostCollection);
+    let user = loadUserData().username;
+    let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+    let allPosts;
+    if(matePosts) {
+      allPosts = matePosts;
+    } else {
+      allPosts = []
+    }
+    let clientList;
+    if(clients) {
+      clientList = clients;
+    } else {
+      clientList = [];
+    }
+    let clientIDs = clientList.map(a => a.clientID);
+    let teamList;
+
+    let props = ['id'];
+    let idsToCheck = [];
+
+    // let result = matePosts.filter(function(o1){
+    //     // filter out (!) items in result2
+    //     return publishedPostCollection.some(function(o2){
+    //         return o1.id === o2.id;          // assumes unique id
+    //     });
+    // }).map(function(o){
+    //     // use reduce to make objects with only the required properties
+    //     // and map to apply this to the filtered array as a whole
+    //     return props.reduce(function(newo, name){
+    //         newo[name] = o[name];
+    //         console.log(newo);
+    //         idsToCheck = [...idsToCheck, newo];
+    //     }, {});
+    // });
+    let ids;
+    if(publishedPostCollection) {
+      ids = publishedPostCollection.map(a => a.id);
+    }
+    console.log(ids);
+    let statusButton;
+
+    if(clientIDs.includes(userRoot) || clientIDs.includes(user)) {
+      if(userRole === "Administrator" || clientIDs.includes(user)) {
+          return (
+            <div className="docs">
+
+              <div className="container project-pane">
+
+              {/*Loading indicator*/}
+                <div className={loading}>
+                  <div className="progress center-align">
+                    <p>Loading...</p>
+                    <div className="indeterminate"></div>
+                  </div>
+                </div>
+                <div>
+                <div className="row">
+                  <div className="col s12 m6">
+                    <h5>Posts ({allPosts.length})
+                      {/*appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+                      {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.value})}>Clear</a></span> : <div />*/}
+                    </h5>
+                  </div>
+                  <div className="col right s12 m6">
+                  <form className="searchform">
+                  <fieldset className=" form-group searchfield">
+                  <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Posts" onChange={this.filterList}/>
+                  </fieldset>
+                  </form>
+                  </div>
+                </div>
+
+                  <table className="bordered">
+                    <thead>
+                      <tr>
+                        <th></th>
+                        <th>Title</th>
+                        <th>Author</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                  {
+                    allPosts.map(post => {
+                      if(ids.includes(post.id)) {
+                        statusButton = "btn-floating center-align btn-small waves-effect waves-light green darken-2";
+                      } else {
+                        statusButton = "btn-floating center-align btn-small waves-effect waves-light yellow accent-4";
+                      }
+                    return(
+                      <tr key={post.id}>
+                        <td><input type="checkbox" checked={this.state.checked} value={post.id} id={post.id} onChange={this.handleCheckbox} /><label htmlFor={post.id}></label></td>
+                        <td><a onClick={() => this.setState({ postId: post.id, userToLoad: post.author})}>{post.title.length > 30 ? post.title.substring(0,30)+"..." :  post.title}</a></td>
+                        <td>{post.author}</td>
+                        <td>{post.updated}</td>
+                        <td>{ids.includes(post.id) ? <p className={statusButton}>S</p> : <p className={statusButton}>P</p>}</td>
+                      </tr>
+                    );
+                    })
+                  }
+                  </tbody>
+                </table>
+                </div>
+              </div>
+            </div>
+        )
+      } else if(userRole === "Editor" && editorPublish === true) {
+        return (
+          <div className="docs">
+
+            <div className="container project-pane">
+
+            {/*Loading indicator*/}
+              <div className={loading}>
+                <div className="progress center-align">
+                  <p>Loading...</p>
+                  <div className="indeterminate"></div>
+                </div>
+              </div>
+              <div>
+              <div className="row">
+                <div className="col s12 m6">
+                  <h5>Posts ({allPosts.length})
+                    {/*appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+                    {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.value})}>Clear</a></span> : <div />*/}
+                  </h5>
+                </div>
+                <div className="col right s12 m6">
+                <form className="searchform">
+                <fieldset className=" form-group searchfield">
+                <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Posts" onChange={this.filterList}/>
+                </fieldset>
+                </form>
+                </div>
+              </div>
+
+                <table className="bordered">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Title</th>
+                      <th>Author</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {
+                    allPosts.map(post => {
+                      if(ids.includes(post.id)) {
+                        statusButton = "btn-floating center-align btn-small waves-effect waves-light green darken-2";
+                      } else {
+                        statusButton = "btn-floating center-align btn-small waves-effect waves-light yellow accent-4";
+                      }
+                    return(
+                      <tr key={post.id}>
+                        <td><input type="checkbox" checked={this.state.checked} value={post.id} id={post.id} onChange={this.handleCheckbox} /><label htmlFor={post.id}></label></td>
+                        <td><a onClick={() => this.setState({ postId: post.id, userToLoad: post.author})}>{post.title.length > 30 ? post.title.substring(0,30)+"..." :  post.title}</a></td>
+                        <td>{post.author}</td>
+                        <td>{post.updated}</td>
+                        <td>{ids.includes(post.id) ? <p className={statusButton}>S</p> : <p className={statusButton}>P</p>}</td>
+                      </tr>
+                    );
+                    })
+                  }
+                </tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+        )
+      } else if(userRole === "Journalist" && journoPublish === true) {
+        return (
+          <div className="docs">
+
+            <div className="container project-pane">
+
+            {/*Loading indicator*/}
+              <div className={loading}>
+                <div className="progress center-align">
+                  <p>Loading...</p>
+                  <div className="indeterminate"></div>
+                </div>
+              </div>
+              <div>
+              <div className="row">
+                <div className="col s12 m6">
+                  <h5>Posts ({allPosts.length})
+                    {/*appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+                    {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.value})}>Clear</a></span> : <div />*/}
+                  </h5>
+                </div>
+                <div className="col right s12 m6">
+                <form className="searchform">
+                <fieldset className=" form-group searchfield">
+                <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Posts" onChange={this.filterList}/>
+                </fieldset>
+                </form>
+                </div>
+              </div>
+
+                <table className="bordered">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th>Title</th>
+                      <th>Author</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                  {
+                    allPosts.map(post => {
+                      if(ids.includes(post.id)) {
+                        statusButton = "btn-floating center-align btn-small waves-effect waves-light green darken-2";
+                      } else {
+                        statusButton = "btn-floating center-align btn-small waves-effect waves-light yellow accent-4";
+                      }
+                    return(
+                      <tr key={post.id}>
+                        <td><input type="checkbox" checked={this.state.checked} value={post.id} id={post.id} onChange={this.handleCheckbox} /><label htmlFor={post.id}></label></td>
+                        <td><a onClick={() => this.setState({ postId: post.id, userToLoad: post.author})}>{post.title.length > 30 ? post.title.substring(0,30)+"..." :  post.title}</a></td>
+                        <td>{post.author}</td>
+                        <td>{post.updated}</td>
+                        <td>{ids.includes(post.id) ? <p className={statusButton}>S</p> : <p className={statusButton}>P</p>}</td>
+                      </tr>
+                    );
+                    })
+                  }
+                </tbody>
+              </table>
+              </div>
+            </div>
+          </div>
+        )
+      } else {
+        return (
+          <div className="docs">
+
+            <div className="container project-pane">
+
+              <h5 className="center-align">You do not have access to this page. Go <a href="/">home</a></h5>
+
+            </div>
+          </div>
+        )
+      }
+    } else {
+      return (
+        <div className="docs">
+
+          <div className="container project-pane">
+
+            <h5 className="center-align">You do not have access to this page. Go <a href="/">home</a></h5>
+
+          </div>
+        </div>
+      )
+    }
+  }
+
+
+  render() {
     const userData = loadUserData();
     const person = new Person(userData.profile);
-    let statusButton;
 
     return (
       <div>
@@ -208,63 +696,7 @@ export default class EditorCollection extends Component {
         </nav>
         </div>
 
-        <div className="docs">
-
-          <div className="container project-pane">
-
-          {/*Loading indicator*/}
-            <div className={loading}>
-              <div className="progress center-align">
-                <p>Loading...</p>
-                <div className="indeterminate"></div>
-              </div>
-            </div>
-            <div>
-            <div className="row">
-              <div className="col s12 m6">
-                <h5>Posts ({matePosts.length})
-                  {/*appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
-                  {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.value})}>Clear</a></span> : <div />*/}
-                </h5>
-              </div>
-              <div className="col right s12 m6">
-              <form className="searchform">
-              <fieldset className=" form-group searchfield">
-              <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Posts" onChange={this.filterList}/>
-              </fieldset>
-              </form>
-              </div>
-            </div>
-
-              <table className="bordered">
-                <thead>
-                  <tr>
-                    <th></th>
-                    <th>Title</th>
-                    <th>Author</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-              {
-                matePosts.map(post => {
-                return(
-                  <tr key={post.id}>
-                    <td><input type="checkbox" checked={this.state.checked} value={post.id} id={post.id} onChange={this.handleCheckbox} /><label htmlFor={post.id}></label></td>
-                    <td><a onClick={() => this.setState({ postId: post.id, userToLoad: post.author})}>{post.title.length > 30 ? post.title.substring(0,30)+"..." :  post.title}</a></td>
-                    <td>{post.author}</td>
-                    <td>{post.updated}</td>
-                    <td>{post.status}</td>
-                  </tr>
-                );
-                })
-              }
-              </tbody>
-            </table>
-            </div>
-          </div>
-        </div>
+        {this.renderView()}
 
       </div>
     );

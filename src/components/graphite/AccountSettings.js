@@ -1,21 +1,13 @@
 import React, { Component } from "react";
-import { Link } from "react-router-dom";
 import {
   isSignInPending,
-  loadUserData,
-  Person,
   getFile,
   putFile,
-  lookupProfile,
-  signUserOut,
   handlePendingSignIn,
 } from "blockstack";
 import update from 'immutability-helper';
-import axios from 'axios';
 const { encryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const Automerge = require('automerge');
 
 export default class AccountSettings extends Component {
   constructor(props) {
@@ -44,7 +36,6 @@ export default class AccountSettings extends Component {
       checkboxState: true,
       selectedTeammate: "",
       updateTeammateModal: "hide",
-      index: "",
       devView: false,
       devTeam: false,
       devPayment: false,
@@ -117,8 +108,8 @@ export default class AccountSettings extends Component {
         if(team[i].name === deleteName) {
             let updated = Date.now();
             team.splice(i,1);
-            return false;
             this.setState({ team: [...this.state.teamMine, team.splice(i, 1)], lastUpdated: updated})
+            return false;
         }
       });
       setTimeout(this.delete, 500);
@@ -424,8 +415,7 @@ export default class AccountSettings extends Component {
 
   render(){
     console.log(this.state.lastUpdated);
-    const user = loadUserData().username;
-    const { devView, lastUpdated, teamMine, accountNameModal, accountPlanModal, managerManage, managerView, managePayment, manageTeam, devManage, devPayment, devTeam, updateTeammateModal, selectedTeammate, ammateName, newUserRole, team, hideMain, teammateModal, contacts } = this.state;
+    const { devView, teamMine, managerManage, managerView, managePayment, manageTeam, devManage, devPayment, devTeam, updateTeammateModal, hideMain, teammateModal, contacts } = this.state;
 
       return(
         <div>
@@ -448,7 +438,7 @@ export default class AccountSettings extends Component {
             <div className="row">
 
               <div className="col s12">
-                <h5>Your Team <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ hideMain: "hide", teammateModal: "" })}><i role="Add new blog team member" className="material-icons white-text">add</i></button></h5>
+                <h5>Your Team <button className="add-teammate-button btn-floating btn-small black" onClick={() => this.setState({ hideMain: "hide", teammateModal: "" })}><i aria-labelledby="Add new blog team member" className="material-icons white-text">add</i></button></h5>
 
                 <table className="bordered">
                   <thead>

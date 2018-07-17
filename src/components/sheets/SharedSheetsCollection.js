@@ -103,7 +103,6 @@ export default class SharedSheetsCollection extends Component {
 
   renderView() {
     let sheets = this.state.shareFile;
-    const img = this.state.img;
     if (sheets.length > 0) {
       return (
         <div>

@@ -6,7 +6,6 @@ import {
   getFile,
   putFile,
   signUserOut,
-  handlePendingSignIn,
 } from 'blockstack';
 import { Link } from 'react-router-dom';
 import update from 'immutability-helper';
@@ -69,7 +68,6 @@ export default class VaultCollection extends Component {
       typeList: "hide",
       selectedType: "",
       applyFilter: false,
-      selectedType: "",
       selectedTag: "",
       selectedCollab: "",
       selectedDate: "",
@@ -250,7 +248,6 @@ export default class VaultCollection extends Component {
     } else {
       const thisFile = this.state.filesSelected[0];
       const fullFile = thisFile + '.json';
-      const fullFileSharedWith = thisFile + 'sharedwith.json';
 
       getFile(fullFile, {decrypt: true})
        .then((fileContents) => {
@@ -467,7 +464,6 @@ export default class VaultCollection extends Component {
 
   handleKeyPress(e) {
     if (e.key === 'Enter') {
-      const object = {};
       this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]});
       this.setState({ tag: "" });
     }
@@ -541,17 +537,17 @@ export default class VaultCollection extends Component {
   filterNow() {
     let files = this.state.files;
 
-    if(this.state.selectedTag != "") {
-      let tagFilter = files.filter(x => typeof x.tags != 'undefined' ? x.tags.includes(this.state.selectedTag) : console.log("nada"));
+    if(this.state.selectedTag !== "") {
+      let tagFilter = files.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(this.state.selectedTag) : console.log("nada"));
       // let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
       this.setState({ filteredValue: tagFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate != "") {
+    } else if (this.state.selectedDate !== "") {
       let dateFilter = files.filter(x => x.updated.includes(this.state.selectedDate));
       this.setState({ filteredValue: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedCollab != "") {
-      let collaboratorFilter = files.filter(x => typeof x.sharedWith != 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
+    } else if (this.state.selectedCollab !== "") {
+      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
       // let collaboratorFilter = files.filter(x => x.sharedWith.includes(this.state.selectedCollab));
       this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
@@ -597,7 +593,7 @@ export default class VaultCollection extends Component {
     const currentFiles = files.slice(0).reverse();
 
     let shared = currentFiles.map(a => a.sharedWith);
-    let newShared = shared.filter(function(n){ return n != undefined });
+    let newShared = shared.filter(function(n){ return n !== undefined });
     let mergedShared = [].concat.apply([], newShared);
     let uniqueCollabs = [];
     window.$.each(mergedShared, function(i, el){
@@ -605,7 +601,7 @@ export default class VaultCollection extends Component {
     });
 
     let tags = currentFiles.map(a => a.tags);
-    let newTags = tags.filter(function(n){ return n != undefined });
+    let newTags = tags.filter(function(n){ return n !== undefined });
     let mergedTags = [].concat.apply([], newTags);
     let uniqueTags = [];
     window.$.each(mergedTags, function(i, el) {
@@ -677,7 +673,7 @@ export default class VaultCollection extends Component {
       <div className="row container">
         <div className="col s12 m6">
           <h5>Files ({currentFiles.length})
-            {appliedFilter === false ? <span className="filter"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
+            {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
             {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.files})}>Clear</a></span> : <div />}
           </h5>
           {/* Filter Dropdown */}
