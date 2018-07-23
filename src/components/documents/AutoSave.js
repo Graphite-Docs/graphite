@@ -1,7 +1,7 @@
 import React, { Component, Link } from "react";
 import ReactDOM from 'react-dom';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+// import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.snow.css';
 import Profile from "../Profile";
 import Signin from "../Signin";
 import Header from "../Header";
@@ -14,10 +14,10 @@ import {
 } from "blockstack";
 const wordcount = require("wordcount");
 const blockstack = require("blockstack");
-const Quill = ReactQuill.Quill
-const Font = Quill.import('formats/font');
-Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto'];
-Quill.register(Font, true);
+// const Quill = ReactQuill.Quill
+// const Font = Quill.import('formats/font');
+// Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto'];
+// Quill.register(Font, true);
 
 export default class SingleDoc extends Component {
   constructor(props) {
@@ -234,12 +234,13 @@ export default class SingleDoc extends Component {
               <input className="print-title" type="text" value={this.state.textvalue} onChange={this.handleTitleChange} />
               </h4>
 
-              <ReactQuill
+              {/* <ReactQuill
                 id="textarea1"
                 className="materialize-textarea print-view"
                 placeholder="Write something great"
                 value={this.state.test}
-                onChange={this.handleChange} />
+                onChange={this.handleChange}
+              /> */}
 
               <div className="right-align wordcounter">
                 <p className="wordcount">{words} words</p>

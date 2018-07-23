@@ -3,6 +3,9 @@ import {
   putFile,
   loadUserData,
 } from 'blockstack'
+import {
+  getMonthDayYear
+} from './helpers';
 import update from 'immutability-helper';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
@@ -19,17 +22,18 @@ export function handleAutoSave(e) {
 }
 
 export function sharePublicly() {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
+  console.warn("sharePublicly called!")
   const object = {};
   object.title = this.state.title;
   object.content = this.state.content;
+  console.error('in sharePublicly, this.state.content is: ', this.state.content)
   object.words = wordcount(this.state.content);
-  object.shared = month + "/" + day + "/" + year;
-  this.setState({singlePublic: object, singleDocIsPublic: true})
-  setTimeout(this.savePublic, 700);
+  object.shared = getMonthDayYear();
+  this.setState({
+    singlePublic: object,
+    singleDocIsPublic: true
+  })
+  setTimeout(this.savePublic, 300);
 }
 
 export function stopSharing() {
@@ -282,25 +286,25 @@ export function autoSave() {
       console.log("e");
       console.log(e);
     });
-    remoteStorage.access.claim(this.state.documentId, 'rw');
-    remoteStorage.caching.enable('/' + this.state.documentId + '/');
-    const client = remoteStorage.scope('/' + this.state.documentId + '/');
+    // remoteStorage.access.claim(this.state.documentId, 'rw');
+    // remoteStorage.caching.enable('/' + this.state.documentId + '/');
+    // const client = remoteStorage.scope('/' + this.state.documentId + '/');
     const content = this.state.content;
     const title = this.state.title;
     const words = wordcount(this.state.content);
     const updated = month + "/" + day + "/" + year;
     const id = parseInt(this.state.documentId, 10);
     const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
-    client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
-    .then(() => { console.log("Upload done") });
-    client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
-    .then(() => { console.log("Upload done") });
-    client.storeFile('text/plain', 'wordCount.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(words))))
-    .then(() => { console.log("Upload done") });
-    client.storeFile('text/plain', 'updated.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
-    .then(() => { console.log("Upload done") });
-    client.storeFile('text/plain', 'id.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(id))))
-    .then(() => { console.log("Upload done") });
+    // client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
+    // .then(() => { console.log("Upload done") });
+    // client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
+    // .then(() => { console.log("Upload done") });
+    // client.storeFile('text/plain', 'wordCount.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(words))))
+    // .then(() => { console.log("Upload done") });
+    // client.storeFile('text/plain', 'updated.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
+    // .then(() => { console.log("Upload done") });
+    // client.storeFile('text/plain', 'id.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(id))))
+    // .then(() => { console.log("Upload done") });
 }
 
 export function saveSingleDocCollection() {
@@ -324,18 +328,6 @@ export function saveSingleDocCollection() {
 }
 
 export function componentDidMountData(props) {
-  window.$('.summernote').summernote({
-      placeholder: "Write something great",
-      value: this.state.content,
-      onChange: this.handleChange,
-      id: props
-    });
-
-    window.$(".summernote").on("summernote.change", function (e) {   // callback as jquery custom event
-      this.setState({ content: e.target.value });
-      clearTimeout(this.timeout);
-      this.timeout = setTimeout(this.handleAutoAdd, 1500)
-    }.bind(this));
 
 
   const thisFile = props;

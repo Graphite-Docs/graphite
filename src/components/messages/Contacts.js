@@ -98,6 +98,7 @@ export default class Contacts extends Component {
   }
 
   componentDidMount() {
+    window.$('.modal').modal();
     window.$('.button-collapse').sideNav({
       menuWidth: 400, // Default is 300
       edge: 'left', // Choose the horizontal origin
@@ -344,7 +345,7 @@ export default class Contacts extends Component {
   }
 
   loadSingleTypes() {
-
+    window.$('#typeModal').modal('open');
     this.setState({typeDownload: false});
     getFile("contact.json", {decrypt: true})
     .then((fileContents) => {
@@ -387,6 +388,7 @@ export default class Contacts extends Component {
   }
 
   saveFullCollectionTypes() {
+    window.$('#typeModal').modal('close');
     putFile("contact.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log("Saved");
@@ -708,7 +710,7 @@ export default class Contacts extends Component {
             {renderPageNumbers}
             </ul>
             <div className="docs-per-page right-align">
-              <label>Docs per page</label>
+              <label>Contacts per page</label>
               <select value={this.state.docsPerPage} onChange={(event) => this.setState({ docsPerPage: event.target.value})}>
                 <option value={10}>
                 10
@@ -725,7 +727,7 @@ export default class Contacts extends Component {
         </div>
         {/* Type Modal */}
           <div className={typeModal}>
-            <div id="modal1" className="project-page-modal modal">
+            <div id="typeModal" className="project-page-modal modal">
               <div className="modal-content">
                 <a onClick={() => this.setState({type: "", typeModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
 

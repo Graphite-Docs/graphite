@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+// import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.snow.css';
 import {
   isSignInPending,
   loadUserData,
@@ -14,9 +14,9 @@ import {
   redirectToSignIn,
 } from 'blockstack';
 const blockstack = require("blockstack");
-const Font = ReactQuill.Quill.import('formats/font');
-Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
+// const Font = ReactQuill.Quill.import('formats/font');
+// Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
+// ReactQuill.Quill.register(Font, true);
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedDocs extends Component {

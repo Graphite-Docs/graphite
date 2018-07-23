@@ -1415,12 +1415,13 @@ h5, h6 {
   margin-right: 25px!important;
 }
 
+/* commenting out these Summernote style attributes for now */
 .note-toolbar {
-  position: fixed!important;
-  top: 63px!important;
-  right: 0!important;
-  width: 100%!important;
-  z-index: 900!important;
+  /* position: fixed!important; */
+  /* top: 63px!important; */
+  /* right: 0!important; */
+  /* width: 100%!important; */
+  z-index: 999!important;
 }
 
 .note-modal-footer {
@@ -1596,6 +1597,7 @@ h5, h6 {
 .modalClose {
   float: right;
 }
+
 
 /* Blog Settings */
 
@@ -1799,6 +1801,11 @@ h5, h6 {
 
 .main-covo {
   /* padding-top: 35px; */
+}
+
+nav {
+  box-shadow: none;
+  -webkit-box-shadow: none;
 }
 
 .convo-left {
@@ -2266,7 +2273,8 @@ nav ul a {
   text-transform: capitalize!important;
   /* resize: auto!important; */
   line-height: 35px;
-  margin-top: 55px!important;
+  margin-top: 150px!important;
+  padding-left: 12px;
 }
 
 .title {
@@ -2301,7 +2309,7 @@ nav ul a {
 }
 
 .doc-margin {
-  padding: 70px;
+  padding: 0px;
   overflow: visible!important;
 }
 
@@ -2677,18 +2685,18 @@ input:focus {
 }
 
 .ql-toolbar.ql-snow {
-    border: none;
+    -webkit-box-sizing: border-box;
     box-sizing: border-box;
     font-family: inherit;
-    padding: 8px;
-    position: fixed;
     top: 0;
-    z-index: 999;
-    width: auto;
-    right: 180px;
-    background: #282828;
+    z-index: 980;
+    width: 100%;
+    background: #fff;
     height: 60px;
-    padding: 15px!important;
+    position: fixed;
+    top: 64px;
+    left: 0;
+    padding-left: 20px;
 }
 
 .ql-toolbar.ql-snow .ql-picker-label {
@@ -2698,11 +2706,11 @@ input:focus {
 }
 
 .ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill {
-  fill: #fff;
+  fill: #282828;
 }
 
 .ql-snow .ql-stroke {
-  stroke: #fff!important;
+  stroke: #282828!important;
 }
 
 .ql-toolbar.ql-snow .ql-picker-label {
@@ -2921,7 +2929,7 @@ blockquote {
     z-index: 999;
     width: 100%;
     /* right: 150px; */
-    background: #282828;
+    background: #fff;
     height: 60px;
     /* padding: 15px!important; */
     left: 0;
@@ -3155,6 +3163,13 @@ blockquote {
   }
 }
 
+@media screen and (max-width: 800px) {
+  .ql-toolbar.ql-snow {
+    z-index: 980!important;
+  }
+}
+
+
 @media screen and (max-width: 760px) {
   #stealthyFrame {
   width: 100%;
@@ -3166,7 +3181,7 @@ blockquote {
 .doc-title {
   /* resize: auto!important; */
   line-height: 35px;
-  margin-top: 75px!important;
+  margin-top: 100px!important;
 }
 
 #stealthyCol {
@@ -3494,7 +3509,34 @@ nav .brand-logo.left {
     display: none;
   }
 
+  .ql-toolbar.ql-snow {
+    display: none;
+  }
+
   @page {
   margin: 2cm;
   }
 }
+
+
+/* css for QuillEditor */
+/* #QuillEditor-container {
+  box-shadow: none;
+  min-height: 250px;
+  text-align: justify;
+} */
+
+/* .ql-toolbar {
+  background: lightgray;
+}
+
+.ql-editor {
+  background: white;
+}
+
+.ql-picker-label::after {
+  padding-left: 10%;
+  content: "\f0dc"; /* this is the sort font */
+
+/* } */
+/* css for QuillEditor */

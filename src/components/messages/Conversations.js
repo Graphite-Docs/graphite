@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.bubble.css';
+// import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.bubble.css';
 import {
   isSignInPending,
   loadUserData,
@@ -12,9 +12,9 @@ import {
   signUserOut
 } from "blockstack";
 import SingleConversation from './SingleConversation';
-const Font = ReactQuill.Quill.import('formats/font');
-Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
+// const Font = ReactQuill.Quill.import('formats/font');
+// Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
+// ReactQuill.Quill.register(Font, true);
 
 const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');

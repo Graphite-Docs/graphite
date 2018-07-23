@@ -1,10 +1,14 @@
 import React, { Component } from "react";
-import 'react-quill/dist/quill.bubble.css';
+// import 'react-quill/dist/quill.bubble.css';
 import {
   loadUserData,
 } from 'blockstack';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
+// import ImageResize from 'quill-image-resize-module';
+import axios from 'axios';
+import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
+import QuillEditorPrivate from '../QuillEditorPrivate.js';
 const wordcount = require("wordcount");
 const { decryptECIES } = require('blockstack/lib/encryption');
 const remoteStorage = new RemoteStorage({logging: false});
@@ -126,8 +130,7 @@ export default class TestDoc extends Component {
       words = 0;
     }
 
-    const { publicShare, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule, title, content, gaiaLink} = this.props
-    console.log(publicShare)
+    const { yjsConnected, idToLoad, docLoaded, publicShare, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule, title, content, gaiaLink, singleDocIsPublic, value} = this.props
     const stealthy = (hideStealthy) ? "hide" : ""
     const remoteStorageActivator = remoteStorage === true ? "" : "hide";
     let contentString = "<p style='text-align: center;'>" + title + "</p> <div style='text-indent: 30px;'>" + content + "</div>";
@@ -173,28 +176,69 @@ export default class TestDoc extends Component {
         <div className="navbar-fixed toolbar">
           <nav className="toolbar-nav">
             <div className="nav-wrapper">
-              <a onClick={this.props.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
+              <a
+                onClick={this.props.handleBack}
+                className="left brand-logo">
+                <i className="small-brand material-icons">arrow_back</i>
+              </a>
 
                 <ul className="left toolbar-menu">
-                <li className="document-title">{title.length > 15 ? title.substring(0,15)+"..." :  title}</li>
-                <li><a className="small-menu muted">{autoSave}</a></li>
+                <li className="document-title">
+                  {title.length > 15 ? title.substring(0,15)+"..." :  title}
+                </li>
+                <li>
+                  <a className="small-menu muted">{autoSave}</a>
+                </li>
                 </ul>
                 <ul className="right toolbar-menu small-toolbar-menu auto-save">
-                <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
-                <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
-                <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={this.props.handleStealthy}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
+                <li>
+                  <a className="tooltipped dropdown-button"
+                    data-activates="dropdown2"
+                    data-position="bottom"
+                    data-delay="50"
+                    data-tooltip="Share">
+                    <i className="small-menu material-icons">people</i>
+                  </a>
+                </li>
+                <li>
+                  <a className="dropdown-button"
+                    data-activates="dropdown1">
+                    <i className="small-menu material-icons">more_vert</i>
+                  </a>
+                </li>
+                <li>
+                  <a className="small-menu tooltipped stealthy-logo"
+                    data-position="bottom"
+                    data-delay="50"
+                    data-tooltip="Stealthy Chat"
+                    onClick={this.props.handleStealthy}>
+                    <img className="stealthylogo"
+                      src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png"
+                      alt="open stealthy chat"/>
+                    </a>
+                  </li>
                 </ul>
 
                 {/*Share Menu Dropdown*/}
-                <ul id="dropdown2"className="dropdown-content collection cointainer">
-                <li><span className="center-align">Select a contact to share with</span></li>
-                <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
+                <ul id="dropdown2"
+                  className="dropdown-content collection cointainer">
+                  <li>
+                    <span className="center-align">Select a contact to share with</span>
+                  </li>
+                  <a href="/contacts">
+                  <li>
+                    <span className="muted blue-text center-align">Or add new contact</span>
+                  </li>
+                </a>
                 <li className="divider" />
-                {contacts.slice(0).reverse().map(contact => {
+                {
+                  contacts.slice(0).reverse().map(contact => {
                     return (
                       <li key={contact.contact}className="collection-item">
                         <a onClick={() => this.props.sharedInfoSingleDoc(contact.contact)}>
-                        <p>{contact.contact}</p>
+                          <p>
+                            {contact.contact}
+                          </p>
                         </a>
                       </li>
                     )
@@ -207,9 +251,15 @@ export default class TestDoc extends Component {
                 <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
                   {/*<li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
                   <li className="divider"></li>*/}
-                  <li><a onClick={this.props.print}>Print</a></li>
-                  <li><a download={title + ".doc"}  href={dataUri}>Download</a></li>
-                  <li><a onClick={this.props.sharePublicly}>Public Link</a></li>
+                  <li>
+                    <a onClick={this.props.print}>Print</a>
+                  </li>
+                  <li>
+                    <a download={title + ".doc"} href={dataUri}>Download</a>
+                  </li>
+                  <li>
+                    <a onClick={this.props.sharePublicly}>Public Link</a>
+                  </li>
                 </ul>
               {/* End dropdown menu content */}
 
@@ -233,19 +283,84 @@ export default class TestDoc extends Component {
                 </div>
               </div>
               <div className="modal-footer">
-                <a onClick={() => this.setState({ publicShare: "hide"})} className="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+                <a
+                onClick={() => this.setState({ publicShare: "hide"})}
+                className="modal-action modal-close waves-effect waves-green btn-flat">
+                Close
+              </a>
               </div>
             </div>
           {/* End Public Link Modal */}
+
 
           <div className="test-docs">
             <div className={docFlex}>
               <div className="double-space doc-margin">
 
-                {title === "Untitled" ? <textarea className="doc-title materialize-textarea" placeholder="Give it a title" type="text" onChange={this.props.handleTitleChange} /> : <textarea className="doc-title materialize-textarea" placeholder="Title" type="text" value={title} onChange={this.handleTitleChange} />}
+                {/* <p style={{border: '5px solid green'}}>
+                  TestDoc ID: {this.props.match.params.id}
+                </p> */}
 
+                {
+                  title === "Untitled" ?
+                  <textarea
+                    className="doc-title materialize-textarea"
+                    placeholder="Give it a title"
+                    type="text"
+                    onChange={this.props.handleTitleChange}
+                  />
+                  :
+                  <textarea
+                    className="doc-title materialize-textarea"
+                    placeholder="Title"
+                    type="text"
+                    value={title}
+                    onChange={this.props.handleTitleChange}
+                  />
+                }
 
-                <textarea className="summernote" name="editordata"></textarea>
+                {
+                  (singleDocIsPublic === true && value) //making sure we have this pass to match for PublicDoc
+                  ?
+                  <div>
+                    <div>
+                    </div>
+
+                    {
+                      (docLoaded === true) ?
+                      <QuillEditorPublic
+                        roomId={idToLoad.toString()} //this needs to be a string!
+                        docLoaded={docLoaded} //this is set by getFile
+                        value={content}
+                        onChange={this.props.handleChange}
+                        getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
+                        yjsConnected={yjsConnected} //true or false, for TextEdit
+                        singleDocIsPublic={singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
+                      />
+
+                      :
+                      <div className="progress">
+                          <div className="indeterminate"></div>
+                      </div>
+                    }
+                  </div>
+                  :
+                  <div>
+                    {
+                      (docLoaded === true) ?
+                      <QuillEditorPrivate
+                        roomId={idToLoad.toString()} //this needs to be a string!
+                        docLoaded={docLoaded} //this is set by getFile
+                        value={content}
+                        onChange={this.props.handleChange}
+                      />
+                      :
+                      <div className="progress">
+                        <div className="indeterminate"></div>
+                      </div>
+                    }
+                  </div>
+                }
 
 
               <div className="right-align wordcounter">

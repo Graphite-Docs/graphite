@@ -12,9 +12,12 @@ import {
 import update from 'immutability-helper';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
-import ImageResize from 'quill-image-resize-module';
-import TextEdit from '../TextEdit.js'; //this will render Yjs...
-import ReactQuillTextEditor from '../ReactQuillTextEditor.js';
+// import ImageResize from 'quill-image-resize-module';
+// import TextEdit from '../TextEdit.js'; //this will render Yjs...
+// import SummernotePublic from '../SummernotePublic.js'; //this will render Yjs...
+import SummernotePublic from '../SummernotePublic.js'; //this will render Yjs...
+
+// import ReactQuillTextEditor from '../ReactQuillTextEditor.js';
 
 import Timer from '../Timer.js'; //trying this...
 import axios from 'axios';
@@ -110,7 +113,17 @@ export default class SingleDoc extends Component {
       submitted: [],
       send: false,
       graphitePublicKey: "",
-      clientList: [],
+      clients: [],
+      editorView: "",
+      editorName: "",
+      editorRoles: "",
+      editorPermissions: "",
+      editorIntegrations: "",
+      journoView: "",
+      journoName: "",
+      journoRoles: "",
+      journoPermissions: "",
+      journoIntegrations: "",
       editorShare: false,
       editorPublish: false,
       editorComment: false,
@@ -119,14 +132,19 @@ export default class SingleDoc extends Component {
       journoPublish: false,
       journoComment: false,
       journoAssign: false,
+      integrations: [],
+      userRole: "",
+      accountSettings: "",
       role: "",
       clientType: "",
       sentArticles: [],
       timerKey: "", //will update this to reset Timer
       yjsConnected: false,
+      teamCount: 0,
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleChangeInTextEdit = this.handleChangeInTextEdit.bind(this);
+    this.handleChangeInSummernotePublic = this.handleChangeInSummernotePublic.bind(this);
     this.handleAutoAdd = this.handleAutoAdd.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handleIDChange = this.handleIDChange.bind(this);
@@ -154,25 +172,45 @@ export default class SingleDoc extends Component {
     this.getValueFromTextarea = this.getValueFromTextarea.bind(this);
     this.timeUp = this.timeUp.bind(this);
     this.getYjsConnectionStatus = this.getYjsConnectionStatus.bind(this);
+    this.postToMedium = this.postToMedium.bind(this);
+    this.loadPermissions = this.loadPermissions.bind(this);
   }
 
 
+  componentWillMount() {
+    console.warn('0. SingleDoc - componentWillMount, then render...')
+  }
+
   componentDidMount() {
-
-    const user = "admin.graphite";
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    console.warn('1. SingleDoc - componentDidMount')
+    const user = 'admin.graphite';
+    const options = { username: user, zoneFileLookupURL: 'https://core.blockstack.org/v1/names', decrypt: false}
     getFile('clientlist.json', options)
-    .then((fileContents) => {
-      if(JSON.parse(fileContents || '{}').length > 0) {
-        this.setState({ clientList: JSON.parse(fileContents || '{}') })
-      } else {
-        this.setState({ clientList: [] })
-      }
+      .then((fileContents) => {
+        if(JSON.parse(fileContents || '{}').length > 0) {
+          this.setState({ clients: JSON.parse(fileContents || '{}') });
+        } else {
+          this.setState({ clients: [] });
+        }
 
-    })
-    .catch(error => {
-      console.log(error);
-    })
+      })
+      .then(() => {
+        let user = loadUserData().username;
+        let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+        let clientList;
+        if(this.state.clients) {
+          clientList = this.state.clients;
+        } else {
+          clientList = [];
+        }
+        let clientIDs =  clientList.map(a => a.clientID);
+        if(clientIDs.includes(userRoot) || clientIDs.includes(user)) {
+          this.loadPermissions();
+        }
+      })
+      .catch(error => {
+        console.log(error);
+      });
 
     getFile("sentarticles.json", {decrypt: true})
     .then((fileContents) => {
@@ -185,7 +223,7 @@ export default class SingleDoc extends Component {
     })
 
     //This won't work yet
-    // let substrings = this.state.clientList.name;
+      // let substrings = this.state.clientList.name;
     // let substrings = [".id"];
 
     // if (substrings.some(function(v) { return loadUserData().username.indexOf(v) >= 0; })) {
@@ -320,11 +358,11 @@ export default class SingleDoc extends Component {
     .then((fileContents) => {
       this.setState({ value: JSON.parse(fileContents || '{}').value })
       let value = this.state.value;
-      const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
+      const thisDoc = value.find((doc) => { return doc.id === Number(this.props.match.params.id)});
       let index = thisDoc && thisDoc.id;
-      console.log('SingleDoc - getFile -> index is:', index);
+      // console.log('SingleDoc - getFile -> index is:', index); //index is same as thisDoc.id, a number
       function findObjectIndex(doc) {
-        return doc.id == index;
+        return doc.id === index;
       }
       this.setState({index: value.findIndex(findObjectIndex)})
     })
@@ -384,34 +422,197 @@ export default class SingleDoc extends Component {
 
   getValueFromTextarea(roomId) {
     console.log("getValueFromTextarea called!")
-    console.log('getValueFromTextarea - roomId is: ', roomId)
-    var valueFromTextarea = document.getElementById(roomId).value;
-    console.warn("XXX ---- valueFromTextarea is: ", valueFromTextarea)
+    // console.log('getValueFromTextarea - roomId is: ', roomId)
+    var valueFromTextarea
+    if (this.state.singleDocIsPublic !== true) { //could be false or undefined...
+      valueFromTextarea = document.getElementById(roomId).value; //this works for TextEdit, but not for Summernote...
+    }
+    if (this.state.singleDocIsPublic === true) {
+      valueFromTextarea = document.getElementsByClassName('note-editable')[0].innerHTML //for Summernote...
+    }
+    console.warn("getValueFromTextarea - valueFromTextarea is: ", valueFromTextarea)
+    // console.log("getValueFromTextarea - typeof valueFromTextarea is: ", typeof valueFromTextarea)
     return valueFromTextarea
   }
 
-  resetTimer() {
+  loadPermissions() {
+    console.log("Loading permissions: ")
+    let user = loadUserData().username;
+    let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+    let clientList;
+    if(this.state.clients) {
+      clientList = this.state.clients;
+    } else {
+      clientList = [];
+    }
+
+    let clientIDs = clientList.map(a => a.clientID);
+
+    let clientTypeRoot = clientList.find(function (obj) { return obj.clientID === userRoot });
+    let clientType = clientList.find(function (obj) { return obj.clientID === user })
+    if(clientTypeRoot) {
+      this.setState({ clientType: clientTypeRoot.type});
+    } else if(clientType) {
+      this.setState({clientType: clientType.type});
+    }
+
+    if(clientIDs.includes(userRoot)) {
+      const options = {username: userRoot, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false };
+      const privateKey = loadUserData().appPrivateKey;
+      getFile(getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json', options)
+       .then((fileContents) => {
+         if(fileContents) {
+           console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
+           this.setState({
+             team: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+             integrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team,
+             editorView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorView,
+             editorName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorName,
+             editorRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorRoles,
+             editorPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPermissions,
+             editorIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorIntegrations,
+             editorPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).editorPublish,
+             journoView: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoView,
+             journoName: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoName,
+             journoRoles: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoRoles,
+             journoPermissions: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPermissions,
+             journoIntegrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoIntegrations,
+             journoPublish: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).journoPublish,
+             accountSettings: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountSettings,
+             lastUpdated: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated
+           })
+         } else {
+           this.setState({
+             team: [],
+             integrations: [],
+             editorView: false,
+             editorRoles: false,
+             editorPermissions: false,
+             editorIntegrations: false,
+             editorPublish: false,
+             journoView: false,
+             journoRoles: false,
+             journoPermissions: false,
+             journoIntegrations: false,
+             journoPublish: false,
+             accountSettings: "",
+             lastUpdated: 0
+           })
+         }
+       })
+        .then(() => {
+          let teamList;
+          if(this.state.team) {
+            teamList = this.state.team;
+          } else {
+            teamList = [];
+          }
+          let teamName = teamList.map(a => a.name);
+          let teamMate = teamList.find(function (obj) { return obj.name === loadUserData().username })
+          if(teamMate) {
+            this.setState({ userRole: teamMate.role});
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    } else if(clientIDs.includes(user)) {
+      getFile('journoFileTest.json', {decrypt: true})
+        .then((fileContents) => {
+          if(fileContents) {
+            console.log("Found your file");
+            console.log(JSON.parse(fileContents || '{}'));
+            this.setState({
+              team: JSON.parse(fileContents || '{}').team,
+              integrations: JSON.parse(fileContents || '{}').integrations || [],
+              editorView: JSON.parse(fileContents || '{}').editorView,
+              editorName: JSON.parse(fileContents || '{}').editorName,
+              editorRoles: JSON.parse(fileContents || '{}').editorRoles,
+              editorPermissions: JSON.parse(fileContents || '{}').editorPermissions,
+              editorIntegrations: JSON.parse(fileContents || '{}').editorIntegrations,
+              editorPublish: JSON.parse(fileContents || '{}').editorPublish,
+              journoView: JSON.parse(fileContents || '{}').journoView,
+              journoName: JSON.parse(fileContents || '{}').journoName,
+              journoRoles: JSON.parse(fileContents || '{}').journoRoles,
+              journoPermissions: JSON.parse(fileContents || '{}').journoPermissions,
+              journoIntegrations: JSON.parse(fileContents || '{}').journoIntegrations,
+              journoPublish: JSON.parse(fileContents || '{}').journoPublish,
+              accountSettings: JSON.parse(fileContents || '{}').accountSettings,
+              lastUpdated: JSON.parse(fileContents || '{}').lastUpdated
+            })
+          } else {
+            console.log("No file created yet");
+            this.setState({
+              team: [],
+              integrations: [],
+              editorView: false,
+              editorName: false,
+              editorRoles: false,
+              editorPermissions: false,
+              editorIntegrations: false,
+              editorPublish: false,
+              journoView: false,
+              journoName: false,
+              journoRoles: false,
+              journoPermissions: false,
+              journoIntegrations: false,
+              journoPublish: false,
+              accountSettings: "",
+              lastUpdated: 0
+            })
+          }
+        })
+        .then(() => {
+          let teamList;
+          if(this.state.team) {
+            teamList = this.state.team;
+          } else {
+            teamList = [];
+          }
+          let teamName = teamList.map(a => a.name);
+          let teamMate = teamList.find(function (obj) { return obj.name === loadUserData().username })
+          if(teamMate) {
+            this.setState({ userRole: teamMate.role});
+          }
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    }
+  }
+
+  resetTimer() { //calling setState below will rerender SingleDoc, as will any other setState calls...
     this.setState({ timerKey: Math.random() }); //reset timerKey, which will reset Timer component
   }
 
   timeUp() {
     console.log('timeUp - timer is at zero!')
     if (this.state.singleDocIsPublic === true && this.state.yjsConnected === true) {
-      console.log('calling handleAutoAdd from timeUp...')
       let roomId = this.state.idToLoad.toString()
       let valueFromTextarea = this.getValueFromTextarea(roomId)
-      this.setState({ content: valueFromTextarea}) //update the content based on what's in the textarea
-      this.handleAutoAdd() //call handleAutoAdd to save SingleDoc
-      setTimeout( () => {
-        this.resetTimer()
-      }, 1000); //call this after one second.
+      // add condition: if valueFromTextarea is the same as this.state.content, meaning no changes have been made in publicDoc, simply reset timer...
+      if (valueFromTextarea === this.state.content) {
+        console.warn("timeUp - NO updates have been made in PublicDoc, so calling resetTimer...")
+        setTimeout( () => {
+          this.resetTimer()
+        }, 1000); //call this after one second.
+      }
+      // else, valueFromTextarea is different from this.state.content, so do the below...
+      if (valueFromTextarea !== this.state.content) {
+        console.warn("timeUp - updates have been made in PublicDoc - setting state in SingleDoc...")
+        this.setState({ content: valueFromTextarea}) //update the content based on what's in the textarea
+        console.log('timeUp - calling handleAutoAdd...')
+        this.handleAutoAdd() //call handleAutoAdd to save SingleDoc
+        setTimeout( () => {
+          this.resetTimer()
+        }, 1000); //call this after one second.
+      }
     }
   }
 
   getYjsConnectionStatus(status) {
     console.warn('SingleDoc - getYjsConnectionStatus is: ', status)
-    this.setState({ yjsConnected: status}) //set status of yjsConnected based on connection.connected in Yjs
-    //then if yjsConnect is true, start timer in Timer component. if not connected, don't start timer.
+    this.setState({ yjsConnected: status}) //set status of yjsConnected based on connection.connected in Yjs... then if yjsConnect is true, start timer in Timer component. if not connected, don't start timer.
   }
 
   // attachQuillRefs = () => {
@@ -803,18 +1004,9 @@ export default class SingleDoc extends Component {
 
   sendArticle() {
     this.setState({sentArticles: [...this.state.sentArticles, this.state.singleDoc]})
-    //this is test code only to get the pubKey we need
-    const user = "justin.personal.id";
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    getFile('key.json', options)
-    .then((file) => {
-      this.setState({ pubKey: JSON.parse(file)})
-      console.log("Step One: PubKey Loaded");
-      this.saveSend();
-    })
-    .catch(error => {
-      console.log("No key: " + error);
-    });
+    setTimeout(this.saveSend, 300);
+
+
     this.setState({send: false})
   }
 
@@ -830,19 +1022,96 @@ export default class SingleDoc extends Component {
   }
 
   sentToEditor() {
-    //Here we will want to cycle through the team file and send/encrypt the file to all teammates
+
+    if(this.state.teamCount < this.state.team.length) {
+      //Here we will want to cycle through the team file and send/encrypt the file to all teammates
+      const user = this.state.team[this.state.teamCount].name;
+      // const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+
+      const publicKey = this.state.team[this.state.teamCount].key;
+      const data = this.state.sentArticles;
+      const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
+      const file = user + 'submitted.json';
+      putFile(file, encryptedData, {encrypt: false})
+        .then(() => {
+          console.log("Sent!");
+          window.Materialize.toast('Article Submitted', 4000);
+          this.setState({ teamCount: this.state.teamCount + 1 });
+          this.sentToEditor();
+        })
+        .catch(e => {
+          console.log(e);
+        });
+    } else {
+      console.log("no more teammates");
+      let userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
+      const options = { username: userRoot, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false }
+      getFile('key.json', options)
+        .then((fileContents) => {
+          this.setState({ pubKey: JSON.parse(fileContents || '{}')});
+        })
+        .then(() => {
+          this.saveToAdmin();
+        })
+        .catch(error => {
+          console.log(error);
+        })
+    }
+  }
+
+  saveToAdmin() {
+    const userRoot = loadUserData().username.split('.')[1] + "." + loadUserData().username.split('.')[2];
     const publicKey = this.state.pubKey;
     const data = this.state.sentArticles;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-    const file = "submitted.json";
+    const file = userRoot + 'submitted.json';
     putFile(file, encryptedData, {encrypt: false})
-    .then(() => {
-      console.log("Sent!");
-      window.Materialize.toast('Article Submitted', 4000);
-    })
-    .catch(e => {
-      console.log(e);
-    });
+      .then(() => {
+        console.log("Sent to admin!");
+        this.setState({ teamCount: 0 });
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
+
+  postToMedium() {
+    const user = "jehunter5811.id";
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+
+    getFile('key.json', options)
+      .then((file) => {
+        this.setState({ pubKey: JSON.parse(file)})
+        console.log("Step One: PubKey Loaded");
+      })
+        .then(() => {
+          const publicKey = this.state.pubKey;
+          const data = this.state.singleDoc;
+          const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
+          axios.post("https://hooks.zapier.com/hooks/catch/2565501/w9vl8j/", encryptedData)
+          .then(function (response) {
+            console.log(response);
+
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+        })
+        .catch(error => {
+          console.log("No key: " + error);
+          window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+          this.setState({ shareModal: "hide", loading: "hide", show: "" });
+        });
+  }
+
+  //this function is for SummernotePublic...
+  handleChangeInSummernotePublic(contents) { //calling this on change in textarea...
+    console.log('****** -->> handleChangeInSummernotePublic called, contents is: ', contents)
+    this.resetTimer()
+    var updateString = contents;
+    this.setState({ content: updateString });
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(this.handleAutoAdd, 1500);
   }
 
   //this function is for TextEdit...
@@ -858,42 +1127,53 @@ export default class SingleDoc extends Component {
 
   render() {
     console.log("SINGLE DOC RENDER...")
-    console.log("SingleDoc - this.props: ", this.props)
     if (this.state.docLoaded === true) {
-      console.log("SingleDoc - this.state: ", this.state)
-      console.warn("SingleDoc - 1) this.state.singleDoc.content: ", this.state.singleDoc.content);
-      console.warn("SingleDoc - 2) this.state.singlePublic.content: ", this.state.singlePublic.content);
+      // console.log("SingleDoc - this.props: ", this.props)
+      console.warn("SingleDoc - this.state: ", this.state)
+      // console.warn("SingleDoc - 1) this.state.singleDoc.content: ", this.state.singleDoc.content);
+      // console.warn("SingleDoc - 2) this.state.singlePublic.content: ", this.state.singlePublic.content);
+
+      // console.log("Title: ");
+      // console.log(this.state.title);
+      // console.log("Content: ");
+      // console.log(this.state.content);
+      // console.log("SingleDoc - this.state.team: ", this.state.team);
+      // this.state.enterpriseUser === true && this.state.team.length === 0 ? this.loadTeamFile() : console.log("no team");
+
+      //QUESTION: do we need these three lines? looks like they console.log the messages every time SingleDoc renders...
+      this.state.commentId === "" ? console.log("1. no index set") : this.resolveComment();
+      this.state.reviewSelection === "" ? console.log("2. no comment selected") : this.getCommentSelection();
+      this.state.send === false ? console.log("3. No article sent") : this.sendArticle();
     } else {
       console.log("SingleDoc - docLoaded: ", this.state.docLoaded)
     }
-    // this.state.enterpriseUser === true && this.state.team.length === 0 ? this.loadTeamFile() : console.log("no team");
-    this.state.commentId === "" ? console.log("no index set") : this.resolveComment();
-    this.state.reviewSelection === "" ? console.log("no comment selected") : this.getCommentSelection();
-    this.state.send === false ? console.log("No article sent") : this.sendArticle();
-    SingleDoc.modules = {
-      toolbar: [
-        //[{ font: Font.whitelist }],
-        [{ header: 1 }, { header: 2 }],
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-        [{ align: [] }],
-        ['bold', 'italic', 'underline', 'strike'],
-        ['blockquote', 'code-block'],
-        [{ script: 'sub' }, { script: 'super' }],
-        [{ indent: '-1' }, { indent: '+1' }],
-        [{ color: [] }, { background: [] }],
-        ['video'],
-        ['image'],
-        ['link'],
-      ],
-      imageResize: {
-        modules: ['Resize', 'DisplaySize']
-      },
-      clipboard: {
-        // toggle to add extra line breaks when pasting HTML:
-        matchVisual: false,
-      }
-    }
+
+    //QUESTION: can SingleDoc.modules below be deleted? looks like it was for Quill... - ER 7/10/18
+    // SingleDoc.modules = {
+    //   toolbar: [
+    //     //[{ font: Font.whitelist }],
+    //     [{ header: 1 }, { header: 2 }],
+    //     [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    //     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    //     [{ align: [] }],
+    //     ['bold', 'italic', 'underline', 'strike'],
+    //     ['blockquote', 'code-block'],
+    //     [{ script: 'sub' }, { script: 'super' }],
+    //     [{ indent: '-1' }, { indent: '+1' }],
+    //     [{ color: [] }, { background: [] }],
+    //     ['video'],
+    //     ['image'],
+    //     ['link'],
+    //   ],
+    //   imageResize: {
+    //     modules: ['Resize', 'DisplaySize']
+    //   },
+    //   clipboard: {
+    //     // toggle to add extra line breaks when pasting HTML:
+    //     matchVisual: false,
+    //   }
+    // }
+
     // const user = loadUserData().username;
     let words;
     if(this.state.content) {
@@ -902,8 +1182,11 @@ export default class SingleDoc extends Component {
       words = 0;
     }
 
-    const { publicShare, showCommentModal, comments, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule} = this.state
+    const { team, publicShare, showCommentModal, comments, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule} = this.state
     const stealthy = (hideStealthy) ? "hide" : ""
+    let teamName = team.map(a => a.name);
+    // console.log('teamName is: ', teamName)
+
     // let blogTags = [
     //   "Technology",
     //   "Computers",
@@ -1008,40 +1291,47 @@ export default class SingleDoc extends Component {
                     )
                   })
                 }
-              </ul>
-              {/*Share Menu Dropdown*/}
+                </ul>
+                {/*Share Menu Dropdown*/}
 
-              {/* Dropdown menu content */}
-              <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
-                <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
-                <li className="divider"></li>
-                <li><a onClick={this.print}>Print</a></li>
-                <li><a download={this.state.title + ".docx"} href={dataUri}>Download</a></li>
-                <li><a onClick={this.sharePublicly}>Public Link</a></li>
-                {
-                  (this.state.role === "Editor" && this.state.editorAssign === true) || (this.state.role === "Journalist" && this.state.journoAssign === true) || (this.state.role === "Administrator")
-                  ?
+                {/* Dropdown menu content */}
+                <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
                   <li>
-                    <a onClick={() => this.setState({send: true})}>Submit Article</a>
+                    <a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a>
                   </li>
-                  :
-                  <li className="hide"/>
-                }
-                {
-                  (loadUserData().username === "jehunter5811.id")
-                  ?
+                  <li className="divider"></li>
                   <li>
-                    <a onClick={this.postToMedium}>Post to Medium</a>
+                    <a onClick={this.print}>Print</a>
                   </li>
-                  :
-                  <li className="hide"/>
-                }
-                <li className="divider"></li>
-                {/*this.state.role === "Editor" && this.state.editorComment === true || this.state.role === "Journalist" && this.state.journoComment === true ? <li><a href="#" data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li> : <li className="hide"/>*/}
-                <li><a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
-                {/*this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>*/}
-                {/*this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>*/}
-              </ul>
+                  <li>
+                    <a download={this.state.title + ".doc"} href={dataUri}>Download</a>
+                  </li>
+                  <li>
+                    <a onClick={this.sharePublicly}>Public Link</a>
+                  </li>
+                  {
+                    (this.state.clientType === "Newsroom") ?
+                    <li>
+                      <a onClick={() => this.setState({send: true})}>Submit Article</a>
+                    </li>
+                    :
+                    <li className="hide"/>
+                  }
+                  {
+                    (loadUserData().username === "jehunter5811.id")
+                    ?
+                    <li>
+                      <a onClick={this.postToMedium}>Post to Medium</a>
+                    </li>
+                    : <li className="hide"/>
+                  }
+                  <li className="divider"></li>
+                  <li>
+                    <a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a>
+                  </li>
+                  {/*this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>*/}
+                  {/*this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>*/}
+                </ul>
               {/* End dropdown menu content */}
 
               {/*Show Comments Modal*/}
@@ -1124,6 +1414,10 @@ export default class SingleDoc extends Component {
   <div className={docFlex}>
     <div className="double-space doc-margin">
 
+      <p>
+        <span style={{background: 'yellow'}}>Single Doc:</span> {this.state.idToLoad}
+      </p>
+
       {
         this.state.title === "Untitled" ?
         <textarea
@@ -1157,14 +1451,12 @@ export default class SingleDoc extends Component {
       </p> */}
       {/* Public Link NO Modal */}
       {/* Public Link NO Modal */}
-      {/* Public Link NO Modal */}
       <div className={publicShare}>
         <h4>Share Publicly</h4>
         <p>This data is not encrypted and can be accessed by anyone with the link below.</p>
         {/* <p>{this.state.gaiaLink}</p> */}
         <Link to={this.state.gaiaLink} target="_blank">{this.state.gaiaLink}</Link>
       </div>
-      {/* End Public Link NO Modal */}
       {/* End Public Link NO Modal */}
       {/* End Public Link NO Modal */}
 
@@ -1175,7 +1467,11 @@ export default class SingleDoc extends Component {
           {/* <p>
             (TextEdit will be rendered here, as a child of SingleDoc...)
           </p> */}
-          <p>
+          <p style={{border: "2px solid green"}}>
+            (SummernotePublic will be rendered here, as a child of SingleDoc...)
+          </p>
+
+          <p style={{border: "2px solid purple"}}>
             Websockets: &nbsp;
             {
               (this.state.yjsConnected === true) ?
@@ -1184,7 +1480,8 @@ export default class SingleDoc extends Component {
               <span style={{color: "red"}}>no connection</span>
             }
           </p>
-          <div style={{display: "none"}}>
+          {/* <div style={{display: "none"}}> */}
+          <div>
             <Timer
               key={this.state.timerKey}
               docLoaded={this.state.docLoaded} //this is set by getFile
@@ -1194,15 +1491,30 @@ export default class SingleDoc extends Component {
           </div>
 
           {
-            (this.state.docLoaded) ?
-            <TextEdit
+            (this.state.docLoaded === true) ?
+            <SummernotePublic
+              // roomId={this.state.idToLoad} //this is a string!
+              // docLoaded={this.state.docLoaded} //this is set by loadDoc
+              // value={this.state.content}
+              // onChange={this.handleChange}
               roomId={this.state.idToLoad.toString()} //this needs to be a string!
               docLoaded={this.state.docLoaded} //this is set by getFile
-              value={strip(this.state.content)} //stripping html tags from content received from loadDoc...
-              onChange={this.handleChangeInTextEdit}
+              // value={strip(this.state.content)} //stripping html tags from content received from loadDoc...
+              value={this.state.content} //stripping html tags from content received from loadDoc...
+              // onChange={this.handleChangeInTextEdit}
+              onChange={this.handleChangeInSummernotePublic}
               getYjsConnectionStatus={this.getYjsConnectionStatus} //passing this through TextEdit to Yjs
               yjsConnected={this.state.yjsConnected} //true or false, for TextEdit
+              singleDocIsPublic={this.state.singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
             />
+            //<TextEdit
+              // roomId={this.state.idToLoad.toString()} //this needs to be a string!
+              // docLoaded={this.state.docLoaded} //this is set by getFile
+              // value={strip(this.state.content)} //stripping html tags from content received from loadDoc...
+              // onChange={this.handleChangeInTextEdit}
+              // getYjsConnectionStatus={this.getYjsConnectionStatus} //passing this through TextEdit to Yjs
+              // yjsConnected={this.state.yjsConnected} //true or false, for TextEdit
+            // />
             :
             "Loading..." //replace this with a Materialize loading spinner icon?
           }
@@ -1210,89 +1522,62 @@ export default class SingleDoc extends Component {
         :
         <div>
           {/* <p>
-            (regular Quill editor will go here, since this doc is private.)
+            (else, singleDoc is not public, so returning a private doc.)
           </p> */}
-          {/* {
-            (this.state.docLoaded) ?
-            <TextEdit
-              roomId={this.state.idToLoad.toString()} //this needs to be a string!
-              docLoaded={this.state.docLoaded} //this is set by getFile
-              value={strip(this.state.content)} //stripping html tags from content received from loadDoc...
-              onChange={this.handleChangeInTextEdit}
-            />
-            :
-            "TextEdit will go here..."
-          } */}
           {
             (this.state.docLoaded === true) ?
-            <ReactQuillTextEditor
-              // ref={(el) => { this.reactQuillRef = el }}
+            <SummernotePublic
+              // roomId={this.state.idToLoad} //this is a string!
+              // docLoaded={this.state.docLoaded} //this is set by loadDoc
+              // value={this.state.content}
+              // onChange={this.handleChange}
               roomId={this.state.idToLoad.toString()} //this needs to be a string!
-              docLoaded={this.state.docLoaded}
-              value={this.state.content}
-              onChange={this.handleChange}
+              docLoaded={this.state.docLoaded} //this is set by getFile
+              // value={strip(this.state.content)} //stripping html tags from content received from loadDoc...
+              value={this.state.content} //NOT stripping html tags from content received from loadDoc...
+              // onChange={this.handleChangeInTextEdit}
+              onChange={this.handleChangeInSummernotePublic}
+              getYjsConnectionStatus={this.getYjsConnectionStatus} //passing this through TextEdit to Yjs
+              yjsConnected={this.state.yjsConnected} //true or false, for TextEdit
             />
+            //<ReactQuillTextEditor
+              // roomId={this.state.idToLoad.toString()} //this needs to be a string!
+              // docLoaded={this.state.docLoaded}
+              // value={this.state.content}
+              // onChange={this.handleChange}
+            // />
             :
             "Loading..." //replace this with a Materialize loading spinner icon?
           }
         </div>
       }
 
-      {/* {
-        (this.state.docLoaded) ?
-        <TextEdit
-        roomId={this.state.idToLoad.toString()} //this needs to be a string!
-        docLoaded={this.state.docLoaded} //this is set by getFile
-        value={strip(this.state.content)} //stripping html tags from content received from loadDoc...
-        onChange={this.handleChangeInTextEdit}
-      />
-      :
-      "TextEdit will go here..."
-    } */}
-
-
-    {/* <p>
-      example of setting functions outside of Component: { helloWorld() }
-    </p> */}
-
-
-
-    {/* <ReactQuill
-      ref={(el) => { this.reactQuillRef = el }}
-      modules={SingleDoc.modules}
-      id="textarea1"
-      className="materialize-textarea"
-      placeholder="Write something great"
-      value={this.state.content}
-      onChange={this.handleChange}
-      theme="bubble"
-    /> */}
-
-    <div className="right-align wordcounter">
-      <p className="wordcount">{words} words</p>
-    </div>
-    <div className={save}>
-    </div>
-    <div className={loading}>
-      <div className="preloader-wrapper small active">
-        <div className="spinner-layer spinner-green-only">
-          <div className="circle-clipper left">
-            <div className="circle"></div>
-          </div>
-          <div className="gap-patch">
-            <div className="circle">
+      <div className="right-align wordcounter">
+        <p className="wordcount">
+          {words} words
+        </p>
+      </div>
+      <div className={save}></div>
+      <div className={loading}>
+        <div className="preloader-wrapper small active">
+          <div className="spinner-layer spinner-green-only">
+            <div className="circle-clipper left">
+              <div className="circle"></div>
             </div>
-          </div>
-          <div className="circle-clipper right">
-            <div className="circle">
+            <div className="gap-patch">
+              <div className="circle">
+              </div>
+            </div>
+            <div className="circle-clipper right">
+              <div className="circle">
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    {stealthyModule}
   </div>
-  {stealthyModule}
-</div>
 </div>
 </div>
 );

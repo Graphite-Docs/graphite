@@ -134,10 +134,10 @@ export default class AppPage extends Component {
                             </h5>
                             <strong><h3>{value.length}</h3></strong>
                           </div>
-                          <div className="col s6">
+                          {/*<div className="col s6">
                             <p>Words</p>
                             <strong><h5>{words}</h5></strong>
-                          </div>
+                          </div>*/}
                           <div className="col s6">
                             <p>Tags</p>
                             <strong><h5>{mergedDocTags}</h5></strong>
@@ -169,10 +169,6 @@ export default class AppPage extends Component {
                             <h3>{sheets.length}</h3>
                           </div>
                           <div className="col s6">
-                            <p>OtherStat</p>
-                            <h5>1000</h5>
-                          </div>
-                          <div className="col s6">
                             <p>Tags</p>
                             <strong><h5>{mergedSheetsTags}</h5></strong>
                           </div>
@@ -180,6 +176,7 @@ export default class AppPage extends Component {
                             <p>Collaborators</p>
                             <strong><h5>{mergedSheetsCollabs}</h5></strong>
                           </div>
+
 
                       </div>
                       </div>
@@ -202,10 +199,10 @@ export default class AppPage extends Component {
                             </h5>
                             <h3>{files.length}</h3>
                           </div>
-                          <div className="col s6">
+                          {/*<div className="col s6">
                             <p>Types</p>
                             <strong><h5>{fileTypesCount}</h5></strong>
-                          </div>
+                          </div>*/}
                           <div className="col s6">
                             <p>Tags</p>
                             <strong><h5>{mergedFilesTags}</h5></strong>
@@ -238,18 +235,14 @@ export default class AppPage extends Component {
                             <h3>{contacts.length}</h3>
                           </div>
                           <div className="col s6">
-                            <p>OtherStat</p>
-                            <h5>523</h5>
-                          </div>
-                          <div className="col s6">
                             <p>Types</p>
                             <h5>{mergedContactsTypes}</h5>
                           </div>
                           <div className="col s6">
-                            <p>OtherState2</p>
-                            <h5>{mergedFilesCollabs}</h5>
+                            <p>Notes</p>
+                            <h5>0</h5>
                           </div>
-
+                          
                       </div>
                       </div>
                     </a>

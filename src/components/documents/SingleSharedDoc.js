@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+// import ReactQuill from 'react-quill';
+// import 'react-quill/dist/quill.snow.css';
 import {
   isSignInPending,
   loadUserData,
@@ -12,9 +12,9 @@ import {
 
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const Font = ReactQuill.Quill.import('formats/font');
-Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
+// const Font = ReactQuill.Quill.import('formats/font');
+// Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
+// ReactQuill.Quill.register(Font, true);
 
 export default class SingleSharedDoc extends Component {
   constructor(props) {

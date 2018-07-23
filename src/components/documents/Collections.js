@@ -98,7 +98,7 @@ export default class Collections extends Component {
                 <li><a href="/shared-docs">Shared Files</a></li>
                 <li><a href="/export">Export All Data</a></li>
                 <li className="divider"></li>
-                <li><a onClick={ this.handleSignOut }>Sign out</a></li>
+                <li><a onClick={ this.props.handleSignOut }>Sign out</a></li>
               </ul>
               <ul id="dropdown2" className="dropdown-content">
                 <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
@@ -265,6 +265,7 @@ export default class Collections extends Component {
         {/* Share Modal */}
           <div id="shareModal" className="project-page-modal modal">
             <div className="modal-content">
+              <a className="btn-floating modal-action modal-close right grey"><i className="material-icons">close</i></a>
               <div>
                 <h4>Select Contact</h4>
                 <ul className="collection">
@@ -310,6 +311,7 @@ export default class Collections extends Component {
         {/* Tag Modal */}
             <div id="tagModal" className="project-page-modal modal">
               <div className="modal-content">
+                <a className="btn-floating modal-action modal-close right grey"><i className="material-icons">close</i></a>
                   <h4>Tags</h4>
                   <p>Add a new tag or remove an existing tag.</p>
                   <div className="row">

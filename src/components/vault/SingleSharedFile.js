@@ -7,7 +7,7 @@ import {
   putFile,
   lookupProfile,
 } from "blockstack";
-import "react-quill/dist/quill.snow.css";
+// import "react-quill/dist/quill.snow.css";
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import XLSX from "xlsx";

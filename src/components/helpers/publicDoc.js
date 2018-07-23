@@ -5,11 +5,13 @@ export function fetchData() {
   lookupProfile(this.state.userToLoadFrom, "https://core.blockstack.org/v1/names")
   .then((profile) => {
     console.log('PublicDoc - fetchData - profile.apps: ', profile.apps['http://localhost:3000']);
-    if(process.env.NODE_ENV !== 'production') {
-      this.setState({url: profile.apps['http://localhost:3000']});
-    } else {
-      this.setState({url: profile.apps['https://app.graphitedocs.com']});
-    }
+    // if(process.env.NODE_ENV !== 'production') {
+    //   this.setState({url: profile.apps['http://localhost:3000']});
+    // } else {
+    //   this.setState({url: profile.apps['https://app.graphitedocs.com']});
+    //   // this.setState({ url: profile.apps['https://serene-hamilton-56e88e.netlify.com']})
+    // }
+    this.setState({ url: profile.apps[window.location.origin]})
     setTimeout(this.loadDoc, 300);
   })
   .catch((error) => {
@@ -20,32 +22,22 @@ export function fetchData() {
 export function loadDoc() {
   axios.get(this.state.url + 'public/' + this.state.idToLoad + '.json')
   .then((response) => {
-    console.warn('PublicDoc - loadDoc() - axios ->> docLoaded! response:', response);
+    console.log(response);
+    console.log(Object.keys(response.data).length < 1);
     var responseHeaders = response.headers // response.headers: {last-modified: "Sat, 30 Jun 2018 21:07:31 GMT", content-type: "text/plain", cache-control: "public, max-age=1"}
     var lastUpdated = responseHeaders[Object.keys(responseHeaders)[0]]; //this is the value of last-modified
     console.log('lastUpdated is: ', lastUpdated)
-    // console.log('PublicDoc - loadDoc() - axios ->> docLoaded! response.data:', response.data);
-    // console.log('PublicDoc - loadDoc() - axios ->> docLoaded! response.data.content:', response.data.content);
-    // console.log('PublicDoc - loadDoc() - axios ->> docLoaded! typeof response.data.content:', typeof response.data.content); //this is a string
-    this.setState({
-      title: response.data.title,
-      content: response.data.content,
-      words: response.data.words,
-      docLoaded: true,
-      lastUpdated: lastUpdated
-    })
-  })
-  .then(() => {
-    let markupStr = this.state.content;
-    window.$('.summernote').summernote('code', markupStr);
-    window.$('.summernote').summernote({
-      roomId: this.state.idToLoad.toString(), //this needs to be a string!
-      docLoaded: this.state.docLoaded, //this is set by getFile
-       //stripping html tags from content received from loadDoc...
-      onChange: this.handleChangeInTextEdit,
-      getYjsConnectionStatus: this.getYjsConnectionStatus, //passing this through TextEdit to Yjs
-      yjsConnected: this.state.yjsConnected
-    })
+    if(Object.keys(response.data).length > 0) {
+      this.setState({
+        title: response.data.title,
+        content: response.data.content,
+        words: response.data.words,
+        docLoaded: true,
+        lastUpdated: lastUpdated
+      })
+    } else {
+      console.log("nothing shared")
+    }
   })
   .catch((error) => {
     console.log('error:', error);

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import 'react-quill/dist/quill.snow.css';
+// import 'react-quill/dist/quill.snow.css';
 import {
   getFile,
   putFile

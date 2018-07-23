@@ -396,6 +396,7 @@ export function saveNewTags() {
 }
 
 export function saveFullCollectionTags() {
+  console.log(this.state.value);
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
       console.log("Saved");

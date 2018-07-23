@@ -101,6 +101,7 @@ export default class VaultCollection extends Component {
   }
 
   componentDidMount() {
+    window.$('.modal').modal();
     window.$('.button-collapse').sideNav({
         menuWidth: 400, // Default is 300
         edge: 'left', // Choose the horizontal origin
@@ -750,8 +751,8 @@ export default class VaultCollection extends Component {
         {
           this.state.activeIndicator === true ?
             <ul className="pagination action-items">
-              <li><a onClick={() => this.setState({shareModal: ""})}>Share</a></li>
-              <li><a onClick={() => this.setState({tagDownload: true })}>Tag</a></li>
+              <li><a className="modal-trigger" href="#shareModal">Share</a></li>
+              <li><a className="modal-trigger" href="#tagModal">Tag</a></li>
 
             </ul>
          :
@@ -827,10 +828,10 @@ export default class VaultCollection extends Component {
         </div>
 
         {/* Share Modal */}
-          <div className={shareModal}>
-            <div id="modal1" className="project-page-modal modal">
+
+            <div id="shareModal" className="project-page-modal modal">
               <div className="modal-content">
-                <a onClick={() => this.setState({shareModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
+                <a className="btn-floating modal-action modal-close right grey"><i className="material-icons">close</i></a>
                 <div className={contactDisplay}>
                   <h4>Select Contact</h4>
                   <ul className="collection">
@@ -865,14 +866,14 @@ export default class VaultCollection extends Component {
               </div>
               {/*end loading */}
             </div>
-          </div>
+
         {/* End Share Modal */}
 
         {/* Tag Modal */}
-          <div className={tagModal}>
-            <div id="modal1" className="project-page-modal modal">
+
+            <div id="tagModal" className="project-page-modal modal">
               <div className="modal-content">
-                <a onClick={() => this.setState({tagModal: "hide"})} className="btn-floating modalClose grey"><i className="material-icons">close</i></a>
+                <a className="btn-floating modal-action modal-close right grey"><i className="material-icons">close</i></a>
 
                   <h4>Tags</h4>
                   <p>Add a new tag or remove an existing tag.</p>
@@ -916,7 +917,7 @@ export default class VaultCollection extends Component {
               </div>
               {/*end loading */}
             </div>
-          </div>
+
         {/* End tag Modal */}
 
         </div>

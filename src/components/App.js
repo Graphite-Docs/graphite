@@ -5,7 +5,7 @@ import AppPage from './AppPage';
 import Signin from './Signin';
 import Collections from './documents/Collections';
 import TestDoc from './documents/TestDoc';
-// import SingleDoc from './documents/SingleDoc';
+import SingleDoc from './documents/SingleDoc';
 import DeleteDoc from './documents/DeleteDoc';
 import SharedCollection from './documents/SharedCollection';
 import SentCollection from './documents/SentCollection';
@@ -40,7 +40,6 @@ import PublicDoc from './PublicDoc';
 // import MainGraphiteScreen from './graphite/MainGraphiteScreen';
 // import AccountSettings from './graphite/AccountSettings';
 // import DeleteClient from './graphite/DeleteClient';
-import Yjs from './graphite/Yjs';
 import Integrations from './Integrations';
 import {
   savePubKey
@@ -245,6 +244,7 @@ export default class App extends Component {
       view: false,
       docLoaded: false,
       lastUpdated: "",
+      yjsConnected: false
     }
   }
 
@@ -349,7 +349,7 @@ export default class App extends Component {
       value, sheets, contacts, files, pubKey, appliedFilter, dateList, tagList, collaboratorsModal, singleDocTags,
       contactDisplay, loadingTwo, confirmAdd, shareModal, tagModal, currentPage, docsPerPage, loading, redirect, tempDocId,
       filteredValue, activeIndicator, tag, publicShare, remoteStorage, save, autoSave, hideStealthy, revealModule, title,
-      content, gaiaLink, sharedWith, lastUpdated, idToLoad, docLoaded
+      content, gaiaLink, sharedWith, lastUpdated, idToLoad, docLoaded, singleDocIsPublic, yjsConnected
     } = this.state;
 
     return (
@@ -374,6 +374,7 @@ export default class App extends Component {
                       setTags={this.setTags}
                       handleKeyPress={this.handleKeyPress}
                       addTagManual={this.addTagManual}
+                      handleSignOut={this.handleSignOut}
                       handleaddItem={this.handleaddItem}
                       filterList={this.filterList}
                       saveNewFile={this.saveNewFile}
@@ -425,7 +426,9 @@ export default class App extends Component {
                       />}
               />
               <Route exact path="/documents/doc/:id" render={(props) =>
-                <TestDoc {...props}
+
+              //  <TestDoc {...props}
+              <SingleDoc {...props}
                   componentDidMountData={this.componentDidMountData}
                   handleAutoAdd={this.handleAutoAdd}
                   handleChange={this.handleChange}
@@ -447,6 +450,10 @@ export default class App extends Component {
                   hideStealthy={hideStealthy}
                   gaiaLink={gaiaLink}
                   sharedWith={sharedWith}
+                  docLoaded={docLoaded}
+                  singleDocIsPublic={singleDocIsPublic}
+                  idToLoad={idToLoad}
+                  yjsConnected={yjsConnected}
                 />
               }/>
               <Route exact path="/shared/docs/:id" render={(location, match, props) =>
@@ -487,7 +494,6 @@ export default class App extends Component {
               <Route exact path="/shared-vault" component={SharedVault} />
               <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
               <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
-              <Route exact path="/admin/yjs" component={Yjs} />
               <Route exact path="/integrations" component={Integrations} />
             </div>
           </BrowserRouter>

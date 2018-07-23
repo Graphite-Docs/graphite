@@ -1,8 +1,8 @@
 import React, { Component } from "react";
-import ReactQuill from 'react-quill';
-const Font = ReactQuill.Quill.import('formats/font');
-Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
+// import ReactQuill from 'react-quill';
+// const Font = ReactQuill.Quill.import('formats/font');
+// Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
+// ReactQuill.Quill.register(Font, true);
 
 export default class Quill extends Component {
 
