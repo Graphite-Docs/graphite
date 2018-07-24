@@ -13,8 +13,8 @@ Graphite is open source and welcomes new issues, feature requests, and contribut
 Steps to install:
 
 1) Clone the repo.
-2) Run `npm install`
-3) cd into `graphite`
+2) cd into `graphite`
+3) Run `npm install`
 4) Run `npm run start`
 
 Note: Local development will result in CORS errors on authentication. Use a CORS browser extension to get around this. Future version will eliminate this need and when pushed to a hosted site, the CORS error is resolved. 
