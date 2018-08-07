@@ -5,7 +5,6 @@ import {
 import {
   postToLog
 } from './audits';
-} from './audits'
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
