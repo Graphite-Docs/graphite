@@ -6,6 +6,8 @@ import {
   handlePendingSignIn,
 } from "blockstack";
 import update from 'immutability-helper';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { encryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -275,14 +277,10 @@ export default class AccountSettings extends Component {
 
   addTeammate() {
     this.setState({confirmAdd: false, hideMain: "", teammateModal: "hide" });
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.name = this.state.teammateName;
     object.role = this.state.newUserRole;
-    object.added = month + "/" + day + "/" + year;
+    object.added = getMonthDayYear();
     let updated = Date.now();
     this.setState({ teamMine: [...this.state.teamMine, object], lastUpdated: updated });
     setTimeout(this.saveTeam, 500);
@@ -374,13 +372,9 @@ export default class AccountSettings extends Component {
 
   updateRole() {
     const object = {};
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     object.name = this.state.selectedTeammate;
     object.role = this.state.newUserRole;
-    object.added = month + "/" + day + "/" + year;
+    object.added = getMonthDayYear();
     const index = this.state.index;
     const updatedTeam = update(this.state.team, {$splice: [[index, 1, object]]});
     this.setState({ team: updatedTeam });

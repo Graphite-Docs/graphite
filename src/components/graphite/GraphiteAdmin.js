@@ -8,6 +8,7 @@ import {
   putFile,
   handlePendingSignIn,
 } from 'blockstack';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -114,10 +115,6 @@ export default class GraphiteAdmin extends Component {
   }
 
   handleAddClient() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.id = rando;
@@ -126,7 +123,7 @@ export default class GraphiteAdmin extends Component {
     object.type = this.state.newClientType;
     object.plan = this.state.newClientPlan;
     object.paid = this.state.paid;
-    object.added = month + "/" + day + "/" + year;
+    object.added = getMonthDayYear();
 
     this.setState({ orgs: [...this.state.orgs, object] });
     this.setState({ filteredValue: [...this.state.filteredValue, object] });

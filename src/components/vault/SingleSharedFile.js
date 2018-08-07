@@ -7,14 +7,14 @@ import {
   putFile,
   lookupProfile,
 } from "blockstack";
-// import "react-quill/dist/quill.snow.css";
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import XLSX from "xlsx";
 import HotTable from "react-handsontable";
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { decryptECIES } = require('blockstack/lib/encryption');
-const avatarFallbackImage =
-  "https://s3.amazonaws.com/onename/avatar-placeholder.png";
+const avatarFallbackImage = "https://s3.amazonaws.com/onename/avatar-placeholder.png";
 const mammoth = require("mammoth");
 const str2ab = require("string-to-arraybuffer");
 const rtfToHTML = require('./rtf-to-html.js');
@@ -104,11 +104,11 @@ export default class SingleSharedFile extends Component {
            console.log("loaded");
            let wholeFile = this.state.shareFileIndex;
            console.log(wholeFile)
-           const thisFile = wholeFile.find((file) => { return file.id == this.props.match.params.id});
+           const thisFile = wholeFile.find((file) => {return file.id.toString() === this.props.match.params.id}); //this is comparing strings
            let index = thisFile && thisFile.id;
            console.log(index);
            function findObjectIndex(file) {
-               return file.id == index;
+               return file.id === index; //this is comparing numbers
            }
            this.setState({
              name: thisFile && thisFile.name,
@@ -223,16 +223,12 @@ export default class SingleSharedFile extends Component {
     this.setState({ show: "hide" });
     this.setState({ hideButton: "hide", loading: "" });
 
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.link = this.state.link;
     object.name = this.state.name;
     object.size = this.state.size;
     object.type = this.state.type;
-    object.uploaded = month + "/" + day + "/" + year;
+    object.uploaded = getMonthDayYear();
     object.id = this.props.match.params.id;
 
     this.setState({ files: [...this.state.files, object] });
@@ -420,7 +416,7 @@ export default class SingleSharedFile extends Component {
                         page={this.state.page}
                       />
                       {pagination}
-                      <a
+                      <link
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
@@ -455,7 +451,7 @@ export default class SingleSharedFile extends Component {
                           }}
                         />
                       </div>
-                      <a
+                      <link
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
@@ -498,7 +494,7 @@ export default class SingleSharedFile extends Component {
                         }}
                       />
 
-                      <a
+                      <link
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}

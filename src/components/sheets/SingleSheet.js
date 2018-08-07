@@ -9,6 +9,8 @@ import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { getPublicKeyFromPrivate } = require('blockstack');
 const remoteStorage = new RemoteStorage({logging: false});
 const widget = new Widget(remoteStorage);
@@ -119,11 +121,11 @@ export default class SingleSheet extends Component {
         this.setState({ initialLoad: "hide" });
      }).then(() =>{
        let sheets = this.state.sheets;
-       const thisSheet = sheets.find((sheet) => { return sheet.id == this.props.match.params.id});
+       const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.props.match.params.id}); //this is comparing strings
        let index = thisSheet && thisSheet.id;
        console.log(index);
        function findObjectIndex(sheet) {
-           return sheet.id == index;
+           return sheet.id === index; //this is comparing numbers
        }
        // let grid = thisSheet && thisSheet.content;
        this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) })
@@ -203,15 +205,11 @@ export default class SingleSheet extends Component {
   }
 
     handleAddItem() {
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
       object.id = parseInt(this.props.match.params.id, 10);
-      object.updated = month + "/" + day + "/" + year;
+      object.updated = getMonthDayYear();
       object.sharedWith = this.state.sharedWith;
       object.fileType = "sheets";
       const objectTwo = {};
@@ -249,10 +247,6 @@ handleIDChange(e) {
   }
 
 autoSave() {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
   const file = this.props.match.params.id;
   const fullFile = '/sheets/' + file + '.json';
   putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: true})
@@ -270,7 +264,7 @@ autoSave() {
     const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
     const content = this.state.grid;
     const title = this.state.title;
-    const updated = month + "/" + day + "/" + year;
+    const updated = getMonthDayYear();
     const id = this.props.match.params.id;
     const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
     if(this.state.grid !== []) {
@@ -305,14 +299,10 @@ shareModal() {
 }
 
 sharePublicly() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.title = this.state.title;
     object.content = this.state.grid;
-    object.shared = month + "/" + day + "/" + year;
+    object.shared = getMonthDayYear();
     this.setState({singlePublic: object})
     setTimeout(this.savePublic, 700);
   }
@@ -407,32 +397,24 @@ loadMyFile() {
    .then((fileContents) => {
       this.setState({ shareFile: JSON.parse(fileContents || '{}') })
       this.setState({ loading: "", show: "hide" });
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
       object.id = Date.now();
       object.receiverID = this.state.receiverID;
-      object.shared = month + "/" + day + "/" + year;
+      object.shared = getMonthDayYear();
       this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
       setTimeout(this.shareSheet, 700);
    })
     .catch(error => {
       console.log(error);
       // this.setState({ loading: "", show: "hide" });
-      // const today = new Date();
-      // const day = today.getDate();
-      // const month = today.getMonth() + 1;
-      // const year = today.getFullYear();
       // const object = {};
       // object.title = this.state.title;
       // object.content = this.state.grid;
       // object.id = Date.now();
       // object.receiverID = this.state.receiverID;
-      // object.shared = month + "/" + day + "/" + year;
+      // object.shared = getMonthDayYear();
       // this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
       // setTimeout(this.shareSheet, 700);
     });
@@ -490,7 +472,7 @@ print(){
 
 
 renderView() {
-  const { grid, revealModule, hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
+  const { revealModule, hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
   const {length} = contacts
   const stealthy = (hideStealthy) ? "hide" : ""
@@ -605,7 +587,7 @@ renderView() {
               <li><a className="small-menu muted">{autoSave}</a></li>
               </ul>
               <ul className="right toolbar-menu small-toolbar-menu auto-save">
-              
+
               <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
               <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
               <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>

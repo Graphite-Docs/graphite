@@ -3,6 +3,7 @@ import {
 } from "blockstack";
 
 export function loadDocs() {
+  console.log("loading documents");
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(JSON.parse(fileContents || '{}').value) {
@@ -24,6 +25,7 @@ export function loadDocs() {
 }
 
 export function loadSheets() {
+  console.log("loading sheets");
   getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
@@ -45,6 +47,7 @@ export function loadSheets() {
 }
 
 export function loadContacts() {
+  console.log("loading contacts");
   getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
      let file = JSON.parse(fileContents || '{}');
@@ -64,6 +67,7 @@ export function loadContacts() {
 }
 
 export function loadVault() {
+  console.log("loading vault");
   getFile("uploads.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents){
@@ -74,17 +78,11 @@ export function loadVault() {
        this.setState({filteredVault: []});
      }
    })
+    .then(() => {
+      this.loadIntegrations();
+    })
     .catch(error => {
       console.log(error);
       this.setState({ files: [], filteredVault: [] });
     });
-}
-
-export function getMonthDayYear() {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
-  const monthDayYear = month + "/" + day + "/" + year;
-  return monthDayYear
 }

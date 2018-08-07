@@ -1143,6 +1143,48 @@ h5, h6 {
   font-weight: 400;
 }
 
+.header-drop {
+  right: 0px!important;
+  left: auto!important;
+  width: auto!important;
+}
+
+.more-info {
+  font-size: 18px!important;
+  margin-left: 5px!important;
+  position: relative!important;
+  bottom: -3px!important;
+}
+
+.onboarding-page {
+  margin-top: 65px;
+}
+
+.onboarding-page div h3, .onboarding-page div button  {
+  margin-bottom: 35px;
+}
+
+.onboarding-page div div div h5 {
+  margin-bottom: 25px;
+}
+
+.onboarding-button {
+  margin-top: 35px;
+}
+
+.account-settings {
+  margin-top: 45px;
+}
+
+.integrations-section {
+  margin-top: 45px;
+  margin-bottom: 95px;
+}
+
+.audits {
+  margin-top: 20px;
+}
+
 .app-button {
   padding: 10px;
   border-radius: 15px;
@@ -2692,7 +2734,7 @@ input:focus {
     z-index: 980;
     width: 100%;
     background: #fff;
-    height: 60px;
+    height: auto;
     position: fixed;
     top: 64px;
     left: 0;
@@ -2930,7 +2972,7 @@ blockquote {
     width: 100%;
     /* right: 150px; */
     background: #fff;
-    height: 60px;
+    height: auto;
     /* padding: 15px!important; */
     left: 0;
   }
@@ -3270,7 +3312,7 @@ blockquote {
   }
 
   .ql-toolbar.ql-snow {
-    display: none!important;
+    /* display: none!important; */
   }
 
   .small-menu {
@@ -3382,7 +3424,7 @@ blockquote {
   }
 
   .ql-toolbar.ql-snow {
-    display: none!important;
+    /* display: none!important; */
   }
 
   .small-menu {
@@ -3510,7 +3552,7 @@ nav .brand-logo.left {
   }
 
   .ql-toolbar.ql-snow {
-    display: none;
+    /* display: none; */
   }
 
   @page {

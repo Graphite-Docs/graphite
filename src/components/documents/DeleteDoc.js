@@ -2,26 +2,16 @@ import React, { Component } from "react";
 import Header from "../Header";
 import {
   isSignInPending,
-  getFile,
-  putFile,
   handlePendingSignIn
 } from 'blockstack';
+import {
+  tryingSomething
+} from '../helpers/audits';
+import {
+  loadAccountPlan
+} from '../helpers/accountPlan';
 
 export default class DeleteDoc extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: [],
-      textvalue : "",
-      singleDoc: {},
-      test:"",
-      index: "",
-      save: "",
-      loading: "hide"
-    }
-    this.handleDeleteItem = this.handleDeleteItem.bind(this);
-    this.saveNewFile = this.saveNewFile.bind(this);
-  }
 
   componentWillMount() {
     if (isSignInPending()) {
@@ -32,82 +22,12 @@ export default class DeleteDoc extends Component {
   }
 
   componentDidMount() {
-    getFile("documentscollection.json", {decrypt: true})
-     .then((fileContents) => {
-        this.setState({ value: JSON.parse(fileContents || '{}').value })
-        console.log("loaded");
-     }).then(() =>{
-       let value = this.state.value;
-       const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
-       let index = thisDoc && thisDoc.id;
-       function findObjectIndex(doc) {
-           return doc.id == index;
-       }
-       this.setState({ test: thisDoc && thisDoc.content, textvalue: thisDoc && thisDoc.title, index: value.findIndex(findObjectIndex) })
-     })
-      .catch(error => {
-        console.log(error);
-      });
-      const file = this.props.match.params.id;
-      const fullFile = '/documents/' + file + '.json';
-      getFile(fullFile, {decrypt: true})
-       .then((fileContents) => {
-         console.log(fileContents);
-          this.setState({
-            singleDoc: JSON.parse(fileContents || '{}')
-         })
-       })
-        .catch(error => {
-          console.log(error);
-        });
-
+      this.props.loadDocToDelete();
     }
 
-  handleDeleteItem() {
-    const object = {};
-    object.title = this.state.textvalue;
-    object.content = this.state.test;
-    object.id = parseInt(this.props.match.params.id, 10);
-    this.setState({ value: [...this.state.value, this.state.value.splice(this.state.index, 1)]})
-    this.setState({ singleDoc: {} });
-    this.setState({ loading: "show", save: "hide" });
-    this.saveNewFile();
-  };
-
-  saveNewFile() {
-    this.setState({ loading: "show" });
-    this.setState({ save: "hide"});
-    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
-      .then(() => {
-        // console.log(JSON.stringify(this.state));
-        this.saveTwo();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-        alert(e.message);
-      });
-  }
-
-  saveTwo() {
-    const file = this.props.match.params.id;
-    const fullFile = '/documents/' + file + '.json';
-    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
-      .then(() => {
-        this.setState({ loading: "hide" });
-        window.location.href = '/documents';
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-        alert(e.message);
-      });
-
-  }
-
   render() {
-    const loading = this.state.loading;
-    const save = this.state.save;
+    const loading = this.props.loading;
+    const save = this.props.save;
     return (
       <div>
         <Header />
@@ -117,10 +37,10 @@ export default class DeleteDoc extends Component {
             <h5>
               Delete Document
             </h5>
-            <h6>Are you sure you want to delete <strong>{this.state.singleDoc.title}</strong>?
+            <h6>Are you sure you want to delete <strong>{this.props.title}</strong>?
             </h6>
             <div className={save}>
-            <button className="btn red" onClick={this.handleDeleteItem}>
+            <button className="btn red" onClick={this.props.handleDeleteDoc}>
               Delete
             </button>
             <a href="/documents"><button className="btn grey">

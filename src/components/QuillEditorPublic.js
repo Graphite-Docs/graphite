@@ -2,18 +2,17 @@ import React from 'react';
 
 import YjsQuill from './YjsQuill';
 
-
 export default class QuillEditorPublic extends React.Component {
 
   componentDidMount() {
-    console.warn('1. QuillEditorPublic - componentDidMount...')
+    // console.log('1. QuillEditorPublic - componentDidMount...')
   }
 
   render() {
-    console.log('QuillEditorPublic: ' + this.props.value);
+    // console.log('QuillEditorPublic: ' + this.props.value);
     if (this.props.docLoaded) {
-      console.warn('0. QuillEditorPublic - render...')
-      console.warn('0. QuillEditorPublic - this.props: ', this.props)
+      console.log('0. QuillEditorPublic - render...')
+      // console.log('0. QuillEditorPublic - this.props: ', this.props)
     }
     return (
       <div>
@@ -27,6 +26,7 @@ export default class QuillEditorPublic extends React.Component {
             getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this function to check status of Yjs for SingleDoc
             singleDocIsPublic={this.props.singleDocIsPublic}
             onChange={this.props.onChange} //passing this to YjsQuill, to call whenever updates are made...
+            readOnly={this.props.readOnly} //passing this from PublicDoc...
           />
           :
           null
@@ -47,7 +47,6 @@ export default class QuillEditorPublic extends React.Component {
             <div className="indeterminate"></div>
           </div>
         }
-
 
       </div>
     )

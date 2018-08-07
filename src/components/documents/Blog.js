@@ -6,6 +6,7 @@ import {
   putFile,
   handlePendingSignIn,
 } from "blockstack";
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -103,13 +104,9 @@ export default class Blog extends Component {
 
   addTeammate() {
     this.setState({confirmAdd: false, hideMain: "", teammateModal: "hide" });
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.name = this.state.teammateName;
-    object.added = month + "/" + day + "/" + year;
+    object.added = getMonthDayYear();
     object.postCount = 0;
     this.setState({ team: [...this.state.team, object] });
     setTimeout(this.saveTeam, 500);

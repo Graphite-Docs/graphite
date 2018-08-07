@@ -16,7 +16,7 @@ export default class AppPage extends Component {
     redirectToSignIn(origin, origin + "/manifest.json", [
       "store_write",
       "publish_data"
-    ]);
+    ])
   }
 
   handleSignOut(e) {
@@ -45,7 +45,7 @@ export default class AppPage extends Component {
     recentFiles = mergedRecent.filter(function(n){ return n !== undefined })
 
     //Docs variables
-    let words = value.map(a => a.words).reduce((a, b) => a + b, 0);
+
     let docTags = value.map(a => a.tags);
     let newDocTags = docTags.filter(function(n){ return n !== undefined });
     let mergedDocTags = [].concat.apply([], newDocTags).length;
@@ -242,7 +242,7 @@ export default class AppPage extends Component {
                             <p>Notes</p>
                             <h5>0</h5>
                           </div>
-                          
+
                       </div>
                       </div>
                     </a>

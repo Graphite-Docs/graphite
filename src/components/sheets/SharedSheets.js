@@ -7,6 +7,8 @@ import {
   putFile,
   lookupProfile
 } from 'blockstack';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const blockstack = require("blockstack");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -95,16 +97,12 @@ export default class SharedSheets extends Component {
   handleaddItem() {
     this.setState({ show: "hide" });
     this.setState({ hideButton: "hide", loading: "" })
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = this.state.title;
     object.content = this.state.grid;
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
 
     this.setState({ sheets: [...this.state.sheets, object] });
     this.setState({ tempDocId: object.id });

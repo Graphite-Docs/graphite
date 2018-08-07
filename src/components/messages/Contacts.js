@@ -10,8 +10,10 @@ import {
   signUserOut,
   handlePendingSignIn,
 } from "blockstack";
+import Header from '../Header';
 import axios from 'axios';
 import update from 'immutability-helper';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -149,15 +151,11 @@ export default class Contacts extends Component {
 
   handleaddItem() {
     console.log("adding...");
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.contact = this.state.addContact + '.id';
     object.img = this.state.newContactImg;
     object.name = this.state.name;
-    object.dateAdded = month + "/" + day + "/" + year;
+    object.dateAdded = getMonthDayYear();
     object.types = [];
     object.fileType = "contacts";
     let link = 'https://core.blockstack.org/v1/names/' + object.contact;
@@ -226,15 +224,11 @@ export default class Contacts extends Component {
   handleManualAdd(e) {
     this.setState({ showResults: "hide", loading: "", show: "hide", confirmManualAdd: false })
     console.log("adding...");
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.contact = this.state.addContact;
     object.img = this.state.newContactImg;
     object.name = this.state.name;
-    object.dateAdded = month + "/" + day + "/" + year;
+    object.dateAdded = getMonthDayYear();
     object.types = [];
     let link = 'https://core.blockstack.org/v1/names/' + object.contact;
     axios
@@ -260,10 +254,6 @@ export default class Contacts extends Component {
       .then((profile) => {
           console.log(profile);
           const object = {};
-          const today = new Date();
-          const day = today.getDate();
-          const month = today.getMonth() + 1;
-          const year = today.getFullYear();
           object.contact = this.state.newContact;
           if(profile.image) {
             object.img = profile.image[0].contentUrl;
@@ -276,7 +266,7 @@ export default class Contacts extends Component {
             object.name = "";
           }
           object.types = [];
-          object.dateAdded = month + "/" + day + "/" + year;
+          object.dateAdded = getMonthDayYear();
           this.setState({ contacts: [...this.state.contacts, object], add: false });
           this.setState({ filteredContacts: this.state.contacts });
           setTimeout(this.saveNewFile, 500);
@@ -789,29 +779,7 @@ export default class Contacts extends Component {
     const person = new Person(userData.profile);
     return(
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
-
-            <ul id="nav-mobile" className="right">
-            <ul id="dropdown1" className="dropdown-content">
-              <li><a href="/export">Export All Data</a></li>
-              <li className="divider"></li>
-              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
-            </ul>
-            <ul id="dropdown2" className="dropdown-content">
-            <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
-            <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
-            <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-            <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
-            </ul>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
-            </ul>
-          </div>
-        </nav>
-        </div>
+        <Header />
         {this.renderView()}
       </div>
     )

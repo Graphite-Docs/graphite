@@ -45,11 +45,11 @@ export default class DeleteVaultFile extends Component {
       .then((file) => {
         this.setState({files: JSON.parse(file || '{}') });
         let files = this.state.files;
-        const thisFile = files.find((file) => { return file.id == this.props.match.params.id});
+        const thisFile = files.find((file) => {return file.id.toString() === this.props.match.params.id}); //this is comparing strings
         let index = thisFile && thisFile.id;
-        console.log(index);
+        console.log("DeleteVaultFile - componentDidMount - index is: ", index);
         function findObjectIndex(file) {
-          return file.id == index;
+          return file.id === index; //this is comparing numbers
         }
         this.setState({index: files.findIndex(findObjectIndex)});
       })

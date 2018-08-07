@@ -10,6 +10,7 @@ import {
   signUserOut,
   handlePendingSignIn,
 } from 'blockstack';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -113,16 +114,12 @@ export default class SharedCollection extends Component {
   handleaddItem() {
     this.setState({ show: "hide" });
     this.setState({ hideButton: "hide", loading: "" })
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
 
     this.setState({ value: [...this.state.value, object] });
     // this.setState({ filteredValue: [...this.state.filteredValue, object] });

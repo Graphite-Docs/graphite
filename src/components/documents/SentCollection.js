@@ -89,10 +89,10 @@ export default class SentCollection extends Component {
     this.deleteShareDoc = () => {
       this.setState({deleteId: ""})
       let docs = this.state.docs;
-      const thisDoc = docs.find((doc) => { return doc.id == this.state.deleteId});
+      const thisDoc = docs.find((doc) => { return doc.id.toString() === this.state.deleteId}); //comparing strings
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
-        return doc.id == index;
+        return doc.id === index; //comparing numbers
       }
       let deleteIndex = docs.findIndex(findObjectIndex)
       let updatedDoc = update(this.state.docs, {$splice: [[deleteIndex, 1, ]]})

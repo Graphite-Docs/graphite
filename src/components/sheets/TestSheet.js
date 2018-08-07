@@ -11,6 +11,8 @@ import {
   handlePendingSignIn,
 } from 'blockstack';
 import update from 'immutability-helper';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { encryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -297,16 +299,12 @@ migrationComplete() {
   }
 
   handleaddItem() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = "Untitled";
     object.content = [[]];
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
     const objectTwo = {};
     objectTwo.title = object.title;
     objectTwo.id = object.id;
@@ -468,10 +466,10 @@ migrationComplete() {
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let sheets = this.state.sheets;
-      const thisSheet = sheets.find((sheet) => { return sheet.id == this.state.sheetsSelected[0]});
+      const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.state.sheetsSelected[0]}); //this is comparing strings
       let index = thisSheet && thisSheet.id;
       function findObjectIndex(sheet) {
-          return sheet.id == index;
+          return sheet.id === index; //this is comparing numbers
       }
       this.setState({index: sheets.findIndex(findObjectIndex) });
     })
@@ -602,10 +600,10 @@ migrationComplete() {
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let sheets = this.state.sheets;
-      const thisSheet = sheets.find((sheet) => { return sheet.id == this.state.sheetsSelected[0]});
+      const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.state.sheetsSelected[0]}); //this is comparing strings
       let index = thisSheet && thisSheet.id;
       function findObjectIndex(sheet) {
-          return sheet.id == index;
+          return sheet.id === index; //this is comparing numbers
       }
       this.setState({index: sheets.findIndex(findObjectIndex) });
     })
@@ -667,10 +665,10 @@ migrationComplete() {
     this.setState({ deleteState: false });
 
     let tags = this.state.singleSheetTags;
-    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId});
+    const thisTag = tags.find((tag) => { return tag.id.toString() === this.state.selectedTagId}); //this is comparing strings
     let index = thisTag && thisTag.id;
     function findObjectIndex(tag) {
-        return tag.id == index;
+        return tag.id === index; //this is comparing numbers
     }
     this.setState({ index: tags.findIndex(findObjectIndex) });
     // setTimeout(this.finalDelete, 300);

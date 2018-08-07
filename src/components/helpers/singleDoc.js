@@ -3,17 +3,20 @@ import {
   putFile,
   loadUserData,
 } from 'blockstack'
+// import {
+//   postToSlack
+// } from './traditionalIntegrations'
 import {
   getMonthDayYear
-} from './helpers';
+} from './getMonthDayYear';
 import update from 'immutability-helper';
-import RemoteStorage from 'remotestoragejs';
-import Widget from 'remotestorage-widget';
-const remoteStorage = new RemoteStorage({logging: false});
-const widget = new Widget(remoteStorage);
+// import RemoteStorage from 'remotestoragejs';
+// import Widget from 'remotestorage-widget';
+// const remoteStorage = new RemoteStorage({logging: false});
+// const widget = new Widget(remoteStorage);
 const { encryptECIES } = require('blockstack/lib/encryption');
 const wordcount = require("wordcount");
-const { getPublicKeyFromPrivate } = require('blockstack');
+// const { getPublicKeyFromPrivate } = require('blockstack');
 
 export function handleAutoSave(e) {
   this.setState({ content: e.target.value });
@@ -64,7 +67,7 @@ export function savePublic() {
   const id = this.state.documentId
   const link = 'https://app.graphitedocs.com/shared/docs/' + user + '-' + id;
   console.log(link);
-  const params = this.state.documentId;
+  // const params = this.state.documentId;
   const directory = 'public/';
   const file = directory + id + '.json'
   putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
@@ -118,17 +121,13 @@ export function loadMyFile() {
       this.setState({ shareFile: JSON.parse(fileContents || '{}') })
       console.log("Step Two: Loaded share file");
       this.setState({ loading: "", show: "hide" });
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const object = {};
       object.title = this.state.title;
       object.content = this.state.content;
       object.id = Date.now();
       object.receiverID = this.state.receiverID;
       object.words = wordcount(this.state.content);
-      object.shared = month + "/" + day + "/" + year;
+      object.shared = getMonthDayYear();
       this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
       setTimeout(this.shareDoc, 700);
    })
@@ -136,17 +135,13 @@ export function loadMyFile() {
       console.log(error);
       console.log("Step Two: No share file yet, moving on");
       this.setState({ loading: "", show: "hide" });
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const object = {};
       object.title = this.state.title;
       object.content = this.state.content;
       object.id = Date.now();
       object.receiverID = this.state.receiverID;
       object.words = wordcount(this.state.content);
-      object.shared = month + "/" + day + "/" + year;
+      object.shared = getMonthDayYear();
       this.setState({ shareFile: [...this.state.shareFile, object] });
       setTimeout(this.shareDoc, 700);
     });
@@ -227,15 +222,11 @@ export function handleBack() {
 }
 
 export function handleAutoAdd() {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
   const object = {};
   object.title = this.state.title;
   object.content = this.state.content;
   object.id = parseInt(this.state.documentId, 10);
-  object.updated = month + "/" + day + "/" + year;
+  object.updated = getMonthDayYear();
   object.sharedWith = this.state.sharedWith;
   object.author = loadUserData().username;
   object.singleDocIsPublic = this.state.singleDocIsPublic;
@@ -247,7 +238,7 @@ export function handleAutoAdd() {
   const objectTwo = {};
   objectTwo.title = this.state.title;
   objectTwo.id = parseInt(this.state.documentId, 10);
-  objectTwo.updated = month + "/" + day + "/" + year;
+  objectTwo.updated = getMonthDayYear();
   objectTwo.words = wordcount(this.state.content);
   objectTwo.sharedWith = this.state.sharedWith;
   objectTwo.author = loadUserData().username;
@@ -265,10 +256,10 @@ export function handleAutoAdd() {
 
 export function autoSave() {
   console.log("trying to save")
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
+  // const today = new Date();
+  // const day = today.getDate();
+  // const month = today.getMonth() + 1;
+  // const year = today.getFullYear();
   const file = this.state.documentId;
   const fullFile = '/documents/' + file + '.json';
   function lengthInUtf8Bytes(str) {
@@ -289,12 +280,12 @@ export function autoSave() {
     // remoteStorage.access.claim(this.state.documentId, 'rw');
     // remoteStorage.caching.enable('/' + this.state.documentId + '/');
     // const client = remoteStorage.scope('/' + this.state.documentId + '/');
-    const content = this.state.content;
-    const title = this.state.title;
-    const words = wordcount(this.state.content);
-    const updated = month + "/" + day + "/" + year;
-    const id = parseInt(this.state.documentId, 10);
-    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+    // const content = this.state.content;
+    // const title = this.state.title;
+    // const words = wordcount(this.state.content);
+    // const updated = getMonthDayYear();
+    // const id = parseInt(this.state.documentId, 10);
+    // const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
     // client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
     // .then(() => { console.log("Upload done") });
     // client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
@@ -351,11 +342,11 @@ export function componentDidMountData(props) {
    .then((fileContents) => {
       this.setState({ value: JSON.parse(fileContents || '{}').value })
       let value = this.state.value;
-      const thisDoc = value.find((doc) => { return doc.id == props});
+      const thisDoc = value.find((doc) => { return doc.id.toString() === props}); //comparing strings
       let index = thisDoc && thisDoc.id;
       console.log(index);
       function findObjectIndex(doc) {
-          return doc.id == index;
+          return doc.id === index; //comparing numbers
       }
       this.setState({index: value.findIndex(findObjectIndex)})
    })
@@ -392,4 +383,8 @@ export function handleStealthy() {
 
 export function print(){
     window.print();
+}
+
+export function shareToTeam() {
+  this.postToSlack();
 }

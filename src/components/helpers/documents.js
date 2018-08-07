@@ -2,12 +2,23 @@ import {
   putFile,
   getFile
 } from 'blockstack';
+import {
+  postToLog
+<<<<<<< HEAD
+} from './audits';
+=======
+} from './audits'
+>>>>>>> audits
 import update from 'immutability-helper';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
+
 const { encryptECIES } = require('blockstack/lib/encryption');
 
 export function loadCollection() {
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
+
      if(JSON.parse(fileContents || '{}').value) {
        this.setState({ value: JSON.parse(fileContents || '{}').value });
        this.setState({filteredValue: JSON.parse(fileContents || '{}').value})
@@ -39,15 +50,11 @@ export function addTagManual() {
 }
 
 export function handleaddItem() {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
   const rando = Date.now();
   const object = {};
   object.title = "Untitled";
   object.id = rando;
-  object.updated = month + "/" + day + "/" + year;
+  object.updated = getMonthDayYear();
   object.tags = [];
   object.sharedWith = [];
   const objectTwo = {}
@@ -62,6 +69,7 @@ export function handleaddItem() {
   this.setState({ filteredValue: [...this.state.filteredValue, object] });
   this.setState({ singleDoc: objectTwo });
   this.setState({ tempDocId: object.id });
+  this.setState({ action: "Created New Document "});
   setTimeout(this.saveNewFile, 500);
 }
 
@@ -75,10 +83,15 @@ export function filterList(event){
 }
 
 export function saveNewFile() {
+
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
     .then(() => {
-      console.log("Saved Collection!");
       this.saveNewSingleDoc();
+      console.log("Saved Collection!");
+      // setTimeout(this.saveNewSingleDoc, 200);
+    })
+    .then(() => {
+      this.postToLog();
     })
     .catch(e => {
       console.log("e");
@@ -228,7 +241,7 @@ export function getCollection() {
     const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
-        return doc.id == index;
+        return doc.id === index; //this is comparing numbers
     }
     this.setState({index: value.findIndex(findObjectIndex) });
   })
@@ -364,7 +377,7 @@ export function getCollectionTags() {
     const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
-        return doc.id == index;
+        return doc.id === index; //this is comparing numbers
     }
     this.setState({index: value.findIndex(findObjectIndex) });
   })
@@ -428,7 +441,7 @@ export function deleteTag(props) {
   const thisTag = tags.find((tag) => { return tag.id == props});
   let tagIndex = thisTag && thisTag.id;
   function findObjectIndex(tag) {
-      return tag.id == tagIndex;
+      return tag.id === tagIndex; //this is comparing numbers
   }
   this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
   this.setState({singleDocTags: update(this.state.singleDocTags, {$splice: [[this.state.tagIndex, 1]]})});

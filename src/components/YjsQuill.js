@@ -1,22 +1,4 @@
-import React, { Component } from 'react';
-// import { Component } from 'react';
-
-// import 'quill/dist/quill.core.css';
-import 'quill/dist/quill.snow.css'; //need to import this for snow CSS to display correctly...
-
-import Quill from 'quill/core'; //must be from core for functions to work!!!
-import Toolbar from 'quill/modules/toolbar';
-import Snow from 'quill/themes/snow'; //snow works, but need to import and register formats, and replace icons...
-
-import Bold from 'quill/formats/bold';
-import Italic from 'quill/formats/italic';
-import Header from 'quill/formats/header';
-import Underline from 'quill/formats/underline';
-import Link from 'quill/formats/link';
-import List, { ListItem } from 'quill/formats/list';
-
-import Icons from 'quill/ui/icons'; //need to import icons, then replace them...
-
+import React from 'react';
 
 const Y = require('yjs')
 
@@ -37,21 +19,20 @@ var link = process.env.REACT_APP_YJS_HEROKU_URL //this link is set in my .env fi
 var connection = io(link) //need to include LINK within io()...
 
 
-
-export default class YjsQuill extends Component {
+export default class YjsQuill extends React.Component {
 
   componentDidMount() {
     this.setInner = this.setInner.bind(this);
-    console.error('1. YjsQuill - componentDidMount...')
-    console.log('YjsQuill - componentDidMount - this.props is: ', this.props)
-    console.log('YjsQuill - componentDidMount - this.props.roomId is: ', this.props.roomId)
+    console.log('1. YjsQuill - componentDidMount...')
+    // console.log('YjsQuill - componentDidMount - this.props is: ', this.props)
+    // console.log('YjsQuill - componentDidMount - this.props.roomId is: ', this.props.roomId)
 
     //console.logging connection details here won't show until state is updated...
     //note: above logs work after i update state.... -- moved to within promise!
 
-    // var that = this; //setting 'this' to 'that' so scope of 'this' doesn't get lost in promise below
-
     console.log('YjsQuill -->>> connection in render is: ', connection)
+
+    // NOTE: eliminated React warning by following directions in console.info in ./node_modules/yjs/src/y.js
 
     //putting Y within a ternary operator, so it only gets rendered if docLoaded...
     if (this.props.docLoaded === true) {
@@ -73,34 +54,9 @@ export default class YjsQuill extends Component {
 
         var that = this
         console.log('HELLO from YjsQuill promise...')
-        console.error('YjsQuill ----- inside promise, that.props: ', that.props)
+        // console.log('YjsQuill ----- inside promise, that.props: ', that.props)
 
         window.yquill = y
-
-        // Quill.register({
-        //   'modules/toolbar': Toolbar,
-        //   'themes/snow': Snow,
-        //   'formats/bold': Bold,
-        //   'formats/italic': Italic,
-        //   'formats/header': Header,
-        //   'formats/underline': Underline,
-        //   'formats/link': Link,
-        //   'formats/list': List,
-        //   'formats/list/item': ListItem,
-        //   'ui/icons': Icons
-        // });
-        //
-        // var icons = Quill.import('ui/icons');
-        // icons['bold'] = '<i class="fa fa-bold" aria-hidden="true"></i>';
-        // icons['italic'] = '<i class="fa fa-italic" aria-hidden="true"></i>';
-        // icons['underline'] = '<i class="fa fa-underline" aria-hidden="true"></i>';
-        // icons['link'] = '<i class="fa fa-link" aria-hidden="true"></i>';
-        // icons['clean'] = '<i class="fa fa-eraser" aria-hidden="true"></i>'; // making this an eraser for now because i can't find the font awesome equivalent of the Tx / clear / clean icon...
-        //
-        // window.quill = new Quill('#editor', {
-        //   theme: 'snow', //this needs to come after the above, which registers Snow...
-        //   placeholder: "Write something great..."
-        // });
 
         var toolbarOptions = [
           // custom dropdown
@@ -124,24 +80,15 @@ export default class YjsQuill extends Component {
           toolbar: toolbarOptions,
         },
         theme: 'snow',
+        readOnly: (that.props.readOnly === true ? true : false), //readOnly is from QuillEditorPublic, which gets prop from PublicDoc... QuillEditorPrivate won't have this prop, so adding this boolean...
         placeholder: "Write something great..."
       });
 
-        //replacing unrendered svg string in dropdown with an empty string, then adding sort icon in css...
-        var dropdown = document.getElementsByClassName('ql-picker-label'); //changing text here, can't do it in css...
-        setTimeout(this.setInner, 700);
-        dropdown[0].innerText = "";
+      setTimeout(this.setInner, 700); //calling setInner function below to add content to Quill editor...
 
-        //lists both have same class, but different values, so changing them here...
-        var list = document.getElementsByClassName('ql-list');
-        list[0].innerHTML = '<i class="fa fa-list-ol" aria-hidden="true"></i>' //ordered list
-        list[1].innerHTML = '<i class="fa fa-list-ul" aria-hidden="true"></i>' //unordered list
         // bind quill to richtext type
-        //NOTE: NEED TO INCLUDE BELOW LINE:::::::
+        //NOTE: need to include below line:
         y.share.richtext.bindQuill(window.quill)
-
-        var delta = window.quill.getContents();
-        console.warn('in YjsQuill ------>>>>>> delta is: ', delta)
 
         window.quill.on('editor-change', function(eventName, ...args) {
           if (eventName === 'text-change') {
@@ -159,7 +106,7 @@ export default class YjsQuill extends Component {
             }
             console.error('0. CHANGE in YjqQuill...')
             var rootHtml = window.quill.root.innerHTML //getting rootHtml
-            console.warn('9999999999. rootHtml is: ', rootHtml)
+            console.log('0. rootHtml is: ', rootHtml)
             if (that.props.singleDocIsPublic) { //if this YjsQuill instance is being rendered by SingleDoc, and not PublicDoc, call props.onChange (only SingleDoc has this prop, PublicDoc does not...)
               console.log('this YjsQuill is being rendered by SingleDoc, so call props.onChange to save!')
               that.props.onChange(rootHtml) //passing rootHtml to SingleDoc, to save it in the database
@@ -171,27 +118,22 @@ export default class YjsQuill extends Component {
         });
 
         if (that.props.getYjsConnectionStatus) { //PublicDoc won't have that function as a prop, only Yjs rendered by SingleDoc will
-        // var that = this;
-        console.warn('Yjs connection.connected === true, the my-y-websockets-server is running, telling SingleDoc...')
+        console.log('Yjs connection.connected === true, the my-y-websockets-server is running, telling SingleDoc...')
           that.props.getYjsConnectionStatus(true) //this will only be true within the promise
         }
       })
     } //end if statement
   } //componentDidMount
 
-  componentDidUpdate() {
-
-  }
-
+  //using vanilla javascript to set innerHTML of QuillEditorPrivate to this.props.value...
   setInner() {
     var editor = document.getElementsByClassName('ql-editor')
     editor[0].innerHTML = this.props.value;
-    console.log(editor)
+    console.log("YjsQuill - editor is: ", editor)
   }
 
   render() {
     console.log('0. YjsQuill - render - this.props is: ', this.props)
-
 
     return (
       null

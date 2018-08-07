@@ -1,11 +1,13 @@
 import React, { Component } from "react";
-// import ReactQuill, {Quill} from 'react-quill';
-// import 'react-quill/dist/quill.bubble.css';
-import { Link } from 'react-router-dom';
+
+// import { Link } from 'react-router-dom';
 // import PublicDoc from '../PublicDoc.js'; //rendering this here, as a child of SingleDoc. will pass it props.
+import { loadIntegrations } from '../helpers/integrations';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 import {
-  loadIntegrations,
-} from '../helpers/integrations';
+  postToMedium,
+  loadMediumToken
+} from '../helpers/traditionalIntegrations';
 import {
   loadUserData,
   getFile,
@@ -14,33 +16,17 @@ import {
 } from 'blockstack';
 import update from 'immutability-helper';
 import RemoteStorage from 'remotestoragejs';
-import Widget from 'remotestorage-widget';
+// import Widget from 'remotestorage-widget';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
 import QuillEditorPrivate from '../QuillEditorPrivate.js';
 
-// import Timer from '../Timer.js'; //trying this...
-import axios from 'axios';
+// import axios from 'axios';
 const wordcount = require("wordcount");
-// const Font = ReactQuill.Quill.import('formats/font');
 const { encryptECIES } = require('blockstack/lib/encryption');
-const { decryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+// const { decryptECIES } = require('blockstack/lib/encryption');
+// const { getPublicKeyFromPrivate } = require('blockstack');
 const remoteStorage = new RemoteStorage({logging: false});
-const widget = new Widget(remoteStorage);
-// Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-// ReactQuill.Quill.register(Font, true);
-// Quill.register('modules/imageResize', ImageResize);
-
-
-function getMonthDayYear() {
-  const today = new Date();
-  const day = today.getDate();
-  const month = today.getMonth() + 1;
-  const year = today.getFullYear();
-  const monthDayYear = month + "/" + day + "/" + year;
-  return monthDayYear
-}
-
+// const widget = new Widget(remoteStorage);
 
 
 export default class SingleDoc extends Component {
@@ -52,7 +38,7 @@ export default class SingleDoc extends Component {
       travelstackConnect: false,
       coinsConnected: false,
       team: [],
-      value: [],
+      value: [], //NOTE: do we need an array of all the users's docs saved within the state of each SingleDoc?
       contacts: [],
       tags: [],
       title: "",
@@ -73,9 +59,10 @@ export default class SingleDoc extends Component {
       show: "",
       pubKey: "",
       singleDoc: {},
-      singleDocIsPublic: false, //this will be set to true by sharePublicly, and false by stopSharing
+      singleDocIsPublic: false, //NOTE: this will be set to true by sharePublicly, and false by stopSharing. it will be saved to the database in handleAutoAdd...
       confirmAdd: false,
       singlePublic: {},
+      readOnly: false, //NOTE: this will be for singlePublic, it will be updated by toggleReadOnly, and the state will be saved in handleAutoAdd, so it persists in database, then gets set by getFile within componentDidMount... also note, will initially be `undefined` in the console, because false is falsey, which is undefined...
       publicShare: "hide",
       gaiaLink: "",
       hideStealthy: true,
@@ -133,7 +120,7 @@ export default class SingleDoc extends Component {
       role: "",
       clientType: "",
       sentArticles: [],
-      timerKey: "", //will update this to reset Timer
+      // timerKey: "", //will update this to reset Timer
       yjsConnected: false,
       teamCount: 0,
     }
@@ -150,16 +137,20 @@ export default class SingleDoc extends Component {
     this.savePublic = this.savePublic.bind(this);
     this.stopSharing = this.stopSharing.bind(this);
     this.saveStop = this.saveStop.bind(this);
+    this.toggleReadOnly = this.toggleReadOnly.bind(this);
     this.getYjsConnectionStatus = this.getYjsConnectionStatus.bind(this);
   }
 
   componentWillMount() {
     console.warn('0. SingleDoc - componentWillMount, then render...')
     this.loadIntegrations = loadIntegrations.bind(this);
+    this.postToMedium = postToMedium.bind(this);
+    this.loadMediumToken = loadMediumToken.bind(this);
     isUserSignedIn ? this.loadIntegrations() : this.loadUserData();
   }
 
   componentDidMount() {
+
     window.$('.modal').modal();
     window.$('.dropdown-button').dropdown({
       inDuration: 300,
@@ -171,7 +162,7 @@ export default class SingleDoc extends Component {
       alignment: 'left', // Displays dropdown with edge aligned to the left of button
       stopPropagation: false // Stops event propagation
     });
-    let privateKey = loadUserData().appPrivateKey;
+    // let privateKey = loadUserData().appPrivateKey;
 
     window.$('.button-collapse').sideNav({
       menuWidth: 400, // Default is 300
@@ -260,11 +251,24 @@ export default class SingleDoc extends Component {
     .then((fileContents) => {
       this.setState({ value: JSON.parse(fileContents || '{}').value })
       let value = this.state.value;
-      const thisDoc = value.find((doc) => { return doc.id == this.props.match.params.id});
+      const thisDoc = value.find((doc) => {
+        // console.warn('SingleDoc - doc.id is: ', doc.id.toString())
+        // console.warn('SingleDoc - typeof doc.id is: ', typeof doc.id.toString()) //doc.id is a number, so we're turning it into a string...
+        // console.warn('SingleDoc - this.props.match.params.id is: ', this.props.match.params.id)
+        // console.warn('SingleDoc - typeof this.props.match.params.id is: ', typeof this.props.match.params.id) //this is a string...
+        // console.warn('0. doc.id === this.props.match.params.id ?? -> ', doc.id === this.props.match.params.id)  //this is false
+        // console.warn('1. doc.id.toString() === this.props.match.params.id ?? -> ', doc.id === this.props.match.params.id)  //this is true
+        // return doc.id == this.props.match.params.id //this is comparing a number to a string...
+        return doc.id.toString() === this.props.match.params.id //this is comparing a string to a string
+      });
       let index = thisDoc && thisDoc.id;
       // console.log('SingleDoc - getFile -> index is:', index); //index is same as thisDoc.id, a number
       function findObjectIndex(doc) {
-        return doc.id == index;
+        // console.warn("SingleDoc - doc.id: ", doc.id)
+        // console.warn("SingleDoc - typeof doc.id: ", typeof doc.id) //this is a number
+        // console.warn("SingleDoc - index: ", index)
+        // console.warn("SingleDoc - typeof index: ", typeof index) //this is a number
+        return doc.id === index; //this is comparing a number to a number
       }
       this.setState({index: value.findIndex(findObjectIndex)})
     })
@@ -274,13 +278,17 @@ export default class SingleDoc extends Component {
 
     getFile(fullFile, {decrypt: true})
     .then((fileContents) => {
+      console.log("SingleDoc - getFile, fileContents is: ")
+      console.log( JSON.parse(fileContents || '{}') )
       this.setState({
+        //NOTE: don't need author, not setting that state attribute...
         title: JSON.parse(fileContents || '{}').title,
         content: JSON.parse(fileContents || '{}').content,
         tags: JSON.parse(fileContents || '{}').tags,
         idToLoad: JSON.parse(fileContents || '{}').id,
         singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-        docLoaded: true
+        docLoaded: true,
+        readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
       })
     })
     .catch(error => {
@@ -294,7 +302,6 @@ export default class SingleDoc extends Component {
       }
     }
   } //end of componentDidMount
-
 
   componentDidUpdate(prevProps) {
     if(this.state.confirmAdd === true) {
@@ -313,37 +320,52 @@ export default class SingleDoc extends Component {
     this.setState({ yjsConnected: status}) //set status of yjsConnected based on connection.connected in Yjs... then if yjsConnect is true, start timer in Timer component. if not connected, don't start timer.
   }
 
+  toggleReadOnly() { //make this function toggleReadyOnly state instead, so user can press button again!!!!
+    console.error('SingleDoc - toggleReadOnly called, changing readOnly state based on prevState...')
+    console.log('0. toggleReadOnly - this.state.readOnly is: ', this.state.readOnly)
+    this.setState(
+      prevState => ({ readOnly: !prevState.readOnly }) //setState of readOnly to the opposite of its previous state...
+    )
+    setTimeout(this.sharePublicly, 700); //call sharePublicly on a slight delay, so state has updated since calling setState above...
+  }
+
   sharePublicly() {
     this.setState({ publicShare: ""});
-    console.warn("sharePublicly called!")
+    console.log("sharePublicly called!")
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
     console.error('in sharePublicly, this.state.content is: ', this.state.content)
     object.words = wordcount(this.state.content);
     object.shared = getMonthDayYear();
+    object.readOnly = this.state.readOnly;
+    object.singleDocIsPublic = true; //adding this so PublicDoc knows to display doc or not, below sets singleDocIsPublic to true in state, here we are ensuring it will be true for singleDoc object...
     this.setState({
       singlePublic: object,
       singleDocIsPublic: true
     })
-    setTimeout(this.savePublic, 700); //does this need to be on a setTimeout? can it happen right away???
+    setTimeout(this.savePublic, 700); //calling on a slight delay so state can update...
   }
 
   stopSharing() {
+    console.log("stopSharing called!")
     this.setState({
-      singlePublic: {},
+      singlePublic: {}, //this is setting singlePublic object to an empty object, which means its singleDocIsPublic key value will be falsy...
       singleDocIsPublic: false
     })
     setTimeout(this.saveStop, 700);
   }
 
+
   saveStop() {
-    console.log(this.state.singlePublic);
-    const user = loadUserData().username;
-    const userShort = user.slice(0, -3);
+    console.log("saveStop called, this.state.singlePublic: ", this.state.singlePublic);
+    // const user = loadUserData().username;
+    // const userShort = user.slice(0, -3);
     const params = this.props.match.params.id;
     const directory = 'public/';
     const file = directory + params + '.json'
+    console.warn("SingleDoc - saveStop --> putFile #1...")
+    console.warn("000000 ----->>>> SingleDoc - saveStop --> putFile >>>>> this.state.singlePublic is: ", this.state.singlePublic)
     putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
     .then(() => {
       window.Materialize.toast(this.state.title + " is no longer publicly shared.", 4000);
@@ -361,13 +383,15 @@ export default class SingleDoc extends Component {
     const id = this.props.match.params.id
     const link = window.location.origin + '/shared/docs/' + user + '-' + id;
     console.log("savePublic - savePublic link: ", link);
-    const params = this.props.match.params.id;
+    // const params = this.props.match.params.id;
     const directory = 'public/';
-    const file = directory + id + '.json'
+    const file = directory + id + '.json';
+    console.warn("SingleDoc - savePublic --> putFile #2...")
     putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
     .then(() => {
       console.log("Shared Public Link")
       this.setState({gaiaLink: link, publicShare: "", shareModal: "hide"});
+      this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
     })
     .catch(e => {
       console.log("e");
@@ -419,6 +443,7 @@ export default class SingleDoc extends Component {
       object.receiverID = this.state.receiverID;
       object.words = wordcount(this.state.content);
       object.shared = getMonthDayYear();
+      console.warn('1. in SingleDoc, loadMyFile - called getMonthDayYear...')
       this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
       setTimeout(this.shareDoc, 700);
     })
@@ -434,6 +459,7 @@ export default class SingleDoc extends Component {
       object.receiverID = this.state.receiverID;
       object.words = wordcount(this.state.content);
       object.shared = getMonthDayYear();
+      console.warn('2. in SingleDoc, loadMyFile - called getMonthDayYear...')
       this.setState({ shareFile: [...this.state.shareFile, object] });
       setTimeout(this.shareDoc, 700);
     });
@@ -444,6 +470,7 @@ export default class SingleDoc extends Component {
     const userShort = user.slice(0, -3);
     const fileName = 'shareddocs.json'
     const file = userShort + fileName;
+    console.warn("SingleDoc - shareDoc --> putFile #3...")
     putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
     .then(() => {
       console.log("Step Three: File Shared: " + file);
@@ -457,6 +484,7 @@ export default class SingleDoc extends Component {
     const data = this.state.shareFile;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const directory = '/shared/' + file;
+    console.warn("SingleDoc - shareDoc --> putFile #4...")
     putFile(directory, encryptedData, {encrypt: false})
     .then(() => {
       console.log("Shared encrypted file ");
@@ -465,6 +493,7 @@ export default class SingleDoc extends Component {
     .catch(e => {
       console.log(e);
     });
+    console.warn("SingleDoc - shareDoc --> putFile #5...")
     putFile(this.props.match.params.id + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
     .then(() => {
       console.log("Shared With File Updated")
@@ -489,17 +518,19 @@ export default class SingleDoc extends Component {
   }
 
   handleTitleChange(e) {
-    this.setState({
-      title: e.target.value
-    });
+    this.setState({ title: e.target.value });
     clearTimeout(this.timeout);
-    this.timeout = setTimeout(this.handleAutoAdd, 1500)
+    this.timeout = setTimeout(this.handleAutoAdd, 1500) //title is different from content, so don't need to call sharePublicly...
   }
 
   handleChange(value) {
+    console.log("SingleDoc - handleChange -> doing it")
     this.setState({ content: value });
     clearTimeout(this.timeout);
     this.timeout = setTimeout(this.handleAutoAdd, 1500)
+    if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+      this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+    }
   }
 
   handleIDChange(e) {
@@ -514,10 +545,7 @@ export default class SingleDoc extends Component {
     }
   }
 
-  handleAutoAdd() {
-    if (this.state.singleDocIsPublic === true) {
-      this.sharePublicly()
-    }
+  handleAutoAdd() { //this creates an object and stores it in state as singleDoc, then creates another object and stores it in state to value, an array of docs (probably same as collection?)...
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
@@ -525,12 +553,12 @@ export default class SingleDoc extends Component {
     object.updated = getMonthDayYear();
     object.sharedWith = this.state.sharedWith;
     object.singleDocIsPublic = this.state.singleDocIsPublic; //true or false...
-    object.author= loadUserData().username;
-    // object.sharedWith = this.state.sharedWith;
+    object.readOnly = this.state.readOnly; //true or false...
+    // object.author = loadUserData().username;
     object.words = wordcount(this.state.content);
     object.tags = this.state.tags;
     object.fileType = "documents";
-    this.setState({singleDoc: object});
+    this.setState({singleDoc: object}); //NOTE: this saves singleDoc...
     this.setState({autoSave: "Saving..."});
     const objectTwo = {};
     objectTwo.title = this.state.title;
@@ -539,8 +567,8 @@ export default class SingleDoc extends Component {
     objectTwo.words = wordcount(this.state.content);
     objectTwo.sharedWith = this.state.sharedWith;
     objectTwo.singleDocIsPublic = this.state.singleDocIsPublic; //true or false...
-    objectTwo.author = loadUserData().username;
-    // objectTwo.sharedWith = this.state.sharedWith;
+    objectTwo.readOnly = this.state.readOnly; //true or false...
+    // objectTwo.author = loadUserData().username;
     objectTwo.tags = this.state.tags;
     objectTwo.fileType = "documents";
     const index = this.state.index;
@@ -553,6 +581,7 @@ export default class SingleDoc extends Component {
   autoSave() {
     const file = this.props.match.params.id;
     const fullFile = '/documents/' + file + '.json';
+    console.warn("SingleDoc - autoSave --> putFile #6...")
     putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
     .then(() => {
       console.log("Autosaved");
@@ -564,14 +593,15 @@ export default class SingleDoc extends Component {
     });
     remoteStorage.access.claim(this.props.match.params.id, 'rw');
     remoteStorage.caching.enable('/' + this.props.match.params.id + '/');
-    const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
-    const content = this.state.content;
-    const title = this.state.title;
-    const singleDocIsPublic = (this.state.singleDocIsPublic === true ? "true" : "false"); //true or false, as a string...
-    const words = wordcount(this.state.content);
-    const updated = getMonthDayYear();
-    const id = parseInt(this.props.match.params.id, 10);
-    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+    // const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
+    // const content = this.state.content;
+    // const title = this.state.title;
+    // const singleDocIsPublic = (this.state.singleDocIsPublic === true ? "true" : "false"); //true or false, as a string...
+    // const singleDocIsPublic = this.state.singleDocIsPublic; //true or false
+    // const words = wordcount(this.state.content);
+    // const updated = getMonthDayYear();
+    // const id = parseInt(this.props.match.params.id, 10);
+    // const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
     // client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
     // .then(() => { console.log("Upload done - content") });
     // client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
@@ -587,6 +617,7 @@ export default class SingleDoc extends Component {
   }
 
   saveCollection() {
+    console.warn("SingleDoc - saveCollection --> putFile #6...")
     putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         this.setState({autoSave: "Saved"});
@@ -621,14 +652,18 @@ export default class SingleDoc extends Component {
 
   render() {
     if (this.state.docLoaded === true) {
+      // console.warn("SingleDoc - render - docLoaded is true...")
       this.state.commentId === "" ? console.log("1. no index set") : this.resolveComment();
       this.state.reviewSelection === "" ? console.log("2. no comment selected") : this.getCommentSelection();
       this.state.send === false ? console.log("3. No article sent") : this.sendArticle();
+      // console.log("SingleDoc - render - this.state: ", this.state)
+      // console.warn("SingleDoc - render - title: ", this.state.title)
+      // console.warn("SingleDoc - render - content: ", this.state.content)
     } else {
-      console.log("SingleDoc - docLoaded: ", this.state.docLoaded)
+      console.log("SingleDoc - render - docLoaded: ", this.state.docLoaded)
     }
 
-
+    console.log('id to load: ' + this.state.idToLoad);
     let words;
     if(this.state.content) {
       words = wordcount(this.state.content.replace(/<(?:.|\n)*?>/gm, ''));
@@ -636,8 +671,8 @@ export default class SingleDoc extends Component {
       words = 0;
     }
 
-    const { team, publicShare, showCommentModal, comments, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule} = this.state
-    const stealthy = (hideStealthy) ? "hide" : ""
+    const { mediumConnected, graphitePro, showCommentModal, comments, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule} = this.state
+    const stealthy = (hideStealthy) ? "hide" : "";
 
     const remoteStorageActivator = remoteStorage === true ? "" : "hide";
     var content = "<p style='text-align: center;'>" + this.state.title + "</p> <div style='text-indent: 30px;'>" + this.state.content + "</div>";
@@ -702,7 +737,6 @@ export default class SingleDoc extends Component {
                 </li>
               </ul>
               <ul className="right toolbar-menu small-toolbar-menu auto-save">
-                {/*this.state.notificationCount >0 ? <li><a><i className="small-menu red-text material-icons">notifications_active</i></a></li> : <li><a><i className="small-menu material-icons">notifications_none</i></a></li>*/}
                 {/*this.state.role === "Editor" && this.state.editorShare === true || this.state.role === "Journalist" && this.state.journoShare === true ? <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li> : <li className="hide"/>*/}
                 <li>
                   <a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share">
@@ -723,9 +757,23 @@ export default class SingleDoc extends Component {
 
               {/*Share Menu Dropdown*/}
               <ul id="dropdown2"className="dropdown-content collection cointainer">
-                <li><span className="center-align">Select a contact to share with</span></li>
-                <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
+                <li>
+                  <span className="center-align">Select a contact to share with</span>
+                </li>
+                <a href="/contacts">
+                  <li>
+                    <span className="muted blue-text center-align">Or add new contact</span>
+                  </li>
+                </a>
                 <li className="divider" />
+                {
+                  graphitePro ?
+                  <li className="collection-item">
+                    <a onClick={this.props.shareToTeam}>Share to entire team</a>
+                  </li>
+                  :
+                  <li className="hide" />
+                }
                 {
                   contacts.slice(0).reverse().map(contact => {
                     return (
@@ -755,21 +803,14 @@ export default class SingleDoc extends Component {
                   <li>
                     <a className="modal-trigger" href="#publicModal">Public Link</a>
                   </li>
+
                   {
-                    (this.state.clientType === "Newsroom") ?
-                    <li>
-                      <a onClick={() => this.setState({send: true})}>Submit Article</a>
-                    </li>
-                    :
-                    <li className="hide"/>
-                  }
-                  {
-                    (loadUserData().username === "jehunter5811.id")
-                    ?
+                    mediumConnected && graphitePro ?
                     <li>
                       <a onClick={this.postToMedium}>Post to Medium</a>
                     </li>
-                    : <li className="hide"/>
+                    :
+                    <li className="hide"></li>
                   }
                   <li className="divider"></li>
                   {/*<li>
@@ -789,8 +830,12 @@ export default class SingleDoc extends Component {
                         <p className="black-text commenter">From {comment.commenter}</p>
                         <p className="black-text highlightedComment">{comment.highlightedText}</p>
                         <p className="black-text comment">{comment.comment}</p>
-                        <button onClick={() => this.setState({ reviewSelection: comment.selection })} className="black-text btn-flat">Review</button>
-                        <button onClick={() => this.setState({ reviewSelection: comment.selection, commentId: comment.id })} className="btn-flat">Resolve</button>
+                        <button
+                          onClick={() => this.setState({ reviewSelection: comment.selection })}
+                          className="black-text btn-flat">Review</button>
+                        <button
+                          onClick={() => this.setState({ reviewSelection: comment.selection, commentId: comment.id })}
+                          className="btn-flat">Resolve</button>
                         <p className="divider"></p>
                       </li>
                     )
@@ -816,167 +861,164 @@ export default class SingleDoc extends Component {
                         placeholder="Your comment"
                       />
 
+                  </div>
+                  <div className="modal-footer">
+                    <a onClick={this.addComment} className="btn-flat modal-action">Save Comment</a>
+                    <a onClick={this.cancelComment} className="modal-action grey-text btn-flat">Cancel</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/*End Add Comment Modal*/}
+          </div>
+        </nav>
+      </div>
+      {/*Remote storae widget*/}
+      <div className={remoteStorageActivator} id="remotestorage">
+        <div id='remote-storage-element-id'>
+        </div>
+      </div>
+      {/*Remote storae widget*/}
+
+
+      {/* Public Link Modal */}
+
+      <div id="publicModal" className="modal">
+        <div className="modal-content">
+          <h4>Share Publicly</h4>
+          <p>This data is not encrypted and can be accessed by anyone with the link that will be generated.</p>
+          {
+            this.state.singleDocIsPublic === true ?
+            <div>
+              <p>This document is already being shared publicly.</p>
+              <button onClick={this.sharePublicly} className="btn black">Show Link</button>
+              <button onClick={this.toggleReadOnly} className="btn green">{this.state.readOnly === true ? "Make Editable" : "Make Read-Only"}</button>
+              <button onClick={this.stopSharing} className="btn red">Stop Sharing Publicly</button>
+              <p>
+                {this.state.readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
+              </p>
+            </div>
+            :
+            <button className="btn" onClick={this.sharePublicly}>Share publicly</button>
+          }
+
+          {
+            this.state.gaiaLink !== "" ?
+            <div>
+              <p><a href={this.state.gaiaLink}>{this.state.gaiaLink}</a></p>
+            </div>
+            :
+            <div className="hide" />
+          }
+        </div>
+        <div className="modal-footer">
+          <a onClick={() => this.setState({ publicShare: "hide"})}
+            className="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
+          </div>
+        </div>
+
+        {/* End Public Link Modal */}
+        {/* commenting out modal above, showing this message on the page for now instead... */}
+
+
+        <div className="test-docs">
+          <div className={docFlex}>
+            <div className="double-space doc-margin">
+
+              {
+                this.state.title === "Untitled" ?
+                <textarea
+                  className="doc-title materialize-textarea"
+                  placeholder="Give it a title"
+                  type="text"
+                  onChange={this.handleTitleChange}
+                />
+                :
+                <textarea
+                  className="doc-title materialize-textarea"
+                  placeholder="Title"
+                  type="text"
+                  value={this.state.title}
+                  onChange={this.handleTitleChange}
+                />
+              }
+
+              <p className="hide">
+                document access: <span>&nbsp;</span>
+                {
+                  (this.state.singleDocIsPublic === true) ?
+                  <span style={{backgroundColor: "green", color: "white"}}>public</span>
+                  :
+                  <span style={{backgroundColor: "blue", color: "white"}}>private</span>
+                }
+              </p>
+
+            {
+              (this.state.singleDocIsPublic === true) ?
+              <div>
+                {
+                  (this.state.docLoaded === true) ?
+                  <QuillEditorPublic
+                    roomId={this.state.idToLoad.toString()} //this needs to be a string!
+                    docLoaded={this.state.docLoaded} //this is set by getFile
+                    value={this.state.content}
+                    onChange={this.handleChange}
+                    getYjsConnectionStatus={this.getYjsConnectionStatus} //passing this through TextEdit to Yjs
+                    yjsConnected={this.state.yjsConnected} //true or false, for TextEdit
+                    singleDocIsPublic={this.state.singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
+                  />
+                  :
+                  <div className="progress">
+                    <div className="indeterminate"></div>
+                  </div>
+                }
+              </div>
+              :
+              <div>
+                {
+                  (this.state.docLoaded === true) ?
+                  <QuillEditorPrivate
+                    roomId={this.state.idToLoad.toString()} //this needs to be a string!
+                    docLoaded={this.state.docLoaded} //this is set by getFile
+                    value={this.state.content}
+                    onChange={this.handleChange}
+                  />
+                  :
+                  <div className="progress">
+                    <div className="indeterminate"></div>
+                  </div>
+                }
+              </div>
+            }
+
+            <div className="right-align wordcounter">
+              <p className="wordcount">
+                {words} words
+              </p>
+            </div>
+            <div className={save}></div>
+            <div className={loading}>
+              <div className="preloader-wrapper small active">
+                <div className="spinner-layer spinner-green-only">
+                  <div className="circle-clipper left">
+                    <div className="circle"></div>
+                  </div>
+                  <div className="gap-patch">
+                    <div className="circle">
                     </div>
-                    <div className="modal-footer">
-                      <a onClick={this.addComment} className="btn-flat modal-action">Save Comment</a>
-                      <a onClick={this.cancelComment} className="modal-action grey-text btn-flat">Cancel</a>
+                  </div>
+                  <div className="circle-clipper right">
+                    <div className="circle">
                     </div>
                   </div>
                 </div>
               </div>
-              {/*End Add Comment Modal*/}
-            </div>
-          </nav>
-        </div>
-        {/*Remote storae widget*/}
-        <div className={remoteStorageActivator} id="remotestorage">
-          <div id='remote-storage-element-id'>
-          </div>
-        </div>
-        {/*Remote storae widget*/}
-
-
-        {/* Public Link Modal */}
-
-          <div id="publicModal" className="modal">
-            <div className="modal-content">
-              <h4>Share Publicly</h4>
-              <p>This data is not encrypted and can be accessed by anyone with the link that will be generated.</p>
-              {this.state.singleDocIsPublic === true ?
-                <div>
-                  <p>This document is already being shared publicly.</p>
-                  <button onClick={this.sharePublicly} className="btn black">Show Link</button>
-                  <button onClick={this.stopSharing} className="btn red">Stop Sharing Publicly</button>
-                </div>
-                :
-                <button className="btn" onClick={this.sharePublicly}>Share publicly</button>
-              }
-
-              {this.state.gaiaLink !== "" ?
-              <div>
-                <p><a href={this.state.gaiaLink}>{this.state.gaiaLink}</a></p>
-              </div>
-              :
-              <div className="hide" />
-              }
-            </div>
-            <div className="modal-footer">
-              <a onClick={() => this.setState({ publicShare: "hide"})}
-                className="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
-              </div>
-            </div>
-
-          {/* End Public Link Modal */}
-          {/* commenting out modal above, showing this message on the page for now instead... */}
-
-
-<div className="test-docs">
-  <div className={docFlex}>
-    <div className="double-space doc-margin">
-
-      {
-        this.state.title === "Untitled" ?
-        <textarea
-          className="doc-title materialize-textarea"
-          placeholder="Give it a title"
-          type="text"
-          onChange={this.handleTitleChange}
-        />
-        :
-        <textarea
-          className="doc-title materialize-textarea"
-          placeholder="Title"
-          type="text"
-          value={this.state.title}
-          onChange={this.handleTitleChange}
-        />
-      }
-
-      {/*<div className={publicShare}>
-        <h4>Share Publicly</h4>
-        <p>This data is not encrypted and can be accessed by anyone with the link below.</p>
-        <Link to={this.state.gaiaLink} target="_blank">{this.state.gaiaLink}</Link>
-      </div>*/}
-
-      {
-        (this.state.singleDocIsPublic === true && this.state.value) //making sure we have this pass to match for PublicDoc
-        ?
-        <div>
-          <div>
-          </div>
-
-          {
-            (this.state.docLoaded === true) ?
-            <QuillEditorPublic
-              roomId={this.state.idToLoad.toString()} //this needs to be a string!
-              docLoaded={this.state.docLoaded} //this is set by getFile
-              value={this.state.content}
-              onChange={this.handleChange}
-              getYjsConnectionStatus={this.getYjsConnectionStatus} //passing this through TextEdit to Yjs
-              yjsConnected={this.state.yjsConnected} //true or false, for TextEdit
-              singleDocIsPublic={this.state.singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
-            />
-            :
-            <div className="progress">
-              <div className="indeterminate"></div>
-            </div>
-          }
-        </div>
-        :
-        <div>
-          {
-            (this.state.docLoaded === true) ?
-            <QuillEditorPrivate
-              roomId={this.state.idToLoad.toString()} //this needs to be a string!
-              docLoaded={this.state.docLoaded} //this is set by getFile
-              value={this.state.content}
-              onChange={this.handleChange}
-            />
-            :
-            <div className="progress">
-              <div className="indeterminate"></div>
-            </div>
-          }
-        </div>
-      }
-      {/*<QuillEditorPublic
-        roomId={this.state.idToLoad.toString()} //this needs to be a string!
-        docLoaded={this.state.docLoaded} //this is set by getFile
-        value={this.state.value}
-        onChange={this.handleChange}
-        getYjsConnectionStatus={this.getYjsConnectionStatus} //passing this through TextEdit to Yjs
-        yjsConnected={this.state.yjsConnected} //true or false, for TextEdit
-        singleDocIsPublic={this.state.singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
-      />*/}
-
-      <div className="right-align wordcounter">
-        <p className="wordcount">
-          {words} words
-        </p>
-      </div>
-      <div className={save}></div>
-      <div className={loading}>
-        <div className="preloader-wrapper small active">
-          <div className="spinner-layer spinner-green-only">
-            <div className="circle-clipper left">
-              <div className="circle"></div>
-            </div>
-            <div className="gap-patch">
-              <div className="circle">
-              </div>
-            </div>
-            <div className="circle-clipper right">
-              <div className="circle">
-              </div>
             </div>
           </div>
+          {stealthyModule}
         </div>
       </div>
     </div>
-    {stealthyModule}
-  </div>
-</div>
-</div>
-);
+  );
 }
 }

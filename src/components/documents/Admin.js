@@ -8,6 +8,7 @@ import {
   signUserOut,
   handlePendingSignIn,
 } from 'blockstack';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -62,16 +63,12 @@ export default class Admin extends Component {
   }
 
   handleaddItem() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = "Untitled";
     object.content = "";
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
 
     this.setState({ value: [] });
     this.setState({ filteredValue: [] });

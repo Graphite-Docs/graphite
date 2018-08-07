@@ -7,7 +7,9 @@ getFile,
 putFile,
 } from 'blockstack';
 import XLSX from 'xlsx';
-import Dropzone from 'react-dropzone'
+import Dropzone from 'react-dropzone';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 const str2ab = require('string-to-arraybuffer');
 
@@ -57,12 +59,8 @@ export default class NewVaultFile extends Component {
     const reader = new FileReader();
     reader.onload = (event) => {
        const object = {};
-       const today = new Date();
-       const day = today.getDate();
-       const month = today.getMonth() + 1;
-       const year = today.getFullYear();
        object.file = file;
-       object.uploaded = month + "/" + day + "/" + year;
+       object.uploaded = getMonthDayYear();
        object.link = event.target.result;
        object.name = file.name;
        object.size = file.size;
@@ -74,7 +72,7 @@ export default class NewVaultFile extends Component {
        object.id = Date.now();
        object.vault = "vault";
        const objectTwo = {};
-       objectTwo.uploaded = month + "/" + day + "/" + year;
+       objectTwo.uploaded = getMonthDayYear();
        objectTwo.id = object.id;
        objectTwo.name = object.name;
        objectTwo.type = object.type;

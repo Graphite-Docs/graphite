@@ -7,6 +7,7 @@ import {
   putFile,
   signUserOut,
 } from 'blockstack';
+import Header from '../Header';
 import { Link } from 'react-router-dom';
 import update from 'immutability-helper';
 const { getPublicKeyFromPrivate } = require('blockstack');
@@ -139,6 +140,7 @@ export default class VaultCollection extends Component {
   loadCollection() {
     getFile("uploads.json", {decrypt: true})
      .then((fileContents) => {
+       console.log(JSON.parse(fileContents || '{}'))
        if(fileContents){
          this.setState({ files: JSON.parse(fileContents || '{}') });
          this.setState({filteredValue: this.state.files});
@@ -294,16 +296,17 @@ export default class VaultCollection extends Component {
   getCollection() {
     getFile("uploads.json", {decrypt: true})
     .then((fileContents) => {
+      console.log(JSON.parse(fileContents || '{}'))
        this.setState({ files: JSON.parse(fileContents || '{}') })
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let files = this.state.files;
       console.log("files man")
       console.log(files);
-      const thisFile = files.find((file) => { return file.id == this.state.filesSelected[0]});
+      const thisFile = files.find((file) => { return file.id.toString() === this.state.filesSelected[0]}); //this is comparing strings
       let index = thisFile && thisFile.id;
       function findObjectIndex(file) {
-          return file.id == index;
+          return file.id === index; //this is comparing numbers
       }
       this.setState({index: files.findIndex(findObjectIndex) });
     })
@@ -397,11 +400,11 @@ export default class VaultCollection extends Component {
     this.setState({tagDownload: false});
     const thisFile = this.state.filesSelected[0];
     const fullFile = thisFile + '.json';
-
+    console.log(fullFile);
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
        console.log(JSON.parse(fileContents || '{}'));
-       if(JSON.parse(fileContents || '{}').tags) {
+       if(JSON.parse(fileContents || '{}')) {
          this.setState({
            shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
            name: JSON.parse(fileContents || '{}').name,
@@ -447,10 +450,10 @@ export default class VaultCollection extends Component {
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let files = this.state.files;
-      const thisFile = files.find((file) => { return file.id == this.state.filesSelected[0]});
+      const thisFile = files.find((file) => {return file.id.toString() === this.state.filesSelected[0]}); //this is comparing strings
       let index = thisFile && thisFile.id;
       function findObjectIndex(file) {
-          return file.id == index;
+          return file.id === index; //this is comparing numbers
       }
       this.setState({index: files.findIndex(findObjectIndex) });
     })
@@ -522,6 +525,7 @@ export default class VaultCollection extends Component {
       .then(() => {
         console.log("Saved tags");
         this.setState({ tagModal: "hide", loadingTwo: "hide" });
+        window.$('#tagModal').modal('close');
         this.loadCollection();
       })
       .catch(e => {
@@ -560,14 +564,14 @@ export default class VaultCollection extends Component {
   }
 
   deleteTag() {
-    console.log("Deleted");
     this.setState({ deleteState: false });
+    console.log(this.state.selectedTagId);
 
     let tags = this.state.singleFileTags;
-    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId});
+    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId}); //this is comparing strings
     let index = thisTag && thisTag.id;
     function findObjectIndex(tag) {
-        return tag.id == index;
+        return tag.id == index; //this is comparing numbers
     }
     this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
     // setTimeout(this.finalDelete, 300);
@@ -576,7 +580,7 @@ export default class VaultCollection extends Component {
   }
 
   render() {
-    const { deleteState, applyFilter, typeList, collaboratorsModal, tagList, dateList, singleFileTags, tagModal, tagDownload, confirmAdd, loadingTwo, contacts, contactDisplay, shareModal, appliedFilter, person, currentPage, filesPerPage } = this.state;
+    const { deleteState, applyFilter, typeList, collaboratorsModal, tagList, dateList, singleFileTags, tagDownload, confirmAdd, loadingTwo, contacts, contactDisplay, appliedFilter, person, currentPage, filesPerPage } = this.state;
     let files;
     if (this.state.filteredValue !=null) {
       files = this.state.filteredValue;
@@ -646,30 +650,7 @@ export default class VaultCollection extends Component {
     return (
       !isSignInPending() ?
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/shB70Sn.png" alt="pencil" /></a>
-
-            <ul id="nav-mobile" className="right">
-            <ul id="dropdown1" className="dropdown-content">
-              <li><a href="/shared-vault">Shared Files</a></li>
-
-              <li className="divider"></li>
-              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
-            </ul>
-            <ul id="dropdown2" className="dropdown-content">
-            <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
-            <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
-            <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-            <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
-            </ul>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
-            </ul>
-          </div>
-        </nav>
-      </div>
+      <Header />
       <div className="docs">
       <div className="row container">
         <div className="col s12 m6">
@@ -752,7 +733,7 @@ export default class VaultCollection extends Component {
           this.state.activeIndicator === true ?
             <ul className="pagination action-items">
               <li><a className="modal-trigger" href="#shareModal">Share</a></li>
-              <li><a className="modal-trigger" href="#tagModal">Tag</a></li>
+              <li><a className="modal-trigger" href="#tagModal" onClick={this.loadSingleTags}>Tag</a></li>
 
             </ul>
          :
@@ -779,7 +760,6 @@ export default class VaultCollection extends Component {
             <tbody>
           {
             currentFiles.slice(indexOfFirstFile, indexOfLastFile).map(file => {
-              console.log(currentFiles);
               var tags;
               var collabs;
               if(file.tags) {

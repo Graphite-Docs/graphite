@@ -12,6 +12,7 @@ import {
   handlePendingSignIn,
   signUserOut
 } from "blockstack";
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 const wordcount = require("wordcount");
 const blockstack = require("blockstack");
 // const Quill = ReactQuill.Quill
@@ -100,7 +101,7 @@ export default class SingleDoc extends Component {
     object.title = this.state.textvalue;
     object.content = this.state.test;
     object.id = parseInt(this.props.match.params.id);
-    object.updated = month + "/" + day + "/" + year;
+    object.updated = getMonthDayYear();
     object.words = wordcount(this.state.test);
     this.setState({ value: [...this.state.value, this.state.value.splice(this.state.index, 1, object)]})
     console.log(this.state.value);

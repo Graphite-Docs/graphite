@@ -3,6 +3,7 @@ import {
   isSignInPending,
   handlePendingSignIn,
 } from "blockstack";
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const blockstack = require("blockstack");
 const wordcount = require("wordcount");
@@ -64,16 +65,12 @@ export default class Doc extends Component {
   }
   handleaddItem() {
     if(this.state.textvalue || this.state.test) {
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const rando = Math.floor((Math.random() * 2500) + 1);
       const object = {};
       object.title = this.state.textvalue || "Untitled";
       object.content = this.state.test;
       object.id = rando;
-      object.updated = month + "/" + day + "/" + year;
+      object.updated = getMonthDayYear();
       object.words = wordcount(this.state.test);
       this.setState({ value: [...this.state.value, object] });
       // this.setState({ confirm: true, cancel: false });

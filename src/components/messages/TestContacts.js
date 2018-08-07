@@ -12,6 +12,7 @@ import {
 } from "blockstack";
 import axios from 'axios';
 import update from 'immutability-helper';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -143,15 +144,11 @@ export default class TestContacts extends Component {
 
   handleaddItem() {
     console.log("adding...");
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.contact = this.state.addContact + '.id';
     object.img = this.state.newContactImg;
     object.name = this.state.name;
-    object.dateAdded = month + "/" + day + "/" + year;
+    object.dateAdded = getMonthDayYear();
     object.types = [];
     let link = 'https://core.blockstack.org/v1/names/' + object.contact;
     axios
@@ -213,10 +210,6 @@ export default class TestContacts extends Component {
       .then((profile) => {
           console.log(profile);
           const object = {};
-          const today = new Date();
-          const day = today.getDate();
-          const month = today.getMonth() + 1;
-          const year = today.getFullYear();
           object.contact = this.state.newContact;
           if(profile.image) {
             object.img = profile.image[0].contentUrl;
@@ -229,7 +222,7 @@ export default class TestContacts extends Component {
             object.name = "";
           }
           object.types = [];
-          object.dateAdded = month + "/" + day + "/" + year;
+          object.dateAdded = getMonthDayYear();
           this.setState({ contacts: [...this.state.contacts, object], add: false });
           this.setState({ filteredContacts: this.state.contacts });
           setTimeout(this.saveNewFile, 500);

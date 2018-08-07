@@ -7,6 +7,7 @@ import {
   Person,
   handlePendingSignIn,
 } from 'blockstack';
+import Header from '../Header';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Collections extends Component {
@@ -31,7 +32,6 @@ export default class Collections extends Component {
   }
 
   render() {
-
     const { filteredValue, appliedFilter, singleDocTags, loadingTwo, contacts, currentPage, docsPerPage, loading, value } = this.props;
     const link = '/documents/doc/' + this.props.tempDocId;
     if (this.props.redirect) {
@@ -88,31 +88,7 @@ export default class Collections extends Component {
         });
     return (
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
-
-            <ul id="nav-mobile" className="right">
-              <ul id="dropdown1" className="dropdown-content">
-                <li><a href="/shared-docs">Shared Files</a></li>
-                <li><a href="/export">Export All Data</a></li>
-                <li className="divider"></li>
-                <li><a onClick={ this.props.handleSignOut }>Sign out</a></li>
-              </ul>
-              <ul id="dropdown2" className="dropdown-content">
-                <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
-                <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
-                <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-                <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
-              </ul>
-                <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-                <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
-            </ul>
-          </div>
-        </nav>
-        </div>
-
+        <Header />
         <div className="docs">
         <div className="row container">
           <div className="col s12 m6">
@@ -184,7 +160,7 @@ export default class Collections extends Component {
             <a onClick={this.props.handleaddItem} className="btn-floating btn-large black">
               <i className="large material-icons">add</i>
             </a>
-        </div>
+            </div>
         {/* End Add Button */}
           {
             this.props.activeIndicator === true ?
@@ -207,6 +183,7 @@ export default class Collections extends Component {
               <tr>
                 <th></th>
                 <th>Title</th>
+                <th>Access</th>
                 <th>Collaborators</th>
                 <th>Updated</th>
                 <th>Tags</th>
@@ -232,6 +209,7 @@ export default class Collections extends Component {
               <tr key={doc.id}>
                 <td><input type="checkbox" checked={this.props.checked} value={doc.id} id={doc.id} onChange={this.props.handleCheckbox} /><label htmlFor={doc.id}></label></td>
                 <td><Link to={'/documents/doc/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
+                <td>{doc.singleDocIsPublic === true ? "public" : "private"}</td>
                 <td>{collabs === "" ? collabs : collabs.join(', ')}</td>
                 <td>{doc.updated}</td>
                 <td>{tags === "" ? tags : tags.join(', ')}</td>
@@ -355,6 +333,15 @@ export default class Collections extends Component {
               {/*end loading */}
           </div>
         {/* End tag Modal */}
+
+        {/* Tap Target */}
+        <div className="tap-target" data-activates="menu">
+          <div className="tap-target-content">
+            <h5>Add a Document</h5>
+            <p>It looks like you don'{/*'*/}t have any documents yet. Add one here.</p>
+          </div>
+        </div>
+        {/* End Tap Target */}
 
         </div>
       </div>

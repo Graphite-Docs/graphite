@@ -1,18 +1,14 @@
 import React, { Component } from "react";
-// import ReactQuill from 'react-quill';
-// import 'react-quill/dist/quill.bubble.css';
 import {
   loadUserData,
   getFile,
   putFile
 } from 'blockstack';
 import { toXML } from 'jstoxml';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 import axios from 'axios';
 const wordcount = require("wordcount");
-const Font = ReactQuill.Quill.import('formats/font');
 const { decryptECIES } = require('blockstack/lib/encryption');
-Font.whitelist = ['Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-ReactQuill.Quill.register(Font, true);
 
 export default class SingleJournoDoc extends Component {
   constructor(props) {
@@ -193,14 +189,10 @@ export default class SingleJournoDoc extends Component {
 
   publishWebhook() {
     this.setState({webhook: false})
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
-    object.publishDate = month + "/" + day + "/" + year;
+    object.publishDate = getMonthDayYear();
     object.author = this.state.author;
     object.id = this.state.id;
     object.published = true;
@@ -227,14 +219,10 @@ export default class SingleJournoDoc extends Component {
   }
 
   publishJSON() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.title = this.state.title;
     object.content = this.state.content;
-    object.publishDate = month + "/" + day + "/" + year;
+    object.publishDate = getMonthDayYear();
     object.author = this.state.author;
     object.id = this.state.id;
     object.published = true;
@@ -256,14 +244,10 @@ export default class SingleJournoDoc extends Component {
   }
 
   publishRSS() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const object = {};
     object.title = this.state.title;
     object.description = this.state.content;
-    object.publishDate = month + "/" + day + "/" + year;
+    object.publishDate = getMonthDayYear();
     object.author = this.state.author;
     object.id = this.state.id;
     object.published = true;

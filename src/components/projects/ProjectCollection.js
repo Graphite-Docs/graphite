@@ -8,6 +8,7 @@ import {
   signUserOut,
 } from 'blockstack';
 const { getPublicKeyFromPrivate } = require('blockstack');
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class ProjectCollection extends Component {
@@ -126,16 +127,12 @@ export default class ProjectCollection extends Component {
 
   handleAdd() {
     const object = {};
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     object.id = Date.now();
     object.title = this.state.title;
     object.topic = [this.state.topic].join(", ");
     object.collaborators = [];
     object.status = "W";
-    object.updated = month + "/" + day + "/" + year;
+    object.updated = getMonthDayYear();
     object.createdDay = day;
     object.createdMonth = month;
     object.createdYear = year;

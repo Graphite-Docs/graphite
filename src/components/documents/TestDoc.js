@@ -6,7 +6,7 @@ import {
 import RemoteStorage from 'remotestoragejs';
 import Widget from 'remotestorage-widget';
 // import ImageResize from 'quill-image-resize-module';
-import axios from 'axios';
+// import axios from 'axios';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
 import QuillEditorPrivate from '../QuillEditorPrivate.js';
 const wordcount = require("wordcount");
@@ -130,7 +130,7 @@ export default class TestDoc extends Component {
       words = 0;
     }
 
-    const { yjsConnected, idToLoad, docLoaded, publicShare, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule, title, content, gaiaLink, singleDocIsPublic, value} = this.props
+    const { yjsConnected, idToLoad, docLoaded, remoteStorage, loading, save, autoSave, contacts, hideStealthy, revealModule, title, content, gaiaLink, singleDocIsPublic, value} = this.props
     const stealthy = (hideStealthy) ? "hide" : ""
     const remoteStorageActivator = remoteStorage === true ? "" : "hide";
     let contentString = "<p style='text-align: center;'>" + title + "</p> <div style='text-indent: 30px;'>" + content + "</div>";

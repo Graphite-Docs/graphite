@@ -82,10 +82,10 @@ export default class SharedSheetsCollection extends Component {
       this.deleteShareDoc = () => {
         this.setState({deleteId: ""})
         let sharedSheets = this.state.sharedSheets;
-        const thisSheet = sharedSheets.find((sheet) => { return sheet.id == this.state.deleteId});
+        const thisSheet = sharedSheets.find((sheet) => { return sheet.id === this.state.deleteId}); //this is comparing numbers
         let index = thisSheet && thisSheet.id;
         function findObjectIndex(sheet) {
-          return sheet.id == index;
+          return sheet.id === index; //this is comparing numbers
         }
         let deleteIndex = sharedSheets.findIndex(findObjectIndex)
         let updatedSheet = update(this.state.sharedSheets, {$splice: [[deleteIndex, 1, ]]})

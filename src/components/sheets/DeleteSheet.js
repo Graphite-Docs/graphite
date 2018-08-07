@@ -41,11 +41,11 @@ export default class DeleteSheet extends Component {
         this.setState({ initialLoad: "hide" });
      }).then(() =>{
        let sheets = this.state.sheets;
-       const thisSheet = sheets.find((sheet) => { return sheet.id == this.props.match.params.id});
+       const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.props.match.params.id}); //this is comparing strings
        let index = thisSheet && thisSheet.id;
        console.log(index);
        function findObjectIndex(sheet) {
-           return sheet.id == index;
+           return sheet.id === index; //this is comparing numbers
        }
        // let grid = thisSheet && thisSheet.content;
        this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) })

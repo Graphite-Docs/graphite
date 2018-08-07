@@ -10,7 +10,10 @@ import {
   signUserOut,
   handlePendingSignIn,
 } from 'blockstack';
+import Header from '../Header';
 import update from 'immutability-helper';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { encryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -163,15 +166,16 @@ export default class SheetsCollections extends Component {
       }
     })
     .then(() => {
-      console.log("migration complete indication = ");
-      console.log(this.state.migrationComplete);
-      if(this.state.migrationComplete !== true) {
-        console.log("starting migration");
-        this.migrateSheets();
-      } else {
-        console.log("No migration");
-        this.loadCollection();
-      }
+      // console.log("migration complete indication = ");
+      // console.log(this.state.migrationComplete);
+      // if(this.state.migrationComplete !== true) {
+      //   console.log("starting migration");
+      //   this.migrateSheets();
+      // } else {
+      //   console.log("No migration");
+      //   this.loadCollection();
+      // }
+      this.loadCollection();
     })
     .catch(e => {
       console.log(e);
@@ -301,16 +305,12 @@ migrationComplete() {
   }
 
   handleaddItem() {
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = "Untitled";
     object.content = [[]];
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
     object.sharedWith = [];
     object.tags = [];
     const objectTwo = {};
@@ -476,10 +476,10 @@ migrationComplete() {
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let sheets = this.state.sheets;
-      const thisSheet = sheets.find((sheet) => { return sheet.id == this.state.sheetsSelected[0]});
+      const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.state.sheetsSelected[0]}); //this is comparing strings
       let index = thisSheet && thisSheet.id;
       function findObjectIndex(sheet) {
-          return sheet.id == index;
+          return sheet.id === index; //this is comparing numbers
       }
       this.setState({index: sheets.findIndex(findObjectIndex) });
     })
@@ -558,6 +558,7 @@ migrationComplete() {
         window.Materialize.toast('Sheet shared with ' + this.state.receiverID, 4000);
         this.loadCollection();
         this.setState({shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
+        window.$('#shareModal').modal('close');
       })
       .catch(e => {
         console.log(e);
@@ -610,10 +611,10 @@ migrationComplete() {
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let sheets = this.state.sheets;
-      const thisSheet = sheets.find((sheet) => { return sheet.id == this.state.sheetsSelected[0]});
+      const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.state.sheetsSelected[0]}); //this is comparing strings
       let index = thisSheet && thisSheet.id;
       function findObjectIndex(sheet) {
-          return sheet.id == index;
+          return sheet.id === index; //this is comparing numbers
       }
       this.setState({index: sheets.findIndex(findObjectIndex) });
     })
@@ -676,10 +677,10 @@ migrationComplete() {
     this.setState({ deleteState: false });
 
     let tags = this.state.singleSheetTags;
-    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId});
+    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId}); //this is comparing strings
     let index = thisTag && thisTag.id;
     function findObjectIndex(tag) {
-        return tag.id == index;
+        return tag.id == index; //this is comparing numbers
     }
     this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
     // setTimeout(this.finalDelete, 300);
@@ -733,7 +734,7 @@ migrationComplete() {
     this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
     let sheets;
     this.state.filteredSheets === [] ? sheets = [] : sheets = this.state.filteredSheets;
-    const { collaboratorsModal, tagList, dateList, appliedFilter, singleSheetTags, contactDisplay, loadingTwo, confirmAdd, contacts, shareModal, tagModal, currentPage, sheetsPerPage, loading } = this.state;
+    const { collaboratorsModal, tagList, dateList, appliedFilter, singleSheetTags, contactDisplay, loadingTwo, confirmAdd, contacts, currentPage, sheetsPerPage, loading } = this.state;
     const link = '/sheets/sheet/' + this.state.tempSheetId;
     if (this.state.redirect) {
       return <Redirect push to={link} />;
@@ -792,32 +793,7 @@ migrationComplete() {
         });
     return (
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
-
-            <ul id="nav-mobile" className="right">
-            <ul id="dropdown1" className="dropdown-content">
-              <li><a href="/shared-sheets">Shared Files</a></li>
-              <li><a href="/export">Export All Data</a></li>
-              <li className="divider"></li>
-              <li><a onClick={ this.handleSignOut }>Sign out</a></li>
-            </ul>
-            <ul id="dropdown2" className="dropdown-content">
-            <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
-            <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
-            <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-            <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
-            </ul>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-              <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
-            </ul>
-          </div>
-        </nav>
-      </div>
-
-
+        <Header />
         <div className="docs">
         <div className="row container">
           <div className="col s12 m6">

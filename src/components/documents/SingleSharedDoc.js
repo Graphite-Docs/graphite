@@ -1,6 +1,4 @@
 import React, { Component } from "react";
-// import ReactQuill from 'react-quill';
-// import 'react-quill/dist/quill.snow.css';
 import {
   isSignInPending,
   loadUserData,
@@ -8,13 +6,10 @@ import {
   putFile,
   handlePendingSignIn,
 } from 'blockstack';
-// import $ from 'jquery';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-// const Font = ReactQuill.Quill.import('formats/font');
-// Font.whitelist = ['Ubuntu', 'Raleway', 'Roboto', 'Lato', 'Open Sans', 'Montserrat'] ; // allow ONLY these fonts and the default
-// ReactQuill.Quill.register(Font, true);
 
 export default class SingleSharedDoc extends Component {
   constructor(props) {
@@ -90,10 +85,10 @@ getOther() {
        let privateKey = loadUserData().appPrivateKey;
         this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
         let docs = this.state.sharedFile;
-        const thisDoc = docs.find((doc) => { return doc.id == this.props.match.params.id});
+        const thisDoc = docs.find((doc) => { return doc.id.toString() === this.props.match.params.id}); //comparing strings
         let index = thisDoc && thisDoc.id;
         function findObjectIndex(doc) {
-            return doc.id == index;
+            return doc.id === index; //comparing numbers
         }
         this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex) })
      })
@@ -116,15 +111,11 @@ getOther() {
     }
 
     handleaddItem() {
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const rando = Date.now();
       const object = {};
       object.title = this.state.title;
       object.id = rando;
-      object.created = month + "/" + day + "/" + year;
+      object.created = getMonthDayYear();
       const objectTwo = {}
       objectTwo.title = object.title;
       objectTwo.id = object.id;

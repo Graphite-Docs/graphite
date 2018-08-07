@@ -4,3 +4,4 @@ yarn.lock
 npm-debug.log
 .netlify
 src/projects
+dist

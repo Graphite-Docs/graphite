@@ -6,14 +6,14 @@ import {
   getFile,
   putFile,
 } from "blockstack";
-// import "react-quill/dist/quill.snow.css";
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import XLSX from "xlsx";
 import HotTable from "react-handsontable";
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { encryptECIES, } = require('blockstack/lib/encryption');
-const avatarFallbackImage =
-  "https://s3.amazonaws.com/onename/avatar-placeholder.png";
+const avatarFallbackImage = "https://s3.amazonaws.com/onename/avatar-placeholder.png";
 const mammoth = require("mammoth");
 const str2ab = require("string-to-arraybuffer");
 const rtfToHTML = require('./rtf-to-html.js');
@@ -47,7 +47,8 @@ export default class SingleVaultFile extends Component {
       type: "",
       index: "",
       pages: "",
-      page: "",
+      // page: "",
+      page: 1, //default page value should be of type number, not string
       content: "",
       show: "hide",
       loading: "",
@@ -96,13 +97,14 @@ export default class SingleVaultFile extends Component {
           this.setState({ files: JSON.parse(fileContents || '{}') })
           console.log("loaded");
           this.setState({ initialLoad: "hide" });
-       }).then(() =>{
+       }).then(() => {
          let files = this.state.files;
-         const thisFile = files.find((file) => { return file.id == this.props.match.params.id});
+         const thisFile = files.find((file) => { return file.id.toString() === this.props.match.params.id}); //this is comparing strings
+         console.log("SingleVaultFile - componentDidMount - thisFile is: ", thisFile);
          let index = thisFile && thisFile.id;
-         console.log(index);
+         console.log("SingleVaultFile - componentDidMount - index is: ", index);
          function findObjectIndex(file) {
-             return file.id == index;
+             return file.id === index; //this is comparing numbers
          }
          // let grid = thisSheet && thisSheet.content;
          this.setState({ tags: thisFile && thisFile.tags, sharedWith: thisFile && thisFile.sharedWith, index: files.findIndex(findObjectIndex) })
@@ -246,16 +248,12 @@ export default class SingleVaultFile extends Component {
   handleaddTwo() {
     this.setState({ show: "hide" });
     this.setState({ hideButton: "hide", loading: "" });
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = this.state.name;
     object.content = this.state.content;
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
     object.fileType = "vault";
     const objectTwo = {}
     objectTwo.title = object.title;
@@ -273,16 +271,12 @@ export default class SingleVaultFile extends Component {
   handleaddTwoSheet() {
     this.setState({ show: "hide" });
     this.setState({ hideButton: "hide", loading: "" });
-    const today = new Date();
-    const day = today.getDate();
-    const month = today.getMonth() + 1;
-    const year = today.getFullYear();
     const rando = Date.now();
     const object = {};
     object.title = this.state.name;
     object.content = this.state.grid;
     object.id = rando;
-    object.created = month + "/" + day + "/" + year;
+    object.created = getMonthDayYear();
 
     this.setState({ sheets: [...this.state.sheets, object] });
     this.setState({ loading: "" });
@@ -686,7 +680,7 @@ export default class SingleVaultFile extends Component {
                         page={this.state.page}
                       />
                       {pagination}
-                      <a
+                      <link
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
@@ -721,7 +715,7 @@ export default class SingleVaultFile extends Component {
                           }}
                         />
                       </div>
-                      <a
+                      <link
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}
@@ -764,7 +758,7 @@ export default class SingleVaultFile extends Component {
                         }}
                       />
 
-                      <a
+                      <link
                         id="dwnldLnk"
                         download={this.state.name}
                         style={thisStyle}

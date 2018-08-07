@@ -4,7 +4,6 @@ import Profile from './Profile';
 import AppPage from './AppPage';
 import Signin from './Signin';
 import Collections from './documents/Collections';
-import TestDoc from './documents/TestDoc';
 import SingleDoc from './documents/SingleDoc';
 import DeleteDoc from './documents/DeleteDoc';
 import SharedCollection from './documents/SharedCollection';
@@ -30,17 +29,13 @@ import DeleteVaultFile from './vault/DeleteVaultFile';
 import SharedVault from './vault/SharedVault';
 import SharedVaultCollection from './vault/SharedVaultCollection';
 import SingleSharedFile from './vault/SingleSharedFile';
-// import MainProject from './projects/MainProject';
-// import SingleProject from './projects/SingleProject';
-// import MainJournalism from './journalism/MainJournalism';
-// import SingleJournoDoc from './journalism/SingleJournoDoc';
-// import EditorAdmin from './journalism/EditorAdmin';
 import Export from './Export';
 import PublicDoc from './PublicDoc';
-// import MainGraphiteScreen from './graphite/MainGraphiteScreen';
-// import AccountSettings from './graphite/AccountSettings';
-// import DeleteClient from './graphite/DeleteClient';
 import Integrations from './Integrations';
+import Settings from './Settings';
+import PaymentSuccess from './PaymentSuccess';
+import Invites from './Invites';
+import Acceptances from './Acceptances';
 import {
   savePubKey
 } from './helpers/encryptionHelpers';
@@ -110,7 +105,8 @@ import {
   componentDidMountData,
   loadMyFile,
   handleStealthy,
-  print
+  print,
+  shareToTeam
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -124,9 +120,91 @@ import {
   connectStealthy,
   loadKey,
   loadSharedDocs,
-  saveDocsStealthy,
-  saveIntegrations
+  saveIntegrations,
+  connectBlockusign,
+  connectCoins,
+  connectNoteRiot,
+  connectKanstack,
+  loadCoinsKey,
+  loadBlockusignKey,
+  loadKanstackKey,
+  loadNoteRiotKey,
+  disconnectCoins,
+  disconnectKanstack,
+  // disconnectNoteRiot,
+  disconnectBlockusign,
+  disconnectStealthy,
+  loadStealthyKeyDisconnect,
+  loadCoinsKeyDisconnect,
+  loadBlockusignKeyDisconnect,
+  loadNoteRiotKeyDisconnect,
+  loadKanstackKeyDisconnect,
+  saveStealthyIntegration,
+  saveCoinsIntegration,
+  updateIntegrations
 } from './helpers/integrations';
+import {
+  handleMediumIntegrationToken,
+  connectMedium,
+  postToMedium,
+  disconnectMedium,
+  loadMediumToken,
+  handleSlackWebhookUrl,
+  connectSlack,
+  disconnectSlack,
+  postToSlack,
+  slackWebhook
+} from './helpers/traditionalIntegrations';
+import {
+  handleTeammateName,
+  handleTeammateId,
+  handleTeammateEmail,
+  handleTeammateRole,
+  clearNewTeammate,
+  addTeammate,
+  saveInvite,
+  sendInvite,
+  updateRole,
+  teammateToDelete,
+  updateTeammate
+} from './helpers/team';
+import {
+  saveAll,
+  saveAccount,
+  saveToTeam,
+  checkForLatest,
+  setLoadedFile
+} from './helpers/teamsync';
+import {
+  savePlan,
+  savePlanFile,
+  loadAccountPlan,
+  testingDeleteAll,
+  accountDetails
+} from './helpers/accountPlan';
+import {
+  acceptInvite,
+  loadInvite,
+  saveBasicInviteInfo,
+  inviteInfo,
+  loadInviteStatus,
+  saveToInviter,
+  sendToInviter,
+  sendAcceptEmail,
+  loadBasicInviteInfo
+} from './helpers/invite';
+import {
+  confirmAcceptance
+} from './helpers/acceptance';
+import {
+  postToLog,
+} from './helpers/audits';
+import {
+  loadDocToDelete,
+  handleDeleteDoc,
+  saveNewDocFile,
+  saveDocFileTwo
+} from './helpers/deleteDoc';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -205,7 +283,7 @@ export default class App extends Component {
       printPreview: false,
       autoSave: "Saved",
       show: "",
-      singleDocIsPublic: false,
+      // singleDocIsPublic: false,
       singlePublic: {},
       publicShare: "hide",
       gaiaLink: "",
@@ -235,6 +313,7 @@ export default class App extends Component {
       deleteIndex: "",
       send: false,
       integrations: [],
+      // integrations: {},
       userRole: "",
       accountSettings: "",
       teamCount: 0,
@@ -244,9 +323,53 @@ export default class App extends Component {
       view: false,
       docLoaded: false,
       lastUpdated: "",
-      yjsConnected: false
+      yjsConnected: false,
+      stealthyKey: "",
+      blockusignConnected: false,
+      blockusignKey: "",
+      coinsKey: "",
+      kanstackConnected: false,
+      kanstackKey: "",
+      noteRiotConnected: false,
+      noteRiotKey: "",
+      mediumConnected: false,
+      mediumIntegrationToken: "",
+      mediumPost: {},
+      slackConnected: false,
+      slackWebhookUrl: "",
+      graphitePro: false,
+      newTeammateEmail: "",
+      newTeammateName: "",
+      newTeammateRole: "",
+      ownerBlockstackId: "",
+      newTeammateId: "",
+      accountDetails: {},
+      ownerName: "",
+      ownerEmail: "",
+      lastPaymentDate: "",
+      inviterKey: "",
+      inviteDate: "",
+      inviter: "",
+      inviteeEmail: "",
+      inviteeBlockstackId: "",
+      inviteeName: "",
+      inviteeRole: "",
+      inviteeId: "",
+      inviteeKey: "",
+      inviterEmail: "",
+      inviteAccepted: "",
+      inviteDetails: {},
+      teamMateMostRecent: "",
+      count: 0,
+      audits: [],
+      action: "",
+      deleteDoc: false,
+      settingsMain: "hide",
+      settingsOnboarding: "hide",
+      loadingBar: "",
+      teamDocs: []
     }
-  }
+  } //constructor
 
   componentWillMount() {
     if (isSignInPending()) {
@@ -309,7 +432,6 @@ export default class App extends Component {
     this.connectStealthy = connectStealthy.bind(this);
     this.loadKey = loadKey.bind(this);
     this.loadSharedDocs = loadSharedDocs.bind(this);
-    this.saveDocsStealthy = saveDocsStealthy.bind(this);
     this.autoSave = autoSave.bind(this);
     this.saveSingleDocCollection = saveSingleDocCollection.bind(this);
     this.componentDidMountData = componentDidMountData.bind(this);
@@ -317,6 +439,47 @@ export default class App extends Component {
     this.print = print.bind(this);
     this.handleStealthy = handleStealthy.bind(this);
     this.saveIntegrations = saveIntegrations.bind(this);
+    this.shareToTeam = shareToTeam.bind(this);
+
+    //Delete Document
+    this.loadDocToDelete = loadDocToDelete.bind(this);
+    this.handleDeleteDoc = handleDeleteDoc.bind(this);
+    this.saveNewDocFile = saveNewDocFile.bind(this);
+    this.saveDocFileTwo = saveDocFileTwo.bind(this);
+
+    //integrations
+    this.connectBlockusign = connectBlockusign.bind(this);
+    this.connectCoins = connectCoins.bind(this);
+    this.connectNoteRiot = connectNoteRiot.bind(this);
+    this.connectKanstack = connectKanstack.bind(this);
+    this.loadCoinsKey = loadCoinsKey.bind(this);
+    this.loadBlockusignKey = loadBlockusignKey.bind(this);
+    this.loadNoteRiotKey = loadNoteRiotKey.bind(this);
+    this.loadKanstackKey = loadKanstackKey.bind(this);
+    this.disconnectCoins = disconnectCoins.bind(this);
+    this.disconnectKanstack = disconnectKanstack.bind(this);
+    this.disconnectBlockusign = disconnectBlockusign.bind(this);
+    this.disconnectStealthy = disconnectStealthy.bind(this);
+    this.loadStealthyKeyDisconnect = loadStealthyKeyDisconnect.bind(this);
+    this.loadCoinsKeyDisconnect = loadCoinsKeyDisconnect.bind(this);
+    this.loadBlockusignKeyDisconnect = loadBlockusignKeyDisconnect.bind(this);
+    this.loadNoteRiotKeyDisconnect = loadNoteRiotKeyDisconnect.bind(this);
+    this.loadKanstackKeyDisconnect = loadKanstackKeyDisconnect.bind(this);
+    this.saveStealthyIntegration = saveStealthyIntegration.bind(this);
+    this.saveCoinsIntegration = saveCoinsIntegration.bind(this);
+    this.updateIntegrations = updateIntegrations.bind(this);
+
+    //Traditional Integrations
+    this.handleMediumIntegrationToken = handleMediumIntegrationToken.bind(this);
+    this.connectMedium = connectMedium.bind(this);
+    this.postToMedium = postToMedium.bind(this);
+    this.disconnectMedium = disconnectMedium.bind(this);
+    this.loadMediumToken = loadMediumToken.bind(this);
+    this.handleSlackWebhookUrl = handleSlackWebhookUrl.bind(this);
+    this.connectSlack = connectSlack.bind(this);
+    this.disconnectSlack = disconnectSlack.bind(this);
+    this.postToSlack = postToSlack.bind(this);
+    this.slackWebhook = slackWebhook.bind(this);
 
     //PublicDoc Components
     this.fetchData = fetchData.bind(this);
@@ -324,14 +487,59 @@ export default class App extends Component {
     this.handlePubChange = handlePubChange.bind(this);
     this.handlePubTitleChange = handlePubTitleChange.bind(this);
     this.loadInitial = loadInitial.bind(this);
-    isUserSignedIn() ? this.loadIntegrations() : console.log("");
+
+    //Team
+    this.handleTeammateName = handleTeammateName.bind(this);
+    this.handleTeammateId = handleTeammateId.bind(this);
+    this.handleTeammateEmail = handleTeammateEmail.bind(this);
+    this.handleTeammateRole = handleTeammateRole.bind(this);
+    this.clearNewTeammate = clearNewTeammate.bind(this);
+    this.addTeammate = addTeammate.bind(this);
+    this.saveInvite = saveInvite.bind(this);
+    this.sendInvite = sendInvite.bind(this);
+    this.saveAll = saveAll.bind(this);
+    this.saveAccount = saveAccount.bind(this);
+    this.updateRole = updateRole.bind(this);
+    this.saveToTeam = saveToTeam.bind(this);
+    this.checkForLatest = checkForLatest.bind(this);
+    this.setLoadedFile = setLoadedFile.bind(this);
+    this.teammateToDelete = teammateToDelete.bind(this);
+    this.updateTeammate = updateTeammate.bind(this);
+
+    // Account Plan
+    this.savePlan = savePlan.bind(this);
+    this.savePlanFile = savePlanFile.bind(this);
+    this.loadAccountPlan = loadAccountPlan.bind(this);
+    this.testingDeleteAll = testingDeleteAll.bind(this);
+    this.accountDetails = accountDetails.bind(this);
+
+    //Invites
+    this.acceptInvite = acceptInvite.bind(this);
+    this.loadInvite = loadInvite.bind(this);
+    this.saveBasicInviteInfo = saveBasicInviteInfo.bind(this);
+    this.inviteInfo = inviteInfo.bind(this);
+    this.loadInviteStatus = loadInviteStatus.bind(this);
+    this.saveToInviter = saveToInviter.bind(this);
+    this.sendToInviter = sendToInviter.bind(this);
+    this.sendAcceptEmail = sendAcceptEmail.bind(this);
+    this.loadBasicInviteInfo = loadBasicInviteInfo.bind(this);
+
+    //Acceptances
+    this.confirmAcceptance = confirmAcceptance.bind(this);
+
+    //Audits
+    this.postToLog = postToLog.bind(this);
+
+    // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
+    // isUserSignedIn() ? this.loadAccountPlan() : loadUserData();
+    // isUserSignedIn() ? this.loadInviteStatus() : loadUserData();
   }
 
   componentDidMount() {
     console.log('Build Date: ', Config.BUILD_DATE_STAMP)
     console.log('Build Time: ', Config.BUILD_TIME_STAMP)
-    isUserSignedIn() ? savePubKey() : console.log("");
+    isUserSignedIn() ? savePubKey() : loadUserData();
   }
 
   handleSignIn(e) {
@@ -349,9 +557,12 @@ export default class App extends Component {
       value, sheets, contacts, files, pubKey, appliedFilter, dateList, tagList, collaboratorsModal, singleDocTags,
       contactDisplay, loadingTwo, confirmAdd, shareModal, tagModal, currentPage, docsPerPage, loading, redirect, tempDocId,
       filteredValue, activeIndicator, tag, publicShare, remoteStorage, save, autoSave, hideStealthy, revealModule, title,
-      content, gaiaLink, sharedWith, lastUpdated, idToLoad, docLoaded, singleDocIsPublic, yjsConnected
+      content, gaiaLink, sharedWith, idToLoad, docLoaded, yjsConnected, docs, integrations,
+      stealthyConnected,stealthyKey, coinsConnected, coinsKey, blockusignKey, blockusignConnected, noteRiotKey, noteRiotConnected,
+      mediumConnected, mediumIntegrationToken, graphitePro, slackConnected, team, newTeammateName, newTeammateRole,
+      newTeammateEmail, audits, settingsOnboarding, settingsMain, loadingBar
     } = this.state;
-
+    console.log(audits)
     return (
       <div>
       { !isUserSignedIn() && !window.location.pathname.indexOf("shared") ?
@@ -361,6 +572,7 @@ export default class App extends Component {
             <div className="main-container">
               <Route exact path="/" render={(props) =>
                     <AppPage {...props}
+                    postToLog={this.postToLog}
                     value={value}
                     sheets={sheets}
                     contacts={contacts}
@@ -438,6 +650,8 @@ export default class App extends Component {
                   handleBack={this.handleBack}
                   sharedInfoSingleDoc={this.sharedInfoSingleDoc}
                   handleStealthy={this.handleStealthy}
+                  postToMedium={this.postToMedium}
+                  shareToTeam={this.shareToTeam}
                   publicShare={publicShare}
                   remoteStorage={remoteStorage}
                   loading={loading}
@@ -451,24 +665,30 @@ export default class App extends Component {
                   gaiaLink={gaiaLink}
                   sharedWith={sharedWith}
                   docLoaded={docLoaded}
-                  singleDocIsPublic={singleDocIsPublic}
+                  // singleDocIsPublic={singleDocIsPublic}
                   idToLoad={idToLoad}
                   yjsConnected={yjsConnected}
+                  mediumConnected={mediumConnected}
+                  graphitePro={graphitePro}
                 />
               }/>
               <Route exact path="/shared/docs/:id" render={(location, match, props) =>
                 <PublicDoc
-                  handlePubTitleChange={this.handlePubTitleChange}
-                  handlePubChange={this.handlePubChange}
-                  loadInitial={this.loadInitial}
-                  title={title}
-                  lastUpdated={lastUpdated}
-                  idToLoad={idToLoad}
-                  docLoaded={docLoaded}
-                  content={content}
+                  title={title} //testing...
+                  readOnlyStateFromSingleDoc={this.state.readOnlyStateFromSingleDoc} //NOTE: passing this state as prop to PublicDoc, but can move this to a container instead, like PublicDocContainer...
+                  singleDocIsPublicFromApp={this.state.singleDocIsPublicFromSingleDoc} //NOTE: passing this state as prop to PublicDoc, but can move this to a container instead, like PublicDocContainer...
                 />
               }/>
-              <Route exact path="/documents/doc/delete/:id" component={DeleteDoc} />
+              <Route exact path="/documents/doc/delete/:id" render={(location, match, props) =>
+                <DeleteDoc
+                  loadDocToDelete={this.loadDocToDelete}
+                  handleDeleteDoc={this.handleDeleteDoc}
+                  title={title}
+                  content={content}
+                  loading={loading}
+                  save={save}
+                />
+              }/>
               <Route exact path="/documents/shared/:id" component={SharedCollection} />
               <Route exact path="/documents/sent/:id" component={SentCollection} />
               <Route exact path="/documents/single/shared/:id" component={SingleSharedDoc} />
@@ -494,7 +714,79 @@ export default class App extends Component {
               <Route exact path="/shared-vault" component={SharedVault} />
               <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
               <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
-              <Route exact path="/integrations" component={Integrations} />
+              <Route exact path="/integrations" render={(location, match, props) =>
+                <Integrations {...props}
+                  loadIntegrations={this.loadIntegrations}
+                  connectStealthy={this.connectStealthy}
+                  connectCoins={this.connectCoins}
+                  connectBlockusign={this.connectBlockusign}
+                  connectNoteRiot={this.connectNoteRiot}
+                  connectKanstack={this.connectKanstack}
+                  disconnectCoins={this.disconnectCoins}
+                  disconnectKanstack={this.disconnectKanstack}
+                  disconnectNoteRiot={this.disconnectNoteRiot}
+                  disconnectStealthy={this.disconnectStealthy}
+                  disconnectBlockusign={this.disconnectBlockusign}
+                  handleMediumIntegrationToken={this.handleMediumIntegrationToken}
+                  connectMedium={this.connectMedium}
+                  disconnectMedium={this.disconnectMedium}
+                  handleSlackWebhookUrl={this.handleSlackWebhookUrl}
+                  connectSlack={this.connectSlack}
+                  disconnectSlack={this.disconnectSlack}
+                  testingDeleteAll={this.testingDeleteAll}
+                  docs={docs}
+                  integrations={integrations}
+                  stealthyConnected={stealthyConnected}
+                  stealthyKey={stealthyKey}
+                  coinsConnected={coinsConnected}
+                  coinsKey={coinsKey}
+                  blockusignConnected={blockusignConnected}
+                  blockusignKey={blockusignKey}
+                  noteRiotConnected={noteRiotConnected}
+                  noteRiotKey={noteRiotKey}
+                  mediumConnected={mediumConnected}
+                  mediumIntegrationToken={mediumIntegrationToken}
+                  slackConnected={slackConnected}
+                  graphitePro={graphitePro}
+                />
+              }/>
+              <Route exact path="/settings" render={(location, match, props) =>
+                <Settings {...props}
+                  addTeammate={this.addTeammate}
+                  clearNewTeammate={this.clearNewTeammate}
+                  handleTeammateEmail={this.handleTeammateEmail}
+                  handleTeammateRole={this.handleTeammateRole}
+                  handleTeammateName={this.handleTeammateName}
+                  testingDeleteAll={this.testingDeleteAll}
+                  teammateToDelete={this.teammateToDelete}
+                  updateTeammate={this.updateTeammate}
+                  team={team}
+                  newTeammateName={newTeammateName}
+                  newTeammateRole={newTeammateRole}
+                  newTeammateEmail={newTeammateEmail}
+                  graphitePro={graphitePro}
+                  settingsMain={settingsMain}
+                  settingsOnboarding={settingsOnboarding}
+                  loadingBar={loadingBar}
+                  audits={audits}
+                />
+              }/>
+              <Route exact path="/success" render={(location, match, props) =>
+                <PaymentSuccess {...props}
+                  savePlan={this.savePlan}
+                />
+              }/>
+              <Route exact path="/invites" render={(location, match, props) =>
+                <Invites {...props}
+                  acceptInvite={this.acceptInvite}
+                  loadInvite={this.loadInvite}
+                />
+              }/>
+              <Route exact path="/acceptances" render={(location, match, props) =>
+                <Acceptances {...props}
+                  confirmAcceptance={this.confirmAcceptance}
+                />
+              }/>
             </div>
           </BrowserRouter>
       }
@@ -503,12 +795,3 @@ export default class App extends Component {
   }
 
 }
-
-// <Route exact path="/projects" component={MainProject} />
-// <Route exact path="/projects/:id" component={SingleProject} />
-// <Route exact path="/journalism" component={MainJournalism} />
-// <Route exact path="/journalism/:id" component={SingleJournoDoc} />
-// <Route exact path="/journalism-admin" component={EditorAdmin} />
-// <Route exact path="/admin" component={MainGraphiteScreen} />
-// <Route exact path="/admin/settings" component={AccountSettings} />
-// <Route exact path="/admin/delete/:id" component={DeleteClient} />

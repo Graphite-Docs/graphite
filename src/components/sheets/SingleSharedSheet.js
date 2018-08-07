@@ -1,11 +1,12 @@
 import React, { Component } from "react";
-// import 'react-quill/dist/quill.snow.css';
 import {
   loadUserData,
   getFile,
   putFile
 } from 'blockstack';
 import HotTable from 'react-handsontable';
+import { getMonthDayYear } from '../helpers/getMonthDayYear';
+
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -76,11 +77,11 @@ getOther() {
     console.log("loaded");
     let allSheets = this.state.shareFile;
     // let sheets = allSheets.shareFile;
-    const thisSheet = allSheets.find((sheet) => { return sheet.id == this.props.match.params.id});
+    const thisSheet = allSheets.find((sheet) => { return sheet.id.toString() === this.props.match.params.id}); //this is comparing strings
     let index = thisSheet && thisSheet.id;
     console.log(index);
     function findObjectIndex(sheet) {
-        return sheet.id == index;
+        return sheet.id === index; //this is comparing numbers
     }
     this.setState({ grid: thisSheet && thisSheet.content, title: thisSheet && thisSheet.title, index: allSheets.findIndex(findObjectIndex) })
   })
@@ -105,16 +106,12 @@ getOther() {
     handleaddItem() {
       this.setState({ show: "hide" });
       this.setState({ hideButton: "hide", loading: "" })
-      const today = new Date();
-      const day = today.getDate();
-      const month = today.getMonth() + 1;
-      const year = today.getFullYear();
       const rando = Date.now();
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
       object.id = rando;
-      object.created = month + "/" + day + "/" + year;
+      object.created = getMonthDayYear();
 
       this.setState({ sheets: [...this.state.sheets, object] });
       this.setState({ tempDocId: object.id });
