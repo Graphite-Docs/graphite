@@ -4,11 +4,8 @@ import {
 } from 'blockstack';
 import {
   postToLog
-<<<<<<< HEAD
 } from './audits';
-=======
 } from './audits'
->>>>>>> audits
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
