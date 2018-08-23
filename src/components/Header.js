@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom';
 import {
   isSignInPending,
   isUserSignedIn,
@@ -57,6 +56,7 @@ export default class Header extends Component {
                   {
                     window.location.pathname === '/documents' ? <a href="/shared-docs">Shared Files</a> :
                     window.location.pathname === '/sheets' ? <a href="/shared-sheets">Shared Files</a> :
+                    window.location.pathname === '/vault' ? <a href="/shared-vault">Shared Files</a> :
                     <a href="/Profile">Profile</a>
                   }
                   </li>

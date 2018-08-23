@@ -53,7 +53,6 @@ export function accountDetails() {
 }
 
 export function savePlanFile() {
-  console.log(object);
   putFile('accountPlan.json', JSON.stringify(object), {encrypt: true})
     .then(() => {
       if(window.location.pathname === '/success') {
@@ -69,10 +68,8 @@ export function savePlanFile() {
 }
 
 export function loadAccountPlan() {
-  console.log("loading account plan")
   getFile('accountPlan.json', {decrypt: true})
     .then((fileContents) => {
-      console.log(JSON.parse(fileContents || '{}'))
       if(fileContents) {
         this.setState({
           accountOwner: JSON.parse(fileContents || '{}').accountOwner,
@@ -98,10 +95,8 @@ export function loadAccountPlan() {
     })
     .then(() => {
       if(this.state.team === undefined) {
-        console.log("loading invite status");
         this.loadInviteStatus();
       } else if(this.state.team.length < 1) {
-        console.log("loading invite status");
         this.loadInviteStatus();
       }
     })

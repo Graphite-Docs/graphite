@@ -1,12 +1,6 @@
 import {
   loadUserData
 } from 'blockstack';
-import {
-  getTimestamp
-} from './getMonthDayYear';
-import {
-  accountDetails
-} from './accountPlan';
 import axios from 'axios';
 
 export function postToLog() {
@@ -19,6 +13,7 @@ export function postToLog() {
       object.action = this.state.action;
     })
     .catch(error => {console.log(error)})
+
   this.setState({ audits: [...this.state.audits, object] });
   setTimeout(this.accountDetails, 300);
 }

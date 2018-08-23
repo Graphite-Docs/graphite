@@ -66,7 +66,6 @@ export default class AppPage extends Component {
     let filesCollabs = files.map(a => a.sharedWith);
     let newFilesCollabs = filesCollabs.filter(function(n){ return n !== undefined });
     let mergedFilesCollabs = [].concat.apply([], newFilesCollabs).length;
-    let fileTypes = files.map(a => a.types);
     window.$.extend({
       countUnique : function(fileTypes) {
         var result = [];
@@ -78,7 +77,6 @@ export default class AppPage extends Component {
         return result.length;
       }
     });
-    let fileTypesCount = window.$.countUnique(fileTypes);
 
     //Contacts variables
     let contactsTypes = contacts.map(a => a.types);

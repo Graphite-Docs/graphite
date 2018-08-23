@@ -4,12 +4,6 @@ import {
   isSignInPending,
   handlePendingSignIn
 } from 'blockstack';
-import {
-  tryingSomething
-} from '../helpers/audits';
-import {
-  loadAccountPlan
-} from '../helpers/accountPlan';
 
 export default class DeleteDoc extends Component {
 

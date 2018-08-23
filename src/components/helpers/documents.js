@@ -2,9 +2,8 @@ import {
   putFile,
   getFile
 } from 'blockstack';
-import {
-  postToLog
-} from './audits';
+
+
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
@@ -234,7 +233,7 @@ export function getCollection() {
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
+    const thisDoc = value.find((doc) => { return doc.id === this.state.docsSelected[0]});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
         return doc.id === index; //this is comparing numbers
@@ -370,7 +369,7 @@ export function getCollectionTags() {
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id == this.state.docsSelected[0]});
+    const thisDoc = value.find((doc) => { return doc.id === this.state.docsSelected[0]});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
         return doc.id === index; //this is comparing numbers
@@ -434,7 +433,7 @@ export function saveSingleDocTags() {
 
 export function deleteTag(props) {
   let tags = this.state.singleDocTags;
-  const thisTag = tags.find((tag) => { return tag.id == props});
+  const thisTag = tags.find((tag) => { return tag.id === props});
   let tagIndex = thisTag && thisTag.id;
   function findObjectIndex(tag) {
       return tag.id === tagIndex; //this is comparing numbers

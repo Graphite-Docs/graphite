@@ -1,142 +1,11 @@
 import React, { Component } from 'react';
-import {
-isSignInPending,
-loadUserData,
-Person,
-getFile,
-putFile,
-} from 'blockstack';
-import XLSX from 'xlsx';
 import Dropzone from 'react-dropzone';
-import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
-const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-const str2ab = require('string-to-arraybuffer');
 
 export default class NewVaultFile extends Component {
-  constructor(props) {
-  	super(props);
-
-  	this.state = {
-  	  person: {
-  	  	name() {
-          return 'Anonymous';
-        },
-  	  	avatarUrl() {
-  	  	  return avatarFallbackImage;
-  	  	},
-  	  },
-      id: "",
-      name: "",
-      type: "",
-      tags: [],
-      sharedWithSingle: [],
-      files: [],
-      grid: [[]],
-      singleFile: {},
-      loading: "hide",
-      show: ""
-  	};
-    this.handleDrop = this.handleDrop.bind(this);
-    this.handleDropRejected = this.handleDropRejected.bind(this);
-    this.save = this.save.bind(this);
-    this.saveTwo = this.saveTwo.bind(this);
-  }
 
   componentDidMount() {
-  getFile("uploads.json", {decrypt: true})
-   .then((fileContents) => {
-     this.setState({ files: JSON.parse(fileContents || '{}') });
-   })
-    .catch(error => {
-      console.log(error);
-    });
-  }
-
-  handleDrop(files) {
-    var file = files[0]
-    console.log(file);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-       const object = {};
-       object.file = file;
-       object.uploaded = getMonthDayYear();
-       object.link = event.target.result;
-       object.name = file.name;
-       object.size = file.size;
-       object.type = file.type;
-       object.tags = this.state.tags;
-       object.sharedWithSingle = this.state.sharedWithSingle;
-       object.lastModified = file.lastModified;
-       object.lastModifiedDate = file.lastModifiedDate;
-       object.id = Date.now();
-       object.vault = "vault";
-       const objectTwo = {};
-       objectTwo.uploaded = getMonthDayYear();
-       objectTwo.id = object.id;
-       objectTwo.name = object.name;
-       objectTwo.type = object.type;
-       objectTwo.tags = this.state.tags;
-       objectTwo.sharedWithSingle = this.state.sharedWithSingle;
-       objectTwo.lastModifiedDate = object.lastModifiedDate;
-       objectTwo.fileType = "vault";
-
-       this.setState({id: objectTwo.id, name: objectTwo.name});
-       console.log(object.type);
-       if(object.type.includes('sheet')) {
-         var abuf4 = str2ab(object.link)
-          var wb = XLSX.read(abuf4, {type:'buffer'});
-          this.setState({ grid: wb.Strings })
-          console.log(this.state.grid);
-          object.grid = this.state.grid;
-       } else {
-         console.log("not a spreadsheet");
-       }
-       if(object.size > 111048576) {
-         this.handleDropRejected();
-       }else {
-         this.setState({singleFile: object});
-         this.setState({files: [...this.state.files, objectTwo] });
-         this.setState({ loading: "", show: "hide"})
-         setTimeout(this.save, 700)
-       }
-   };
-   reader.readAsDataURL(file);
- }
-
- handleDropRejected(files) {
-  console.log("Error file too large");
-  // Materialize.toast('Sorry, your file is larger than 1mb', 4000) // 4000 is the duration of the toast
-}
-
-save() {
-    console.log(this.state.files);
-    console.log(this.state.singleFile);
-    const file = this.state.id + '.json';
-    putFile(file, JSON.stringify(this.state.singleFile), {encrypt:true})
-      .then(() => {
-        console.log("Saved!");
-        this.saveTwo();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-        alert(e.message);
-      });
-
-  }
-
-  saveTwo() {
-    putFile("uploads.json", JSON.stringify(this.state.files), {encrypt:true})
-      .then(() => {
-        console.log("Saved!");
-        window.location.replace("/vault");
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-        alert(e.message);
-      });
+    this.props.loadFilesCollection();
   }
 
   render() {
@@ -145,19 +14,14 @@ save() {
       height : "400px",
 
       marginTop: "74px",
-      background: "#eb6a5a",
+      background: "#282828",
       paddingTop: "10%",
       cursor: "pointer"
     };
-    let files = this.state.files;
-    // files.slice(0).reverse().map(file => {
-    //   return(console.log(file.name))
-    // });
-    console.log(files);
-    const show = this.state.show;
-    const loading = this.state.loading;
+
+    const show = this.props.show;
+    const loading = this.props.loading;
     return (
-      !isSignInPending() ?
       <div>
       <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
@@ -194,10 +58,10 @@ save() {
         <div className="card hoverable">
           <Dropzone
             style={dropzoneStyle}
-            onDrop={ this.handleDrop }
+            onDrop={ this.props.handleVaultDrop }
             accept="application/rtf, application/x-rtf, text/richtext, text/plain, application/rtf, application/x-rtf, text/rtf, application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv, video/quicktime, video/x-ms-wmv,video/mp4,application/pdf,image/png,image/jpeg,image/jpg,image/tiff,image/gif"
             multiple={ false }
-            onDropRejected={ this.handleDropRejected }>
+            onDropRejected={ this.props.handleDropRejected }>
             <h1 className="upload-cloud"><i className="material-icons white-text large">cloud_upload</i></h1>
             <h3 className="white-text">Drag files or click to upload</h3>
           </Dropzone>
@@ -205,15 +69,7 @@ save() {
         </div>
       </div>
       </div>
-      </div> : null
+      </div>
     );
   }
-
-  componentWillMount() {
-    this.setState({
-      person: new Person(loadUserData().profile),
-    });
-  }
 }
-
-// <a className="btn tooltipped" dataPosition="bottom" dataDelay="50" dataTooltip=".doc, .docx, .rtf, .txt, .xlsx, .png, .tiff, .jpeg, .jpg, .mov, .mp4"><p className="muted">Accepted files<span className="note">?</span></p></a>

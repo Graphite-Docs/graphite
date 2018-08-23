@@ -11,7 +11,6 @@ let url;
 //Main Integration Functions
 
 export function loadIntegrations() {
-  console.log("loading integrations");
   getFile('integrations.json', {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
@@ -388,23 +387,23 @@ export function loadSharedDocs() {
     });
 }
 
-export function saveStealthyIntegration() {
-  console.log("saving stealthy")
-  const data = this.state.docs;
-  const publicKey = this.state.stealthyKey;
-  const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-  const fileName = 'stealthyIndex.json';
-  putFile(fileName, encryptedData, {encrypt: false})
-  .then(() => {
-    if(window.location.pathname === "/integrations") {
-      window.Materialize.toast('Stealthy integration updated', 4000);
-      this.saveIntegrations();
-    }
-  })
-  .catch(e => {
-    console.log(e);
-  });
-}
+  export function saveStealthyIntegration() {
+    console.log("saving stealthy")
+    const data = this.state.docs;
+    const publicKey = this.state.stealthyKey;
+    const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
+    const fileName = 'stealthyIndex.json';
+    putFile(fileName, encryptedData, {encrypt: false})
+    .then(() => {
+      if(window.location.pathname === "/integrations") {
+        window.Materialize.toast('Stealthy integration updated', 4000);
+        this.saveIntegrations();
+      }
+    })
+    .catch(e => {
+      console.log(e);
+    });
+  }
 
 export function saveBlockusignIntegration() {
   const data = this.state.docs;

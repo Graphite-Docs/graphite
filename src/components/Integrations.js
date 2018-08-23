@@ -17,8 +17,8 @@ export default class Integrations extends Component {
   }
 
   render(){
-    const { graphitePro, stealthyConnected, blockusignConnected, coinsConnected, noteRiotConnected, kanstackConnected, mediumConnected, mediumIntegrationToken, slackConnected, slackWebhookUrl } = this.props;
-    if(graphitePro === true) {
+    const { stealthyConnected, blockusignConnected, coinsConnected, noteRiotConnected, kanstackConnected, mediumConnected, mediumIntegrationToken, slackConnected, slackWebhookUrl } = this.props;
+    if(1+1===2) {
       return(
         <div>
           <Header />

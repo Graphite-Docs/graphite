@@ -21,10 +21,6 @@ export default class Signin extends Component {
           </button>
         </p>
 
-        {/*<button id="signupButton" class="civic-button-a medium" type="button">
-            <span>Sign in with Civic</span>
-        </button>*/}
-
       </div>
     );
   }

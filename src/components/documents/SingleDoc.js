@@ -252,10 +252,22 @@ export default class SingleDoc extends Component {
       this.setState({ value: JSON.parse(fileContents || '{}').value })
       let value = this.state.value;
       const thisDoc = value.find((doc) => {
+        // console.warn('SingleDoc - doc.id is: ', doc.id.toString())
+        // console.warn('SingleDoc - typeof doc.id is: ', typeof doc.id.toString()) //doc.id is a number, so we're turning it into a string...
+        // console.warn('SingleDoc - this.props.match.params.id is: ', this.props.match.params.id)
+        // console.warn('SingleDoc - typeof this.props.match.params.id is: ', typeof this.props.match.params.id) //this is a string...
+        // console.warn('0. doc.id === this.props.match.params.id ?? -> ', doc.id === this.props.match.params.id)  //this is false
+        // console.warn('1. doc.id.toString() === this.props.match.params.id ?? -> ', doc.id === this.props.match.params.id)  //this is true
+        // return doc.id == this.props.match.params.id //this is comparing a number to a string...
         return doc.id.toString() === this.props.match.params.id //this is comparing a string to a string
       });
       let index = thisDoc && thisDoc.id;
+      // console.log('SingleDoc - getFile -> index is:', index); //index is same as thisDoc.id, a number
       function findObjectIndex(doc) {
+        // console.warn("SingleDoc - doc.id: ", doc.id)
+        // console.warn("SingleDoc - typeof doc.id: ", typeof doc.id) //this is a number
+        // console.warn("SingleDoc - index: ", index)
+        // console.warn("SingleDoc - typeof index: ", typeof index) //this is a number
         return doc.id === index; //this is comparing a number to a number
       }
       this.setState({index: value.findIndex(findObjectIndex)})

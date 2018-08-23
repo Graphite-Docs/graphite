@@ -22,7 +22,7 @@ import SingleSharedSheet from './sheets/SingleSharedSheet';
 import MainContacts from './messages/MainContacts';
 import ContactsProfile from './messages/ContactsProfile';
 import DeleteContact from './messages/DeleteContact';
-import MainVault from './vault/MainVault';
+import VaultCollection from './vault/VaultCollection';
 import SingleVaultFile from './vault/SingleVaultFile';
 import NewVaultFile from './vault/NewVaultFile';
 import DeleteVaultFile from './vault/DeleteVaultFile';
@@ -205,6 +205,85 @@ import {
   saveNewDocFile,
   saveDocFileTwo
 } from './helpers/deleteDoc';
+import {
+  dataLoad,
+  postToDB,
+  loadAnalytics
+} from './helpers/analytics';
+import {
+  loadFilesCollection,
+  filterVaultList,
+  handleVaultPageChange,
+  handleVaultCheckbox,
+  sharedVaultInfo,
+  loadSharedVaultCollection,
+  loadVaultSingle,
+  getVaultCollection,
+  vaultShare,
+  saveSharedVaultFile,
+  saveSingleVaultFile,
+  saveVaultCollection,
+  sendVaultFile,
+  loadSingleVaultTags,
+  getVaultCollectionTags,
+  setVaultTags,
+  handleVaultKeyPress,
+  addVaultTagManual,
+  saveNewVaultTags,
+  saveFullVaultCollectionTags,
+  saveSingleVaultFileTags,
+  applyVaultFilter,
+  filterVaultNow,
+  deleteVaultTag,
+  clearVaultFilter,
+  collabVaultFilter,
+  tagVaultFilter,
+  dateVaultFilter,
+  typeVaultFilter,
+  setPagination
+} from './helpers/vaultFiles';
+import {
+  profileLoad,
+  fetchContactData
+} from './helpers/contactsProfile';
+import {
+  initialDeleteLoad,
+  handleDeleteVaultItem,
+  saveVaultDelete,
+  saveVaultDeleteTwo
+} from './helpers/deleteVaultFile';
+import {
+  handleVaultDrop,
+  saveNewVaultFile,
+  saveNewVaultFileTwo
+} from './helpers/newVaultFile';
+import {
+  loadSingleVaultFile,
+  onDocumentComplete,
+  onPageComplete,
+  handlePrevious,
+  handleNext,
+  downloadPDF,
+  handleToDocs,
+  handleAddToDocsTwo,
+  handleaddSheet,
+  handleaddTwoSheet,
+  saveToDocs,
+  saveToDocsTwo,
+  saveToSheets,
+  saveToSheetsTwo
+} from './helpers/singleVaultFile';
+import {
+  handleIDChangeVault,
+  loadVaultContacts,
+  loadSharedVault,
+  saveVaultUser,
+  loadSingleSharedVault,
+  handleAddToVault,
+  handleAddToVaultTwo,
+  saveNewVaultTwo
+} from './helpers/sharedVaultFiles';
+import work from 'webworkify-webpack';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -283,7 +362,6 @@ export default class App extends Component {
       printPreview: false,
       autoSave: "Saved",
       show: "",
-      // singleDocIsPublic: false,
       singlePublic: {},
       publicShare: "hide",
       gaiaLink: "",
@@ -367,8 +445,36 @@ export default class App extends Component {
       settingsMain: "hide",
       settingsOnboarding: "hide",
       loadingBar: "",
-      teamDocs: []
+      teamDocs: [],
+      sharedDocsCount: 0,
+      analytics: [],
+      fileCreation: false,
+      combined: [],
+      filesPerPage: 10,
+      filesSelected: [],
+      file: "",
+      name: "",
+      lastModifiedDate: "",
+      link: "",
+      type: "",
+      singleFile: {},
+      singleFileTags: [],
+      uploaded: "",
+      typeList: "hide",
+      selectedType: "",
+      applyFilter: false,
+      filteredVault: [],
+      currentVaultPage: 1,
+      description: "",
+      appsUsed: "",
+      conversationUser: "",
+      img: "",
+      page: 1,
+      sharedWithMe: true,
+      shareFileIndex: [],
+      user: ""
     }
+    this.launchWorker = this.launchWorker.bind(this);
   } //constructor
 
   componentWillMount() {
@@ -530,6 +636,76 @@ export default class App extends Component {
     //Audits
     this.postToLog = postToLog.bind(this);
 
+    //Analytics
+    this.dataLoad = dataLoad.bind(this);
+    this.postToDB = postToDB.bind(this);
+    this.loadAnalytics = loadAnalytics.bind(this);
+
+    //Vault
+    this.loadFilesCollection = loadFilesCollection.bind(this);
+    this.filterVaultList = filterVaultList.bind(this);
+    this.handleVaultPageChange = handleVaultPageChange.bind(this);
+    this.handleVaultCheckbox = handleVaultCheckbox.bind(this);
+    this.sharedVaultInfo = sharedVaultInfo.bind(this);
+    this.loadSharedVaultCollection = loadSharedVaultCollection.bind(this);
+    this.loadVaultSingle = loadVaultSingle.bind(this);
+    this.getVaultCollection = getVaultCollection.bind(this);
+    this.vaultShare = vaultShare.bind(this);
+    this.saveSharedVaultFile = saveSharedVaultFile.bind(this);
+    this.saveSingleVaultFile = saveSingleVaultFile.bind(this);
+    this.saveVaultCollection = saveVaultCollection.bind(this);
+    this.sendVaultFile = sendVaultFile.bind(this);
+    this.loadSingleVaultTags = loadSingleVaultTags.bind(this);
+    this.getVaultCollectionTags = getVaultCollectionTags.bind(this);
+    this.setVaultTags = setVaultTags.bind(this);
+    this.handleVaultKeyPress = handleVaultKeyPress.bind(this);
+    this.addVaultTagManual = addVaultTagManual.bind(this);
+    this.saveNewVaultTags = saveNewVaultTags.bind(this);
+    this.saveFullVaultCollectionTags = saveFullVaultCollectionTags.bind(this);
+    this.saveSingleVaultFileTags = saveSingleVaultFileTags.bind(this);
+    this.applyVaultFilter = applyVaultFilter.bind(this);
+    this.filterVaultNow = filterVaultNow.bind(this);
+    this.deleteVaultTag = deleteVaultTag.bind(this);
+    this.clearVaultFilter = clearVaultFilter.bind(this);
+    this.collabVaultFilter = collabVaultFilter.bind(this);
+    this.tagVaultFilter = tagVaultFilter.bind(this);
+    this.dateVaultFilter = dateVaultFilter.bind(this);
+    this.typeVaultFilter = typeVaultFilter.bind(this);
+    this.setPagination = setPagination.bind(this);
+    this.initialDeleteLoad = initialDeleteLoad.bind(this);
+    this.handleDeleteVaultItem = handleDeleteVaultItem.bind(this);
+    this.saveVaultDelete = saveVaultDelete.bind(this);
+    this.saveVaultDeleteTwo = saveVaultDeleteTwo.bind(this);
+    this.handleVaultDrop = handleVaultDrop.bind(this);
+    this.saveNewVaultFile = saveNewVaultFile.bind(this);
+    this.saveNewVaultFileTwo = saveNewVaultFileTwo.bind(this);
+    this.loadSingleVaultFile = loadSingleVaultFile.bind(this);
+    this.onDocumentComplete = onDocumentComplete.bind(this);
+    this.onPageComplete = onPageComplete.bind(this);
+    this.handlePrevious = handlePrevious.bind(this);
+    this.handleNext = handleNext.bind(this);
+    this.downloadPDF = downloadPDF.bind(this);
+    this.handleToDocs = handleToDocs.bind(this);
+    this.handleAddToDocsTwo = handleAddToDocsTwo.bind(this);
+    this.handleaddSheet = handleaddSheet.bind(this);
+    this.handleaddTwoSheet = handleaddTwoSheet.bind(this);
+    this.saveToDocs = saveToDocs.bind(this);
+    this.saveToDocsTwo = saveToDocsTwo.bind(this);
+    this.saveToSheets = saveToSheets.bind(this);
+    this.saveToSheetsTwo = saveToSheetsTwo.bind(this);
+    this.handleIDChangeVault = handleIDChangeVault.bind(this);
+    this.loadVaultContacts = loadVaultContacts.bind(this);
+    this.loadSharedVault = loadSharedVault.bind(this);
+    this.saveVaultUser = saveVaultUser.bind(this);
+    this.loadSingleSharedVault = loadSingleSharedVault.bind(this);
+    this.handleAddToVault = handleAddToVault.bind(this);
+    this.handleAddToVaultTwo = handleAddToVaultTwo.bind(this);
+    this.saveNewVaultTwo = saveNewVaultTwo.bind(this);
+
+    //Contacts
+    this.profileLoad = profileLoad.bind(this);
+    this.fetchContactData = fetchContactData.bind(this);
+
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
     // isUserSignedIn() ? this.loadAccountPlan() : loadUserData();
@@ -537,9 +713,24 @@ export default class App extends Component {
   }
 
   componentDidMount() {
+    // this.launchWorker();
     console.log('Build Date: ', Config.BUILD_DATE_STAMP)
     console.log('Build Time: ', Config.BUILD_TIME_STAMP)
     isUserSignedIn() ? savePubKey() : loadUserData();
+  }
+
+  launchWorker() {
+    if(this.state.contacts.length > 0) {
+      let w = work(require.resolve('./worker.js'));
+      w.addEventListener('message', event => {
+          console.log(event.data);
+      });
+
+      w.postMessage(this.state.contacts); // send the worker a message
+    } else {
+      setTimeout(this.launchWorker, 500)
+    }
+
   }
 
   handleSignIn(e) {
@@ -560,9 +751,10 @@ export default class App extends Component {
       content, gaiaLink, sharedWith, idToLoad, docLoaded, yjsConnected, docs, integrations,
       stealthyConnected,stealthyKey, coinsConnected, coinsKey, blockusignKey, blockusignConnected, noteRiotKey, noteRiotConnected,
       mediumConnected, mediumIntegrationToken, graphitePro, slackConnected, team, newTeammateName, newTeammateRole,
-      newTeammateEmail, audits, settingsOnboarding, settingsMain, loadingBar
+      newTeammateEmail, audits, settingsOnboarding, settingsMain, loadingBar, filteredVault, currentVaultPage, deleteState,
+      applyFilter, typeList, singleFileTags, tagDownload, filesPerPage, name, username, img, description, show, page,
+      type, pages, link, grid, sharedWithMe, shareFileIndex, user
     } = this.state;
-    console.log(audits)
     return (
       <div>
       { !isUserSignedIn() && !window.location.pathname.indexOf("shared") ?
@@ -705,15 +897,149 @@ export default class App extends Component {
               <Route exact path="/shared-sheets" component={SharedSheets} />
               <Route exact path="/export" component={Export} />
               <Route exact path="/contacts" component={MainContacts} />
-              <Route exact path="/contacts/profile/:id" component={ContactsProfile} />
+              <Route exact path="/contacts/profile/:id" render={(location, match, props) =>
+                <ContactsProfile {...props}
+                  profileLoad={this.profileLoad}
+                  fetchContactData={this.fetchContactData}
+                  name={name}
+                  username={username}
+                  description={description}
+                  img={img}
+                />
+              }/>
               <Route exact path="/contacts/delete/:id" component={DeleteContact} />
-              <Route exact path="/vault" component={MainVault} />
-              <Route exact path="/vault/new/file" component={NewVaultFile} />
-              <Route exact path="/vault/:id" component={SingleVaultFile} />
-              <Route exact path="/vault/delete/:id" component={DeleteVaultFile} />
-              <Route exact path="/shared-vault" component={SharedVault} />
-              <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
-              <Route exact path="/vault/single/shared/:id" component={SingleSharedFile} />
+              <Route exact path="/vault" render={(props) =>
+                <VaultCollection {...props}
+                  loadVaultFiles={this.loadVaultFiles}
+                  filterVaultList={this.filterVaultList}
+                  handleVaultPageChange={this.handleVaultPageChange}
+                  handleVaultCheckbox={this.handleVaultCheckbox}
+                  sharedVaultInfo={this.sharedVaultInfo}
+                  loadSharedVault={this.loadSharedVault}
+                  loadVaultSingle={this.loadVaultSingle}
+                  getVaultCollection={this.getVaultCollection}
+                  vaultShare={this.vaultShare}
+                  saveSharedVaultFile={this.saveSharedVaultFile}
+                  saveSingleVaultFile={this.saveSingleVaultFile}
+                  saveVaultCollection={this.saveVaultCollection}
+                  sendVaultFile={this.sendVaultFile}
+                  loadSingleVaultTags={this.loadSingleVaultTags}
+                  getVaultCollectionTags={this.getVaultCollectionTags}
+                  setVaultTags={this.setVaultTags}
+                  handleVaultKeyPress={this.handleVaultKeyPress}
+                  addVaultTagManual={this.addVaultTagManual}
+                  saveNewVaultTags={this.saveNewVaultTags}
+                  saveFullVaultCollectionTags={this.saveFullVaultCollectionTags}
+                  saveSingleVaultFileTags={this.saveSingleVaultFileTags}
+                  applyVaultFilter={this.applyVaultFilter}
+                  filterVaultNow={this.filterVaultNow}
+                  deleteVaultTag={this.deleteVaultTag}
+                  clearVaultFilter={this.clearVaultFilter}
+                  collabVaultFilter={this.collabVaultFilter}
+                  tagVaultFilter={this.tagVaultFilter}
+                  dateVaultFilter={this.dateVaultFilter}
+                  typeVaultFilter={this.typeVaultFilter}
+                  setPagination={this.setPagination}
+                  files={files}
+                  filteredVault={filteredVault}
+                  deleteState={deleteState}
+                  applyFilter={applyFilter}
+                  typeList={typeList}
+                  collaboratorsModal={collaboratorsModal}
+                  tagList={tagList}
+                  dateList={dateList}
+                  singleFileTags={singleFileTags}
+                  tagDownload={tagDownload}
+                  confirmAdd={confirmAdd}
+                  loadingTwo={loadingTwo}
+                  contacts={contacts}
+                  contactDisplay={contactDisplay}
+                  appliedFilter={appliedFilter}
+                  currentPage={currentPage}
+                  filesPerPage={filesPerPage}
+                  activeIndicator={activeIndicator}
+                  tag={tag}
+                  currentVaultPage={currentVaultPage}
+                />}
+              />
+              <Route exact path="/vault/new/file" render={(location, match, props) =>
+                <NewVaultFile
+                  loadFilesCollection={this.loadFilesCollection}
+                  handleVaultDrop={this.handleVaultDrop}
+                  files={files}
+                  show={show}
+                  loading={loading}
+                />
+              }/>
+              <Route exact path="/vault/:id" render={(location, match, props) =>
+                <SingleVaultFile {...props}
+                  loadSingleVaultFile={this.loadSingleVaultFile}
+                  onDocumentComplete={this.onDocumentComplete}
+                  onPageComplete={this.onPageComplete}
+                  handlePrevious={this.handlePrevious}
+                  handleNext={this.handleNext}
+                  downloadPDF={this.downloadPDF}
+                  handleToDocs={this.handleToDocs}
+                  handleaddSheet={this.handleaddSheet}
+                  page={page}
+                  type={type}
+                  loading={loading}
+                  show={show}
+                  shareModal={shareModal}
+                  contacts={contacts}
+                  pages={pages}
+                  name={name}
+                  link={link}
+                  content={content}
+                  grid={grid}
+                />
+              }/>
+              <Route exact path="/vault/delete/:id" render={(location, match, props) =>
+                <DeleteVaultFile {...props}
+                  initialDeleteLoad={this.initialDeleteLoad}
+                  handleDeleteVaultItem={this.handleDeleteVaultItem}
+                  name={name}
+                  loading={loading}
+                  save={save}
+                />
+              }/>
+              <Route exact path="/shared-vault" render={(location, match, props) =>
+                <SharedVault {...props}
+                  loadVaultContacts={this.loadVaultContacts}
+                  handleIDChangeVault={this.handleIDChangeVault}
+                  show={show}
+                  contacts={contacts}
+                  sharedWithMe={sharedWithMe}
+                />
+              }/>
+              <Route exact path="/vault/shared/:id" render={(location, match, props) =>
+                <SharedVaultCollection {...props}
+                  loadSharedVault={this.loadSharedVault}
+                  user={user}
+                  shareFileIndex={shareFileIndex}
+                />
+              }/>
+              <Route exact path="/vault/single/shared/:id" render={(location, match, props) =>
+                <SingleSharedFile {...props}
+                  loadSingleSharedVault={this.loadSingleSharedVault}
+                  onDocumentComplete={this.onDocumentComplete}
+                  onPageComplete={this.onPageComplete}
+                  handlePrevious={this.handlePrevious}
+                  handleNext={this.handleNext}
+                  downloadPDF={this.downloadPDF}
+                  handleAddToVault={this.handleAddToVault}
+                  user={user}
+                  type={type}
+                  loading={loading}
+                  show={show}
+                  pages={pages}
+                  page ={page}
+                  link={link}
+                  content={content}
+                  grid={grid}
+                  name={name}
+                />
+              }/>
               <Route exact path="/integrations" render={(location, match, props) =>
                 <Integrations {...props}
                   loadIntegrations={this.loadIntegrations}

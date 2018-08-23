@@ -3,11 +3,9 @@ import {
 } from "blockstack";
 
 export function loadDocs() {
-  console.log("loading documents");
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(JSON.parse(fileContents || '{}').value) {
-       console.log(JSON.parse(fileContents || '{}').value);
        this.setState({ value: JSON.parse(fileContents || '{}').value });
        this.setState({filteredValue: JSON.parse(fileContents || '{}').value})
        this.setState({ loading: "hide" });
@@ -25,11 +23,9 @@ export function loadDocs() {
 }
 
 export function loadSheets() {
-  console.log("loading sheets");
   getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
-       console.log("Files are here");
        this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
        this.setState({filteredSheets: this.state.sheets})
        this.setState({ loading: "hide" });
@@ -47,7 +43,6 @@ export function loadSheets() {
 }
 
 export function loadContacts() {
-  console.log("loading contacts");
   getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
      let file = JSON.parse(fileContents || '{}');
@@ -67,7 +62,6 @@ export function loadContacts() {
 }
 
 export function loadVault() {
-  console.log("loading vault");
   getFile("uploads.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents){
@@ -79,7 +73,9 @@ export function loadVault() {
      }
    })
     .then(() => {
-      this.loadIntegrations();
+      this.loadAnalytics();
+      setTimeout(this.loadIntegrations, 1000);
+      // this.loadIntegrations();
     })
     .catch(error => {
       console.log(error);

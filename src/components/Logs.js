@@ -5,7 +5,6 @@ export default class Logs extends Component {
 
   render() {
     const { audits } = this.props;
-    let auditLogs;
 
     return (
       <div className="modal-content">

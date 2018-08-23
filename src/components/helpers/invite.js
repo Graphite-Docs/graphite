@@ -9,7 +9,6 @@ const { encryptECIES } = require('blockstack/lib/encryption');
 const { decryptECIES } = require('blockstack/lib/encryption');
 
 export function loadInviteStatus() {
-  console.log("Checking invite status");
     getFile('inviteStatus.json', {decrypt: true})
       .then((fileContents) => {
         if(fileContents) {
@@ -50,7 +49,6 @@ export function loadInvite() {
   const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile(fileRoot + '.json', options)
     .then((fileContents) => {
-      console.log(JSON.parse(fileContents || '{}'))
       this.setState({
         inviterKey: JSON.parse(fileContents || '{}').inviterKey,
         inviteDate: JSON.parse(fileContents || '{}').inviteDate,
@@ -122,7 +120,6 @@ export function acceptInvite() {
 export function saveToInviter() {
   let publicKey = this.state.inviterKey;
   const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(this.state.inviteDetails)));
-  console.log(this.state.inviteeId + '/inviteaccepted.json');
   if(this.state.inviterKey !== "" || this.state.inviterKey !== undefined) {
     putFile(this.state.inviteeId + '/inviteaccepted.json', encryptedData, {encrypt: false})
       .then(() => {
@@ -151,7 +148,6 @@ export function sendToInviter() {
 export function sendAcceptEmail() {
   axios.post("https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/accept-invite", this.state.sendToInviter)
     .then(function (response) {
-      console.log(response);
       window.location.replace('/');
     })
     .catch(function (error) {
@@ -165,8 +161,6 @@ export function loadBasicInviteInfo() {
   const options = { username: this.state.inviter, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile(file, options)
     .then((fileContents) => {
-      console.log(this.state.inviter);
-      console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))))
       this.setState({
         ownerBlockstackId: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).ownerBlockstackId,
         ownerEmail: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).ownerEmail,
@@ -186,7 +180,6 @@ export function loadBasicInviteInfo() {
     })
     .then(() => {
       if(this.state.team.length > 0) {
-        console.log(this.state.team.length);
         this.checkForLatest();
       } else {
         console.log("End of team sync")

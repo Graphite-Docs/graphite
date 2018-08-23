@@ -4,7 +4,6 @@ import { Redirect } from 'react-router';
 import {
   isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
   signUserOut,
@@ -130,10 +129,6 @@ export default class SheetsCollections extends Component {
   );
   const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
   putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
-  .then(() => {
-      console.log("Saved!");
-      console.log(JSON.stringify(publicKey));
-    })
     .catch(e => {
       console.log(e);
     });
@@ -155,26 +150,13 @@ export default class SheetsCollections extends Component {
 
   getFile('sheetsmigration.json', {decrypt: true})
     .then((fileContents) => {
-      console.log("Sheets migration file loading");
       if(fileContents) {
-        console.log("migration file found");
-        console.log(JSON.parse(fileContents || '{}'));
         this.setState({migrationComplete: JSON.parse(fileContents || '{}')})
       } else {
-        console.log("no migration file yet");
         this.setState({migrationComplete: false})
       }
     })
     .then(() => {
-      // console.log("migration complete indication = ");
-      // console.log(this.state.migrationComplete);
-      // if(this.state.migrationComplete !== true) {
-      //   console.log("starting migration");
-      //   this.migrateSheets();
-      // } else {
-      //   console.log("No migration");
-      //   this.loadCollection();
-      // }
       this.loadCollection();
     })
     .catch(e => {
@@ -186,12 +168,10 @@ loadCollection() {
   getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
-       console.log("Files are here");
        this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
        this.setState({filteredSheets: this.state.sheets})
        this.setState({ loading: "hide" });
      } else {
-       console.log("Nothing to see here");
        this.setState({ loading: "hide" });
      }
    })
@@ -204,11 +184,9 @@ migrateSheets() {
   getFile("spread.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
-       console.log(JSON.parse(fileContents || '{}').sheets);
        this.setState({ oldValue: JSON.parse(fileContents || '{}').sheets });
 
      } else {
-       console.log("No old sheets found");
        this.migrationComplete();
      }
    })
@@ -217,7 +195,6 @@ migrateSheets() {
        this.setState({migrationLength: this.state.oldValue.length})
        this.startMigration();
      } else {
-       console.log("No old files");
        this.migrationComplete();
      }
    })
@@ -227,7 +204,6 @@ migrateSheets() {
 }
 
 startMigration() {
-  console.log("starting");
   const files = this.state.oldValue;
   this.setState({
     migrateTitle: files[this.state.migrationCount].title,
@@ -255,7 +231,6 @@ startMigration() {
 saveMigrationCollection() {
   putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt:true})
     .then(() => {
-      console.log("Migration Saved!");
       this.saveMigrationSheet();
     })
     .catch(e => {
@@ -265,22 +240,15 @@ saveMigrationCollection() {
 }
 
 saveMigrationSheet() {
-  console.log("Migration Length");
-  console.log(this.state.oldValue.length);
-  console.log("Migration Count");
-  console.log(this.state.migrationCount);
   const file = this.state.tempDocId;
   const fullFile = '/sheets/' + file + '.json'
 
   putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt:true})
     .then(() => {
-      console.log("Saved Single Migration!");
       this.setState({migrationCount: this.state.migrationCount + 1})
       if(this.state.migrationCount < this.state.oldValue.length) {
-        console.log(this.state.migrationCount);
         this.startMigration();
       } else {
-        console.log("migration complete")
         this.migrationComplete();
       }
     })
@@ -294,7 +262,6 @@ migrationComplete() {
   this.setState({migrationComplete: true})
   putFile('sheetsmigration.json', JSON.stringify(this.state.migrationComplete), {encrypt: true})
     .then(() => {
-      console.log("migration file saved")
       window.location.reload(true);
     })
 }
@@ -339,7 +306,6 @@ migrationComplete() {
   saveNewFile() {
     putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
-        console.log("Saved!");
         this.saveSingleSheet();
       })
       .catch(e => {
@@ -354,7 +320,6 @@ migrationComplete() {
     const fullFile = '/sheets/' + file + '.json'
     putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt:true})
       .then(() => {
-        console.log("Saved!");
         this.setState({ redirect: true });
       })
       .catch(e => {
@@ -677,10 +642,10 @@ migrationComplete() {
     this.setState({ deleteState: false });
 
     let tags = this.state.singleSheetTags;
-    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId}); //this is comparing strings
+    const thisTag = tags.find((tag) => { return tag.id === this.state.selectedTagId}); //this is comparing strings
     let index = thisTag && thisTag.id;
     function findObjectIndex(tag) {
-        return tag.id == index; //this is comparing numbers
+        return tag.id === index; //this is comparing numbers
     }
     this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
     // setTimeout(this.finalDelete, 300);
@@ -730,26 +695,21 @@ migrationComplete() {
 
 
   render() {
-    this.state.deleteState === true ? this.deleteTag() : console.log("no delete");
-    this.state.applyFilter === true ? this.applyFilter() : console.log("No filter applied");
+    this.state.deleteState === true ? this.deleteTag() : loadUserData();
+    this.state.applyFilter === true ? this.applyFilter() : loadUserData();
     let sheets;
     this.state.filteredSheets === [] ? sheets = [] : sheets = this.state.filteredSheets;
     const { collaboratorsModal, tagList, dateList, appliedFilter, singleSheetTags, contactDisplay, loadingTwo, confirmAdd, contacts, currentPage, sheetsPerPage, loading } = this.state;
     const link = '/sheets/sheet/' + this.state.tempSheetId;
     if (this.state.redirect) {
       return <Redirect push to={link} />;
-    } else {
-      console.log("No redirect");
     }
-    confirmAdd === false ? console.log("Not sharing") : this.sharedInfo();
-    this.state.tagDownload === true ? this.loadSingleTags() : console.log("no sheet selected");
-    const userData = loadUserData();
-    const person = new Person(userData.profile);
+    confirmAdd === false ? loadUserData() : this.sharedInfo();
+    this.state.tagDownload === true ? this.loadSingleTags() : loadUserData();
 
     const indexOfLastSheet = currentPage * sheetsPerPage;
     const indexOfFirstSheet = indexOfLastSheet - sheetsPerPage;
     const currentSheets = sheets.slice(0).reverse();
-    console.log(currentSheets);
 
     let shared = currentSheets.map(a => a.sharedWith);
     let newShared = shared.filter(function(n){ return n !== undefined });

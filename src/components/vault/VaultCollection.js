@@ -1,108 +1,15 @@
 import React, { Component } from 'react';
 import {
-  isSignInPending,
-  loadUserData,
-  Person,
-  getFile,
-  putFile,
-  signUserOut,
+  isSignInPending
 } from 'blockstack';
 import Header from '../Header';
 import { Link } from 'react-router-dom';
-import update from 'immutability-helper';
-const { getPublicKeyFromPrivate } = require('blockstack');
-const { encryptECIES } = require('blockstack/lib/encryption');
-const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class VaultCollection extends Component {
-  constructor(props) {
-  	super(props);
-
-  	this.state = {
-  	  person: {
-  	  	name() {
-          return 'Anonymous';
-        },
-  	  	avatarUrl() {
-  	  	  return avatarFallbackImage;
-  	  	},
-  	  },
-      files: [],
-      filteredValue: [],
-      folders: [],
-      docs: [],
-      sheets: [],
-      combined: [],
-      currentPage: 1,
-      filesPerPage: 10,
-      appliedFilter: false,
-      activeIndicator: false,
-      filesSelected: [],
-      shareModal: "hide",
-      contactDisplay: "",
-      contacts: [],
-      loadingTwo: "hide",
-      receiverID: "",
-      confirmAdd: false,
-      pubKey: "",
-      sharedCollection: [],
-      sharedWithSingle: [],
-      index: "",
-      file: "",
-      name: "",
-      lastModifiedDate: "",
-      link: "",
-      type: "",
-      tags: [],
-      singleFile: {},
-      tagDownload: false,
-      singleFileTags: [],
-      tagModal: "hide",
-      shareFile: [],
-      tag: "",
-      selectedTagId: "",
-      deleteState: false,
-      collaboratorsModal: "hide",
-      tagList: "hide",
-      dateList: "hide",
-      uploaded: "",
-      typeList: "hide",
-      selectedType: "",
-      applyFilter: false,
-      selectedTag: "",
-      selectedCollab: "",
-      selectedDate: "",
-      tagIndex: ""
-  	};
-    this.filterList = this.filterList.bind(this);
-    this.handleSignOut = this.handleSignOut.bind(this);
-    this.handlePageChange = this.handlePageChange.bind(this);
-    this.handleCheckbox = this.handleCheckbox.bind(this);
-    this.loadCollection = this.loadCollection.bind(this);
-    this.sharedInfo = this.sharedInfo.bind(this);
-    this.loadSharedCollection = this.loadSharedCollection.bind(this);
-    this.loadSingle = this.loadSingle.bind(this);
-    this.getCollection = this.getCollection.bind(this);
-    this.share = this.share.bind(this);
-    this.saveSharedFile =this.saveSharedFile.bind(this);
-    this.saveSingleFile = this.saveSingleFile.bind(this);
-    this.saveCollection = this.saveCollection.bind(this);
-    this.sendFile = this.sendFile.bind(this);
-    this.loadSingleTags = this.loadSingleTags.bind(this);
-    this.getCollectionTags = this.getCollectionTags.bind(this);
-    this.setTags = this.setTags.bind(this);
-    this.handleKeyPress = this.handleKeyPress.bind(this);
-    this.addTagManual = this.addTagManual.bind(this);
-    this.saveNewTags = this.saveNewTags.bind(this);
-    this.saveFullCollectionTags = this.saveFullCollectionTags.bind(this);
-    this.saveSingleFileTags = this.saveSingleFileTags.bind(this);
-    this.applyFilter = this.applyFilter.bind(this);
-    this.filterNow = this.filterNow.bind(this);
-    this.deleteTag = this.deleteTag.bind(this);
-  }
 
   componentDidMount() {
     window.$('.modal').modal();
+    window.$('.dropdown-trigger').dropdown();
     window.$('.button-collapse').sideNav({
         menuWidth: 400, // Default is 300
         edge: 'left', // Choose the horizontal origin
@@ -110,488 +17,16 @@ export default class VaultCollection extends Component {
         draggable: true, // Choose whether you can drag to open on touch screens
       }
     );
-
-    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
-    putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
-    .then(() => {
-        console.log("Saved!");
-        console.log(JSON.stringify(publicKey));
-      })
-      .catch(e => {
-        console.log(e);
-      });
-    getFile("contact.json", {decrypt: true})
-     .then((fileContents) => {
-       let file = JSON.parse(fileContents || '{}');
-       let contacts = file.contacts;
-       if(contacts.length > 0) {
-         this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
-       } else {
-         this.setState({ contacts: [] });
-       }
-     })
-      .catch(error => {
-        console.log(error);
-      });
-
-    this.loadCollection();
-  }
-
-  loadCollection() {
-    getFile("uploads.json", {decrypt: true})
-     .then((fileContents) => {
-       console.log(JSON.parse(fileContents || '{}'))
-       if(fileContents){
-         this.setState({ files: JSON.parse(fileContents || '{}') });
-         this.setState({filteredValue: this.state.files});
-       }else {
-         this.setState({ files: [] });
-         this.setState({filteredValue: []});
-       }
-     })
-      .catch(error => {
-        console.log(error);
-        this.setState({ files: [], filteredValue: [] });
-      });
-  }
-
-  handleSignOut(e) {
-    e.preventDefault();
-    signUserOut(window.location.origin);
-  }
-
-  filterList(event){
-    var updatedList = this.state.files;
-    updatedList = updatedList.filter(function(item){
-      return item.name.toLowerCase().search(
-        event.target.value.toLowerCase()) !== -1;
-    });
-    this.setState({filteredValue: updatedList});
-  }
-
-  handlePageChange(event) {
-    this.setState({
-      currentPage: Number(event.target.id)
-    });
-  }
-
-  handleCheckbox(event) {
-    let checkedArray = this.state.filesSelected;
-      let selectedValue = event.target.value;
-
-        if (event.target.checked === true) {
-        	checkedArray.push(selectedValue);
-            this.setState({
-              filesSelected: checkedArray
-            });
-          if(checkedArray.length === 1) {
-            this.setState({activeIndicator: true});
-            console.log(checkedArray)
-
-          } else {
-            this.setState({activeIndicator: false});
-          }
-        } else {
-          this.setState({activeIndicator: false});
-        	let valueIndex = checkedArray.indexOf(selectedValue);
-			      checkedArray.splice(valueIndex, 1);
-
-            this.setState({
-              filesSelected: checkedArray
-            });
-            if(checkedArray.length === 1) {
-              this.setState({activeIndicator: true});
-            } else {
-              this.setState({activeIndicator: false});
-            }
-        }
-  }
-
-  sharedInfo() {
-    this.setState({ confirmAdd: false });
-    const user = this.state.receiverID;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-
-    getFile('key.json', options)
-      .then((file) => {
-        this.setState({ pubKey: JSON.parse(file)})
-      })
-        .then(() => {
-          this.loadSharedCollection();
-        })
-        .catch(error => {
-          console.log("No key: " + error);
-          window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-          this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
-        });
-  }
-
-  loadSharedCollection() {
-    const user = this.state.receiverID;
-    const file = "sharedvault.json";
-    getFile(user + file, {decrypt: true})
-      .then((fileContents) => {
-        if(fileContents) {
-          this.setState({ sharedCollection: JSON.parse(fileContents || '{}') })
-        } else {
-          this.setState({ sharedCollection: [] });
-        }
-      })
-      .then(() => {
-        this.loadSingle();
-      })
-      .catch((error) => {
-        console.log(error)
-      });
-  }
-
-  loadSingle() {
-    if(this.state.filesSelected.length > 1) {
-      //TODO figure out how to handle this
-    } else {
-      const thisFile = this.state.filesSelected[0];
-      const fullFile = thisFile + '.json';
-
-      getFile(fullFile, {decrypt: true})
-       .then((fileContents) => {
-         if(JSON.parse(fileContents || '{}').sharedWith) {
-           this.setState({
-             file: JSON.parse(fileContents || "{}").file,
-             name: JSON.parse(fileContents || "{}").name,
-             lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
-             size: JSON.parse(fileContents || "{}").size,
-             link: JSON.parse(fileContents || "{}").link,
-             type: JSON.parse(fileContents || "{}").type,
-             id: JSON.parse(fileContents || "{}").id,
-             sharedWithSingle: JSON.parse(fileContents || "{}").sharedWith,
-             singleFileTags: JSON.parse(fileContents || "{}").tags,
-             uploaded: JSON.parse(fileContents || "{}").uploaded
-          });
-        } else {
-          this.setState({
-            file: JSON.parse(fileContents || "{}").file,
-            name: JSON.parse(fileContents || "{}").name,
-            lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
-            size: JSON.parse(fileContents || "{}").size,
-            link: JSON.parse(fileContents || "{}").link,
-            id: JSON.parse(fileContents || "{}").id,
-            type: JSON.parse(fileContents || "{}").type,
-            sharedWithSingle: [],
-            singleFileTags: JSON.parse(fileContents || "{}").tags,
-            uploaded: JSON.parse(fileContents || "{}").uploaded
-         });
-        }
-
-       })
-        .then(() => {
-          this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
-          setTimeout(this.getCollection, 300);
-        })
-        .catch(error => {
-          console.log(error);
-        });
-      }
-  }
-
-  getCollection() {
-    getFile("uploads.json", {decrypt: true})
-    .then((fileContents) => {
-      console.log(JSON.parse(fileContents || '{}'))
-       this.setState({ files: JSON.parse(fileContents || '{}') })
-       this.setState({ initialLoad: "hide" });
-    }).then(() =>{
-      let files = this.state.files;
-      console.log("files man")
-      console.log(files);
-      const thisFile = files.find((file) => { return file.id.toString() === this.state.filesSelected[0]}); //this is comparing strings
-      let index = thisFile && thisFile.id;
-      function findObjectIndex(file) {
-          return file.id === index; //this is comparing numbers
-      }
-      this.setState({index: files.findIndex(findObjectIndex) });
-    })
-      .then(() => {
-        this.share();
-      })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-  share() {
-    const object = {};
-    object.name = this.state.name;
-    object.file = this.state.file;
-    object.id = this.state.id;
-    object.lastModifiedDate = this.state.lastModifiedDate;
-    object.sharedWith = this.state.sharedWithSingle;
-    object.size = this.state.size;
-    object.link = this.state.link;
-    object.type = this.state.type;
-    object.tags = this.state.singleFileTags;
-    object.uploaded = this.state.uploaded;
-    const index = this.state.index;
-    const updatedFiles = update(this.state.files, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-    this.setState({files: updatedFiles, singleFile: object, sharedCollection: [...this.state.sharedCollection, object]});
-
-    setTimeout(this.saveSharedFile, 300);
-  }
-
-  saveSharedFile() {
-    const user = this.state.receiverID;
-    const userShort = user.slice(0, -3);
-    const file = "sharedvault.json";
-
-    putFile(userShort + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
-      .then(() => {
-        console.log("Shared Collection Saved");
-        this.saveSingleFile();
-      })
-  }
-
-  saveSingleFile() {
-    const file = this.state.filesSelected[0];
-    const fullFile = file + '.json'
-    putFile(fullFile, JSON.stringify(this.state.singleFile), {encrypt:true})
-      .then(() => {
-        console.log("Saved!");
-        this.saveCollection();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  saveCollection() {
-    putFile("uploads.json", JSON.stringify(this.state.files), {encrypt: true})
-      .then(() => {
-        console.log("Saved Collection");
-        this.sendFile();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  sendFile() {
-    const user = this.state.receiverID;
-    const userShort = user.slice(0, -3);
-    const fileName = 'sharedvault.json'
-    const file = userShort + fileName;
-    const publicKey = this.state.pubKey;
-    const data = this.state.sharedCollection;
-    const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-    const directory = '/shared/' + file;
-    putFile(directory, encryptedData, {encrypt: false})
-      .then(() => {
-        console.log("Shared encrypted file ");
-        window.Materialize.toast('File shared with ' + this.state.receiverID, 4000);
-        this.loadCollection();
-        this.setState({shareModal: "hide", loadingTwo: "", contactDisplay: ""});
-      })
-      .catch(e => {
-        console.log(e);
-      });
-  }
-
-  loadSingleTags() {
-    this.setState({tagDownload: false});
-    const thisFile = this.state.filesSelected[0];
-    const fullFile = thisFile + '.json';
-    console.log(fullFile);
-    getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-       console.log(JSON.parse(fileContents || '{}'));
-       if(JSON.parse(fileContents || '{}')) {
-         this.setState({
-           shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-           name: JSON.parse(fileContents || '{}').name,
-           id: JSON.parse(fileContents || '{}').id,
-           lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
-           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith,
-           singleFileTags: JSON.parse(fileContents || '{}').tags,
-           file: JSON.parse(fileContents || "{}").file,
-           size: JSON.parse(fileContents || "{}").size,
-           link: JSON.parse(fileContents || "{}").link,
-           type: JSON.parse(fileContents || "{}").type,
-           uploaded: JSON.parse(fileContents || "{}").uploaded
-        });
-      } else {
-        this.setState({
-          shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-          name: JSON.parse(fileContents || '{}').name,
-          id: JSON.parse(fileContents || '{}').id,
-          lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
-          sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith,
-          singleFileTags: [],
-          file: JSON.parse(fileContents || "{}").file,
-          size: JSON.parse(fileContents || "{}").size,
-          link: JSON.parse(fileContents || "{}").link,
-          type: JSON.parse(fileContents || "{}").type,
-          uploaded: JSON.parse(fileContents || "{}").uploaded
-       });
-      }
-     })
-     .then(() => {
-       this.setState({ tagModal: ""});
-       setTimeout(this.getCollectionTags, 300);
-     })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-  getCollectionTags() {
-    getFile("uploads.json", {decrypt: true})
-    .then((fileContents) => {
-       this.setState({ files: JSON.parse(fileContents || '{}') })
-       this.setState({ initialLoad: "hide" });
-    }).then(() =>{
-      let files = this.state.files;
-      const thisFile = files.find((file) => {return file.id.toString() === this.state.filesSelected[0]}); //this is comparing strings
-      let index = thisFile && thisFile.id;
-      function findObjectIndex(file) {
-          return file.id === index; //this is comparing numbers
-      }
-      this.setState({index: files.findIndex(findObjectIndex) });
-    })
-      .catch(error => {
-        console.log(error);
-      });
-  }
-
-  setTags(e) {
-    this.setState({ tag: e.target.value});
-  }
-
-  handleKeyPress(e) {
-    if (e.key === 'Enter') {
-      this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]});
-      this.setState({ tag: "" });
-    }
-  }
-
-  addTagManual() {
-    this.setState({ singleFileTags: [...this.state.singleDocTags, this.state.tag]});
-    this.setState({ tag: "" });
-  }
-
-  saveNewTags() {
-    this.setState({ loadingTwo: ""});
-    const object = {};
-    object.name = this.state.name;
-    object.file = this.state.file;
-    object.id = this.state.id;
-    object.lastModifiedDate = this.state.lastModifiedDate;
-    object.sharedWith = this.state.sharedWithSingle;
-    object.size = this.state.size;
-    object.link = this.state.link;
-    object.type = this.state.type;
-    object.tags = this.state.singleFileTags;
-    object.uploaded = this.state.uploaded;
-    const index = this.state.index;
-    const objectTwo = {};
-    objectTwo.name = this.state.name;
-    objectTwo.file = this.state.file;
-    objectTwo.id = this.state.id;
-    objectTwo.lastModifiedDate = this.state.lastModifiedDate;
-    objectTwo.sharedWith = this.state.sharedWithSingle;
-    objectTwo.tags = this.state.singleFileTags;
-    objectTwo.type = this.state.type;
-    objectTwo.uploaded = this.state.uploaded;
-    const updatedFile = update(this.state.files, {$splice: [[index, 1, objectTwo]]});
-    this.setState({files: updatedFile, filteredValue: updatedFile, singleFile: object });
-    setTimeout(this.saveFullCollectionTags, 500);
-  }
-
-  saveFullCollectionTags() {
-    putFile("uploads.json", JSON.stringify(this.state.files), {encrypt: true})
-      .then(() => {
-        console.log("Saved");
-        this.saveSingleFileTags();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  saveSingleFileTags() {
-    const thisFile = this.state.filesSelected[0];
-    const fullFile = thisFile + '.json';
-    putFile(fullFile, JSON.stringify(this.state.singleFile), {encrypt:true})
-      .then(() => {
-        console.log("Saved tags");
-        this.setState({ tagModal: "hide", loadingTwo: "hide" });
-        window.$('#tagModal').modal('close');
-        this.loadCollection();
-      })
-      .catch(e => {
-        console.log("e");
-        console.log(e);
-      });
-  }
-
-  applyFilter() {
-    this.setState({ applyFilter: false });
-    setTimeout(this.filterNow, 500);
-  }
-
-  filterNow() {
-    let files = this.state.files;
-
-    if(this.state.selectedTag !== "") {
-      let tagFilter = files.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(this.state.selectedTag) : console.log("nada"));
-      // let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
-      this.setState({ filteredValue: tagFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate !== "") {
-      let dateFilter = files.filter(x => x.updated.includes(this.state.selectedDate));
-      this.setState({ filteredValue: dateFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedCollab !== "") {
-      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
-      // let collaboratorFilter = files.filter(x => x.sharedWith.includes(this.state.selectedCollab));
-      this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if(this.state.selectedType) {
-      let typeFilter = files.filter(x => x.type.includes(this.state.selectedType));
-      this.setState({ filteredValue: typeFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    }
-  }
-
-  deleteTag() {
-    this.setState({ deleteState: false });
-    console.log(this.state.selectedTagId);
-
-    let tags = this.state.singleFileTags;
-    const thisTag = tags.find((tag) => { return tag.id == this.state.selectedTagId}); //this is comparing strings
-    let index = thisTag && thisTag.id;
-    function findObjectIndex(tag) {
-        return tag.id == index; //this is comparing numbers
-    }
-    this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
-    // setTimeout(this.finalDelete, 300);
-    const updatedTags = update(this.state.singleFileTags, {$splice: [[this.state.tagIndex, 1]]});
-    this.setState({singleFileTags: updatedTags });
   }
 
   render() {
-    const { deleteState, applyFilter, typeList, collaboratorsModal, tagList, dateList, singleFileTags, tagDownload, confirmAdd, loadingTwo, contacts, contactDisplay, appliedFilter, person, currentPage, filesPerPage } = this.state;
+    const { activeIndicator, checked, tag, singleFileTags, loadingTwo, contacts, contactDisplay, appliedFilter, currentPage, filesPerPage, filteredVault } = this.props;
     let files;
-    if (this.state.filteredValue !=null) {
-      files = this.state.filteredValue;
+    if (filteredVault !== null) {
+      files = filteredVault;
     } else {
       files = [];
     }
-
-    deleteState === true ? this.deleteTag() : console.log("no delete");
-    tagDownload === true ? this.loadSingleTags() : console.log("no document selected");
-    confirmAdd === false ? console.log("Not sharing") : this.sharedInfo();
-    applyFilter === true ? this.applyFilter() : console.log("No filter applied");
 
     const indexOfLastFile = currentPage * filesPerPage;
     const indexOfFirstFile = indexOfLastFile - filesPerPage;
@@ -633,14 +68,12 @@ export default class VaultCollection extends Component {
      pageNumbers.push(i);
    }
 
-   console.log(this.state.selectedCollab);
-
    const renderPageNumbers = pageNumbers.map(number => {
           return (
             <li
               key={number}
               id={number}
-              className={number === this.state.currentPage ? "active" : ""}
+              className={number === currentPage ? "active" : ""}
             >
               <a id={number} onClick={this.handlePageChange}>{number}</a>
             </li>
@@ -656,54 +89,54 @@ export default class VaultCollection extends Component {
         <div className="col s12 m6">
           <h5>Files ({currentFiles.length})
             {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
-            {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredValue: this.state.files})}>Clear</a></span> : <div />}
+            {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={this.props.clearVaultFilter}>Clear</a></span> : <div />}
           </h5>
           {/* Filter Dropdown */}
           <ul id="slide-out" className="comments-side-nav side-nav">
             <h5 className="center-align">Filter</h5>
-            <li><a onClick={() => this.setState({collaboratorsModal: ""})}>Collaborators</a></li>
+            <li><a className="dropdown-trigger" data-activates='collabDrop'>Collaborators</a></li>
               {/* Collaborator list */}
-                <ul className={collaboratorsModal}>
+                <ul id='collabDrop' className='dropdown-content'>
                 {
                   uniqueCollabs.map(collab => {
                     return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedCollab: collab, collaboratorsModal: "hide", applyFilter: true})}>{collab}</a></li>
+                      <li className="filter-li" key={Math.random()}><a onClick={() => this.props.collabVaultFilter(collab)}>{collab}</a></li>
                     )
                   })
                 }
                 </ul>
               {/* End Collaborator list */}
-            <li><a onClick={() => this.setState({tagList: ""})}>Tags</a></li>
+            <li><a className="dropdown-trigger" data-activates='tagDrop'>Tags</a></li>
             {/* Tags list */}
-              <ul className={tagList}>
+              <ul id='tagDrop' className='dropdown-content'>
               {
                 uniqueTags.map(tag => {
                   return (
-                    <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedTag: tag, tagList: "hide", applyFilter: true})}>{tag}</a></li>
+                    <li className="filter-li" key={Math.random()}><a onClick={() => this.props.tagVaultFilter(tag)}>{tag}</a></li>
                   )
                 })
               }
               </ul>
             {/* End Tag list */}
-            <li><a onClick={() => this.setState({dateList: ""})}>Updated</a></li>
+            <li><a className="dropdown-trigger" data-activates='dateDrop'>Updated</a></li>
             {/* Date list */}
-              <ul className={dateList}>
+              <ul id='dateDrop' className='dropdown-content'>
               {
                 uniqueDate.map(date => {
                   return (
-                    <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedDate: date, dateList: "hide", applyFilter: true})}>{date}</a></li>
+                    <li className="filter-li" key={Math.random()}><a onClick={() => this.props.dateVaultFilter(date)}>{date}</a></li>
                   )
                 })
               }
               </ul>
             {/* End Date list */}
-            <li><a onClick={() => this.setState({typeList: ""})}>Type</a></li>
+            <li><a className="dropdown-trigger" data-activates='typeDrop'>Type</a></li>
             {/* Type list */}
-              <ul className={typeList}>
+              <ul id='typeDrop' className='dropdown-content'>
               {
                 uniqueType.map(type => {
                   return (
-                    <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedType: type, typeList: "hide", applyFilter: true})}>{type.split('/')[1].toUpperCase()}</a></li>
+                    <li className="filter-li" key={Math.random()}><a onClick={() => this.props.typeVaultFilter(type)}>{type.split('/')[1].toUpperCase()}</a></li>
                   )
                 })
               }
@@ -730,10 +163,10 @@ export default class VaultCollection extends Component {
         </div>
 
         {
-          this.state.activeIndicator === true ?
+          activeIndicator === true ?
             <ul className="pagination action-items">
               <li><a className="modal-trigger" href="#shareModal">Share</a></li>
-              <li><a className="modal-trigger" href="#tagModal" onClick={this.loadSingleTags}>Tag</a></li>
+              <li><a className="modal-trigger" href="#tagModal" onClick={this.props.loadSingleVaultTags}>Tag</a></li>
 
             </ul>
          :
@@ -774,7 +207,7 @@ export default class VaultCollection extends Component {
               }
             return(
               <tr key={file.id}>
-                <td><input type="checkbox" checked={this.state.checked} value={file.id} id={file.id} onChange={this.handleCheckbox} /><label htmlFor={file.id}></label></td>
+                <td><input type="checkbox" checked={checked} value={file.id} id={file.id} onChange={this.props.handleVaultCheckbox} /><label htmlFor={file.id}></label></td>
                 <td><Link to={'/vault/' + file.id}>{file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name}</Link></td>
                 <td>{collabs === "" ? collabs : collabs.join(', ')}</td>
                 <td>{file.uploaded}</td>
@@ -793,7 +226,7 @@ export default class VaultCollection extends Component {
           </ul>
           <div className="docs-per-page right-align">
             <label>Files per page</label>
-            <select value={this.state.filesPerPage} onChange={(event) => this.setState({ filesPerPage: event.target.value})}>
+            <select value={filesPerPage} onChange={this.props.setPagination}>
               <option value={10}>
               10
               </option>
@@ -818,7 +251,7 @@ export default class VaultCollection extends Component {
                   {contacts.slice(0).reverse().map(contact => {
                       return (
                         <li key={contact.contact}className="collection-item">
-                          <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true, contactDisplay: "hide", loadingTwo: "" })}>
+                          <a onClick={() => this.props.sharedVaultInfo(contact.contact)}>
                           <p>{contact.contact}</p>
                           </a>
                         </li>
@@ -859,24 +292,24 @@ export default class VaultCollection extends Component {
                   <p>Add a new tag or remove an existing tag.</p>
                   <div className="row">
                     <div className="col s9">
-                      <input type="text" value={this.state.tag} onChange={this.setTags} onKeyPress={this.handleKeyPress} />
+                      <input type="text" value={tag} onChange={this.props.setVaultTags} onKeyPress={this.props.handleVaultKeyPress} />
                     </div>
                     <div className="col s3">
-                      <a onClick={this.addTagManual}><i className="material-icons">check</i></a>
+                      <a onClick={this.props.addVaultTagManual}><i className="material-icons">check</i></a>
                     </div>
                   </div>
                   <div>
                   {singleFileTags.slice(0).reverse().map(tag => {
                       return (
                         <div key={tag} className="chip">
-                          {tag}<a onClick={() => this.setState({selectedTagId: tag, deleteState: true})}><i className="close material-icons">close</i></a>
+                          {tag}<a onClick={() => this.props.deleteVaultTag(tag)}><i className="close material-icons">close</i></a>
                         </div>
                       )
                     })
                   }
                   </div>
                   <div>
-                    <button onClick={this.saveNewTags} className="btn">Save</button>
+                    <button onClick={this.props.saveNewVaultTags} className="btn">Save</button>
                   </div>
               </div>
               {/*loading */}
@@ -942,11 +375,5 @@ export default class VaultCollection extends Component {
       </div>
       </div> : null
     );
-  }
-
-  componentWillMount() {
-    this.setState({
-      person: new Person(loadUserData().profile),
-    });
   }
 }

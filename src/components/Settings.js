@@ -20,7 +20,7 @@ export default class Settings extends Component {
 
   render() {
     this.state.mateInfo !=="" ? window.$('#modal4').modal('open') : window.$('#modal4').modal('close');
-    const { audits, team, newTeammateName, newTeammateRole, newTeammateEmail, graphitePro, settingsOnboarding, settingsMain, loadingBar } = this.props;
+    const { audits, team, newTeammateName, newTeammateRole, newTeammateEmail, settingsOnboarding, settingsMain, loadingBar } = this.props;
     let teamList;
     team === undefined ? teamList = [] : teamList = team;
       return (

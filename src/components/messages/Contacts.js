@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   isSignInPending,
   loadUserData,
-  Person,
   getFile,
   putFile,
   lookupProfile,
@@ -774,9 +773,6 @@ export default class Contacts extends Component {
   }
 
   render(){
-    console.log("Contact: " + this.state.addContact);
-    const userData = loadUserData();
-    const person = new Person(userData.profile);
     return(
       <div>
         <Header />

@@ -1243,6 +1243,11 @@ h5, h6 {
   display: block;
 }
 
+.vault-img{
+  max-width: 60%;
+  margin: auto;
+}
+
 .contacts-card:hover p div {
   border-radius: 50%;
   height: 150px;

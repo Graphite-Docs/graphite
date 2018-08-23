@@ -3,12 +3,9 @@ import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import {
   isSignInPending,
-  loadUserData,
-  Person,
   handlePendingSignIn,
 } from 'blockstack';
 import Header from '../Header';
-const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Collections extends Component {
 
@@ -36,11 +33,7 @@ export default class Collections extends Component {
     const link = '/documents/doc/' + this.props.tempDocId;
     if (this.props.redirect) {
       return <Redirect push to={link} />;
-    } else {
-      console.log("No redirect");
     }
-    const userData = loadUserData();
-    const person = new Person(userData.profile);
 
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
