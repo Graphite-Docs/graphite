@@ -11,7 +11,6 @@ export function confirmAcceptance() {
   let privateKey = loadUserData().appPrivateKey;
 
   const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  console.log(options)
   getFile(fileRoot + '/inviteaccepted.json', options)
     .then((fileContents) => {
       console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))))
@@ -35,8 +34,11 @@ export function confirmAcceptance() {
           return mate.id === index;
       }
       this.setState({
-        teammateIndex: team.findIndex(findObjectIndex)});
-      setTimeout(this.updateRole, 300);
+        teammateIndex: team.findIndex(findObjectIndex)
+      });
+    })
+    .then(() => {
+      this.updateRoleAfterConfirmation();
     })
     .catch(error => {
       console.log(error);

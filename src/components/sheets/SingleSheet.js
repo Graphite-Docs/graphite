@@ -512,7 +512,7 @@ renderView() {
               </ul>
               <ul className="right toolbar-menu small-toolbar-menu auto-save">
               <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
-              <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
+              <li><a className="dropdown-button" data-activates="singleSheet"><i className="small-menu material-icons">more_vert</i></a></li>
               <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
               </ul>
 
@@ -535,7 +535,7 @@ renderView() {
               {/*Share Menu Dropdown*/}
 
               {/* Dropdown menu content */}
-              <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
+              <ul id="singleSheet" className="dropdown-content single-doc-dropdown-content">
                 <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
                 <li className="divider"></li>
                 <li><a onClick={this.print}>Print</a></li>
@@ -589,7 +589,7 @@ renderView() {
               <ul className="right toolbar-menu small-toolbar-menu auto-save">
 
               <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
-              <li><a className="dropdown-button" data-activates="dropdown1"><i className="small-menu material-icons">more_vert</i></a></li>
+              <li><a className="dropdown-button" data-activates="singleSheet"><i className="small-menu material-icons">more_vert</i></a></li>
               <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
               </ul>
 
@@ -612,7 +612,7 @@ renderView() {
               {/*Share Menu Dropdown*/}
 
               {/* Dropdown menu content */}
-              <ul id="dropdown1" className="dropdown-content single-doc-dropdown-content">
+              <ul id="singleSheet" className="dropdown-content single-doc-dropdown-content">
                 <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
                 <li className="divider"></li>
                 <li><a onClick={this.print}>Print</a></li>

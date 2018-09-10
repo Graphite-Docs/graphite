@@ -20,7 +20,7 @@ export default class VaultCollection extends Component {
   }
 
   render() {
-    const { activeIndicator, checked, tag, singleFileTags, loadingTwo, contacts, contactDisplay, appliedFilter, currentPage, filesPerPage, filteredVault } = this.props;
+    const { graphitePro, activeIndicator, checked, tag, singleFileTags, loadingTwo, contacts, contactDisplay, appliedFilter, currentPage, filesPerPage, filteredVault } = this.props;
     let files;
     if (filteredVault !== null) {
       files = filteredVault;
@@ -83,11 +83,16 @@ export default class VaultCollection extends Component {
     return (
       !isSignInPending() ?
       <div>
-      <Header />
+      <Header
+        graphitePro={graphitePro}
+      />
       <div className="docs">
       <div className="row container">
         <div className="col s12 m6">
-          <h5>Files ({currentFiles.length})
+          <h5>Files ({currentFiles.length})  <a href='/vault/new/file' className="btn-floating btn black">
+            <i className="large material-icons">add</i>
+          </a>
+
             {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
             {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={this.props.clearVaultFilter}>Clear</a></span> : <div />}
           </h5>
@@ -156,11 +161,11 @@ export default class VaultCollection extends Component {
 
         <div className="">
         <div className="container">
-          <div className="fixed-action-btn">
+          {/*<div className="fixed-action-btn">
             <a href='/vault/new/file' className="btn-floating btn-large black">
               <i className="large material-icons">add</i>
             </a>
-        </div>
+        </div>*/}
 
         {
           activeIndicator === true ?

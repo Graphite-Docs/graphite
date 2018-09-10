@@ -10,20 +10,20 @@ let data;
 let state;
 
 export function loadAnalytics() {
-  axios.get('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/analytics-get')
-  .then(function (response) {
-    if(response) {
-      state = response.data;
-    } else {
-      state = [];
-    }
-  })
-  .then(() => {
-    this.dataLoad();
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
+  // axios.get('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/analytics-get')
+  // .then(function (response) {
+  //   if(response) {
+  //     state = response.data;
+  //   } else {
+  //     state = [];
+  //   }
+  // })
+  // .then(() => {
+  //   this.dataLoad();
+  // })
+  // .catch(function (error) {
+  //   console.log(error);
+  // });
 }
 
 export function dataLoad() {

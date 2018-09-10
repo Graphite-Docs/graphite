@@ -56,6 +56,7 @@ export default class SingleVaultFile extends Component {
   }
 
   render() {
+    console.log(this.props.link)
     window.$('.materialboxed').materialbox();
     var thisStyle = {
       display: "none"

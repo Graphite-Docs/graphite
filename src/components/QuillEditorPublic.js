@@ -25,6 +25,7 @@ export default class QuillEditorPublic extends React.Component {
             value={this.props.value} //value gets passed to Yjs
             getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this function to check status of Yjs for SingleDoc
             singleDocIsPublic={this.props.singleDocIsPublic}
+            rtc={this.props.rtc}
             onChange={this.props.onChange} //passing this to YjsQuill, to call whenever updates are made...
             readOnly={this.props.readOnly} //passing this from PublicDoc...
           />

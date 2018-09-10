@@ -9,6 +9,7 @@ import {
 } from 'blockstack';
 import Signin from './Signin';
 import Header from './Header';
+import LoadingBar from './LoadingBar';
 
 export default class Invites extends Component {
 
@@ -27,7 +28,7 @@ export default class Invites extends Component {
   handleSignIn(e) {
     e.preventDefault();
     const origin = window.location.origin
-    redirectToSignIn(origin, origin + '/manifest.json', ['store_write', 'publish_data'])
+    redirectToSignIn(window.location.href, origin + '/manifest.json', ['store_write', 'publish_data'])
   }
 
   handleSignOut(e) {
@@ -36,6 +37,7 @@ export default class Invites extends Component {
   }
 
   render() {
+    const { loadingIndicator } = this.props;
     return (
       <div>
         { !isUserSignedIn() ?
@@ -45,11 +47,16 @@ export default class Invites extends Component {
             <Header />
             <div className="container payment-wrapper">
               <div className="center-align">
-                <h3>You have been invited to join a Graphite Pro team.</h3>
-                <p>Learn more about Graphite Pro here.</p>
-                <p>Click below to accept the invite. You will have access to all the free features, but until the person who invited you confirms the invite acceptance, you will not be able to access the Pro features.</p>
-                <p>Read more about Graphite Pro's{/*'*/} security <a>here</a>.</p>
-                <button onClick={this.props.acceptInvite} className="btn black">Accept Invite</button>
+                {loadingIndicator ?
+                  <LoadingBar /> :
+                  <div>
+                    <h3>You have been invited to join a Graphite Pro team.</h3>
+                    <p>Learn more about Graphite Pro here.</p>
+                    <p>Click below to accept the invite. You will have access to all the free features, but until the person who invited you confirms the invite acceptance, you will not be able to access the Pro features.</p>
+                    <p>Read more about Graphite Pro's{/*'*/} security <a>here</a>.</p>
+                    <button onClick={this.props.acceptInvite} className="btn black">Accept Invite</button>
+                  </div>
+                }
               </div>
             </div>
           </div>

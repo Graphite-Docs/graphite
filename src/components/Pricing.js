@@ -51,8 +51,12 @@ export default class Pricing extends Component {
                   <div className="card-content center">
                     <div className="row">
                       <div className="col s12">
-                      <form id="teamPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-dev-team-plan" method="POST" >
-                      </form>
+                      {window.location.origin === "http://localhost:3000" ?
+                        <form id="teamPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-dev-team-plan" method="POST" ></form> :
+                        window.location.origin === "https://serene-hamilton-56e88e.netlify.com" ?
+                        <form id="teamPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-staging-team-plan" method="POST" ></form> :
+                        <form id="teamPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-team-plan" method="POST" ></form>
+                      }
                       </div>
                     </div>
                   </div>
@@ -79,8 +83,12 @@ export default class Pricing extends Component {
                   <div className="card-content center">
                     <div className="row">
                       <div className="col s12">
-                      <form id="proPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/team-plan" method="POST" >
-                      </form>
+                      {window.location.origin === "http://localhost:3000" ?
+                        <form id="proPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-dev-pro-plan" method="POST" ></form>:
+                        window.location.origin === "https://serene-hamilton-56e88e.netlify.com" ?
+                        <form id="proPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-staging-pro-plan" method="POST" ></form>:
+                        <form id="proPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-pro-plan" method="POST" ></form>
+                      }
                       </div>
                     </div>
                   </div>
@@ -107,8 +115,12 @@ export default class Pricing extends Component {
                   <div className="card-content center">
                     <div className="row">
                       <div className="col s12">
-                      <form id="enterprisePlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/pro-plan" method="POST" >
-                      </form>
+                      {window.location.origin === "http://localhost:3000" ?
+                        <form id="enterprisePlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-dev-enterprise-plan" method="POST" ></form>:
+                        window.location.origin === "https://serene-hamilton-56e88e.netlify.com" ?
+                        <form id="enterprisePlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-staging-enterprise-plan" method="POST" ></form>:
+                        <form id="enterprisePlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-pro-enterprise-plan" method="POST" ></form>
+                      }
                       </div>
                     </div>
                   </div>

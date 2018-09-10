@@ -5,6 +5,7 @@ import AppPage from './AppPage';
 import Signin from './Signin';
 import Collections from './documents/Collections';
 import SingleDoc from './documents/SingleDoc';
+import SingleRTCDoc from './documents/SingleRTCDoc';
 import DeleteDoc from './documents/DeleteDoc';
 import SharedCollection from './documents/SharedCollection';
 import SentCollection from './documents/SentCollection';
@@ -19,7 +20,7 @@ import DeleteSheet from './sheets/DeleteSheet';
 import SharedSheetsCollection from './sheets/SharedSheetsCollection';
 import SentSheetsCollection from './sheets/SentSheetsCollection';
 import SingleSharedSheet from './sheets/SingleSharedSheet';
-import MainContacts from './messages/MainContacts';
+import Contacts from './messages/Contacts';
 import ContactsProfile from './messages/ContactsProfile';
 import DeleteContact from './messages/DeleteContact';
 import VaultCollection from './vault/VaultCollection';
@@ -36,6 +37,7 @@ import Settings from './Settings';
 import PaymentSuccess from './PaymentSuccess';
 import Invites from './Invites';
 import Acceptances from './Acceptances';
+import NoUsername from './NoUsername';
 import {
   savePubKey
 } from './helpers/encryptionHelpers';
@@ -83,7 +85,9 @@ import {
   tagFilter,
   dateFilter,
   clearFilter,
-  setDocsPerPage
+  setDocsPerPage,
+  sharedInfoStatic,
+  loadTeamDocs
 } from './helpers/documents';
 import {
   handleChange,
@@ -93,7 +97,8 @@ import {
   shareModal,
   hideModal,
   shareDoc,
-  sharedInfoSingleDoc,
+  sharedInfoSingleDocRTC,
+  sharedInfoSingleDocStatic,
   handleBack,
   sharePublicly,
   savePublic,
@@ -106,7 +111,13 @@ import {
   loadMyFile,
   handleStealthy,
   print,
-  shareToTeam
+  shareToTeam,
+  initialDocLoad,
+  getYjsConnectionStatus,
+  toggleReadOnly,
+  stealthyChat,
+  loadAvatars,
+  noCollaboration
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -166,21 +177,27 @@ import {
   sendInvite,
   updateRole,
   teammateToDelete,
-  updateTeammate
+  updateTeammate,
+  updateRoleAfterConfirmation
 } from './helpers/team';
 import {
   saveAll,
   saveAccount,
   saveToTeam,
   checkForLatest,
-  setLoadedFile
+  setLoadedFile,
+  saveToMainAdmin,
+  saveMainAccount,
+  saveOriginalConfig,
+  loadOriginalConfig
 } from './helpers/teamsync';
 import {
   savePlan,
   savePlanFile,
   loadAccountPlan,
   testingDeleteAll,
-  accountDetails
+  accountDetails,
+  loadMainAccount
 } from './helpers/accountPlan';
 import {
   acceptInvite,
@@ -191,7 +208,8 @@ import {
   saveToInviter,
   sendToInviter,
   sendAcceptEmail,
-  loadBasicInviteInfo
+  loadBasicInviteInfo,
+  saveInfo
 } from './helpers/invite';
 import {
   confirmAcceptance
@@ -283,6 +301,39 @@ import {
   handleAddToVaultTwo,
   saveNewVaultTwo
 } from './helpers/sharedVaultFiles';
+import {
+  loadContactsCollection,
+  addNewContact,
+  handleAddContact,
+  saveNewContactsFile,
+  handleNewContact,
+  handleManualAdd,
+  manualAdd,
+  filterContactsList,
+  handleContactsCheckbox,
+  setTypes,
+  handleContactsKeyPress,
+  addTypeManual,
+  loadSingleTypes,
+  saveNewTypes,
+  saveFullCollectionTypes,
+  handleContactsPageChange,
+  deleteType,
+  applyContactsFilter,
+  filterContactsNow,
+  dateFilterContacts,
+  typeFilter,
+  clearContactsFilter
+} from './helpers/contacts';
+import {
+  loadSharedRTC,
+  handleAddRTC,
+  findDoc,
+  loadSingleRTC,
+  handleAddStatic,
+  saveNewSharedFile,
+  saveNewSingleSharedDoc
+} from './helpers/singleRTC';
 import work from 'webworkify-webpack';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -472,7 +523,33 @@ export default class App extends Component {
       page: 1,
       sharedWithMe: true,
       shareFileIndex: [],
-      user: ""
+      user: "",
+      singleDocIsPublic: false,
+      readOnly: false,
+      filteredContacts: [],
+      add: false,
+      results: [],
+      newContact: "",
+      showFirstLink: false,
+      types: [],
+      manualResults: {},
+      contactsPerPage: 10,
+      contactsSelected: [],
+      rtc: false,
+      avatars: [],
+      privateKey: "",
+      publicKey: "",
+      adminAddress: "",
+      adminToken: "",
+      tokenRefreshDate: "",
+      accountInfo: {},
+      originalConfig: {},
+      invite: {},
+      teamShare: false,
+      loadingIndicator: false,
+      auditThis: false,
+      teamDoc: false,
+      isTeamDoc: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -518,6 +595,8 @@ export default class App extends Component {
     this.dateFilter = dateFilter.bind(this);
     this.clearFilter = clearFilter.bind(this);
     this.setDocsPerPage = setDocsPerPage.bind(this);
+    this.sharedInfoStatic = sharedInfoStatic.bind(this);
+    this.loadTeamDocs = loadTeamDocs.bind(this);
 
     //Single Doc Component Functions
     this.handleChange = handleChange.bind(this);
@@ -527,7 +606,9 @@ export default class App extends Component {
     this.shareModal = shareModal.bind(this);
     this.hideModal = hideModal.bind(this);
     this.shareDoc = shareDoc.bind(this);
-    this.sharedInfoSingleDoc = sharedInfoSingleDoc.bind(this);
+    // this.sharedInfoSingleDoc = sharedInfoSingleDoc.bind(this);
+    this.sharedInfoSingleDocRTC = sharedInfoSingleDocRTC.bind(this);
+    this.sharedInfoSingleDocStatic = sharedInfoSingleDocStatic.bind(this);
     this.handleBack = handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
     this.sharePublicly = sharePublicly.bind(this);
     this.savePublic = savePublic.bind(this);
@@ -546,6 +627,12 @@ export default class App extends Component {
     this.handleStealthy = handleStealthy.bind(this);
     this.saveIntegrations = saveIntegrations.bind(this);
     this.shareToTeam = shareToTeam.bind(this);
+    this.getYjsConnectionStatus = getYjsConnectionStatus.bind(this);
+    this.initialDocLoad = initialDocLoad.bind(this);
+    this.toggleReadOnly = toggleReadOnly.bind(this);
+    this.stealthyChat = stealthyChat.bind(this);
+    this.loadAvatars = loadAvatars.bind(this);
+    this.noCollaboration = noCollaboration.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -611,6 +698,11 @@ export default class App extends Component {
     this.setLoadedFile = setLoadedFile.bind(this);
     this.teammateToDelete = teammateToDelete.bind(this);
     this.updateTeammate = updateTeammate.bind(this);
+    this.updateRoleAfterConfirmation = updateRoleAfterConfirmation.bind(this);
+    this.saveToMainAdmin = saveToMainAdmin.bind(this);
+    this.saveMainAccount = saveMainAccount.bind(this);
+    this.loadOriginalConfig = loadOriginalConfig.bind(this);
+    this.saveOriginalConfig = saveOriginalConfig.bind(this);
 
     // Account Plan
     this.savePlan = savePlan.bind(this);
@@ -618,6 +710,7 @@ export default class App extends Component {
     this.loadAccountPlan = loadAccountPlan.bind(this);
     this.testingDeleteAll = testingDeleteAll.bind(this);
     this.accountDetails = accountDetails.bind(this);
+    this.loadMainAccount = loadMainAccount.bind(this);
 
     //Invites
     this.acceptInvite = acceptInvite.bind(this);
@@ -629,6 +722,7 @@ export default class App extends Component {
     this.sendToInviter = sendToInviter.bind(this);
     this.sendAcceptEmail = sendAcceptEmail.bind(this);
     this.loadBasicInviteInfo = loadBasicInviteInfo.bind(this);
+    this.saveInfo = saveInfo.bind(this);
 
     //Acceptances
     this.confirmAcceptance = confirmAcceptance.bind(this);
@@ -705,6 +799,38 @@ export default class App extends Component {
     //Contacts
     this.profileLoad = profileLoad.bind(this);
     this.fetchContactData = fetchContactData.bind(this);
+    this.loadContactsCollection = loadContactsCollection.bind(this);
+    this.addNewContact = addNewContact.bind(this);
+    this.handleAddContact = handleAddContact.bind(this);
+    this.saveNewContactsFile = saveNewContactsFile.bind(this);
+    this.handleNewContact = handleNewContact.bind(this);
+    this.handleManualAdd = handleManualAdd.bind(this);
+    this.manualAdd = manualAdd.bind(this);
+    this.filterContactsList = filterContactsList.bind(this);
+    this.handleContactsCheckbox = handleContactsCheckbox.bind(this);
+    this.setTypes = setTypes.bind(this);
+    this.handleContactsKeyPress = handleContactsKeyPress.bind(this);
+    this.addTypeManual = addTypeManual.bind(this);
+    this.loadSingleTypes = loadSingleTypes.bind(this);
+    this.saveNewTypes = saveNewTypes.bind(this);
+    this.saveFullCollectionTypes = saveFullCollectionTypes.bind(this);
+    this.handleContactsPageChange = handleContactsPageChange.bind(this);
+    this.deleteType = deleteType.bind(this);
+    this.applyContactsFilter = applyContactsFilter.bind(this);
+    this.filterContactsNow = filterContactsNow.bind(this);
+    this.dateFilterContacts = dateFilterContacts.bind(this);
+    this.typeFilter = typeFilter.bind(this);
+    this.clearContactsFilter = clearContactsFilter.bind(this);
+
+    //Single rtc
+    this.loadSharedRTC = loadSharedRTC.bind(this);
+    this.handleAddRTC = handleAddRTC.bind(this);
+    this.findDoc = findDoc.bind(this);
+    this.loadSingleRTC = loadSingleRTC.bind(this);
+    this.handleAddStatic = handleAddStatic.bind(this);
+    this.saveNewSharedFile = saveNewSharedFile.bind(this);
+    this.saveNewSingleSharedDoc = saveNewSingleSharedDoc.bind(this);
+
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -713,12 +839,23 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    // this.launchWorker();
+    // // this.launchWorker();
+    // const ADMIN_ADDRESS = "14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv"
+    // const ADMIN_AUTH_TOKEN = "eyJwdWJsaWNrZXkiOiIwMzVlODg4YTU4NDc3MGNjMGMyOTZkNDBjNGJhZDI3N2Y5MzA4OTllNjczMzZmYjFmNDdmNTIxNGQ5MDZmODkzNjIiLCJzaWduYXR1cmUiOiIzMDQ0MDIyMDFkZDRiOGIwODNlMDFhMjIwMjM1ZDMzN2U5ZmQ4MmNkY2M5MDY3ZjY0NjhlMmE2NmEyMGVjYWE0MjI0NWFjZmUwMjIwNWRhZDI0MDAwNTliZTE4MTkzNjBhZjZjNTE1MWZmZDg1MGVlY2NlZWFlNzQzNjJiMTU1ZDVmYTMyNWNjYmY4MSJ9"
+    //
+    // if(loadUserData().username === "khunter.id") {
+    //   const gaiaConfigJSON = localStorage.getItem('blockstack-gaia-hub-config')
+    //   const gaiaConfig = JSON.parse(gaiaConfigJSON)
+    //   gaiaConfig.address = ADMIN_ADDRESS
+    //   gaiaConfig.token = ADMIN_AUTH_TOKEN
+    //   localStorage.setItem('blockstack-gaia-hub-config', JSON.stringify(gaiaConfig))
+    //   setTimeout(this.testing, 300)
+    // }
+
     console.log('Build Date: ', Config.BUILD_DATE_STAMP)
     console.log('Build Time: ', Config.BUILD_TIME_STAMP)
     isUserSignedIn() ? savePubKey() : loadUserData();
   }
-
   launchWorker() {
     if(this.state.contacts.length > 0) {
       let w = work(require.resolve('./worker.js'));
@@ -753,11 +890,18 @@ export default class App extends Component {
       mediumConnected, mediumIntegrationToken, graphitePro, slackConnected, team, newTeammateName, newTeammateRole,
       newTeammateEmail, audits, settingsOnboarding, settingsMain, loadingBar, filteredVault, currentVaultPage, deleteState,
       applyFilter, typeList, singleFileTags, tagDownload, filesPerPage, name, username, img, description, show, page,
-      type, pages, link, grid, sharedWithMe, shareFileIndex, user
+      type, pages, link, grid, sharedWithMe, shareFileIndex, user, singleDocIsPublic, readOnly,
+      manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
+      showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc
     } = this.state;
     return (
       <div>
-      { !isUserSignedIn() && !window.location.pathname.indexOf("shared") ?
+      { isUserSignedIn() && loadUserData().username === null ?
+        <NoUsername
+          handleSignIn={this.handleSignIn}
+        />
+        :
+        !isUserSignedIn() && !window.location.pathname.indexOf("shared") ?
         <Signin handleSignIn={ this.handleSignIn } />
         :
         <BrowserRouter>
@@ -770,6 +914,7 @@ export default class App extends Component {
                     contacts={contacts}
                     files={files}
                     pubKey={pubKey}
+                    graphitePro={graphitePro}
                     />}
               />
               <Route exact path="/documents"
@@ -805,6 +950,12 @@ export default class App extends Component {
                       dateFilter={this.dateFilter}
                       clearFilter={this.clearFilter}
                       setDocsPerPage={this.setDocsPerPage}
+                      sharedInfoStatic={this.sharedInfoStatic}
+                      loadTeamDocs={this.loadTeamDocs}
+                      docs={docs}
+                      graphitePro={graphitePro}
+                      rtc={rtc}
+                      docsSelected={docsSelected}
                       value={value}
                       contacts={contacts}
                       pubKey={pubKey}
@@ -830,8 +981,6 @@ export default class App extends Component {
                       />}
               />
               <Route exact path="/documents/doc/:id" render={(props) =>
-
-              //  <TestDoc {...props}
               <SingleDoc {...props}
                   componentDidMountData={this.componentDidMountData}
                   handleAutoAdd={this.handleAutoAdd}
@@ -840,10 +989,22 @@ export default class App extends Component {
                   sharePublicly={this.sharePublicly}
                   handleTitleChange={this.handleTitleChange}
                   handleBack={this.handleBack}
-                  sharedInfoSingleDoc={this.sharedInfoSingleDoc}
+                  sharedInfoSingleDocRTC={this.sharedInfoSingleDocRTC}
+                  sharedInfoSingleDocStatic={this.sharedInfoSingleDocStatic}
                   handleStealthy={this.handleStealthy}
                   postToMedium={this.postToMedium}
                   shareToTeam={this.shareToTeam}
+                  initialDocLoad={this.initialDocLoad}
+                  getYjsConnectionStatus={this.getYjsConnectionStatus}
+                  toggleReadOnly={this.toggleReadOnly}
+                  stopSharing={this.stopSharing}
+                  stealthyChat={this.stealthyChat}
+                  teamDoc={teamDoc}
+                  loadingIndicator={loadingIndicator}
+                  userRole={userRole}
+                  team={team}
+                  avatars={avatars}
+                  sharedWith={sharedWith}
                   publicShare={publicShare}
                   remoteStorage={remoteStorage}
                   loading={loading}
@@ -855,20 +1016,30 @@ export default class App extends Component {
                   content={content}
                   hideStealthy={hideStealthy}
                   gaiaLink={gaiaLink}
-                  sharedWith={sharedWith}
                   docLoaded={docLoaded}
-                  // singleDocIsPublic={singleDocIsPublic}
                   idToLoad={idToLoad}
                   yjsConnected={yjsConnected}
                   mediumConnected={mediumConnected}
                   graphitePro={graphitePro}
+                  singleDocIsPublic={singleDocIsPublic}
+                  readOnly={readOnly}
+                  rtc={rtc}
                 />
               }/>
               <Route exact path="/shared/docs/:id" render={(location, match, props) =>
                 <PublicDoc
-                  title={title} //testing...
-                  readOnlyStateFromSingleDoc={this.state.readOnlyStateFromSingleDoc} //NOTE: passing this state as prop to PublicDoc, but can move this to a container instead, like PublicDocContainer...
-                  singleDocIsPublicFromApp={this.state.singleDocIsPublicFromSingleDoc} //NOTE: passing this state as prop to PublicDoc, but can move this to a container instead, like PublicDocContainer...
+                  title={title}
+                  content={content}
+                  readOnly={readOnly}
+                  idToLoad={idToLoad}
+                  singleDocIsPublic={singleDocIsPublic}
+                  loadInitial={this.loadInitial}
+                  fetchData={this.fetchData}
+                  loadDoc={this.loadDoc}
+                  handlePubTitleChange={this.handlePubTitleChange}
+                  docLoaded={docLoaded}
+                  readOnlyStateFromSingleDoc={this.state.readOnlyStateFromSingleDoc}
+                  singleDocIsPublicFromApp={this.state.singleDocIsPublicFromSingleDoc}
                 />
               }/>
               <Route exact path="/documents/doc/delete/:id" render={(location, match, props) =>
@@ -881,12 +1052,31 @@ export default class App extends Component {
                   save={save}
                 />
               }/>
+              <Route exact path="/documents/single/shared/:id/:id" render={(props) =>
+              <SingleRTCDoc {...props}
+                  loadSharedRTC={this.loadSharedRTC}
+                  handleTitleChange={this.handleTitleChange}
+                  handleChange={this.handleChange}
+                  handleIDChange={this.handleIDChange}
+                  findDoc={this.findDoc}
+                  handleAddStatic={this.handleAddStatic}
+                  title={title}
+                  rtc={rtc}
+                  content={content}
+                  docLoaded={docLoaded}
+                  idToLoad={idToLoad}
+                  yjsConnected={yjsConnected}
+                  autoSave={autoSave}
+                  hideButton={hideButton}
+                />
+              }/>
               <Route exact path="/documents/shared/:id" component={SharedCollection} />
               <Route exact path="/documents/sent/:id" component={SentCollection} />
               <Route exact path="/documents/single/shared/:id" component={SingleSharedDoc} />
               <Route exact path="/admin-docs" component={Admin} />
               <Route exact path="/profile" component={Profile} />
               <Route exact path="/shared-docs" component={SharedDocs} />
+
               <Route exact path="/sheets" component={MainSheets} />
               <Route exact path="/sheets/sheet/:id" component={SingleSheet} />
               <Route exact path="/sheets/sheet/delete/:id" component={DeleteSheet} />
@@ -895,8 +1085,55 @@ export default class App extends Component {
               <Route exact path="/sheets/single/shared/:id" component={SingleSharedSheet} />
               <Route exact path="/testsheet" component={TestSheet} />
               <Route exact path="/shared-sheets" component={SharedSheets} />
+
               <Route exact path="/export" component={Export} />
-              <Route exact path="/contacts" component={MainContacts} />
+              <Route exact path="/contacts" render={(location, match, props) =>
+                <Contacts {...props}
+                  loadContactsCollection={this.loadContactsCollection}
+                  addNewContact={this.addNewContact}
+                  handleAddContact={this.handleAddContact}
+                  handleNewContact={this.handleNewContact}
+                  handleManualAdd={this.handleManualAdd}
+                  manualAdd={this.manualAdd}
+                  filterContactsList={this.filterContactsList}
+                  handleContactsCheckbox={this.handleContactsCheckbox}
+                  setTypes={this.setTypes}
+                  addTypeManual={this.addTypeManual}
+                  loadSingleTypes={this.loadSingleTypes}
+                  saveNewTypes={this.saveNewTypes}
+                  saveFullCollectionTypes={this.saveFullCollectionTypes}
+                  handleContactsPageChange={this.handleContactsPageChange}
+                  deleteType={this.deleteType}
+                  applyContactsFilter={this.applyContactsFilter}
+                  filterContactsNow={this.filterContactsNow}
+                  handleContactsKeyPress={this.handleContactsKeyPress}
+                  dateFilterContacts={this.dateFilterContacts}
+                  typeFilter={this.typeFilter}
+                  clearContactsFilter={this.clearContactsFilter}
+                  graphitePro={graphitePro}
+                  manualResults={manualResults}
+                  typesList={typesList}
+                  dateList={dateList}
+                  appliedFilter={appliedFilter}
+                  deleteState={deleteState}
+                  typeDownload={typeDownload}
+                  loadingTwo={loadingTwo}
+                  typeModal={typeModal}
+                  currentPage={currentPage}
+                  contactsPerPage={contactsPerPage}
+                  add={add}
+                  filteredContacts={filteredContacts}
+                  show={show}
+                  loading={loading}
+                  results={results}
+                  newContact={newContact}
+                  showFirstLink={showFirstLink}
+                  types={types}
+                  activeIndicator={activeIndicator}
+                  checked={checked}
+                  type={type}
+                />
+              }/>
               <Route exact path="/contacts/profile/:id" render={(location, match, props) =>
                 <ContactsProfile {...props}
                   profileLoad={this.profileLoad}
@@ -905,6 +1142,7 @@ export default class App extends Component {
                   username={username}
                   description={description}
                   img={img}
+                  graphitePro={graphitePro}
                 />
               }/>
               <Route exact path="/contacts/delete/:id" component={DeleteContact} />
@@ -940,6 +1178,7 @@ export default class App extends Component {
                   dateVaultFilter={this.dateVaultFilter}
                   typeVaultFilter={this.typeVaultFilter}
                   setPagination={this.setPagination}
+                  graphitePro={graphitePro}
                   files={files}
                   filteredVault={filteredVault}
                   deleteState={deleteState}
@@ -969,6 +1208,7 @@ export default class App extends Component {
                   files={files}
                   show={show}
                   loading={loading}
+                  graphitePro={graphitePro}
                 />
               }/>
               <Route exact path="/vault/:id" render={(location, match, props) =>
@@ -992,6 +1232,7 @@ export default class App extends Component {
                   link={link}
                   content={content}
                   grid={grid}
+                  graphitePro={graphitePro}
                 />
               }/>
               <Route exact path="/vault/delete/:id" render={(location, match, props) =>
@@ -1074,6 +1315,7 @@ export default class App extends Component {
                   mediumIntegrationToken={mediumIntegrationToken}
                   slackConnected={slackConnected}
                   graphitePro={graphitePro}
+                  userRole={userRole}
                 />
               }/>
               <Route exact path="/settings" render={(location, match, props) =>
@@ -1086,6 +1328,7 @@ export default class App extends Component {
                   testingDeleteAll={this.testingDeleteAll}
                   teammateToDelete={this.teammateToDelete}
                   updateTeammate={this.updateTeammate}
+                  userRole={userRole}
                   team={team}
                   newTeammateName={newTeammateName}
                   newTeammateRole={newTeammateRole}
@@ -1106,11 +1349,13 @@ export default class App extends Component {
                 <Invites {...props}
                   acceptInvite={this.acceptInvite}
                   loadInvite={this.loadInvite}
+                  loadingIndicator={loadingIndicator}
                 />
               }/>
               <Route exact path="/acceptances" render={(location, match, props) =>
                 <Acceptances {...props}
                   confirmAcceptance={this.confirmAcceptance}
+                  loadingIndicator={loadingIndicator}
                 />
               }/>
             </div>

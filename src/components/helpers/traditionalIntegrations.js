@@ -15,6 +15,7 @@ export function handleMediumIntegrationToken(e) {
 }
 
 export function connectMedium() {
+  this.setState({ action: "Set up Medium Integration."})
   putFile('mediumIntegrationToken.json', JSON.stringify(this.state.mediumIntegrationToken), {encrypt: true})
     .then(() => {
       window.Materialize.toast('Medium connected', 4000);

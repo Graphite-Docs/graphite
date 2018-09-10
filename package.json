@@ -38,6 +38,7 @@
     "dotenv-expand": "4.2.0",
     "dropbox": "^2.5.13",
     "dropbox-fs": "^0.3.0",
+    "eccrypto": "^1.0.3",
     "eslint": "4.10.0",
     "eslint-config-react-app": "^2.1.0",
     "eslint-loader": "1.9.0",

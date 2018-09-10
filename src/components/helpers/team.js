@@ -43,6 +43,11 @@ export function addTeammate() {
       object.key = "";
       object.inviteAccepted = false;
       object.inviteLink = 'https://app.graphitedocs.com/invites/?' + loadUserData().username + '?' + object.id;
+      object.privateKey = this.state.privateKey;
+      object.pubKey = this.state.pubKey;
+      object.adminAddress = this.state.adminAddress;
+      object.authToken = this.state.adminToken;
+      object.tokenRefreshDate = this.state.tokenRefreshDate;
       this.setState({ team: [...this.state.team, object], newTeammateId: object.id, action: "Added teammate: " + this.state.newTeammateName });
       window.Materialize.toast('Teammate added', 4000);
       setTimeout(this.saveInvite, 300);
@@ -65,7 +70,7 @@ export function teammateToDelete(props) {
     })
     window.Materialize.toast('Teammate deleted', 4000);
     this.postToLog();
-    setTimeout(this.accountDetails, 800);
+    setTimeout(this.saveAll, 800);
 
 }
 
@@ -86,10 +91,32 @@ export function updateTeammate(props) {
       newTeammateKey: thisMate && thisMate.key,
       newTeammateId: thisMate && thisMate.id,
       inviter: thisMate && thisMate.inviter,
-      action: "Updated teammated role for " + props.name
+      action: "Updated role for " + props.name
     });
-    this.postToLog();
-    setTimeout(this.updateRole, 600);
+    setTimeout(this.updateRole, 700);
+}
+
+export function updateRoleAfterConfirmation() {
+  const object = {};
+  const index = this.state.teammateIndex;
+  object.name = this.state.newTeammateName;
+  object.role = this.state.newTeammateRole;
+  object.inviteAccepted = this.state.inviteAccepted;
+  object.email = this.state.newTeammateEmail;
+  object.added = this.state.inviteDate;
+  object.blockstackId = this.state.newTeammateBlockstackId;
+  object.key = this.state.newTeammateKey;
+  object.id = this.state.newTeammateId;
+  object.inviter = this.state.inviter;
+  object.audits = this.state.audits;
+  object.privateKey = this.state.privateKey;
+  object.pubKey = this.state.pubKey;
+  object.adminAddress = this.state.adminAddress;
+  object.adminToken = this.state.adminToken;
+  const updatedTeam = update(this.state.team, {$splice: [[index, 1, object]]});
+  this.setState({ team: updatedTeam });
+  window.Materialize.toast('Teammate updated', 4000);
+  setTimeout(this.saveAll, 300);
 }
 
 export function updateRole() {
@@ -105,15 +132,19 @@ export function updateRole() {
     object.id = this.state.newTeammateId;
     object.inviter = this.state.inviter;
     object.audits = this.state.audits;
+    object.privateKey = this.state.privateKey;
+    object.pubKey = this.state.pubKey;
+    object.adminAddress = this.state.adminAddress;
+    object.adminToken = this.state.adminToken;
     const updatedTeam = update(this.state.team, {$splice: [[index, 1, object]]});
     this.setState({ team: updatedTeam });
     window.Materialize.toast('Teammate updated', 4000);
-    setTimeout(this.saveAll, 300);
+    setTimeout(this.postToLog, 300);
 }
 
 export function sendInvite() {
   this.postToLog();
-  let inviteLink = 'https://app.graphitedocs.com/invites/?' + loadUserData().username + '?' + this.state.newTeammateId;
+  let inviteLink = window.location.origin + '/invites/?' + loadUserData().username + '?' + this.state.newTeammateId;
   const object = {};
   object.from_email = "contact@graphitedocs.com";
   object.to_email = this.state.newTeammateEmail;

@@ -757,7 +757,10 @@ migrationComplete() {
         <div className="docs">
         <div className="row container">
           <div className="col s12 m6">
-            <h5>Sheets ({currentSheets.length})
+            <h5>Sheets ({currentSheets.length})  <a onClick={this.handleaddItem} className="btn-floating btn black">
+              <i className="material-icons">add</i>
+            </a>
+
             {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
             {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredSheets: this.state.sheets})}>Clear</a></span> : <div />}
             </h5>
@@ -821,11 +824,11 @@ migrationComplete() {
           </div>
         <div className="container">
 
-        <div className="fixed-action-btn">
+        {/*<div className="fixed-action-btn">
           <a onClick={this.handleaddItem} className="btn-floating btn-large black">
             <i className="large material-icons">add</i>
           </a>
-        </div>
+        </div>*/}
 
         {
           this.state.activeIndicator === true ?

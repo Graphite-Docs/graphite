@@ -38,6 +38,7 @@ export default class Header extends Component {
   }
 
   renderHeader() {
+    const { graphitePro } = this.props;
     if (isUserSignedIn()) {
       const userData = loadUserData();
       // console.log('userData', userData);
@@ -60,9 +61,10 @@ export default class Header extends Component {
                     <a href="/Profile">Profile</a>
                   }
                   </li>
-                  {/*<li><a href="/integrations">Integrations</a></li>
-                  <li><a href="/settings">Settings</a></li>*/}
+                  <li><a href="/integrations">Integrations</a></li>
+                  <li><a href="/settings">Settings</a></li>
                   <li><a href="/export">Export All Data</a></li>
+                  {graphitePro === true ? <li><a href="/settings">Settings</a></li> : <li className="hide"></li>}
                   <li className="divider"></li>
                   <li><a onClick={ this.handleSignOut }>Sign out</a></li>
                 </ul>

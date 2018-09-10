@@ -50,6 +50,7 @@ export function saveIntegrations() {
   object.noteRiotConnected = this.state.noteRiotConnected;
   object.mediumConnected = this.state.mediumConnected;
   object.slackConnected = this.state.slackConnected;
+  object.webhooksConnected = this.state.webhooksConnected;
   this.setState({ integrations: object });
   setTimeout(this.updateIntegrations, 300);
 }
@@ -379,9 +380,9 @@ export function loadSharedDocs() {
     .then(() => {
       this.saveStealthyIntegration();
     })
-    .then(() => {
-      this.saveCoinsIntegration();
-    })
+    // .then(() => {
+    //   this.saveCoinsIntegration();
+    // })
     .catch(error => {
       console.log(error);
     });
@@ -390,6 +391,8 @@ export function loadSharedDocs() {
   export function saveStealthyIntegration() {
     console.log("saving stealthy")
     const data = this.state.docs;
+    console.log(data);
+    console.log(this.state.stealthyKey);
     const publicKey = this.state.stealthyKey;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const fileName = 'stealthyIndex.json';

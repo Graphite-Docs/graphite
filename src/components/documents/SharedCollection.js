@@ -11,7 +11,7 @@ import {
   handlePendingSignIn,
 } from 'blockstack';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
-
+const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -64,10 +64,10 @@ export default class SharedCollection extends Component {
         console.log(error);
       });
 
-    let fileID = loadUserData().username;
+    let publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
     let fileString = 'shareddocs.json'
-    let file = fileID.slice(0, -3) + fileString;
-    const directory = '/shared/' + file;
+    let file = publicKey + fileString;
+    const directory = 'shared/' + file;
     const user = this.props.match.params.id;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
     lookupProfile(this.state.user, "https://core.blockstack.org/v1/names")
@@ -169,6 +169,7 @@ export default class SharedCollection extends Component {
                 <tr>
                   <th>Title</th>
                   <th>Shared By</th>
+                  <th>Static File</th>
                   <th>Date Shared</th>
                 </tr>
               </thead>
@@ -178,8 +179,9 @@ export default class SharedCollection extends Component {
 
               return(
                 <tr key={doc.id}>
-                  <td><Link to={'/documents/single/shared/'+ doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
+                  <td><Link to={'/documents/single/shared/'+ this.state.user + '/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
                   <td>{this.state.user}</td>
+                  <td>{doc.rtc === true ? "False" : "True"}</td>
                   <td>{doc.shared}</td>
                 </tr>
               );

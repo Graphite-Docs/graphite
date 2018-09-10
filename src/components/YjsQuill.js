@@ -23,14 +23,11 @@ export default class YjsQuill extends React.Component {
 
   componentDidMount() {
     this.setInner = this.setInner.bind(this);
-    console.log('1. YjsQuill - componentDidMount...')
     // console.log('YjsQuill - componentDidMount - this.props is: ', this.props)
     // console.log('YjsQuill - componentDidMount - this.props.roomId is: ', this.props.roomId)
 
     //console.logging connection details here won't show until state is updated...
     //note: above logs work after i update state.... -- moved to within promise!
-
-    console.log('YjsQuill -->>> connection in render is: ', connection)
 
     // NOTE: eliminated React warning by following directions in console.info in ./node_modules/yjs/src/y.js
 
@@ -53,8 +50,6 @@ export default class YjsQuill extends React.Component {
       }).then( (y) => {
 
         var that = this
-        console.log('HELLO from YjsQuill promise...')
-        // console.log('YjsQuill ----- inside promise, that.props: ', that.props)
 
         window.yquill = y
 
@@ -95,30 +90,37 @@ export default class YjsQuill extends React.Component {
             var range = window.quill.getSelection();
             if (range) {
               if (range.length === 0) {
-                console.log('User cursor is at index', range.index);
+                // console.log('User cursor is at index', range.index);
                 // console.log(window.quill.getBounds(range.index).top);
 
               } else {
-                console.log('Text is selected')
+                // console.log('Text is selected')
               }
             } else {
-              console.log('User cursor is not in editor');
+              // console.log('User cursor is not in editor');
             }
-            console.error('0. CHANGE in YjqQuill...')
+            // console.error('0. CHANGE in YjqQuill...')
             var rootHtml = window.quill.root.innerHTML //getting rootHtml
-            console.log('0. rootHtml is: ', rootHtml)
-            if (that.props.singleDocIsPublic) { //if this YjsQuill instance is being rendered by SingleDoc, and not PublicDoc, call props.onChange (only SingleDoc has this prop, PublicDoc does not...)
-              console.log('this YjsQuill is being rendered by SingleDoc, so call props.onChange to save!')
+            if (that.props.singleDocIsPublic || that.props.rtc) { //if this YjsQuill instance is being rendered by SingleDoc, and not PublicDoc, call props.onChange (only SingleDoc has this prop, PublicDoc does not...)
+              // console.log('this YjsQuill is being rendered by SingleDoc, so call props.onChange to save!')
               that.props.onChange(rootHtml) //passing rootHtml to SingleDoc, to save it in the database
+            } else {
+              // console.log(this.props.rtc);
+              // console.log(that.props.singleDocIsPublic);
+              if(window.location.pathname.split('/')[1] === 'shared') {
+                console.log("Public Doc")
+              } else {
+                that.props.onChange(rootHtml)
+              }
             }
           } else if (eventName === 'selection-change') {
-            console.log('1. CHANGE...') // args[0] will be old range
+            // console.log('1. CHANGE...') // args[0] will be old range
 
           }
         });
 
         if (that.props.getYjsConnectionStatus) { //PublicDoc won't have that function as a prop, only Yjs rendered by SingleDoc will
-        console.log('Yjs connection.connected === true, the my-y-websockets-server is running, telling SingleDoc...')
+        // console.log('Yjs connection.connected === true, the my-y-websockets-server is running, telling SingleDoc...')
           that.props.getYjsConnectionStatus(true) //this will only be true within the promise
         }
       })
@@ -127,9 +129,17 @@ export default class YjsQuill extends React.Component {
 
   //using vanilla javascript to set innerHTML of QuillEditorPrivate to this.props.value...
   setInner() {
-    var editor = document.getElementsByClassName('ql-editor')
-    editor[0].innerHTML = this.props.value;
-    console.log("YjsQuill - editor is: ", editor)
+    if(window.quill.root.innerHTML !== "<p><br></p>") {
+      // console.log("inner html")
+      // console.log(window.quill.root.innerHTML)
+      // console.log("value")
+      // console.log(this.props.value);
+      this.props.onChange(window.quill.root.innerHTML)
+    } else {
+      // console.log("this is where the single doc file would be loaded instead");
+      var editor = document.getElementsByClassName('ql-editor')
+      editor[0].innerHTML = this.props.value;
+    }
   }
 
   render() {

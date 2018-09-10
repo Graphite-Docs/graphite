@@ -9,8 +9,10 @@ const { encryptECIES } = require('blockstack/lib/encryption');
 const { decryptECIES } = require('blockstack/lib/encryption');
 
 export function loadInviteStatus() {
+    console.log("Loading Invite Status")
     getFile('inviteStatus.json', {decrypt: true})
       .then((fileContents) => {
+        console.log(JSON.parse(fileContents));
         if(fileContents) {
           this.setState({
             inviteAccepted: JSON.parse(fileContents || '{}').inviteAccepted,
@@ -43,13 +45,16 @@ export function loadInviteStatus() {
 }
 
 export function loadInvite() {
+  console.log("loading invite")
   let mainLink = window.location.href;
   let userToLoadFrom = mainLink.split('?')[1];
   let fileRoot = mainLink.split('?')[2];
   const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile(fileRoot + '.json', options)
     .then((fileContents) => {
+      console.log(JSON.parse(fileContents))
       this.setState({
+        invite: JSON.parse(fileContents),
         inviterKey: JSON.parse(fileContents || '{}').inviterKey,
         inviteDate: JSON.parse(fileContents || '{}').inviteDate,
         inviter: JSON.parse(fileContents || '{}').inviter,
@@ -74,6 +79,9 @@ export function loadInvite() {
 
 export function saveBasicInviteInfo() {
   putFile('inviter.json', JSON.stringify(this.state.inviter), {encrypt: true})
+    .then(() => {
+      this.setState({ loadingIndicator: false })
+    })
     .catch(error => {
       console.log(error);
     })
@@ -98,16 +106,17 @@ export function inviteInfo() {
 export function acceptInvite() {
   const object = {};
   object.inviteAccepted = true;
-  object.inviteDate = this.state.inviteDate;
-  object.inviter = this.state.inviter;
-  object.inviteeEmail = this.state.inviteeEmail;
+  object.inviteDate = this.state.invite.inviteDate;
+  object.inviter = this.state.invite.inviter;
+  object.inviteeEmail = this.state.invite.inviteeEmail;
   object.inviteeBlockstackId = loadUserData().username;
-  object.inviteeName = this.state.inviteeName;
-  object.inviteeRole = this.state.inviteeRole;
-  object.inviteeId = this.state.inviteeId;
+  object.inviteeName = this.state.invite.inviteeName;
+  object.inviteeRole = this.state.invite.inviteeRole;
+  object.inviteeId = this.state.invite.inviteeId;
   object.inviteeKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
   this.setState({ inviteDetails: object });
-  setTimeout(this.saveToInviter, 300)
+  // setTimeout(this.saveToInviter, 300)
+
   putFile('inviteStatus.json', JSON.stringify(object), {encrypt: true})
     .then(() => {
       this.saveToInviter();
@@ -135,7 +144,7 @@ export function saveToInviter() {
 
 export function sendToInviter() {
   let id = this.state.inviteeId;
-  let acceptanceLink = 'https://app.graphitedocs.com/acceptances/?' + loadUserData().username + '?' + id;
+  let acceptanceLink = window.location.origin + '/acceptances/?' + loadUserData().username + '?' + id;
   const object = {};
   object.from_email = "contact@graphitedocs.com";
   object.to_email = this.state.inviterEmail;
@@ -156,12 +165,18 @@ export function sendAcceptEmail() {
 }
 
 export function loadBasicInviteInfo() {
+  console.log("Loading Basic Info");
+  console.log(getPublicKeyFromPrivate(loadUserData().appPrivateKey));
   let privateKey = loadUserData().appPrivateKey;
-  let file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '.json';
+  console.log(privateKey)
+  let file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '0.json';
   const options = { username: this.state.inviter, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile(file, options)
     .then((fileContents) => {
+      console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
       this.setState({
+        accountInfo: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))),
+        accountOwner: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountOwner,
         ownerBlockstackId: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).ownerBlockstackId,
         ownerEmail: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).ownerEmail,
         accountId: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountId,
@@ -175,17 +190,30 @@ export function loadBasicInviteInfo() {
         team: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team || [],
         integrations: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).integrations || [],
         lastUpdated: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).lastUpdated,
-        graphitePro: true
+        graphitePro: true,
+        adminAddress: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).adminAddress,
+        authToken: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).authToken,
+        privateKey: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).privateKey,
+        pubKey: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).pubKey
       })
     })
     .then(() => {
-      if(this.state.team.length > 0) {
-        this.checkForLatest();
-      } else {
-        console.log("End of team sync")
-      }
+      this.saveInfo();
     })
     .catch(error => {
       console.log(error);
+      this.setState({ loadingIndicator: false})
+    })
+}
+
+export function saveInfo() {
+  this.setState({ newTeammateId: "", newTeammateName: "", newTeammateEmail: "", newTeammateRole: "" })
+  let fileName = 'accountdetails.json';
+  putFile(fileName, JSON.stringify(this.state.accountDetails), {encrypt: true})
+    .then(() => {
+      this.loadMainAccount();
+    })
+    .catch(error => {
+      console.log(error)
     })
 }

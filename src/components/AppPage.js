@@ -25,7 +25,7 @@ export default class AppPage extends Component {
   }
 
   render() {
-    const { value, sheets, files, contacts } = this.props;
+    const { value, sheets, files, contacts, graphitePro } = this.props;
     let merged = sheets.concat(value).concat(files);
     let recentFiles;
     let mergedRecent = merged.map(merge => {
@@ -85,7 +85,9 @@ export default class AppPage extends Component {
 
     return (
       <div>
-        <Header />
+        <Header
+          graphitePro={graphitePro}
+        />
         <div className="site-wrapper">
           <div className="site-wrapper-inner">
             {!isUserSignedIn() ? (

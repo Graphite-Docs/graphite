@@ -3,6 +3,7 @@ import {
 } from "blockstack";
 
 export function loadDocs() {
+  this.setState({ loadingIndicator: true });
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(JSON.parse(fileContents || '{}').value) {
@@ -45,9 +46,7 @@ export function loadSheets() {
 export function loadContacts() {
   getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
-     let file = JSON.parse(fileContents || '{}');
-     let contacts = file.contacts;
-     if(contacts.length > 0) {
+     if(fileContents) {
        this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
      } else {
        this.setState({ contacts: [] });

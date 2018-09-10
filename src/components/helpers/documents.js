@@ -1,11 +1,14 @@
 import {
   putFile,
-  getFile
+  getFile,
+  loadUserData
 } from 'blockstack';
 
 
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
+const { getPublicKeyFromPrivate } = require('blockstack');
+const { decryptECIES } = require('blockstack/lib/encryption');
 
 
 const { encryptECIES } = require('blockstack/lib/encryption');
@@ -64,7 +67,6 @@ export function handleaddItem() {
   this.setState({ filteredValue: [...this.state.filteredValue, object] });
   this.setState({ singleDoc: objectTwo });
   this.setState({ tempDocId: object.id });
-  this.setState({ action: "Created New Document "});
   setTimeout(this.saveNewFile, 500);
 }
 
@@ -78,15 +80,11 @@ export function filterList(event){
 }
 
 export function saveNewFile() {
-
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
     .then(() => {
-      this.saveNewSingleDoc();
+      // this.saveNewSingleDoc();
       console.log("Saved Collection!");
-      // setTimeout(this.saveNewSingleDoc, 200);
-    })
-    .then(() => {
-      this.postToLog();
+      setTimeout(this.saveNewSingleDoc, 200);
     })
     .catch(e => {
       console.log("e");
@@ -148,7 +146,25 @@ export function handleCheckbox(event) {
 export function sharedInfo(props) {
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  this.setState({ receiverID: props})
+  this.setState({ receiverID: props, rtc: true })
+  getFile('key.json', options)
+    .then((file) => {
+      this.setState({ pubKey: JSON.parse(file)})
+    })
+      .then(() => {
+        this.loadSharedCollection();
+      })
+      .catch(error => {
+        console.log("No key: " + error);
+        window.Materialize.toast(props + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
+        this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
+      });
+}
+
+export function sharedInfoStatic(props) {
+  const user = props;
+  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  this.setState({ receiverID: props, rtc: false })
   getFile('key.json', options)
     .then((file) => {
       this.setState({ pubKey: JSON.parse(file)})
@@ -164,9 +180,13 @@ export function sharedInfo(props) {
 }
 
 export function loadSharedCollection () {
-  const user = this.state.receiverID;
-  const file = "shared.json";
-  getFile(user + file, {decrypt: true})
+  // const user = this.state.receiverID;
+  // const file = "shared.json";
+  // getFile(user + file, {decrypt: true})
+  const pubKey = this.state.pubKey;
+  const fileName = 'shareddocs.json'
+  const file = 'mine/' + pubKey + '/' + fileName;
+  getFile(file, {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
         this.setState({ sharedCollection: JSON.parse(fileContents || '{}') })
@@ -252,11 +272,12 @@ export function share() {
   const object = {};
   object.title = this.state.title;
   object.content = this.state.content;
-  object.id = this.state.id;
+  object.id = this.state.id.toString();
   object.updated = this.state.updated;
   object.sharedWith = this.state.sharedWithSingle;
   object.tags = this.state.tags;
   object.words = this.state.words;
+  object.rtc = this.state.rtc;
   const index = this.state.index;
   const updatedDocs = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
   this.setState({value: updatedDocs, singleDoc: object, sharedCollection: [...this.state.sharedCollection, object]});
@@ -265,15 +286,40 @@ export function share() {
 }
 
 export function saveSharedFile() {
-  const user = this.state.receiverID;
-  const file = "shared.json";
-
-  putFile(user + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
+  // const user = this.state.receiverID;
+  // const file = "shared.json";
+  //
+  // putFile(user + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
+  const fileName = 'shareddocs.json'
+  const pubKey = this.state.pubKey;
+  const file = 'mine/' + pubKey + '/' + fileName;
+  putFile(file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
     .then(() => {
       console.log("Shared Collection Saved");
-      this.saveSingleFile();
+      // this.saveSingleFile();
       window.$('#shareModal').modal('close');
+      window.$('#encryptedModal').modal('close');
     })
+
+    const data = this.state.sharedCollection;
+    const encryptedData = JSON.stringify(encryptECIES(pubKey, JSON.stringify(data)));
+    const directory = 'shared/' + pubKey + fileName;
+    putFile(directory, encryptedData, {encrypt: false})
+    .then(() => {
+      window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+    })
+    .catch(e => {
+      console.log(e);
+    });
+    putFile(this.state.docsSelected[0] + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
+    .then(() => {
+      // this.handleAutoAdd();
+      // this.loadAvatars();
+      this.saveSingleFile();
+    })
+    .catch(e => {
+      console.log(e);
+    });
 }
 
 export function saveSingleFile() {
@@ -294,7 +340,11 @@ export function saveCollection() {
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
       console.log("Saved Collection");
-      this.sendFile();
+      // this.sendFile();
+      this.setState({ title: "Untitled"})
+    })
+    .then(() => {
+      this.loadCollection();
     })
     .catch(e => {
       console.log("e");
@@ -469,4 +519,36 @@ export function clearFilter() {
 
 export function setDocsPerPage(e) {
   this.setState({ docsPerPage: e.target.value});
+}
+
+export function loadTeamDocs() {
+  console.log("Loading team docs...")
+  const { team, count } = this.state;
+  if(team.length > count) {
+    let publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+    let fileString = 'shareddocs.json'
+    let file = publicKey + fileString;
+    const directory = 'shared/' + file;
+    const user = team[count].blockstackId;
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    getFile(directory, options)
+     .then((fileContents) => {
+       let privateKey = loadUserData().appPrivateKey;
+       this.setState({
+         docs: this.state.docs.concat(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents)))),
+         count: this.state.count + 1
+       })
+     })
+     .then(() => {
+       this.loadTeamDocs();
+     })
+      .catch(error => {
+        console.log(error);
+        this.setState({ count: this.state.count + 1})
+        this.loadTeamDocs();
+      });
+  } else {
+    console.log("No more files")
+    this.setState({ count: 0, loadingIndicator: false });
+  }
 }

@@ -1,19 +1,15 @@
 import {
   loadUserData
 } from 'blockstack';
-import axios from 'axios';
+const uuidv4 = require('uuid/v4');
 
 export function postToLog() {
   const object = {};
-  axios.get('http://worldclockapi.com/api/json/est/now')
-    .then((response) => {
-      console.log(response.data.currentDateTime)
-      object.user = loadUserData().username;
-      object.timeStamp = response.data.currentDateTime;
-      object.action = this.state.action;
-    })
-    .catch(error => {console.log(error)})
+  object.user = loadUserData().username;
+  object.timeStamp = new Date(Date.now()).toString();
+  object.action = this.state.action;
+  object.id = uuidv4();
 
   this.setState({ audits: [...this.state.audits, object] });
-  setTimeout(this.accountDetails, 300);
+  setTimeout(this.saveAll, 300);
 }

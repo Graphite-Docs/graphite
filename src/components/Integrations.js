@@ -4,6 +4,7 @@ import {
 } from "blockstack";
 import Header from './Header';
 import Onboarding from './Onboarding'
+import Pricing from './Pricing';
 
 // const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -17,7 +18,7 @@ export default class Integrations extends Component {
   }
 
   render(){
-    const { stealthyConnected, blockusignConnected, coinsConnected, noteRiotConnected, kanstackConnected, mediumConnected, mediumIntegrationToken, slackConnected, slackWebhookUrl } = this.props;
+    const { webhooksConnected, stealthyConnected, blockusignConnected, coinsConnected, noteRiotConnected, kanstackConnected, mediumConnected, mediumIntegrationToken, slackConnected, slackWebhookUrl, userRole, graphitePro } = this.props;
     if(1+1===2) {
       return(
         <div>
@@ -49,7 +50,7 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>Blockusign is A decentralized (dApp) social document signing tool where you own and control your own documents, contracts and data. <a href="https://blockusign.co/signup.html">Learn more.</a></h6>
-              {blockusignConnected === true ? <button onClick={this.props.disconnectBlockusign} className="btn btn-small grey">Disconnect</button> : <button onClick={this.props.connectBlockusign} className="btn btn-small black">Connect</button>}
+              {blockusignConnected === true ? <button onClick={this.props.disconnectBlockusign} className="btn btn-small grey">Disconnect</button> : <button className="btn btn-small black">Soon</button>}
             </div>
             </div>
 
@@ -62,7 +63,7 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>Coins is an encrypted cryptocurrency portfolio management tool created on top of Blockstack. Built from the ground up to measure your performance at varying scales, from fine-grain to high-level insights. <a href="">Learn more.</a></h6>
-              {coinsConnected === true ? <button onClick={this.props.disconnectCoins} className="btn btn-small grey">Disconnect</button> : <button className="btn btn-small black">Connect</button>}
+              {coinsConnected === true ? <button onClick={this.props.disconnectCoins} className="btn btn-small grey">Disconnect</button> : <button className="btn btn-small black">Soon</button>}
             </div>
             </div>
 
@@ -88,15 +89,16 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>A decentralized Kanban board built on Blockstack. Kanstack is offline friendly, encrypted, and open-source. <a href="https://kanstack.com/#/">Learn more.</a></h6>
-              {kanstackConnected === true ? <button onClick={this.props.disconnectKanstack} className="btn btn-small grey">Disconnect</button> : <button onClick={this.props.connectKanstack} className="btn btn-small black">Connect</button>}
+              {kanstackConnected === true ? <button onClick={this.props.disconnectKanstack} className="btn btn-small grey">Disconnect</button> : <button className="btn btn-small black">Soon</button>}
             </div>
             </div>
           </div>
+          {userRole !== "User" ?
           <div className="integrations-section">
             <h3 className="center-align">Traditional Integrations</h3>
             <h5 className="center-align">There are times where you will want to take advantage of traditional applications, times when the data does not need to be private but either needs to be spread far and wide as soon as possible or the data needs to be used to help your workflow in other ways.
             That is why Graphite offers the following traditional integrations.</h5>
-            <div className="integration-options row">
+            {/*<div className="integration-options row">
             <div className="col s4">
               <div className="center-align">
                 <img className="integrations-img" src="https://s.w.org/style/images/about/WordPress-logotype-wmark.png" alt="Wordpress logo" />
@@ -105,9 +107,9 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>WordPress combines simplicity for users and publishers with under-the-hood complexity for developers. This makes it flexible while still being easy-to-use. <a href="https://wordpress.org/about/features/">Learn more.</a></h6>
-              {coinsConnected === true ? <button onClick={this.disconnectCoins} className="btn btn-small grey">Disconnect</button> : <button onClick={this.connecCoins} className="btn btn-small black">Connect</button>}
+              {wordpressConnected === true ? <button onClick={this.props.disconnectWordpress} className="btn btn-small grey">Disconnect</button> : <button onClick={this.connecCoins} className="btn btn-small black">Connect</button>}
             </div>
-            </div>
+            </div>*/}
 
             <div className="integration-options row">
             <div className="col s4">
@@ -118,7 +120,7 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>Medium taps into the brains of the world’s most insightful writers, thinkers, and storytellers to bring you the smartest takes on topics that matter. <a href="https://medium.com/about">Learn more.</a></h6>
-              {mediumConnected === true ? <button onClick={this.props.disconnectMedium} className="btn btn-small grey">Disconnect</button> : <a className="modal-trigger" href="#mediumModal"><button className="btn btn-small black">Connect</button></a>}
+              {mediumConnected === true && graphitePro && userRole !== "Manager" ? <button onClick={this.props.disconnectMedium} className="btn btn-small grey">Disconnect</button> : graphitePro ? <a className="modal-trigger" href="#mediumModal"><button className="btn btn-small black">Connect</button></a> : <button className="btn black modal-trigger" href="#pricingModal">Sign up for Graphite Pro</button>}
             </div>
             </div>
 
@@ -131,7 +133,7 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>When your team needs to kick off a project, hire a new employee, deploy some code, review a sales contract, finalize next year'{/*'*/}s budget, measure an A/B test, plan your next office opening, and more, Slack has you covered. <a href="https://slack.com/about">Learn more.</a></h6>
-              {slackConnected === true ? <button onClick={this.props.disconnectSlack} className="btn btn-small grey">Disconnect</button> : <a className="modal-trigger" href="#slackModal"><button className="btn btn-small black">Connect</button></a>}
+              {slackConnected === true && graphitePro && userRole !== "Manager" ? <button onClick={this.props.disconnectSlack} className="btn btn-small grey">Disconnect</button> : graphitePro ? <a className="modal-trigger" href="#slackModal"><button className="btn btn-small black">Connect</button></a> : <button className="btn black modal-trigger" href="#pricingModal">Sign up for Graphite Pro</button>}
             </div>
             </div>
 
@@ -144,11 +146,15 @@ export default class Integrations extends Component {
             </div>
             <div className="col s8 app-description">
               <h6>A webhook (also called a web callback or HTTP push API) is a way for an app to provide other applications with real-time information. <a href="https://sendgrid.com/blog/whats-webhook/">Learn more.</a></h6>
-              {coinsConnected === true ? <button onClick={this.disconnectCoins} className="btn btn-small grey">Disconnect</button> : <button onClick={this.props.connectCoins} className="btn btn-small black">Connect</button>}
+              {webhooksConnected === true && graphitePro && userRole !== "Manager" ? <button onClick={this.props.disconnectWebhooks} className="btn btn-small grey">Disconnect</button> : graphitePro ? <button onClick={this.props.disconnectWebhooks} className="btn btn-small black">Connect</button> : <button className="btn black modal-trigger" href="#pricingModal">Sign up for Graphite Pro</button>}
             </div>
             </div>
 
-          </div>
+          </div>:
+          <div className="hide" />
+
+          }
+
           </div>
 
           {/*Medium Modal */}
@@ -179,6 +185,12 @@ export default class Integrations extends Component {
             </div>
           </div>
           {/*Slack Modal*/}
+
+          {/* Pricing Modal */}
+          <div id="pricingModal" className="modal">
+            <Pricing />
+          </div>
+          {/*End Pricing Modal */}
         </div>
       );
     } else {

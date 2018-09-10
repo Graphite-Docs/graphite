@@ -6,7 +6,9 @@ import {
   signUserOut,
   isUserSignedIn,
 } from 'blockstack';
+import LoadingBar from './LoadingBar';
 import Signin from './Signin';
+import Header from './Header';
 
 export default class Acceptances extends Component {
 
@@ -30,16 +32,27 @@ export default class Acceptances extends Component {
   }
 
   render() {
+    const { loadingIndicator } = this.props;
     return (
       <div>
         { !isUserSignedIn() ?
           <Signin handleSignIn={ this.handleSignIn } />
           :
+          <div>
+          <Header />
           <div className="container payment-wrapper">
             <div className="center-align">
-              <h3>Confirm invite acceptance</h3>
-              <button onClick={this.props.confirmAcceptance} className="btn black">Confirm Invite Acceptance</button>
+
+              {loadingIndicator ?
+                <LoadingBar /> :
+                <div>
+                  <h3>Confirm invite acceptance</h3>
+                  <button onClick={this.props.confirmAcceptance} className="btn black">Confirm Invite Acceptance</button>
+                </div>
+              }
+
             </div>
+          </div>
           </div>
         }
       </div>
