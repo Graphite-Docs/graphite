@@ -13,15 +13,12 @@ import LoadingBar from './LoadingBar';
 
 export default class Invites extends Component {
 
-  componentWillMount() {
+  componentDidMount() {
     if (isSignInPending()) {
       handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
+        window.location = window.location.href.split('&')[0];
       });
     }
-  }
-
-  componentDidMount() {
     isUserSignedIn() ? this.props.loadInvite() : loadUserData();
   }
 

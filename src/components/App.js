@@ -42,9 +42,6 @@ import {
   savePubKey
 } from './helpers/encryptionHelpers';
 import {
-  isSignInPending,
-  redirectToSignIn,
-  handlePendingSignIn,
   signUserOut,
   isUserSignedIn,
   loadUserData
@@ -555,11 +552,7 @@ export default class App extends Component {
   } //constructor
 
   componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
-    }
+
     //Collections Component Functions
     this.loadDocs = loadDocs.bind(this);
     this.loadSheets = loadSheets.bind(this);
@@ -870,10 +863,10 @@ export default class App extends Component {
 
   }
 
-  handleSignIn(e) {
-    e.preventDefault();
-    redirectToSignIn();
-  }
+  // handleSignIn(e) {
+  //   e.preventDefault();
+  //   redirectToSignIn();
+  // }
 
   handleSignOut(e) {
     e.preventDefault();

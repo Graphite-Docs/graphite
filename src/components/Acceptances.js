@@ -12,10 +12,10 @@ import Header from './Header';
 
 export default class Acceptances extends Component {
 
-  componentWillMount() {
+  componentDidMount() {
     if (isSignInPending()) {
       handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
+        window.location = window.location.href.split('&')[0];
       });
     }
   }
@@ -23,7 +23,7 @@ export default class Acceptances extends Component {
   handleSignIn(e) {
     e.preventDefault();
     const origin = window.location.origin
-    redirectToSignIn(origin, origin + '/manifest.json', ['store_write', 'publish_data'])
+    redirectToSignIn(window.location.href, origin + '/manifest.json', ['store_write', 'publish_data'])
   }
 
   handleSignOut(e) {

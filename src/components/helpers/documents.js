@@ -253,7 +253,7 @@ export function getCollection() {
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id === this.state.docsSelected[0]});
+    const thisDoc = value.find((doc) => { return doc.id.toString() === this.state.docsSelected[0]});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
         return doc.id === index; //this is comparing numbers
@@ -419,7 +419,7 @@ export function getCollectionTags() {
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id === this.state.docsSelected[0]});
+    const thisDoc = value.find((doc) => { return doc.id.toString() === this.state.docsSelected[0]});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
         return doc.id === index; //this is comparing numbers
@@ -454,7 +454,6 @@ export function saveNewTags() {
 }
 
 export function saveFullCollectionTags() {
-  console.log(this.state.value);
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
       console.log("Saved");
