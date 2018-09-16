@@ -30,11 +30,7 @@ export default class SingleProject extends Component {
       timelineComment: "",
       commentTitle: "",
     }
-    this.setTimeline = this.setTimeline.bind(this);
-    this.handleCommentChange = this.handleCommentChange.bind(this);
-    this.handleCommentTitleChange = this.handleCommentTitleChange.bind(this);
-    this.addComment = this.addComment.bind(this);
-    this.saveComment = this.saveComment.bind(this);
+
   }
 
 
@@ -84,24 +80,24 @@ export default class SingleProject extends Component {
   }
 
 
-  setTimeline() {
+  setTimeline = () => {
     window.timeline = new window.TL.Timeline('timeline-embed',
         this.state.timeline, {debug: true});
   }
 
-  handleTitleChange(e) {
+  handleTitleChange = (e) => {
     console.log(e.target.value);
   }
 
-  handleCommentChange(e) {
+  handleCommentChange = (e) => {
     this.setState({ timelineComment: e.target.value });
   }
 
-  handleCommentTitleChange(e) {
+  handleCommentTitleChange = (e) => {
     this.setState({ commentTitle: e.target.value });
   }
 
-  addComment() {
+  addComment = () => {
     const titleObject = this.state.timeline.title;
     const today = new Date();
     const day = today.getDate();
@@ -128,7 +124,7 @@ export default class SingleProject extends Component {
     // setTimeout(this.saveComment, 500);
   }
 
-  saveComment() {
+  saveComment = () => {
     const file = this.props.match.params.id;
     const fullFile = 'projects/' + file + '.json'
     putFile(fullFile, JSON.stringify(this.state), {encrypt: true})
@@ -140,7 +136,7 @@ export default class SingleProject extends Component {
       });
   }
 
-  renderView() {
+  renderView = () => {
     return (
         <div>
           <div className="navbar-fixed toolbar">
