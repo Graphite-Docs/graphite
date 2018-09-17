@@ -115,7 +115,6 @@ export default class Contacts extends Component {
 
             <ul className="collection">
             {results.map(result => {
-              console.log(result.fullyQualifiedName)
               let profile = result.profile;
               let image = profile.image;
               let imageLink;

@@ -22,6 +22,7 @@ export function loadIntegrations() {
           noteRiotConnected: JSON.parse(fileContents || '{}').noteRiotConnected,
           mediumConnected: JSON.parse(fileContents || '{}').mediumConnected,
           slackConnected: JSON.parse(fileContents || '{}').slackConnected,
+          webhookConnected: JSON.parse(fileContents || '{}').webhookConnected
         })
       } else {
         this.setState({
@@ -35,6 +36,19 @@ export function loadIntegrations() {
     })
     .then(() => {
       this.loadAccountPlan()
+    })
+    .then(() => {
+      if(window.location.href.includes("medium")) {
+        const object = {};
+        object.integration = window.location.pathname.split('/')[2];
+        object.state = window.location.href.split('=')[1];
+        object.code = window.location.href.split('=')[2];
+        this.connectMedium(object.code);
+      } else if (window.location.href.includes('slack')) {
+        this.connectSlack(window.location.href.split('=')[1].split('&')[0]);
+      } else if(window.location.href.includes('gdocs')) {
+        this.connectGoogleDocs(window.location.href.split('=')[2].split('&')[0]);
+      }
     })
     .catch(error => {
       console.log(error);
@@ -50,13 +64,20 @@ export function saveIntegrations() {
   object.noteRiotConnected = this.state.noteRiotConnected;
   object.mediumConnected = this.state.mediumConnected;
   object.slackConnected = this.state.slackConnected;
-  object.webhooksConnected = this.state.webhooksConnected;
+  object.webhookConnected = this.state.webhookConnected;
   this.setState({ integrations: object });
   setTimeout(this.updateIntegrations, 300);
 }
 
 export function updateIntegrations() {
   putFile('integrations.json', JSON.stringify(this.state.integrations), {encrypt: true})
+    .then(() => {
+      if(window.location.href.includes('medium') || window.location.href.includes('slack')) {
+        window.location.replace('/integrations');
+      } else {
+        this.loadIntegrations();
+      }
+    })
     .catch(error => {
       console.log(error);
     })
@@ -218,7 +239,6 @@ export function connectStealthy() {
   lookupProfile(loadUserData().username, "https://core.blockstack.org/v1/names")
   .then((profile) => {
       url = profile.apps['https://www.stealthy.im'];
-      console.log(loadUserData());
       this.loadKey();
   })
   .catch((error) => {

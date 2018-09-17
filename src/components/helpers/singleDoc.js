@@ -15,6 +15,7 @@ import update from 'immutability-helper';
 // import Widget from 'remotestorage-widget';
 // const remoteStorage = new RemoteStorage({logging: false});
 // const widget = new Widget(remoteStorage);
+const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const wordcount = require("wordcount");
 // const { getPublicKeyFromPrivate } = require('blockstack');
@@ -69,10 +70,14 @@ export function initialDocLoad() {
 
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
-    console.log(JSON.parse(fileContents));
+    if(JSON.parse(fileContents).compressed === true) {
+      this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content)})
+    } else {
+      this.setState({ content: JSON.parse(fileContents).content});
+    }
     this.setState({
       title: JSON.parse(fileContents || '{}').title,
-      content: JSON.parse(fileContents || '{}').content,
+      // content: JSON.parse(fileContents || '{}').content,
       tags: JSON.parse(fileContents || '{}').tags,
       idToLoad: JSON.parse(fileContents || '{}').id,
       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
@@ -80,7 +85,8 @@ export function initialDocLoad() {
       readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
       rtc: JSON.parse(fileContents || '{}').rtc || false,
       sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-      teamDoc: JSON.parse(fileContents || '{}').teamDoc
+      teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+      compressed: JSON.parse(fileContents || '{}').compressed || false
     })
   //   if(JSON.parse(fileContents).rtc) {
   //     this.setState({
@@ -299,7 +305,8 @@ export function loadMyFile() {
   .then(() => {
     const object = {};
     object.title = this.state.title;
-    object.content = this.state.content;
+    object.compressed = true;
+    object.content = lzjs.compress(this.state.content);
     this.state.teamShare ? object.teamDoc = true : object.teamDoc = false;
     object.id = window.location.href.split('doc/')[1];
     object.receiverID = this.state.receiverID;
@@ -412,7 +419,8 @@ export function handleBack() {
 export function handleAutoAdd() {
   const object = {};
   object.title = this.state.title;
-  object.content = this.state.content;
+  object.content = lzjs.compress(this.state.content);
+  object.compressed = true;
   this.state.teamDoc ? object.teamDoc = true : object.teamDoc = false;
   if(window.location.href.split('doc/')[1] !==undefined) {
     object.id = parseInt(window.location.href.split('doc/')[1], 10)
@@ -524,13 +532,13 @@ export function componentDidMountData(props) {
 
 getFile(fullFile, {decrypt: true})
  .then((fileContents) => {
-   console.log(JSON.parse(fileContents || '{}'));
+   console.log(JSON.parse(fileContents || '{}').id);
     this.setState({
       title: JSON.parse(fileContents || '{}').title,
       content: JSON.parse(fileContents || '{}').content,
       tags: JSON.parse(fileContents || '{}').tags,
       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic,
-      idToLoad: JSON.parse(fileContents || '{}').id,
+      idToLoad: window.location.href.split('doc/')[1],
       docLoaded: true
    })
  })
@@ -554,7 +562,7 @@ export function print() {
 }
 
 export function shareToTeam() {
-  // this.postToSlack();
+
   this.setState({ teamDoc: true, teamShare: true, loadingIndicator: true, action: "Shared document id " + window.location.href.split('doc/')[1] + " with team."})
   const {team, count} = this.state;
   if(team.length > count) {
@@ -568,6 +576,17 @@ export function shareToTeam() {
   } else {
     this.setState({ teamShare: false, loadingIndicator: false })
     window.$('#teamShare').modal('close');
+    if(this.state.slackConnected){
+      this.postToSlack();
+    }
+    if(this.state.webhookConnected) {
+      const object = {};
+      object.title = this.state.title;
+      object.content = this.state.content;
+      object.words = wordcount(this.state.content);;
+      object.sharedWith = this.state.sharedWith;
+      this.postToWebhook(object);
+    }
     this.handleAutoAdd();
     this.loadAvatars();
   }

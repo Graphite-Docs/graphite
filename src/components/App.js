@@ -38,6 +38,7 @@ import PaymentSuccess from './PaymentSuccess';
 import Invites from './Invites';
 import Acceptances from './Acceptances';
 import NoUsername from './NoUsername';
+import OAUTH from './OAUTH';
 import {
   savePubKey
 } from './helpers/encryptionHelpers';
@@ -161,7 +162,20 @@ import {
   connectSlack,
   disconnectSlack,
   postToSlack,
-  slackWebhook
+  slackWebhook,
+  completeAuth,
+  createMediumPost,
+  connectWebhook,
+  handleWebhookUrl,
+  postToWebhook,
+  postHook,
+  disconnectWebhooks,
+  connectGoogleDocs,
+  filterGDocsList,
+  fetchGDocs,
+  singleGDoc,
+  handleAddGDoc,
+  importAllGDocs
 } from './helpers/traditionalIntegrations';
 import {
   handleTeammateName,
@@ -546,7 +560,14 @@ export default class App extends Component {
       loadingIndicator: false,
       auditThis: false,
       teamDoc: false,
-      isTeamDoc: false
+      isTeamDoc: false,
+      webhookUrl: "",
+      webhookConnected: false,
+      gDocs: [],
+      filteredGDocs: [],
+      token: "",
+      compressed: false,
+      importAll: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -654,6 +675,7 @@ export default class App extends Component {
     this.saveStealthyIntegration = saveStealthyIntegration.bind(this);
     this.saveCoinsIntegration = saveCoinsIntegration.bind(this);
     this.updateIntegrations = updateIntegrations.bind(this);
+    this.createMediumPost = createMediumPost.bind(this);
 
     //Traditional Integrations
     this.handleMediumIntegrationToken = handleMediumIntegrationToken.bind(this);
@@ -666,6 +688,18 @@ export default class App extends Component {
     this.disconnectSlack = disconnectSlack.bind(this);
     this.postToSlack = postToSlack.bind(this);
     this.slackWebhook = slackWebhook.bind(this);
+    this.handleSlackWebhookUrl = handleSlackWebhookUrl.bind(this);
+    this.connectWebhook = connectWebhook.bind(this);
+    this.postToWebhook = postToWebhook.bind(this);
+    this.postHook = postHook.bind(this);
+    this.disconnectWebhooks = disconnectWebhooks.bind(this);
+    this.handleWebhookUrl = handleWebhookUrl.bind(this);
+    this.connectGoogleDocs = connectGoogleDocs.bind(this);
+    this.filterGDocsList = filterGDocsList.bind(this);
+    this.fetchGDocs = fetchGDocs.bind(this);
+    this.singleGDoc = singleGDoc.bind(this);
+    this.handleAddGDoc = handleAddGDoc.bind(this);
+    this.importAllGDocs = importAllGDocs.bind(this);
 
     //PublicDoc Components
     this.fetchData = fetchData.bind(this);
@@ -824,6 +858,9 @@ export default class App extends Component {
     this.saveNewSharedFile = saveNewSharedFile.bind(this);
     this.saveNewSingleSharedDoc = saveNewSingleSharedDoc.bind(this);
 
+    //Auth
+    this.completeAuth = completeAuth.bind(this);
+
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -885,7 +922,8 @@ export default class App extends Component {
       applyFilter, typeList, singleFileTags, tagDownload, filesPerPage, name, username, img, description, show, page,
       type, pages, link, grid, sharedWithMe, shareFileIndex, user, singleDocIsPublic, readOnly,
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
-      showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc
+      showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
+      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll
     } = this.state;
     return (
       <div>
@@ -1294,6 +1332,11 @@ export default class App extends Component {
                   connectSlack={this.connectSlack}
                   disconnectSlack={this.disconnectSlack}
                   testingDeleteAll={this.testingDeleteAll}
+                  handleWebhookUrl={this.handleWebhookUrl}
+                  connectWebhook={this.connectWebhook}
+                  disconnectWebhooks={this.disconnectWebhooks}
+                  webhookConnected={webhookConnected}
+                  webhookUrl={webhookUrl}
                   docs={docs}
                   integrations={integrations}
                   stealthyConnected={stealthyConnected}
@@ -1309,6 +1352,18 @@ export default class App extends Component {
                   slackConnected={slackConnected}
                   graphitePro={graphitePro}
                   userRole={userRole}
+                />
+              }/>
+              <Route exact path="/integrations/:id" render={(location, match, props) =>
+                <OAUTH {...props}
+                  connectMedium={this.connectMedium}
+                  connectSlack={this.connectSlack}
+                  filterGDocsList={this.filterGDocsList}
+                  singleGDoc={this.singleGDoc}
+                  importAllGDocs={this.importAllGDocs}
+                  importAll={importAll}
+                  gDocs={gDocs}
+                  filteredGDocs={filteredGDocs}
                 />
               }/>
               <Route exact path="/settings" render={(location, match, props) =>

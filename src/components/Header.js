@@ -52,14 +52,13 @@ export default class Header extends Component {
 
               <ul id="nav-mobile" className="right">
                 <ul id="dropdown1" className="dropdown-content">
-                  <li>
+
                   {
-                    window.location.pathname === '/documents' ? <a href="/shared-docs">Shared Files</a> :
-                    window.location.pathname === '/sheets' ? <a href="/shared-sheets">Shared Files</a> :
-                    window.location.pathname === '/vault' ? <a href="/shared-vault">Shared Files</a> :
-                    <a href="/Profile">Profile</a>
+                    window.location.pathname === '/documents' ? <li><a href="/shared-docs">Shared Files</a></li> :
+                    window.location.pathname === '/sheets' ? <li><a href="/shared-sheets">Shared Files</a></li> :
+                    window.location.pathname === '/vault' ? <li><a href="/shared-vault">Shared Files</a></li> :
+                    <li className="hide"></li>
                   }
-                  </li>
                   <li><a href="/integrations">Integrations</a></li>
                   <li><a href="/settings">Settings</a></li>
                   <li><a href="/export">Export All Data</a></li>

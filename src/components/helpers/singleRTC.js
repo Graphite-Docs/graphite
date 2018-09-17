@@ -8,6 +8,7 @@ import {
 } from './getMonthDayYear';
 const { decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
+const lzjs = require('lzjs');
 
 export function loadSharedRTC() {
   let userToLoadFrom = window.location.href.split('shared/')[1].split('/')[0];
@@ -27,7 +28,7 @@ export function loadSharedRTC() {
         function findObjectIndex(doc) {
             return doc.id === index; //comparing numbers
         }
-        this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex), rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
+        this.setState({ content: thisDoc && lzjs.decompress(thisDoc.content), title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex), rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
      })
      .then(() => {
        if(this.state.rtc) {

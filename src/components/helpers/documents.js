@@ -97,8 +97,19 @@ export function saveNewSingleDoc() {
   const fullFile = '/documents/' + file + '.json'
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
-      console.log("Saved!");
-      this.setState({ redirect: true });
+      if(!window.location.href.includes('google')) {
+        this.setState({ redirect: true });
+      } else {
+        window.Materialize.toast(this.state.title + " added!", 4000);
+      }
+      if(this.state.importAll) {
+        this.setState({ count: this.state.count + 1 });
+      }
+    })
+    .then(() => {
+      if(this.state.importAll) {
+        this.importAllGDocs();
+      }
     })
     .catch(e => {
       console.log("e");

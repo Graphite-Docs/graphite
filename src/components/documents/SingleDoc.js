@@ -51,7 +51,6 @@ export default class SingleDoc extends Component {
 
   render() {
     const { userRole, teamDoc, avatars, loadingIndicator, yjsConnected, docLoaded, rtc, idToLoad, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, revealModule, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
-    console.warn(teamDoc);
     let teamList;
     if(team) {
       teamList = team;
@@ -216,7 +215,7 @@ export default class SingleDoc extends Component {
                   </li>
 
                   {
-                    mediumConnected && graphitePro ?
+                    Object.keys(mediumConnected).length > 0 && graphitePro ?
                     <li>
                       <a onClick={this.props.postToMedium}>Post to Medium</a>
                     </li>
@@ -391,7 +390,7 @@ export default class SingleDoc extends Component {
                 {
                   (docLoaded === true) ?
                   <QuillEditorPrivate
-                    roomId={idToLoad.toString()} //this needs to be a string!
+                    roomId={idToLoad} //this needs to be a string!
                     docLoaded={docLoaded} //this is set by getFile
                     value={content}
                     onChange={this.props.handleChange}

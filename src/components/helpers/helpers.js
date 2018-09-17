@@ -72,7 +72,7 @@ export function loadVault() {
      }
    })
     .then(() => {
-      this.loadAnalytics();
+      // this.loadAnalytics();
       setTimeout(this.loadIntegrations, 1000);
       // this.loadIntegrations();
     })

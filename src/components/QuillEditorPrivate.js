@@ -32,27 +32,21 @@ export default class QuillEditorPrivate extends React.Component {
 
     // using vanilla javascript to set innerHTML of QuillEditorPrivate to this.props.value...
     var editor = document.getElementsByClassName('ql-editor')
-    console.log('QuillEditorPrivate - setting innerHTML to this.props.value: ', this.props.value)
     editor[0].innerHTML = this.props.value //once QuillEditorPrivate mounts, set the value of the contenteditable div to this.props.value...
 
     // quill.insertText(0, this.props.value) //this doesn't parse the html in this.props.value, so using above method instead...
 
     var that = this;
     window.quill.on('editor-change', function(eventName, ...args) {
-      console.log('in editor-change, that.props is: ', that.props)
       if (eventName === 'text-change') {
-        console.log('0. CHANGE in QuillEditorPrivate...')
         var rootHtml = window.quill.root.innerHTML //getting rootHtml
-        console.log('0. rootHtml is: ', rootHtml)
         that.props.onChange(rootHtml) //passing rootHtml to SingleDoc, to save it in the database
       } else if (eventName === 'selection-change') {
-        console.log('1. CHANGE...') // args[0] will be old range
       }
     });
   } //componentDidMount
 
   render() {
-    console.log('0. QuillEditorPrivate - render...')
     return (
       <div>
         {

@@ -51,7 +51,7 @@ export default class Pricing extends Component {
                   <div className="card-content center">
                     <div className="row">
                       <div className="col s12">
-                      {window.location.origin === "http://localhost:3000" ?
+                      {window.location.origin === "http://localhost:3000" || window.location.origin === 'http://127.0.0.1:3000' ?
                         <form id="teamPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-dev-team-plan" method="POST" ></form> :
                         window.location.origin === "https://serene-hamilton-56e88e.netlify.com" ?
                         <form id="teamPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-staging-team-plan" method="POST" ></form> :
@@ -83,7 +83,7 @@ export default class Pricing extends Component {
                   <div className="card-content center">
                     <div className="row">
                       <div className="col s12">
-                      {window.location.origin === "http://localhost:3000" ?
+                      {window.location.origin === "http://localhost:3000" || window.location.origin === 'http://127.0.0.1:3000' ?
                         <form id="proPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-dev-pro-plan" method="POST" ></form>:
                         window.location.origin === "https://serene-hamilton-56e88e.netlify.com" ?
                         <form id="proPlan" action="https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/graphite-pro-staging-pro-plan" method="POST" ></form>:
@@ -109,7 +109,7 @@ export default class Pricing extends Component {
                         <strong>All Graphite Pro features plus:</strong>
                       </li>
                       <li className='collection-item'>
-                        <strong>Unlimited Users</strong>
+                        <strong>Up to 25 Users*</strong>
                       </li>
                     </ul>
                   <div className="card-content center">
@@ -126,6 +126,9 @@ export default class Pricing extends Component {
                   </div>
                   </div>
                 </div>
+                <div className="col s12">
+                  <p><em>*$5 per user per month after 25 users</em></p>
+                </div>
 
                 <div className=" col s12">
                 <div className="card">
@@ -136,9 +139,6 @@ export default class Pricing extends Component {
                       <h2 className='green-text '><small></small>Free</h2>
                     </div>
                     <ul className='collection center'>
-                      <li className='collection-item'>
-                        <strong>Access code here:</strong>
-                      </li>
                       <li className='collection-item'>
                         <strong><a href="github.com/Graphite-Docs/graphite">Github</a></strong>
                       </li>

@@ -1631,9 +1631,32 @@ h5, h6 {
   margin-top: 45px!important;
 }
 
+.card .import-doc a:not(.btn):not(.btn-large):not(.btn-large):not(.btn-floating) {
+  color: blue!important;
+  text-align: center!important;
+}
+
+.card .import-doc-content p {
+  margin-top: 18%;
+  font-size: 20px;
+}
+
+.import-docs-item {
+  max-width: 90%!important;
+  margin: auto!important;
+}
+
+.gDocs {
+  margin-top: 45px;
+}
+
 #dropdown1 {
   width: auto!important;
   left: 10px!important;
+}
+
+.integration-options .card {
+  padding: 15px;
 }
 
 .tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-description, .tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-icon, .tl-slidenav-next .tl-slidenav-content-container .tl-slidenav-title, .tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-description, .tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-icon, .tl-slidenav-previous .tl-slidenav-content-container .tl-slidenav-title {
