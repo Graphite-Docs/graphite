@@ -30,10 +30,8 @@ export default class Admin extends Component {
       redirect: false,
       loading: ""
     }
-    this.handleaddItem = this.handleaddItem.bind(this);
-    this.saveNewFile = this.saveNewFile.bind(this);
-    this.filterList = this.filterList.bind(this);
-
+   
+  
   }
 
   componentWillMount() {
@@ -62,7 +60,7 @@ export default class Admin extends Component {
       });
   }
 
-  handleaddItem() {
+  handleaddItem = () => {
     const rando = Date.now();
     const object = {};
     object.title = "Untitled";
@@ -77,7 +75,7 @@ export default class Admin extends Component {
     setTimeout(this.saveNewFile, 500);
     // setTimeout(this.handleGo, 700);
   }
-  filterList(event){
+  filterList = (event) => {
     var updatedList = this.state.value;
     updatedList = updatedList.filter(function(item){
       return item.title.toLowerCase().search(
@@ -86,7 +84,7 @@ export default class Admin extends Component {
     this.setState({filteredValue: updatedList});
   }
 
-  saveNewFile() {
+  saveNewFile = () => {
     putFile("documents.json", JSON.stringify(this.state), {encrypt:true})
       .then(() => {
         console.log("Saved!");
@@ -104,7 +102,7 @@ export default class Admin extends Component {
     window.location.replace("/documents");
   }
 
-  handleSignOut(e) {
+  handleSignOut = (e) => {
     e.preventDefault();
     signUserOut(window.location.origin);
   }
