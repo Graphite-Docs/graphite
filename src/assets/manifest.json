@@ -1,9 +1,13 @@
 {
   "name": "Graphite",
-  "start_url": "localhost:8080",
+  "short_name": "Graphite",
+  "background_color": "#eeeeee",
+  "theme_color": "#eeeeee",
+  "display": "standalone",
+  "start_url": "https://app.graphitedocs.com",
   "description": "Documents, spreadsheets, converations, and more. All decentralized and encrypted.",
   "icons": [{
-    "src": "https://image.ibb.co/hde71b/AppIcon.png",
+    "src": "https://i.imgur.com/1taYMrP.png",
     "sizes": "192x192",
     "type": "image/png"
   }]

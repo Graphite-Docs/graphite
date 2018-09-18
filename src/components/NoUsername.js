@@ -1,10 +1,22 @@
 import React, { Component } from "react";
 import Header from './Header';
+import {
+  redirectToSignIn
+} from 'blockstack';
 
 export default class NoUsername extends Component {
 
+  handleSignIn(e) {
+    e.preventDefault();
+    const origin = window.location.origin;
+    redirectToSignIn(origin, origin + "/manifest.json", [
+      "store_write",
+      "publish_data"
+    ])
+  }
+
   render(){
-    const { handleSignIn } =this.props;
+    // const { handleSignIn } = this.props;
       return(
         <div>
           <Header />
@@ -21,7 +33,7 @@ export default class NoUsername extends Component {
               <li>Search for a name and choose the free option (or pay for one if you would like)</li>
               <li>Sign out and sign back in with the new username (you don't{/*'*/} need to wait an hour)</li>
             </ol>
-            <button onClick={handleSignIn.bind(this)} className="btn black">Get a Username</button>
+            <button onClick={this.handleSignIn} className="btn black">Get a Username</button>
           </div>
         </div>
       );

@@ -1390,6 +1390,21 @@ h5, h6 {
   color: #644BFF;
 }
 
+.full-page {
+  width: 1200px;
+  height: calc(1200px * 1.414);
+  border: 1px solid #ddd;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+  align-items: center;
+}
+
+.inner {
+  overflow: auto;
+}
+
 .app-page {
   padding: 0!important;
 }

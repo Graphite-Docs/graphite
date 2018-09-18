@@ -32,7 +32,7 @@
         <meta name="twitter:image" content="https://image.ibb.co/hde71b/AppIcon.png">
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <meta name="theme-color" content="#000000">
+        <meta name="theme-color" content="#282828">
     <!--
       manifest.json provides metadata used when your web app is added to the
       homescreen on Android. See https://developers.google.com/web/fundamentals/engage-and-retain/web-app-manifest/
@@ -65,9 +65,20 @@
 <!-- End Piwik Code -->
   </head>
   <body>
+    <noscript>
+      <!-- anchor linking to external file -->
+      <p>Graphite requires JavaScript to work. Please enable JavaScript to continue.</p>
+    </noscript>
     <div id="root">
 
     </div>
+    <script>
+    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+     for(let registration of registrations) {
+      registration.unregister()
+      document.location.reload()
+      } })
+    </script>
     <script
     src="https://code.jquery.com/jquery-3.2.1.min.js"
     integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
