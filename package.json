@@ -29,7 +29,6 @@
     "babel-runtime": "6.26.0",
     "blockstack": "^18.0.4",
     "blockstack-large-storage": "0.0.2",
-    "bootstrap": "^3.3.7",
     "bower": "^1.8.2",
     "case-sensitive-paths-webpack-plugin": "2.1.1",
     "chalk": "1.1.3",
