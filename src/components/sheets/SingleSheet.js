@@ -4,7 +4,8 @@ import {
   getFile,
   putFile
 } from 'blockstack';
-import HotTable from 'react-handsontable';
+import { HotTable } from '@handsontable/react';
+// import Handsontable from 'handsontable';
 import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
@@ -406,31 +407,31 @@ print(){
 
 
 renderView() {
-  const { revealModule, hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
+  const {  hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
-  const {length} = contacts
-  const stealthy = (hideStealthy) ? "hide" : ""
-  let users = '&length=' + length
-  let k = 0
-  for (const i of contacts) {
-    users += '&id' + k + "=" + i.contact
-    k += 1
-  }
-  // const to = (sharedWith && sharedWith[sharedWith.length - 1] && sharedWith[sharedWith.length - 1].contact) ? sharedWith[sharedWith.length - 1].contact : ''
-  const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
-    'http://localhost:3030/?app=gd04012018' :
-    'https://www.stealthy.im/?app=gd04012018';
-  const stealthyUrl = stealthyUrlStub + users;
 
-  // const stealthyModule = (length > 0) ? (
-  const stealthyModule =  (<div className={stealthy}>
-      <div id='stealthyCol' className='card'>
-      <div className={revealModule}>
-        <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
-      </div>
-    </div>
-    </div>
-  )
+  // const stealthy = (hideStealthy) ? "hide" : ""
+  // let users = '&length=' + length
+  // let k = 0
+  // for (const i of contacts) {
+  //   users += '&id' + k + "=" + i.contact
+  //   k += 1
+  // }
+  // const to = (sharedWith && sharedWith[sharedWith.length - 1] && sharedWith[sharedWith.length - 1].contact) ? sharedWith[sharedWith.length - 1].contact : ''
+  // const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
+  //   'http://localhost:3030/?app=gd04012018' :
+  //   'https://www.stealthy.im/?app=gd04012018';
+  // const stealthyUrl = stealthyUrlStub + users;
+  //
+  // // const stealthyModule = (length > 0) ? (
+  // const stealthyModule =  (<div className={stealthy}>
+  //     <div id='stealthyCol' className='card'>
+  //     <div className={revealModule}>
+  //       <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
+  //     </div>
+  //   </div>
+  //   </div>
+  // )
 
   if(this.state.initialLoad === "") {
     return (
@@ -524,7 +525,7 @@ renderView() {
 
               <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
               <li><a className="dropdown-button" data-activates="singleSheet"><i className="small-menu material-icons">more_vert</i></a></li>
-              <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
+              {/*<li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>*/}
               </ul>
 
               {/*Share Menu Dropdown*/}
@@ -567,6 +568,13 @@ renderView() {
           </div>
         </nav>
       </div>
+      {/*<nav className="sheets-bar">
+        <div className="ql-toolbar ql-snow">
+        <div className="row">
+          <i className="col s1 material-icons right-align black-text">functions</i><input type="text" className="browser-default col s10 black-text" /><div className="col s1" />
+        </div>
+        </div>
+      </nav>*/}
 
       <div className={publicShare}>
         <div id="modal1" className="modal bottom-sheet">
@@ -632,10 +640,9 @@ renderView() {
         </div>
         </div>
         <div>
-          <div id='spreadsheet' />
           <div className={hideSheet}>
             <div className="spreadsheet-table">
-              <HotTable root="hot" settings={{
+              <HotTable id='table' root="hot" settings={{
                 data: this.state.grid,
                 renderer: 'html',
                 stretchH: 'all',
@@ -661,12 +668,13 @@ renderView() {
                 onAfterChange: (changes, source) => {if(changes){
                   clearTimeout(this.timeout);
                   this.timeout = setTimeout(this.handleAddItem, 1000)
-                }}
+                }},
+
               }}
                />
             </div>
           </div>
-          {stealthyModule}
+          {/*stealthyModule*/}
         </div>
         </div>
 

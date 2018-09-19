@@ -40,6 +40,7 @@ import Acceptances from './Acceptances';
 import NoUsername from './NoUsername';
 import OAUTH from './OAUTH';
 import Calendar from './Calendar';
+import ios from '../images/ios.png';
 import {
   savePubKey
 } from './helpers/encryptionHelpers';
@@ -568,7 +569,8 @@ export default class App extends Component {
       filteredGDocs: [],
       token: "",
       compressed: false,
-      importAll: false
+      importAll: false,
+      showInstallMessage: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -870,6 +872,19 @@ export default class App extends Component {
   }
 
   componentDidMount() {
+    const isIos = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test( userAgent );
+    }
+    // Detects if device is in standalone mode
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+    // Checks if should display install popup notification:
+    if (isIos() && !isInStandaloneMode() && !localStorage.getItem('showInstallMessage')) {
+      this.setState({ showInstallMessage: true });
+      localStorage.setItem('showInstallMessage', false);
+      setTimeout(localStorage.getItem('showInstallMessage'), 10000);
+    }
     // // this.launchWorker();
     // const ADMIN_ADDRESS = "14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv"
     // const ADMIN_AUTH_TOKEN = "eyJwdWJsaWNrZXkiOiIwMzVlODg4YTU4NDc3MGNjMGMyOTZkNDBjNGJhZDI3N2Y5MzA4OTllNjczMzZmYjFmNDdmNTIxNGQ5MDZmODkzNjIiLCJzaWduYXR1cmUiOiIzMDQ0MDIyMDFkZDRiOGIwODNlMDFhMjIwMjM1ZDMzN2U5ZmQ4MmNkY2M5MDY3ZjY0NjhlMmE2NmEyMGVjYWE0MjI0NWFjZmUwMjIwNWRhZDI0MDAwNTliZTE4MTkzNjBhZjZjNTE1MWZmZDg1MGVlY2NlZWFlNzQzNjJiMTU1ZDVmYTMyNWNjYmY4MSJ9"
@@ -911,6 +926,11 @@ export default class App extends Component {
     signUserOut(window.location.origin);
   }
 
+  dismiss = () => {
+    localStorage.setItem('showInstallMessage', false);
+    this.setState({showInstallMessage: false});
+  }
+
   render() {
     const {
       value, sheets, contacts, files, pubKey, appliedFilter, dateList, tagList, collaboratorsModal, singleDocTags,
@@ -938,6 +958,13 @@ export default class App extends Component {
         :
         <BrowserRouter>
             <div className="main-container">
+              {
+                this.state.showInstallMessage ?
+                <div className="ios-install">
+                  <p>Install Graphite to your home screen. Tap <img className="ios-share-icon" src={ios} alt="ios share icon" /> then choose "Add to homescreen". <span className="dismiss-ios"><a onClick={this.dismiss}>Dismiss</a></span></p>
+                </div>  :
+                <div className="hide" />
+              }
               <Route exact path="/" render={(props) =>
                     <AppPage {...props}
                     postToLog={this.postToLog}

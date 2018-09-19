@@ -16,6 +16,8 @@
     "worker-loader": "^2.0.0"
   },
   "dependencies": {
+    "@handsontable-pro/react": "^1.1.0",
+    "@handsontable/react": "^1.1.0",
     "automerge": "^0.7.11",
     "autoprefixer": "7.1.6",
     "axios": "^0.17.1",
@@ -52,6 +54,7 @@
     "file-loader": "1.1.5",
     "fs": "0.0.1-security",
     "fs-extra": "3.0.1",
+    "handsontable": "^5.0.2",
     "handsontable-pro": "^1.18.1",
     "html-webpack-plugin": "2.29.0",
     "immutability-helper": "^2.7.1",

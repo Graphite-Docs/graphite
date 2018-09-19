@@ -1005,11 +1005,22 @@ h5, h6 {
 
 #stealthyCol {
   position: fixed;
-  top: 85px;
+  top: 115px;
   right: 20px;
   height: 80vh;
   width: 33%;
   z-index: 999;
+}
+
+.sheets-bar .ql-toolbar.ql-snow {
+  height: 60px!important;
+  padding: 0!important;
+  padding-left: 10px!important;
+  padding-right: 10px!important;
+}
+
+.toolbar-menu li input:not([type]), input[type=text]:not(.browser-default), input[type=password]:not(.browser-default), input[type=email]:not(.browser-default), input[type=url]:not(.browser-default), input[type=time]:not(.browser-default), input[type=date]:not(.browser-default), input[type=datetime]:not(.browser-default), input[type=datetime-local]:not(.browser-default), input[type=tel]:not(.browser-default), input[type=number]:not(.browser-default), input[type=search]:not(.browser-default), textarea.materialize-textarea {
+  border-bottom: none;
 }
 
 .module-contacts {
@@ -1095,6 +1106,15 @@ h5, h6 {
   color: #fff!important;
   background: #fff;
   padding: 25px;
+}
+
+.ios-install {
+  padding: 10px;
+}
+
+.ios-share-icon {
+  height: 20px;
+  margin: 0px 5px;
 }
 
 .destination {
@@ -2934,7 +2954,7 @@ polygon.ql-stroke {
 }
 
 .spreadsheet-table {
-  margin-top: 65px;
+  margin-top: 60px;
 }
 
 .intro-text {
