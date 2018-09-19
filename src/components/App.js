@@ -870,14 +870,6 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      // Prevent Chrome 67 and earlier from automatically showing the prompt
-      e.preventDefault();
-      // Stash the event so it can be triggered later.
-      deferredPrompt = e;
-    });
     // // this.launchWorker();
     // const ADMIN_ADDRESS = "14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv"
     // const ADMIN_AUTH_TOKEN = "eyJwdWJsaWNrZXkiOiIwMzVlODg4YTU4NDc3MGNjMGMyOTZkNDBjNGJhZDI3N2Y5MzA4OTllNjczMzZmYjFmNDdmNTIxNGQ5MDZmODkzNjIiLCJzaWduYXR1cmUiOiIzMDQ0MDIyMDFkZDRiOGIwODNlMDFhMjIwMjM1ZDMzN2U5ZmQ4MmNkY2M5MDY3ZjY0NjhlMmE2NmEyMGVjYWE0MjI0NWFjZmUwMjIwNWRhZDI0MDAwNTliZTE4MTkzNjBhZjZjNTE1MWZmZDg1MGVlY2NlZWFlNzQzNjJiMTU1ZDVmYTMyNWNjYmY4MSJ9"

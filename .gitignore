@@ -5,3 +5,6 @@ npm-debug.log
 .netlify
 src/projects
 dist
+src/components/helpers/dev.js
+src/components/helpers/prod.js
+.env

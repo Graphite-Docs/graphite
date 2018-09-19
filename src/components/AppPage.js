@@ -42,7 +42,8 @@ export default class AppPage extends Component {
       }
       return merge;
     })
-    recentFiles = mergedRecent.filter(function(n){ return n !== undefined })
+    // recentFiles = mergedRecent.filter(function(n){ return n !== undefined })
+    recentFiles = mergedRecent.sort(function(a, b){return a.id - b.id}).slice(0,15);
 
     //Docs variables
 

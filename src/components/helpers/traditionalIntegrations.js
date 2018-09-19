@@ -409,7 +409,7 @@ export function fetchGDocs() {
 export function singleGDoc(props) {
   const object = {};
   object.token = this.state.token;
-  object.docId = props.id;
+  object.docId = Date.now();
   // if(window.location.href.includes('local')) {
     if(this.state.importAll) {
       var count = this.state.count + 1;
@@ -423,7 +423,7 @@ export function singleGDoc(props) {
         this.setState({
           title: props.name,
           content: lzjs.compress(res.data),
-          id: props.id
+          id: object.docId
         })
       })
       .then(() => {
