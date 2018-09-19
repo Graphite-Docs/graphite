@@ -32,7 +32,8 @@ export default class SingleSharedSheet extends Component {
       hideButton: "",
       shareFile: [],
       show: "",
-      img: avatarFallbackImage
+      img: avatarFallbackImage,
+      singleSheet: {}
     }
     this.handleChange = this.handleChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
@@ -112,20 +113,42 @@ getOther() {
       object.content = this.state.grid;
       object.id = rando;
       object.created = getMonthDayYear();
-
-      this.setState({ sheets: [...this.state.sheets, object] });
-      this.setState({ tempDocId: object.id });
-      this.setState({ loading: "" });
+      object.sharedWith = [];
+      object.tags = [];
+      const objectTwo = {};
+      objectTwo.title = object.title;
+      objectTwo.id = object.id;
+      objectTwo.created = object.created
+      objectTwo.sharedWith = [];
+      objectTwo.tags = [];
+      this.setState({
+        sheets: [...this.state.sheets, objectTwo],
+        tempSheetId: object.id,
+        singleSheet: object,
+        loading: ""
+       });
       // this.setState({ confirm: true, cancel: false });
       setTimeout(this.saveNewFile, 500);
       // setTimeout(this.handleGo, 700);
     }
 
     saveNewFile() {
-      putFile("spread.json", JSON.stringify(this.state), {encrypt: true})
+      putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
         .then(() => {
-          console.log("Saved!");
-          window.location.replace("/sheets");
+          this.saveSingleSheet();
+        })
+        .catch(e => {
+          console.log("e");
+          console.log(e);
+        });
+    }
+
+    saveSingleSheet = () => {
+      const file = this.state.tempSheetId;
+      const fullFile = '/sheets/' + file + '.json'
+      putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt:true})
+        .then(() => {
+          window.location.replace('/sheets');
         })
         .catch(e => {
           console.log("e");

@@ -7,14 +7,8 @@ import {
 import HotTable from 'react-handsontable';
 import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
-import RemoteStorage from 'remotestoragejs';
-import Widget from 'remotestorage-widget';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
-
-const { getPublicKeyFromPrivate } = require('blockstack');
-const remoteStorage = new RemoteStorage({logging: false});
-const widget = new Widget(remoteStorage);
-const { encryptECIES, decryptECIES } = require('blockstack/lib/encryption');
+const { encryptECIES } = require('blockstack/lib/encryption');
 
 export default class SingleSheet extends Component {
   constructor(props) {
@@ -85,7 +79,7 @@ export default class SingleSheet extends Component {
       stopPropagation: false // Stops event propagation
     }
   );
-    let privateKey = loadUserData().appPrivateKey;
+
     const thisFile = this.props.match.params.id;
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile("contact.json", {decrypt: true})
@@ -155,47 +149,6 @@ export default class SingleSheet extends Component {
         }
       }
       setTimeout(this.handleAddItem,1000);
-
-      remoteStorage.access.claim(thisFile, 'rw');
-      remoteStorage.caching.enable('/' + thisFile + '/');
-      const client = remoteStorage.scope('/' + thisFile + '/');
-      widget.attach('remote-storage-element-id');
-      remoteStorage.on('connected', () => {
-        const userAddress = remoteStorage.remote.userAddress;
-        console.debug(`${userAddress} connected their remote storage.`);
-      })
-
-    remoteStorage.on('network-offline', () => {
-      console.debug(`We're offline now.`);
-    })
-
-    remoteStorage.on('network-online', () => {
-      console.debug(`Hooray, we're back online.`);
-    })
-    client.getFile('title.txt').then(file => {
-      if(file.data !== null) {
-          this.setState({ remoteTitle: file.data });
-      }
-
-    });
-    client.getFile('content.txt').then(file => {
-      if(file.data !==null) {
-        this.setState({ remoteContent: decryptECIES(privateKey, JSON.parse(file.data)) });
-      }
-
-    });
-    client.getFile('id.txt').then(file => {
-      if(file.data !==null) {
-        this.setState({ remoteId: decryptECIES(privateKey, JSON.parse(file.data)) });
-      }
-
-    });
-    client.getFile('updated.txt').then(file => {
-      if(file.data !==null) {
-        this.setState({ remoteUpdated: decryptECIES(privateKey, JSON.parse(file.data)) });
-      }
-
-    });
   }
 
   componentDidUpdate() {
@@ -258,25 +211,6 @@ autoSave() {
       console.log("e");
       console.log(e);
     });
-
-    remoteStorage.access.claim(this.props.match.params.id, 'rw');
-    remoteStorage.caching.enable('/' + this.props.match.params.id + '/');
-    const client = remoteStorage.scope('/' + this.props.match.params.id + '/');
-    const content = this.state.grid;
-    const title = this.state.title;
-    const updated = getMonthDayYear();
-    const id = this.props.match.params.id;
-    const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
-    if(this.state.grid !== []) {
-      client.storeFile('text/plain', 'content.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(content))))
-      .then(() => { console.log("Grid saving done") });
-    }
-    client.storeFile('text/plain', 'title.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(title))))
-    .then(() => { console.log("Title saved") });
-    client.storeFile('text/plain', 'updated.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(updated))))
-    .then(() => { console.log("Updated date saved") });
-    client.storeFile('text/plain', 'id.txt', JSON.stringify(encryptECIES(publicKey, JSON.stringify(id))))
-    .then(() => { console.log("ID saved") });
 }
 
 saveCollection() {
@@ -703,6 +637,7 @@ renderView() {
             <div className="spreadsheet-table">
               <HotTable root="hot" settings={{
                 data: this.state.grid,
+                renderer: 'html',
                 stretchH: 'all',
                 manualRowResize: true,
                 manualColumnResize: true,
