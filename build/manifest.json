@@ -9,12 +9,12 @@
   "icons":
   [
     {
-      "src": "images/gIcon.png",
+      "src": "https://i.imgur.com/1taYMrP.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "images/gIcon.png",
+      "src": "https://i.imgur.com/lTSUrFu.png",
       "sizes": "192x192",
       "type": "image/png"
     }
