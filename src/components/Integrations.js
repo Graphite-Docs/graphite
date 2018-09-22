@@ -150,28 +150,23 @@ export default class Integrations extends Component {
                 </div>
               </div>
 
-              {
-                loadUserData().username === 'jehunter5811.id' ?
-                <div className="col card medium s12 m6 l4">
-                  <div className="center-align">
-                    <img className="integrations-img" src={gdocs} alt="Google Docs Integration" />
-                    <h5>Google Docs</h5>
-                    <div className="app-description">
-                      <h6>Pull in all or any of your Google Docs. This integration will fetch a maximum of 1,000 documents and will give you full control over which files to import.</h6>
-                      {gDocsConnected === true ? <button onClick={this.props.disconnectGDocs} className="btn btn-small grey">Disconnect</button> :
-                      graphitePro && window.location.href.includes('local') ?
-                        <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><button className="btn btn-small black">Fetch Docs</button></a> :
-                      graphitePro && window.location.href.includes('serene') ?
-                        <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fserene-hamilton-56e88e.netlify.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><button className="btn btn-small black">Fetch Docs</button></a> :
-                      graphitePro && window.location.href.includes('graphite') ?
-                        <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fapp.graphitedocs.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><button className="btn btn-small black">Fetch Docs</button></a> :
-                      <button className="btn black modal-trigger" href="#pricingModal">Sign up for Graphite Pro</button>}
-                    </div>
+              <div className="col card medium s12 m6 l4">
+                <div className="center-align">
+                  <img className="integrations-img" src={gdocs} alt="Google Docs Integration" />
+                  <h5>Google Docs</h5>
+                  <div className="app-description">
+                    <h6>Pull in all or any of your Google Docs. This integration will fetch a maximum of 1,000 documents and will give you full control over which files to import.</h6>
+                    {gDocsConnected === true ? <button onClick={this.props.disconnectGDocs} className="btn btn-small grey">Disconnect</button> :
+                    graphitePro && window.location.href.includes('local') ?
+                      <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><button className="btn btn-small black">Fetch Docs</button></a> :
+                    graphitePro && window.location.href.includes('serene') ?
+                      <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fserene-hamilton-56e88e.netlify.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><button className="btn btn-small black">Fetch Docs</button></a> :
+                    graphitePro && window.location.href.includes('graphite') ?
+                      <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fapp.graphitedocs.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><button className="btn btn-small black">Fetch Docs</button></a> :
+                    <button className="btn black modal-trigger" href="#pricingModal">Sign up for Graphite Pro</button>}
                   </div>
                 </div>
-                :
-                <div className ="hide" />
-              }
+              </div>
 
             </div>
 
