@@ -75,7 +75,7 @@ export default class SharedSheets extends Component {
         console.log(error);
       });
 
-    getFile("spread.json", {decrypt: true})
+    getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
          this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
@@ -113,7 +113,7 @@ export default class SharedSheets extends Component {
   }
 
   saveNewFile() {
-    putFile("spread.json", JSON.stringify(this.state), {encrypt:true})
+    putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt:true})
       .then(() => {
         console.log("Saved!");
         window.location.replace("/sheets");

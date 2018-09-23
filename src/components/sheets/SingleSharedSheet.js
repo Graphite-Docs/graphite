@@ -43,15 +43,19 @@ export default class SingleSharedSheet extends Component {
   }
 
   componentDidMount() {
-    getFile("spread.json", {decrypt: true})
+    getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
+       console.log(JSON.parse(fileContents))
        if(fileContents) {
          this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
          this.setState({ user: JSON.parse(fileContents || '{}').user });
-         this.refresh = setInterval(() => this.getOther(), 1000);
+         // this.refresh = setInterval(() => this.getOther(), 1000);
        } else {
          console.log("No sheets");
        }
+     })
+     .then(() => {
+       this.getOther();
      })
       .catch(error => {
         console.log(error);
@@ -71,9 +75,11 @@ getOther() {
   let file = fileID.slice(0, -3) + fileString;
   const directory = '/shared/' + file;
   const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  console.log(this.state.user);
   getFile(directory, options)
   .then((fileContents) => {
-   let privateKey = loadUserData().appPrivateKey;
+    let privateKey = loadUserData().appPrivateKey;
+    console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))))
     this.setState({ shareFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
     console.log("loaded");
     let allSheets = this.state.shareFile;

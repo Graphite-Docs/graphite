@@ -40,7 +40,7 @@ export default class SharedSheetsCollection extends Component {
 
     componentDidMount() {
       this.setState({ user: this.props.match.params.id });
-      getFile("spread.json", {decrypt: true})
+      getFile("sheetscollection.json", {decrypt: true})
        .then((fileContents) => {
          if(fileContents) {
            console.log("Loaded");
@@ -87,7 +87,7 @@ export default class SharedSheetsCollection extends Component {
     }
 
   save() {
-    putFile("spread.json", JSON.stringify(this.state), {encrypt: true})
+    putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log("saved");
       })

@@ -1,7 +1,6 @@
 import React, { Component } from "react";
 import {
-  isUserSignedIn,
-  loadUserData
+  isUserSignedIn
 } from "blockstack";
 import Header from './Header';
 import Onboarding from './Onboarding'
