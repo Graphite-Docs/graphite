@@ -40,6 +40,7 @@ import Acceptances from './Acceptances';
 import NoUsername from './NoUsername';
 import OAUTH from './OAUTH';
 import Calendar from './Calendar';
+import Forms from './forms/Forms';
 import ios from '../images/ios.png';
 import {
   savePubKey
@@ -570,7 +571,8 @@ export default class App extends Component {
       token: "",
       compressed: false,
       importAll: false,
-      showInstallMessage: false
+      showInstallMessage: false,
+      forms: []
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -944,7 +946,7 @@ export default class App extends Component {
       type, pages, link, grid, sharedWithMe, shareFileIndex, user, singleDocIsPublic, readOnly,
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
-      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll
+      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms
     } = this.state;
     return (
       <div>
@@ -1437,6 +1439,16 @@ export default class App extends Component {
               <Route exact path="/calendar" render={(location, match, props) =>
                 <Calendar {...props}
 
+                />
+              }/>
+              <Route exact path="/forms" render={(location, match, props) =>
+                <Forms {...props}
+                  forms={forms}
+                  appliedFilter={appliedFilter}
+                  loading={loading}
+                  graphitePro={graphitePro}
+                  docsPerPage={docsPerPage}
+                  currentPage={currentPage}
                 />
               }/>
             </div>
