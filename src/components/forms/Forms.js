@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import Header from '../Header';
 export default class Forms extends Component {
 
+  componentDidMount() {
+    this.props.loadForms();
+  }
+
 
   render() {
     const { forms, appliedFilter, loading, currentPage, docsPerPage } = this.props;
@@ -85,7 +89,7 @@ export default class Forms extends Component {
           <div className="col right s12 m6">
           <form className="searchform">
           <fieldset className=" form-group searchfield">
-          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Documents" onChange={this.props.filterList}/>
+          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Forms" onChange={this.props.filterList}/>
           </fieldset>
           </form>
           </div>
@@ -118,8 +122,6 @@ export default class Forms extends Component {
               <tr>
                 <th></th>
                 <th>Title</th>
-                {/*<th>Access</th>*/}
-                <th>Collaborators</th>
                 <th>Updated</th>
                 <th>Tags</th>
                 <th></th>
@@ -139,7 +141,7 @@ export default class Forms extends Component {
                 <td><input type="checkbox" checked={this.props.checked} value={form.id} id={form.id} onChange={this.props.handleFormCheckbox} /><label htmlFor={form.id}></label></td>
                 <td><Link to={'/forms/form/' + form.id}>{form.title.length > 20 ? form.title.substring(0,20)+"..." :  form.title}</Link></td>
                 {/*<td>{doc.singleDocIsPublic === true ? "public" : "private"}</td>*/}
-                <td>{form.updated}</td>
+                <td>{form.date}</td>
                 <td>{tags === "" ? tags : tags.join(', ')}</td>
                 <td><Link to={'/forms/form/delete/'+ form.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
               </tr>
@@ -155,7 +157,7 @@ export default class Forms extends Component {
           </ul>
           <div className="docs-per-page right-align">
             <label>Docs per page</label>
-            <select value={this.props.docsPerPage} onChange={this.props.setDocsPerPage}>
+            <select defaultValue={docsPerPage} onChange={this.props.setDocsPerPage}>
               <option value={10}>
               10
               </option>

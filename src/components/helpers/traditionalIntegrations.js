@@ -350,12 +350,16 @@ export function connectGoogleDocs(props) {
     })
   } else if(window.location.href.includes('graphite')) {
     axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGoogleAuthProd', props)
-      .then((res) => {
-        console.log(res);
-      })
-      .catch(error => {
-        console.log(error);
-      })
+    .then((res) => {
+      console.log(res);
+      this.setState({ token: res.data });
+    })
+    .then(() => {
+      this.fetchGDocs();
+    })
+    .catch(error => {
+      console.log(error);
+    })
   }
 }
 
@@ -409,7 +413,7 @@ export function fetchGDocs() {
 export function singleGDoc(props) {
   const object = {};
   object.token = this.state.token;
-  object.docId = Date.now();
+  object.docId = props.id;
   // if(window.location.href.includes('local')) {
     if(this.state.importAll) {
       var count = this.state.count + 1;
@@ -420,6 +424,7 @@ export function singleGDoc(props) {
 
     axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGDocContentDev', object)
       .then((res) => {
+
         this.setState({
           title: props.name,
           content: lzjs.compress(res.data),
@@ -459,7 +464,7 @@ export function handleAddGDoc() {
   // console.log(decompressed === data);
   const object = {};
   object.title = this.state.title;
-  object.id = this.state.id;
+  object.id = Date.now();
   object.updated = getMonthDayYear();
   object.tags = [];
   object.sharedWith = [];

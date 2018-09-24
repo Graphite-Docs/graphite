@@ -41,6 +41,7 @@ import NoUsername from './NoUsername';
 import OAUTH from './OAUTH';
 import Calendar from './Calendar';
 import Forms from './forms/Forms';
+import SingleForm from './forms/SingleForm';
 import ios from '../images/ios.png';
 import {
   savePubKey
@@ -348,6 +349,13 @@ import {
   saveNewSharedFile,
   saveNewSingleSharedDoc
 } from './helpers/singleRTC';
+import {
+  handleAddForm,
+  saveForm,
+  addQuestion,
+  loadSingleForm,
+  loadForms
+} from './helpers/forms';
 import work from 'webworkify-webpack';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -572,7 +580,9 @@ export default class App extends Component {
       compressed: false,
       importAll: false,
       showInstallMessage: false,
-      forms: []
+      forms: [],
+      singleForm: {},
+      formContents: []
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -866,6 +876,13 @@ export default class App extends Component {
     //Auth
     this.completeAuth = completeAuth.bind(this);
 
+    //Forms
+    this.handleAddForm = handleAddForm.bind(this);
+    this.saveForm = saveForm.bind(this);
+    this.addQuestion = addQuestion.bind(this);
+    this.loadSingleForm = loadSingleForm.bind(this);
+    this.loadForms = loadForms.bind(this);
+
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -946,7 +963,7 @@ export default class App extends Component {
       type, pages, link, grid, sharedWithMe, shareFileIndex, user, singleDocIsPublic, readOnly,
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
-      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms
+      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents
     } = this.state;
     return (
       <div>
@@ -1449,6 +1466,16 @@ export default class App extends Component {
                   graphitePro={graphitePro}
                   docsPerPage={docsPerPage}
                   currentPage={currentPage}
+                  handleAddForm={this.handleAddForm}
+                  loadForms={this.loadForms}
+                />
+              }/>
+              <Route exact path="/forms/form/:id" render={(location, match, props) =>
+                <SingleForm {...props}
+                  addQuestion={this.addQuestion}
+                  loadSingleForm={this.loadSingleForm}
+                  singleForm={singleForm}
+                  formContents={formContents}
                 />
               }/>
             </div>
