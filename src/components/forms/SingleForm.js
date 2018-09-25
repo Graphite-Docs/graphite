@@ -1,27 +1,31 @@
 import React, { Component } from "react";
-
+import { Link } from 'react-router-dom';
 export default class SingleForm extends Component {
 
   componentDidMount() {
-    this.props.loadSingleForm();
+    this.props.loadForms();
     window.$('.modal').modal();
   }
 
 
   render() {
-    const { title, singleForm, formContents } = this.props;
-    console.log(singleForm);
-    console.log(formContents);
-
+    const { title, singleForm, formContents, optionValue } = this.props;
+    let formContent;
+    if(formContents !==undefined) {
+      formContent = formContents
+    } else {
+      formContent = []
+    }
+    console.log(singleForm)
     return(
       <div>
       <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <a onClick={this.props.handleFormBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
+            <Link to={'/forms'} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></Link>
 
               <ul className="left toolbar-menu">
-              <li><a href="#titleModal" className="modal-trigger white-text small-menu"><i className="material-icons tiny right">edit</i>{title || "Untitled Form"}</a></li>
+              <li><a href="#titleModal" className="modal-trigger white-text small-menu"><i className="material-icons tiny right">edit</i>{singleForm.title || "Untitled Form"}</a></li>
               </ul>
 
           </div>
@@ -36,8 +40,8 @@ export default class SingleForm extends Component {
           <p><input type="text" defaultValue={title} onChange={this.props.formTitleChange} /></p>
         </div>
         <div className="modal-footer">
-          <a onClick={this.props.saveForm} className="modal-action modal-close waves-effect waves-green btn-flat">Save</a>
-          <a href="#!" className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+          <a onClick={this.props.updateForm} className="modal-action modal-close waves-effect waves-green btn-flat">Save</a>
+          <a className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
         </div>
       </div>
       {/* End Title Modal */}
@@ -59,37 +63,63 @@ export default class SingleForm extends Component {
           <h3 className="center-align">Your Form</h3>
           <div className="row">
           {
-            formContents.sort(function(a, b) {return a.position - b.position}).map(q => {
-              return(
+            formContent.length > 0 ?
 
+            formContent.sort(function(a, b) {return a.position - b.position}).map(q => {
+              return(
                   <div key={q.id} className="col s12">
                     <div className="card">
+                      <div className="left reorder"><i className="material-icons">reorder</i></div>
+                      <br />
                       <div className="card-content black-text">
                         {q.questionType === "singleLine" ? <p>Single Line</p> : q.questionType === "paragraph" ? <p>Paragraph</p> : q.questionType === "email" ? <p>Email</p> : q.questionType === "number" ? <p>Number</p> :
                          q.questionType === "multipleChoice" ? <p>Multiple Choice</p> : q.questionType === "dropdown" ? <p>Dropdown</p> : q.questionType === "checkbox" ? <p>Checkbox</p>:null
                         }
-                        <span className="card-title"><label>Question title</label><input value={q.questionTitle === "New Question" ? null : q.questionTitle} placeholder="Enter question title" type="text" /></span>
+                        <span className="card-title"><label>Question title</label><input defaultValue={q.questionTitle === "New Question" ? null : q.questionTitle} onChange={this.props.handleQuestionTitle} placeholder="Enter question title" type="text" /></span>
                         <label>Help text</label>
-                        <input type="text" placeholder="Help text" />
+                        <input type="text" defaultValue={q.helpText === "" ? null : q.helpText} onChange={this.props.handleHelpText} placeholder="Help text" />
                         {
                           q.questionType === "multipleChoice" || q.questionType === "dropdown" || q.questionType === "checkbox" ?
                             <div>
-                            <input type="text" placeholder="Option 1" />
-                            <button className="btn-flat">Add option</button>
+                            {
+                              q.options.map(o => {
+                                return(
+                                  <p className="border" key={o.id}>{o.option}</p>
+                                )
+                              })
+                            }
+                            <input type="text" onChange={this.props.handleOptionValue} value={optionValue} placeholder="Enter option here" />
+                            <button onClick={() => this.props.addOptions(q)} className="btn-flat">Add option</button>
                             </div>
                            :
                           null
                         }
                       </div>
                       <div className="card-action">
-                        <a className="black-text">Save question</a>
-                        <a className="red-text" href="#">Delete question</a>
+                        <a onClick={() => this.props.updateQuestion(q)} className="black-text">Save question</a>
+                        <a href="#deleteModal" className="red-text modal-trigger">Delete question</a>
                       </div>
+                      {/*Confirm Delete */}
+                      <div id="deleteModal" className="modal">
+                        <div className="modal-content">
+                          <h4>Are you sure you want to delete?</h4>
+                          <p>Question title: <strong>{q.questionTitle}</strong></p>
+                        </div>
+                        <div className="modal-footer">
+                          <a onClick={() => this.props.deleteQuestion(q)} className="modal-action modal-close red-text btn-flat">Yes, delete</a>
+                          <a className="modal-action modal-close btn-flat">Cancel</a>
+                        </div>
+                      </div>
+                      {/*End Confirm Delete */}
                     </div>
                   </div>
 
               )
             })
+            :
+            <div>
+              <h5 className="center-align">Add some questions by clicking the buttons on the left</h5>
+            </div>
           }
           </div>
         </div>

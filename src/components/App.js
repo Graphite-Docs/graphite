@@ -354,7 +354,15 @@ import {
   saveForm,
   addQuestion,
   loadSingleForm,
-  loadForms
+  loadForms,
+  updateForm,
+  formTitleChange,
+  handleQuestionTitle,
+  updateQuestion,
+  handleHelpText,
+  deleteQuestion,
+  handleOptionValue,
+  addOptions
 } from './helpers/forms';
 import work from 'webworkify-webpack';
 const Config = require('Config');
@@ -582,7 +590,11 @@ export default class App extends Component {
       showInstallMessage: false,
       forms: [],
       singleForm: {},
-      formContents: []
+      formContents: [],
+      qIndex: 0,
+      questionTitle: "",
+      optionValue: "",
+      options: []
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -872,6 +884,8 @@ export default class App extends Component {
     this.handleAddStatic = handleAddStatic.bind(this);
     this.saveNewSharedFile = saveNewSharedFile.bind(this);
     this.saveNewSingleSharedDoc = saveNewSingleSharedDoc.bind(this);
+    this.handleQuestionTitle = handleQuestionTitle.bind(this);
+    this.updateQuestion = updateQuestion.bind(this);
 
     //Auth
     this.completeAuth = completeAuth.bind(this);
@@ -882,7 +896,12 @@ export default class App extends Component {
     this.addQuestion = addQuestion.bind(this);
     this.loadSingleForm = loadSingleForm.bind(this);
     this.loadForms = loadForms.bind(this);
-
+    this.updateForm = updateForm.bind(this);
+    this.formTitleChange = formTitleChange.bind(this);
+    this.handleHelpText = handleHelpText.bind(this);
+    this.deleteQuestion = deleteQuestion.bind(this);
+    this.handleOptionValue = handleOptionValue.bind(this);
+    this.addOptions = addOptions.bind(this);
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -963,7 +982,8 @@ export default class App extends Component {
       type, pages, link, grid, sharedWithMe, shareFileIndex, user, singleDocIsPublic, readOnly,
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
-      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents
+      webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
+      optionValue
     } = this.state;
     return (
       <div>
@@ -1473,9 +1493,19 @@ export default class App extends Component {
               <Route exact path="/forms/form/:id" render={(location, match, props) =>
                 <SingleForm {...props}
                   addQuestion={this.addQuestion}
-                  loadSingleForm={this.loadSingleForm}
+                  loadForms={this.loadForms}
+                  formTitleChange={this.formTitleChange}
+                  updateForm={this.updateForm}
+                  handleQuestionTitle={this.handleQuestionTitle}
+                  updateQuestion={this.updateQuestion}
+                  handleHelpText={this.handleHelpText}
+                  deleteQuestion={this.deleteQuestion}
+                  handleOptionValue={this.handleOptionValue}
+                  addOptions={this.addOptions}
                   singleForm={singleForm}
                   formContents={formContents}
+                  questionTitle={questionTitle}
+                  optionValue={optionValue}
                 />
               }/>
             </div>

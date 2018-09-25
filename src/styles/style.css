@@ -1406,6 +1406,10 @@ h5, h6 {
 
 }
 
+.reorder {
+  margin: 5px;
+}
+
 .addContact {
   color: #644BFF;
 }
