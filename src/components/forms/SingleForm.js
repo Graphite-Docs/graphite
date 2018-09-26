@@ -16,7 +16,6 @@ export default class SingleForm extends Component {
     } else {
       formContent = []
     }
-    console.log(singleForm)
     return(
       <div>
       <div className="navbar-fixed toolbar">
@@ -47,7 +46,7 @@ export default class SingleForm extends Component {
       {/* End Title Modal */}
 
       <div className="docs row">
-        <div className="col s12 m4 grey">
+        <div className="col s12 m4 question-types grey">
           <div className="center-align">
           <h5>Add a question</h5>
             <div className="card"><button onClick={() => this.props.addQuestion("singleLine") } className="btn-flat">Single Line Text</button></div>
@@ -59,20 +58,31 @@ export default class SingleForm extends Component {
             <div className="card"><button onClick={() => this.props.addQuestion("checkbox")} className="btn-flat">Checkbox</button></div>
           </div>
         </div>
-        <div className="col s12 m8">
+        <div className="col s12 form m8">
+          <button onClick={this.props.publishForm} className="btn green right">Publish Form</button>
           <h3 className="center-align">Your Form</h3>
           <div className="row">
           {
             formContent.length > 0 ?
 
             formContent.sort(function(a, b) {return a.position - b.position}).map(q => {
+
               return(
                   <div key={q.id} className="col s12">
                     <div className="card">
-                      <div className="left reorder"><i className="material-icons">reorder</i></div>
+                      {/*<div className="left reorder"><i className="material-icons">reorder</i></div>*/}
+                      <div className="switch required-or-not right">
+                        <label>
+                          Optional
+                          <input checked={q.required} onChange={() => this.props.handleRequired(q)} type="checkbox" />
+
+                          <span className="lever"></span>
+                          Required
+                        </label>
+                      </div>
                       <br />
                       <div className="card-content black-text">
-                        {q.questionType === "singleLine" ? <p>Single Line</p> : q.questionType === "paragraph" ? <p>Paragraph</p> : q.questionType === "email" ? <p>Email</p> : q.questionType === "number" ? <p>Number</p> :
+                        {q.questionType === "singleLine" ? <h6>Single Line</h6> : q.questionType === "paragraph" ? <p>Paragraph</p> : q.questionType === "email" ? <h6>Email</h6> : q.questionType === "number" ? <p>Number</p> :
                          q.questionType === "multipleChoice" ? <p>Multiple Choice</p> : q.questionType === "dropdown" ? <p>Dropdown</p> : q.questionType === "checkbox" ? <p>Checkbox</p>:null
                         }
                         <span className="card-title"><label>Question title</label><input defaultValue={q.questionTitle === "New Question" ? null : q.questionTitle} onChange={this.props.handleQuestionTitle} placeholder="Enter question title" type="text" /></span>
@@ -83,23 +93,28 @@ export default class SingleForm extends Component {
                             <div>
                             {
                               q.options.map(o => {
+                                const object = {};
+                                object.o = o;
+                                object.q = q;
                                 return(
-                                  <p className="border" key={o.id}>{o.option}</p>
+                                  <p className="border" key={o.id}>{o.option} <a onClick={() => this.props.removeOption(object)}><i className="material-icons circle red white-text tiny">remove</i></a></p>
                                 )
                               })
                             }
-                            <input type="text" onChange={this.props.handleOptionValue} value={optionValue} placeholder="Enter option here" />
+                            <label>Add option</label>
+                            <input type="text" className="options-input" onChange={this.props.handleOptionValue} value={optionValue} placeholder="Enter option here" />
                             <button onClick={() => this.props.addOptions(q)} className="btn-flat">Add option</button>
                             </div>
                            :
                           null
                         }
+
                       </div>
                       <div className="card-action">
                         <a onClick={() => this.props.updateQuestion(q)} className="black-text">Save question</a>
-                        <a href="#deleteModal" className="red-text modal-trigger">Delete question</a>
+                        <a onClick={() => this.props.deleteQuestion(q)} className="red-text">Delete question</a>
                       </div>
-                      {/*Confirm Delete */}
+                      {/*
                       <div id="deleteModal" className="modal">
                         <div className="modal-content">
                           <h4>Are you sure you want to delete?</h4>
@@ -110,7 +125,7 @@ export default class SingleForm extends Component {
                           <a className="modal-action modal-close btn-flat">Cancel</a>
                         </div>
                       </div>
-                      {/*End Confirm Delete */}
+                      */}
                     </div>
                   </div>
 

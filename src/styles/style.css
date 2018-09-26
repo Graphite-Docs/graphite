@@ -1410,6 +1410,27 @@ h5, h6 {
   margin: 5px;
 }
 
+.question-types {
+  position: fixed;
+}
+
+.form {
+  float: right!important;
+  padding-left: 30px!important;
+}
+
+.reorder input {
+  max-width: 20px;
+}
+
+.options-input {
+  border-bottom: 1px solid #282828!important;
+}
+
+.required-or-not {
+  margin: 5px;
+}
+
 .addContact {
   color: #644BFF;
 }

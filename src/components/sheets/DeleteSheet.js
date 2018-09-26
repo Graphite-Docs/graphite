@@ -23,7 +23,8 @@ export default class DeleteSheet extends Component {
       shareModal: "hide",
       shareFile: "",
       initialLoad: "",
-      singleSheet: {}
+      singleSheet: {},
+      decryption: true
     }
     this.handleDeleteItem = this.handleDeleteItem.bind(this);
     this.saveNewFile = this.saveNewFile.bind(this);
@@ -48,7 +49,15 @@ export default class DeleteSheet extends Component {
            return sheet.id === index; //this is comparing numbers
        }
        // let grid = thisSheet && thisSheet.content;
-       this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) })
+       this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) }, () => {
+         if(thisSheet && thisSheet.form === true) {
+           this.setState({ decryption: false }, () => {
+             this.loadSingleForm();
+           })
+         } else {
+           this.loadSingle();
+         }
+       })
        // console.log(this.state.title);
      })
       .catch(error => {
@@ -67,6 +76,41 @@ export default class DeleteSheet extends Component {
         console.log(error);
       });
     }
+
+  loadSingleForm() {
+    const thisFile = window.location.href.split('sheets/sheet/delete/')[1];
+    const fullFile = '/sheets/' + thisFile + '.json';
+    getFile(fullFile, {decrypt: this.state.decryption})
+     .then((fileContents) => {
+       console.log(JSON.parse(fileContents));
+       if(fileContents) {
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: [JSON.parse(fileContents || '{}').content]  })
+       }
+     })
+     .then(() => {
+       this.setState({ initialLoad: "hide" });
+     })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+  loadSingle() {
+    const thisFile = window.location.href.split('sheets/sheet/delete/')[1];
+    const fullFile = '/sheets/' + thisFile + '.json';
+    getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       if(fileContents) {
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+       }
+     })
+     .then(() => {
+       this.setState({ initialLoad: "hide" });
+     })
+      .catch(error => {
+        console.log(error);
+      });
+  }
 
   handleDeleteItem() {
     const object = {};

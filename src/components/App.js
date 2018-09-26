@@ -362,7 +362,13 @@ import {
   handleHelpText,
   deleteQuestion,
   handleOptionValue,
-  addOptions
+  addOptions,
+  removeOption,
+  handleRequired,
+  requiredSave,
+  publishForm,
+  saveNewFormToSheet,
+  saveFormToSingleSheet
 } from './helpers/forms';
 import work from 'webworkify-webpack';
 const Config = require('Config');
@@ -594,7 +600,9 @@ export default class App extends Component {
       qIndex: 0,
       questionTitle: "",
       optionValue: "",
-      options: []
+      options: [],
+      required: false,
+      deleteLastOption: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -902,6 +910,12 @@ export default class App extends Component {
     this.deleteQuestion = deleteQuestion.bind(this);
     this.handleOptionValue = handleOptionValue.bind(this);
     this.addOptions = addOptions.bind(this);
+    this.removeOption = removeOption.bind(this);
+    this.handleRequired = handleRequired.bind(this);
+    this.requiredSave = requiredSave.bind(this);
+    this.publishForm = publishForm.bind(this);
+    this.saveFormToSingleSheet = saveFormToSingleSheet.bind(this);
+    this.saveNewFormToSheet = saveNewFormToSheet.bind(this);
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -983,7 +997,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue
+      optionValue, required
     } = this.state;
     return (
       <div>
@@ -1502,10 +1516,15 @@ export default class App extends Component {
                   deleteQuestion={this.deleteQuestion}
                   handleOptionValue={this.handleOptionValue}
                   addOptions={this.addOptions}
+                  removeOption={this.removeOption}
+                  handleRequired={this.handleRequired}
+                  requiredSave={this.requiredSave}
+                  publishForm={this.publishForm}
                   singleForm={singleForm}
                   formContents={formContents}
                   questionTitle={questionTitle}
                   optionValue={optionValue}
+                  required={required}
                 />
               }/>
             </div>

@@ -51,7 +51,8 @@ export default class SingleSheet extends Component {
       remoteUpdated: "",
       remoteStorage: false,
       hideStealthy: true,
-      revealModule: "innerStealthy"
+      revealModule: "innerStealthy",
+      decryption: true
     }
     this.autoSave = this.autoSave.bind(this);
     this.shareModal = this.shareModal.bind(this);
@@ -66,6 +67,8 @@ export default class SingleSheet extends Component {
     this.saveStop = this.saveStop.bind(this);
     this.savePublic = this.savePublic.bind(this);
     this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
+    this.loadSingle = this.loadSingle.bind(this);
+    this.loadSingleForm = this.loadSingleForm.bind(this);
   }
   componentDidMount() {
 
@@ -81,8 +84,6 @@ export default class SingleSheet extends Component {
     }
   );
 
-    const thisFile = this.props.match.params.id;
-    const fullFile = '/sheets/' + thisFile + '.json';
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
@@ -113,30 +114,26 @@ export default class SingleSheet extends Component {
      .then((fileContents) => {
         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
         console.log("loaded");
-        this.setState({ initialLoad: "hide" });
      }).then(() =>{
        let sheets = this.state.sheets;
        const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.props.match.params.id}); //this is comparing strings
+       console.log('this sheet: ')
+       console.log(thisSheet)
        let index = thisSheet && thisSheet.id;
-       console.log(index);
        function findObjectIndex(sheet) {
            return sheet.id === index; //this is comparing numbers
        }
        // let grid = thisSheet && thisSheet.content;
-       this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) })
+       this.setState({ sharedWith: thisSheet && thisSheet.sharedWith, index: sheets.findIndex(findObjectIndex) }, () => {
+         if(thisSheet && thisSheet.form === true) {
+           this.setState({ decryption: false }, () => {
+             this.loadSingleForm();
+           })
+         } else {
+           this.loadSingle();
+         }
+       })
        // console.log(this.state.title);
-     })
-      .catch(error => {
-        console.log(error);
-      });
-
-    getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-       console.log("loading file: ");
-       console.log(JSON.parse(fileContents || '{}'));
-       if(fileContents) {
-         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
-       }
      })
       .catch(error => {
         console.log(error);
@@ -149,7 +146,42 @@ export default class SingleSheet extends Component {
           this.setState({printPreview: true});
         }
       }
-      setTimeout(this.handleAddItem,1000);
+      // setTimeout(this.handleAddItem,1000);
+  }
+
+  loadSingleForm() {
+    const thisFile = window.location.href.split('sheets/sheet/')[1];
+    const fullFile = '/sheets/' + thisFile + '.json';
+    getFile(fullFile, {decrypt: this.state.decryption})
+     .then((fileContents) => {
+       console.log(JSON.parse(fileContents));
+       if(fileContents) {
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: [JSON.parse(fileContents || '{}').content]  })
+       }
+     })
+     .then(() => {
+       this.setState({ initialLoad: "hide" });
+     })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+  loadSingle() {
+    const thisFile = window.location.href.split('sheets/sheet/')[1];
+    const fullFile = '/sheets/' + thisFile + '.json';
+    getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       if(fileContents) {
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+       }
+     })
+     .then(() => {
+       this.setState({ initialLoad: "hide" });
+     })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
   componentDidUpdate() {
