@@ -42,6 +42,7 @@ import OAUTH from './OAUTH';
 import Calendar from './Calendar';
 import Forms from './forms/Forms';
 import SingleForm from './forms/SingleForm';
+import PublicForm from './forms/PublicForm';
 import ios from '../images/ios.png';
 import {
   savePubKey
@@ -368,8 +369,12 @@ import {
   requiredSave,
   publishForm,
   saveNewFormToSheet,
-  saveFormToSingleSheet
+  saveFormToSingleSheet,
+  publishPublic
 } from './helpers/forms';
+import {
+  loadPublicForm
+} from './helpers/publicForms';
 import work from 'webworkify-webpack';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -602,7 +607,8 @@ export default class App extends Component {
       optionValue: "",
       options: [],
       required: false,
-      deleteLastOption: false
+      deleteLastOption: false,
+      publicForm: {},
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -916,6 +922,8 @@ export default class App extends Component {
     this.publishForm = publishForm.bind(this);
     this.saveFormToSingleSheet = saveFormToSingleSheet.bind(this);
     this.saveNewFormToSheet = saveNewFormToSheet.bind(this);
+    this.publishPublic = publishPublic.bind(this);
+    this.loadPublicForm = loadPublicForm.bind(this);
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -997,7 +1005,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required
+      optionValue, required, publicForm
     } = this.state;
     return (
       <div>
@@ -1525,6 +1533,13 @@ export default class App extends Component {
                   questionTitle={questionTitle}
                   optionValue={optionValue}
                   required={required}
+                />
+              }/>
+              <Route exact path="/forms/public/:id" render={(location, match, props) =>
+                <PublicForm {...props}
+                  loadPublicForm={this.loadPublicForm}
+                  publicForm={publicForm}
+                  formContents={formContents}
                 />
               }/>
             </div>

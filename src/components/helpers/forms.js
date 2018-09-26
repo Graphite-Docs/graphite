@@ -272,7 +272,6 @@ export function requiredSave(props) {
 }
 
 export function publishForm() {
-  console.log(this.state.singleForm.formContents.map(a => a.questionTitle))
   const object = {};
   object.title = this.state.singleForm.title;
   object.content = this.state.singleForm.formContents.map(a => a.questionTitle);
@@ -364,6 +363,20 @@ export function saveFormToSingleSheet() {
   putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: false})
     .then(() => {
       console.log("Saved!");
+      this.publishPublic();
+    })
+    .catch(e => {
+      console.log("e");
+      console.log(e);
+    });
+}
+
+export function publishPublic() {
+  const file = window.location.href.split('forms/form/')[1];
+  const fullFile = '/forms/public/' + file + '.json'
+  putFile(fullFile, JSON.stringify(this.state.singleForm), {encrypt: false})
+    .then(() => {
+      console.log("Published!");
     })
     .catch(e => {
       console.log("e");
