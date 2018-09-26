@@ -19,7 +19,7 @@ export default class PublicForm extends Component {
           {
             formContents.map(q => {
               return (
-                <div>
+                <div key={q.id}>
                 <h5>
                   {q.questionTitle}
                 </h5>
@@ -33,8 +33,8 @@ export default class PublicForm extends Component {
                     q.options.map(o => {
                       return(
                         <div key={o.id}>
-                        <input  type="radio" checked={false} value={o.option} name={o.option} />
-                        <label>
+                        <input type="radio" id={o.id} value={o.option} name={q.questionTitle} />
+                        <label htmlFor={o.id}>
                         {o.option}
                         </label>
                         </div>
@@ -43,11 +43,11 @@ export default class PublicForm extends Component {
                   }
                   </div> :
                   q.questionType === "dropdown" ?
-                  <select>
+                  <select name={q.questionTitle} id={q.questionTitle}>
                   {
                     q.options.map(o => {
                       return (
-                        <option key={o.id} value={o.option}>{o.option}</option>
+                        <option key={o.id} name={o.option}>{o.option}</option>
                       )
                     })
                   }
