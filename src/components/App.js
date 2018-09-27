@@ -373,7 +373,8 @@ import {
   publishPublic
 } from './helpers/forms';
 import {
-  loadPublicForm
+  loadPublicForm,
+  postFormResponses
 } from './helpers/publicForms';
 import work from 'webworkify-webpack';
 const Config = require('Config');
@@ -924,6 +925,7 @@ export default class App extends Component {
     this.saveNewFormToSheet = saveNewFormToSheet.bind(this);
     this.publishPublic = publishPublic.bind(this);
     this.loadPublicForm = loadPublicForm.bind(this);
+    this.postFormResponses = postFormResponses.bind(this);
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -1538,6 +1540,7 @@ export default class App extends Component {
               <Route exact path="/forms/public/:id" render={(location, match, props) =>
                 <PublicForm {...props}
                   loadPublicForm={this.loadPublicForm}
+                  postFormResponses={this.postFormResponses}
                   publicForm={publicForm}
                   formContents={formContents}
                 />

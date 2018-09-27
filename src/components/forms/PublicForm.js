@@ -4,7 +4,7 @@ import React, { Component } from "react";
 export default class PublicForm extends Component {
 
   componentDidMount() {
-    this.props.loadPublicForm();
+    window.location.href.split('?').length > 1 ? this.props.postFormResponses() : this.props.loadPublicForm();
   }
 
 
@@ -13,66 +13,75 @@ export default class PublicForm extends Component {
     console.log(formContents)
     return(
       <div>
-        <div>
-          <h3>{publicForm.title}</h3>
-          <form>
+        <div className="container">
           {
-            formContents.map(q => {
-              return (
-                <div key={q.id}>
-                <h5>
-                  {q.questionTitle}
-                </h5>
-                <div>
-                {
-                  q.questionType === "singleLine" || q.questionType === "paragraph" || q.questionType === "email" || q.questionType === "number" ?
-                  <input type="text" name={q.questionTitle} /> :
-                  q.questionType === "multipleChoice" ?
+            window.location.href.split('?').length > 1 ?
+            <div>
+              <h3>Thank you for your submission!</h3>
+            </div> :
+            <div className="card form-view">
+            <h3>{publicForm.title}</h3>
+            <form>
+            {
+              formContents.map(q => {
+                return (
+                  <div key={q.id}>
+                  <h5>
+                    {q.questionTitle} {q.required ? <span className="red-text">*</span>: null}
+                  </h5>
                   <div>
                   {
-                    q.options.map(o => {
-                      return(
-                        <div key={o.id}>
-                        <input type="radio" id={o.id} value={o.option} name={q.questionTitle} />
-                        <label htmlFor={o.id}>
-                        {o.option}
-                        </label>
-                        </div>
-                      )
-                    })
+                    q.questionType === "singleLine" || q.questionType === "paragraph" || q.questionType === "email" || q.questionType === "number" ?
+                    <div>{q.required ? <input type="text" name={q.questionTitle} placeholder={q.questionTitle} required />: <input type="text" name={q.questionTitle} placeholder={q.questionTitle} />}</div> :
+                    q.questionType === "multipleChoice" ?
+                    <div>
+                    {
+                      q.options.map(o => {
+                        return(
+                          <div key={o.id}>
+                          <input type="radio" id={o.id} value={o.option} name={q.questionTitle} />
+                          <label htmlFor={o.id}>
+                          {o.option}
+                          </label>
+                          </div>
+                        )
+                      })
+                    }
+                    </div> :
+                    q.questionType === "dropdown" ?
+                    <select name={q.questionTitle} id={q.questionTitle}>
+                      <option value="" disabled selected>Make a selection</option>
+                    {
+                      q.options.map(o => {
+                        return (
+                          <option key={o.id} name={o.option}>{o.option}</option>
+                        )
+                      })
+                    }
+                    </select> :
+                    q.questionType === "checkbox" ?
+                    <div>
+                    {
+                      q.options.map(o => {
+                        return(
+                          <label> {o.option}
+                          <input type="checkbox" key={o.id} name={o.option} />
+                          </label>
+                        )
+                      })
+                    }
+                    </div> :
+                    null
                   }
-                  </div> :
-                  q.questionType === "dropdown" ?
-                  <select name={q.questionTitle} id={q.questionTitle}>
-                  {
-                    q.options.map(o => {
-                      return (
-                        <option key={o.id} name={o.option}>{o.option}</option>
-                      )
-                    })
-                  }
-                  </select> :
-                  q.questionType === "checkbox" ?
-                  <div>
-                  {
-                    q.options.map(o => {
-                      return(
-                        <label> {o.option}
-                        <input type="checkbox" key={o.id} name={o.option} />
-                        </label>
-                      )
-                    })
-                  }
-                  </div> :
-                  null
-                }
-                </div>
-                </div>
-              )
-            })
+                  </div>
+                  </div>
+                )
+              })
+            }
+              <input className="btn green submit-btn" type="submit" value="Submit" />
+            </form>
+            </div>
           }
-            <input type="submit" value="Submit" />
-          </form>
         </div>
       </div>
     )

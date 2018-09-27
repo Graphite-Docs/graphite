@@ -156,7 +156,7 @@ export default class SingleSheet extends Component {
      .then((fileContents) => {
        console.log(JSON.parse(fileContents));
        if(fileContents) {
-         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: [JSON.parse(fileContents || '{}').content]  })
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
        }
      })
      .then(() => {

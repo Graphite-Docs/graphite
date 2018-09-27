@@ -330,6 +330,14 @@ export function publishForm() {
        })
         .catch(error => {
           console.log(error);
+          this.setState({
+            sheets: this.state.sheets,
+            filteredSheets: this.state.filteredSheets,
+            tempSheetId: object.id,
+            singleSheet: object
+          }, () => {
+            this.saveNewFormToSheet();
+          });
         });
     })
 

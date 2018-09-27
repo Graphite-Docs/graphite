@@ -1406,6 +1406,21 @@ h5, h6 {
 
 }
 
+.form-view {
+  padding: 15px;
+}
+
+div.card.form-view form div div div input {
+  border: 1px #eee solid;
+  padding: 5px;
+  width: 90%;
+  margin: auto;
+}
+
+.submit-btn {
+  margin-top: 15px;
+}
+
 .reorder {
   margin: 5px;
 }
