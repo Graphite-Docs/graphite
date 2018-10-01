@@ -1410,7 +1410,7 @@ h5, h6 {
   padding: 15px;
 }
 
-div.card.form-view form div div div input {
+div.card.form-view form div div div input, div.card.form-view div div div textarea {
   border: 1px #eee solid;
   padding: 5px;
   width: 90%;

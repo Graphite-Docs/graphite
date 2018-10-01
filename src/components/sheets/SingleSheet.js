@@ -116,7 +116,8 @@ export default class SingleSheet extends Component {
         console.log("loaded");
      }).then(() =>{
        let sheets = this.state.sheets;
-       const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.props.match.params.id}); //this is comparing strings
+       console.log(this.state.sheets);
+       const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === window.location.href.split('/sheets/sheet/')[1]}); //this is comparing strings
        console.log('this sheet: ')
        console.log(thisSheet)
        let index = thisSheet && thisSheet.id;
@@ -150,13 +151,14 @@ export default class SingleSheet extends Component {
   }
 
   loadSingleForm() {
+    console.log("From form")
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: this.state.decryption})
      .then((fileContents) => {
        console.log(JSON.parse(fileContents));
        if(fileContents) {
-         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+         this.setState({ singleSheet: JSON.parse(fileContents), title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
        }
      })
      .then(() => {
@@ -168,6 +170,7 @@ export default class SingleSheet extends Component {
   }
 
   loadSingle() {
+    console.log("Not a form")
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: true})
@@ -194,21 +197,23 @@ export default class SingleSheet extends Component {
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
-      object.id = parseInt(this.props.match.params.id, 10);
+      object.id = window.location.href.split('/sheets/sheet/')[1];
       object.updated = getMonthDayYear();
       object.sharedWith = this.state.sharedWith;
       object.fileType = "sheets";
+      object.form = this.state.singleSheet.form;
       const objectTwo = {};
       objectTwo.title = object.title;
       objectTwo.id = object.id;
       objectTwo.updated = object.updated;
       objectTwo.sharedWith = object.sharedWith;
       objectTwo.fileType = "sheets";
+      objectTwo.form = this.state.singleSheet.form;
       const index = this.state.index;
       const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});  // array.splice(start, deleteCount, item1)
-      this.setState({sheets: updatedSheet, singleSheet: object });
-      this.setState({autoSave: "Saving..."});
-      this.autoSave();
+      this.setState({sheets: updatedSheet, singleSheet: object, autoSave: "Saving..." }, () => {
+        this.autoSave();
+      });
     }
 
     handleBack() {
@@ -235,15 +240,28 @@ handleIDChange(e) {
 autoSave() {
   const file = this.props.match.params.id;
   const fullFile = '/sheets/' + file + '.json';
-  putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: true})
-    .then(() => {
-      console.log("Autosaved");
-      this.saveCollection();
-    })
-    .catch(e => {
-      console.log("e");
-      console.log(e);
-    });
+  if(this.state.singleSheet.form === true) {
+    putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: false})
+      .then(() => {
+        console.log("Autosaved");
+        this.saveCollection();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  } else {
+    putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: true})
+      .then(() => {
+        console.log("Autosaved");
+        this.saveCollection();
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+      });
+  }
+
 }
 
 saveCollection() {
@@ -674,36 +692,69 @@ renderView() {
         <div>
           <div className={hideSheet}>
             <div className="spreadsheet-table">
-              <HotTable id='table' root="hot" settings={{
-                data: this.state.grid,
-                renderer: 'html',
-                stretchH: 'all',
-                manualRowResize: true,
-                manualColumnResize: true,
-                colHeaders: true,
-                rowHeaders: true,
-                colWidths: 100,
-                rowHeights: 30,
-                minCols: 26,
-                minRows: 100,
-                contextMenu: true,
-                formulas: true,
-                columnSorting: true,
-                autoRowSize: true,
-                manualColumnMove: true,
-                manualRowMove: true,
-                ref: "hot",
-                fixedRowsTop: 0,
-                minSpareRows: 1,
-                comments: true,
-                licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
-                onAfterChange: (changes, source) => {if(changes){
-                  clearTimeout(this.timeout);
-                  this.timeout = setTimeout(this.handleAddItem, 1000)
-                }},
+              {
+                this.state.decryption !==true ?
+                <HotTable id='table' root="hot" settings={{
+                  data: this.state.grid,
+                  renderer: 'html',
+                  stretchH: 'all',
+                  manualRowResize: true,
+                  manualColumnResize: true,
+                  colHeaders: true,
+                  rowHeaders: true,
+                  colWidths: 100,
+                  rowHeights: 30,
+                  minCols: 26,
+                  minRows: 1,
+                  contextMenu: true,
+                  formulas: true,
+                  columnSorting: true,
+                  autoRowSize: true,
+                  manualColumnMove: true,
+                  manualRowMove: true,
+                  ref: "hot",
+                  fixedRowsTop: 0,
+                  minSpareRows: 0,
+                  comments: true,
+                  licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
+                  onAfterChange: (changes, source) => {if(changes){
+                    clearTimeout(this.timeout);
+                    this.timeout = setTimeout(this.handleAddItem, 1000)
+                  }},
 
-              }}
-               />
+                }}
+                 /> :
+                 <HotTable id='table' root="hot" settings={{
+                   data: this.state.grid,
+                   renderer: 'html',
+                   stretchH: 'all',
+                   manualRowResize: true,
+                   manualColumnResize: true,
+                   colHeaders: true,
+                   rowHeaders: true,
+                   colWidths: 100,
+                   rowHeights: 30,
+                   minCols: 26,
+                   minRows: 100,
+                   contextMenu: true,
+                   formulas: true,
+                   columnSorting: true,
+                   autoRowSize: true,
+                   manualColumnMove: true,
+                   manualRowMove: true,
+                   ref: "hot",
+                   fixedRowsTop: 0,
+                   minSpareRows: 1,
+                   comments: true,
+                   licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
+                   onAfterChange: (changes, source) => {if(changes){
+                     clearTimeout(this.timeout);
+                     this.timeout = setTimeout(this.handleAddItem, 1000)
+                   }},
+
+                 }}
+                  />
+              }
             </div>
           </div>
           {/*stealthyModule*/}

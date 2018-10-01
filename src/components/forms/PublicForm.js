@@ -31,8 +31,8 @@ export default class PublicForm extends Component {
                   </h5>
                   <div>
                   {
-                    q.questionType === "singleLine" || q.questionType === "paragraph" || q.questionType === "email" || q.questionType === "number" ?
-                    <div>{q.required ? <input type="text" name={q.questionTitle} placeholder={q.questionTitle} required />: <input type="text" name={q.questionTitle} placeholder={q.questionTitle} />}</div> :
+                    q.questionType === "singleLine" || q.questionType === "email" || q.questionType === "number" ?
+                    <div><p>{q.helpText}</p>{q.required ? <input type="text" name={q.questionTitle} placeholder={q.questionTitle} required />: <input type="text" name={q.questionTitle} placeholder={q.questionTitle} />}</div> :
                     q.questionType === "multipleChoice" ?
                     <div>
                     {
@@ -48,7 +48,13 @@ export default class PublicForm extends Component {
                       })
                     }
                     </div> :
+                    q.questionType === "paragraph" ?
+                    <div>
+                      <p>{q.helpText}</p>
+                      <textarea rows="30" name={q.questionTitle} placeholder={q.questionTitle}></textarea>
+                    </div> :
                     q.questionType === "dropdown" ?
+                    <div><p>{q.helpText}</p>
                     <select name={q.questionTitle} id={q.questionTitle}>
                       <option value="" disabled selected>Make a selection</option>
                     {
@@ -58,9 +64,10 @@ export default class PublicForm extends Component {
                         )
                       })
                     }
-                    </select> :
+                    </select></div> :
                     q.questionType === "checkbox" ?
                     <div>
+                    <p>{q.helpText}</p>
                     {
                       q.options.map(o => {
                         return(

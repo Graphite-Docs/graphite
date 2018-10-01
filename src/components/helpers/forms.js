@@ -274,7 +274,7 @@ export function requiredSave(props) {
 export function publishForm() {
   const object = {};
   object.title = this.state.singleForm.title;
-  object.content = this.state.singleForm.formContents.map(a => a.questionTitle);
+  object.content = [this.state.singleForm.formContents.map(a => a.questionTitle)];
   object.id = this.state.singleForm.id;
   object.updated = getMonthDayYear();
   object.sharedWith = [];
@@ -355,6 +355,8 @@ export function publishForm() {
 }
 
 export function saveNewFormToSheet() {
+  // console.log(this.state.sheets);
+  // console.log(this.state.singleSheet)
   putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
       this.saveFormToSingleSheet();
@@ -385,6 +387,7 @@ export function publishPublic() {
   putFile(fullFile, JSON.stringify(this.state.singleForm), {encrypt: false})
     .then(() => {
       console.log("Published!");
+      window.Materialize.toast("Form published!", 3000);
     })
     .catch(e => {
       console.log("e");
