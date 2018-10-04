@@ -610,6 +610,7 @@ export default class App extends Component {
       required: false,
       deleteLastOption: false,
       publicForm: {},
+      fullFile: ""
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1007,7 +1008,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required, publicForm
+      optionValue, required, publicForm, fullFile
     } = this.state;
     return (
       <div>
@@ -1535,6 +1536,7 @@ export default class App extends Component {
                   questionTitle={questionTitle}
                   optionValue={optionValue}
                   required={required}
+                  fullFile={fullFile}
                 />
               }/>
               <Route exact path="/forms/public/:id" render={(location, match, props) =>

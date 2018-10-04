@@ -71,9 +71,10 @@ export default class PublicForm extends Component {
                     {
                       q.options.map(o => {
                         return(
-                          <label> {o.option}
-                          <input type="checkbox" key={o.id} name={o.option} />
-                          </label>
+                          <div>
+                            <input id={o.id} value={o.option} type="checkbox" key={o.id} name={q.questionTitle} />
+                            <label htmlFor={o.id} className="publicFormCheckbox">{o.option}</label>
+                          </div>
                         )
                       })
                     }
@@ -93,4 +94,3 @@ export default class PublicForm extends Component {
       </div>
     )
   }
-}

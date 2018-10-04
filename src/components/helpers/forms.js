@@ -53,6 +53,7 @@ export function loadSingleForm() {
 export function handleAddForm() {
   const object = {};
   object.id = uuidv4();
+  object._exp = this.state.adminToken + '/' + this.state.adminAddress;
   if(this.state.title === "" || this.state.title === undefined) {
     object.title = "Untitled Form";
   } else {
@@ -62,10 +63,13 @@ export function handleAddForm() {
   object.tags = [];
   object.date = getMonthDayYear();
   this.setState({ forms: [...this.state.forms, object ], singleForm: object });
-  setTimeout(this.saveForm, 300);
+  // setTimeout(this.saveForm, 300);
+  console.log(object._exp.split('/')[0].split(':')[1])
 }
 
 export function updateForm() {
+  console.log(this.state.adminToken);
+  console.log(this.state.adminAddress);
   const object = {};
   object.id = window.location.href.split('/forms/form/')[1];
   if(this.state.title !=="") {
@@ -73,6 +77,7 @@ export function updateForm() {
   } else {
     object.title = this.state.singleForm.title;
   }
+  object._exp = this.state.singleForm._exp;
   object.formContents = this.state.formContents;
   object.tags = this.state.singleForm.tags;
   object.date = getMonthDayYear();
@@ -272,86 +277,93 @@ export function requiredSave(props) {
 }
 
 export function publishForm() {
-  const object = {};
-  object.title = this.state.singleForm.title;
-  object.content = [this.state.singleForm.formContents.map(a => a.questionTitle)];
-  object.id = this.state.singleForm.id;
-  object.updated = getMonthDayYear();
-  object.sharedWith = [];
-  object.tags = [];
-  object.form = true;
-  const objectTwo = {};
-  objectTwo.title = object.title;
-  objectTwo.id = object.id;
-  objectTwo.updated = object.updated
-  objectTwo.sharedWith = [];
-  objectTwo.tags = [];
-  objectTwo.form = true;
+  const form = this.state.singleForm;
+  form.published = true;
+  this.setState({ singleForm: form}, () => {
+    const object = {};
+    object.title = this.state.singleForm.title;
+    object.content = [this.state.singleForm.formContents.map(a => a.questionTitle)];
+    object.id = this.state.singleForm.id;
+    object.updated = getMonthDayYear();
+    object.sharedWith = [];
+    object.tags = [];
+    object.form = true;
+    object.published = true;
+    const objectTwo = {};
+    objectTwo.title = object.title;
+    objectTwo.id = object.id;
+    objectTwo.updated = object.updated
+    objectTwo.sharedWith = [];
+    objectTwo.tags = [];
+    objectTwo.form = true;
 
-  let sheets = this.state.sheets;
-  const thisSheet = sheets.find((sheet) => {
-    return sheet.id.toString() === object.id //this is comparing a string to a string
-  });
-  if(thisSheet) {
-    console.log("found it")
-    let index = thisSheet && thisSheet.id;
-    function findObjectIndex(sheet) {
-      return sheet.id === index; //this is comparing a number to a number
-    }
-    this.setState({index: sheets.findIndex(findObjectIndex)}, () => {
-      getFile('/sheets/' + object.id + '.json', {decrypt: false})
-       .then((fileContents) => {
-         console.log("loading file: ");
-         if(fileContents) {
-           this.setState({ grid: JSON.parse(fileContents).content  })
-         }
-       })
-       .then(() => {
-         const object = {};
-         object.title = this.state.singleForm.title;
-         object.content = this.state.grid;
-         object.id = window.location.href.split('forms/form/')[1];
-         object.updated = getMonthDayYear();
-         object.sharedWith = this.state.sharedWith;
-         object.fileType = "sheets";
-         object.form = true;
-         const objectTwo = {};
-         objectTwo.title = object.title;
-         objectTwo.id = object.id;
-         objectTwo.updated = object.updated;
-         objectTwo.sharedWith = object.sharedWith;
-         objectTwo.fileType = "sheets";
-         objectTwo.form = true;
-         console.log(object);
-         const index = this.state.index;
-         const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});  // array.splice(start, deleteCount, item1)
-         this.setState({sheets: updatedSheet, singleSheet: object });
-         this.saveNewFormToSheet();
-       })
-        .catch(error => {
-          console.log(error);
-          this.setState({
-            sheets: this.state.sheets,
-            filteredSheets: this.state.filteredSheets,
-            tempSheetId: object.id,
-            singleSheet: object
-          }, () => {
-            this.saveNewFormToSheet();
-          });
-        });
-    })
-
-  } else {
-    console.log("Nope")
-    this.setState({
-      sheets: [...this.state.sheets, objectTwo],
-      filteredSheets: [...this.state.filteredSheets, objectTwo],
-      tempSheetId: object.id,
-      singleSheet: object
-    }, () => {
-      this.saveNewFormToSheet();
+    let sheets = this.state.sheets;
+    const thisSheet = sheets.find((sheet) => {
+      return sheet.id.toString() === object.id //this is comparing a string to a string
     });
-  }
+    if(thisSheet) {
+      console.log("found it")
+      let index = thisSheet && thisSheet.id;
+      function findObjectIndex(sheet) {
+        return sheet.id === index; //this is comparing a number to a number
+      }
+      this.setState({index: sheets.findIndex(findObjectIndex)}, () => {
+        getFile('/sheets/' + object.id + '.json', {decrypt: false})
+         .then((fileContents) => {
+           console.log("loading file: ");
+           if(fileContents) {
+             this.setState({ grid: JSON.parse(fileContents).content  })
+           }
+         })
+         .then(() => {
+           const object = {};
+           // const file = window.location.href.split('forms/form/')[1];
+           object.title = this.state.singleForm.title;
+           object.content = this.state.grid;
+           object.id = window.location.href.split('forms/form/')[1];
+           object.updated = getMonthDayYear();
+           object.sharedWith = this.state.sharedWith;
+           object.fileType = "sheets";
+           object.form = true;
+           const objectTwo = {};
+           objectTwo.title = object.title;
+           objectTwo.id = object.id;
+           objectTwo.updated = object.updated;
+           objectTwo.sharedWith = object.sharedWith;
+           objectTwo.fileType = "sheets";
+           objectTwo.form = true;
+           console.log(object);
+           const index = this.state.index;
+           const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});  // array.splice(start, deleteCount, item1)
+           this.setState({sheets: updatedSheet, singleSheet: object });
+           this.saveNewFormToSheet();
+         })
+          .catch(error => {
+            console.log(error);
+            this.setState({
+              sheets: this.state.sheets,
+              filteredSheets: this.state.filteredSheets,
+              tempSheetId: object.id,
+              singleSheet: object
+            }, () => {
+              this.saveNewFormToSheet();
+            });
+          });
+      })
+
+    } else {
+      console.log("Nope")
+      this.setState({
+        sheets: [...this.state.sheets, objectTwo],
+        filteredSheets: [...this.state.filteredSheets, objectTwo],
+        tempSheetId: object.id,
+        singleSheet: object
+      }, () => {
+        this.saveNewFormToSheet();
+      });
+    }
+  });
+
 }
 
 export function saveNewFormToSheet() {
@@ -388,6 +400,9 @@ export function publishPublic() {
     .then(() => {
       console.log("Published!");
       window.Materialize.toast("Form published!", 3000);
+      this.setState({ fullFile: fullFile }, () => {
+        this.saveForm();
+      });
     })
     .catch(e => {
       console.log("e");

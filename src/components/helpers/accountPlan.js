@@ -70,6 +70,7 @@ export function loadAccountPlan() {
   getFile('accountdetails.json', {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
+        console.log(JSON.parse(fileContents))
         this.setState({
           accountInfo: JSON.parse(fileContents),
           accountOwner: JSON.parse(fileContents || '{}').accountOwner,

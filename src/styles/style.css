@@ -1410,12 +1410,29 @@ h5, h6 {
   padding: 15px;
 }
 
-div.card.form-view form div div div input, div.card.form-view div div div textarea {
-  border: 1px #eee solid;
+.code {
+  background: #282828;
   padding: 5px;
+  color: #fff;
+}
+
+div.card.form-view form div div div input, div.card.form-view div div div textarea, .card-content span input {
+  border: 1px #eee solid!important;
+  padding: 5px!important;
   width: 90%;
   margin: auto;
 }
+
+.url {
+	white-space: pre;           /* CSS 2.0 */
+	white-space: pre-wrap;      /* CSS 2.1 */
+	white-space: pre-line;      /* CSS 3.0 */
+	white-space: -pre-wrap;     /* Opera 4-6 */
+	white-space: -o-pre-wrap;   /* Opera 7 */
+	white-space: -moz-pre-wrap; /* Mozilla */
+	white-space: -hp-pre-wrap;  /* HP Printers */
+	word-wrap: break-word;      /* IE 5+ */
+	}
 
 .submit-btn {
   margin-top: 15px;

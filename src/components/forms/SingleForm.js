@@ -16,6 +16,8 @@ export default class SingleForm extends Component {
     } else {
       formContent = []
     }
+    const embed = "<iframe src='" + window.location.origin + '/forms/public/' + singleForm.id + "'></iframe>";
+
     return(
       <div>
       <div className="navbar-fixed toolbar">
@@ -59,7 +61,7 @@ export default class SingleForm extends Component {
           </div>
         </div>
         <div className="col s12 form m8">
-          <button onClick={this.props.publishForm} className="btn green right">Publish Form</button>
+          {singleForm.published === true ? <button data-target="codeModal" className="btn-floating btn-small modal-trigger black"><i className="material-icons">code</i></button> : null}<button onClick={this.props.publishForm} className="btn green right">Publish Form</button>
           <h3 className="center-align">Your Form</h3>
           <div className="row">
           {
@@ -136,6 +138,21 @@ export default class SingleForm extends Component {
               <h5 className="center-align">Add some questions by clicking the buttons on the left</h5>
             </div>
           }
+          <div id="codeModal" className="modal">
+            <div className="modal-content">
+              <h4>Embed Form</h4>
+              <p>You can link directly to the form or embed it into your own site. If you would like to link to the form, this is the link: </p>
+              <p className="url"><a target='_blank' rel="noopener noreferrer" href={window.location.origin + '/forms/public/' + window.location.href.split('forms/form/')[1]}>{window.location.origin + '/forms/public/' + window.location.href.split('forms/form/')[1]}</a></p>
+              <p>If you would like to embed the form on your own site, use the following code: </p>
+              <div className="code">
+                {embed}
+              </div>
+
+            </div>
+            <div className="modal-footer">
+              <a href="#!" className="modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+            </div>
+          </div>
           </div>
         </div>
       </div>
