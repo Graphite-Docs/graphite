@@ -94,3 +94,4 @@ export default class PublicForm extends Component {
       </div>
     )
   }
+}
