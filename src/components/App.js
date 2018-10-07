@@ -370,7 +370,9 @@ import {
   publishForm,
   saveNewFormToSheet,
   saveFormToSingleSheet,
-  publishPublic
+  publishPublic,
+  deleteForm,
+  finalDelete
 } from './helpers/forms';
 import {
   loadPublicForm,
@@ -927,6 +929,8 @@ export default class App extends Component {
     this.publishPublic = publishPublic.bind(this);
     this.loadPublicForm = loadPublicForm.bind(this);
     this.postFormResponses = postFormResponses.bind(this);
+    this.deleteForm = deleteForm.bind(this);
+    this.finalDelete = finalDelete.bind(this);
 
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -1513,6 +1517,7 @@ export default class App extends Component {
                   currentPage={currentPage}
                   handleAddForm={this.handleAddForm}
                   loadForms={this.loadForms}
+                  deleteForm={this.deleteForm}
                 />
               }/>
               <Route exact path="/forms/form/:id" render={(location, match, props) =>

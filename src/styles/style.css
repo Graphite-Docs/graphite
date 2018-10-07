@@ -1368,6 +1368,9 @@ h5, h6 {
   color: #F5F5F5!important;
 }
 
+.ht_clone_left {
+  display: none!important;
+}
 
 
 .contacts-side {

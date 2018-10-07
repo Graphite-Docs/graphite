@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import { Link } from 'react-router-dom';
 export default class SingleForm extends Component {
 
   componentDidMount() {
@@ -23,7 +22,7 @@ export default class SingleForm extends Component {
       <div className="navbar-fixed toolbar">
         <nav className="toolbar-nav">
           <div className="nav-wrapper">
-            <Link to={'/forms'} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></Link>
+            <a href='/forms' className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
 
               <ul className="left toolbar-menu">
               <li><a href="#titleModal" className="modal-trigger white-text small-menu"><i className="material-icons tiny right">edit</i>{singleForm.title || "Untitled Form"}</a></li>

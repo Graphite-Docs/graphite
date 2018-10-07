@@ -21,12 +21,10 @@ export function loadPublicForm() {
 
 export function postFormResponses() {
   const file = window.location.href.split('forms/public/')[1].split('?')[0]
-
   const fullFile = '/forms/public/' + file + '.json'
   getFile(fullFile, {decrypt: false})
     .then((fileContents) => {
       this.setState({publicForm: JSON.parse(fileContents), formContents: JSON.parse(fileContents).formContents}, () => {
-        console.log(this.state.publicForm)
         let filename = window.location.href.split('forms/public/')[1].split('?')[0] + '.json';
         let urlEncode;
         if(window.location.origin.includes('https')) {
@@ -36,7 +34,7 @@ export function postFormResponses() {
         }
         let sheet;
         let object = {};
-        axios.get('https://gaia-gateway.com/jehunter5811.id/' + urlEncode + '//sheets/' + filename)
+        axios.get('https://gaia-gateway.com/' + this.state.publicForm.owner + '/' + urlEncode + '//sheets/' + filename)
           .then((res) => {
             console.log(res.data);
             sheet = res.data;
@@ -56,11 +54,11 @@ export function postFormResponses() {
             content.sharedWith = sheet.sharedWith;
             content.updated = sheet.updated;
             content.content = [...sheet.content, responses];
-            object.identityAddress = '14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv';
-            object.authResponseToken = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJnYWlhQ2hhbGxlbmdlIjoiW1wiZ2FpYWh1YlwiLFwiMjAxOFwiLFwic3RvcmFnZS5ibG9ja3N0YWNrLm9yZ1wiLFwiYmxvY2tzdGFja19zdG9yYWdlX3BsZWFzZV9zaWduXCJdIiwiaHViVXJsIjoiaHR0cHM6Ly9odWIuYmxvY2tzdGFjay5vcmciLCJpc3MiOiIwMzVlODg4YTU4NDc3MGNjMGMyOTZkNDBjNGJhZDI3N2Y5MzA4OTllNjczMzZmYjFmNDdmNTIxNGQ5MDZmODkzNjIiLCJzYWx0IjoiYjMwMTdjYjA5MmEyYTc2YTY0ZTQ3OGQyZmM0MzA0MDUifQ.KuxpEHr8DWaNcqFaAeNkfb7v3R6ZK2012o35Dz3FD1pdM7SlfqPWkrVu44hCq9pHuz10Q00rCqt28CNkP7n42w';
-            object.filename = fullFile;
+            object.identityAddress = this.state.publicForm._exp.split('/')[1];
+            object.authResponseToken = this.state.publicForm._exp.split('/')[0].split(':')[1];
             object.responses = responses;
             object.content = content;
+            object.filename = fullFile;
             console.log(object);
           })
           .then(() => {

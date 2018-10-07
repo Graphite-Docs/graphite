@@ -2,24 +2,33 @@ import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import Header from '../Header';
 export default class Forms extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      form: {}
+    }
+  }
 
   componentDidMount() {
     this.props.loadForms();
+    window.$('.modal').modal();
   }
 
 
   render() {
     const { forms, appliedFilter, loading, currentPage, docsPerPage } = this.props;
+    let formList;
+    forms === undefined || forms === null ? formList = [] : formList = forms;
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
-    let tags = forms.map(a => a.tags);
+    let tags = formList.map(a => a.tags);
     let newTags = tags.filter(function(n){ return n !== undefined });
     let mergedTags = [].concat.apply([], newTags);
     let uniqueTags = [];
     window.$.each(mergedTags, function(i, el) {
       if(window.$.inArray(el, uniqueTags) === -1) uniqueTags.push(el);
     })
-    let date = forms.map(a => a.updated);
+    let date = formList.map(a => a.updated);
     let mergedDate = [].concat.apply([], date);
     let uniqueDate = [];
     window.$.each(mergedDate, function(i, el) {
@@ -129,7 +138,7 @@ export default class Forms extends Component {
             </thead>
             <tbody>
           {
-            forms.slice(indexOfFirstDoc, indexOfLastDoc).map(form => {
+            formList.slice(indexOfFirstDoc, indexOfLastDoc).map(form => {
               var tags;
               if(form.tags) {
                 tags = Array.prototype.slice.call(form.tags);
@@ -143,13 +152,24 @@ export default class Forms extends Component {
                 {/*<td>{doc.singleDocIsPublic === true ? "public" : "private"}</td>*/}
                 <td>{form.date}</td>
                 <td>{tags === "" ? tags : tags.join(', ')}</td>
-                <td><Link to={'/forms/form/delete/'+ form.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
+                <td><a href='#deleteModal' onClick={() => this.setState({ form: form })} className="modal-trigger"><i className="material-icons red-text delete-button">delete</i></a></td>
               </tr>
             );
             })
           }
           </tbody>
         </table>
+
+        <div id="deleteModal" className="modal">
+          <div className="modal-content">
+            <h4>Delete Form</h4>
+            <p>Are you sure you want to delete <strong>{this.state.form.title}</strong>?</p>
+          </div>
+          <div className="modal-footer">
+            <a onClick={() => this.props.deleteForm(this.state.form)} className="modal-action modal-close waves-red red-text btn-flat">Delete</a>
+            <a className="modal-action modal-close btn-flat">Cancel</a>
+          </div>
+        </div>
 
         <div>
           <ul className="center-align pagination">

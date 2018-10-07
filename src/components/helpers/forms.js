@@ -1,7 +1,8 @@
 import { getMonthDayYear } from './getMonthDayYear';
 import {
   putFile,
-  getFile
+  getFile,
+  loadUserData
 } from 'blockstack';
 import update from 'immutability-helper';
 const uuidv4 = require('uuid/v4');
@@ -51,6 +52,8 @@ export function loadSingleForm() {
 }
 
 export function handleAddForm() {
+  console.log(this.state.adminToken);
+  console.log(this.state.adminAddress);
   const object = {};
   object.id = uuidv4();
   object._exp = this.state.adminToken + '/' + this.state.adminAddress;
@@ -62,9 +65,9 @@ export function handleAddForm() {
   object.formContents = [];
   object.tags = [];
   object.date = getMonthDayYear();
-  this.setState({ forms: [...this.state.forms, object ], singleForm: object });
-  // setTimeout(this.saveForm, 300);
-  console.log(object._exp.split('/')[0].split(':')[1])
+  this.setState({ forms: [...this.state.forms, object ], singleForm: object }, () => {
+    this.saveForm();
+  });
 }
 
 export function updateForm() {
@@ -90,6 +93,7 @@ export function updateForm() {
 }
 
 export function saveForm() {
+  this.setState({ title: "" });
   //TODO refactor to post to account owner's storage only here
   putFile('forms/' + this.state.singleForm.id + '.json', JSON.stringify(this.state.singleForm), {encrypt: true})
     .catch(error => {
@@ -279,6 +283,7 @@ export function requiredSave(props) {
 export function publishForm() {
   const form = this.state.singleForm;
   form.published = true;
+  form.owner = loadUserData().username;
   this.setState({ singleForm: form}, () => {
     const object = {};
     object.title = this.state.singleForm.title;
@@ -289,6 +294,7 @@ export function publishForm() {
     object.tags = [];
     object.form = true;
     object.published = true;
+    object.owner = loadUserData().username;
     const objectTwo = {};
     objectTwo.title = object.title;
     objectTwo.id = object.id;
@@ -367,6 +373,7 @@ export function publishForm() {
 }
 
 export function saveNewFormToSheet() {
+  // console.log(this.state.singleForm);
   // console.log(this.state.sheets);
   // console.log(this.state.singleSheet)
   putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
@@ -409,3 +416,41 @@ export function publishPublic() {
       console.log(e);
     });
 }
+
+export function deleteForm(props) {
+  this.setState({ singleForm: props });
+  console.log(props);
+  let forms = this.state.forms;
+  const thisForm = forms.find((form) => { return form.id.toString() === props.id}); //comparing strings
+  let index = thisForm && thisForm.id;
+  console.log('index is ' + index)
+  function findObjectIndex(form) {
+      return form.id === index; //comparing numbers
+  }
+  this.setState({ index: forms.findIndex(findObjectIndex) }, () => {
+    console.log(this.state.index);
+    setTimeout(this.finalDelete, 300);
+  })
+}
+
+export function finalDelete() {
+  console.log(this.state.forms);
+  this.state.forms.splice(this.state.index, 1);
+  console.log(this.state.forms);
+  this.setState({ forms: this.state.forms }, () => {
+    putFile('forms/' + this.state.singleForm.id + '.json', JSON.stringify({}), {encrypt: true})
+      .catch(error => {
+        console.log(error);
+      })
+
+    putFile('forms.json', JSON.stringify(this.state.forms), {encrypt: true})
+      .then(() => {
+        window.Materialize.toast("Form deleted!", 3000);
+      })
+  })
+}
+
+
+// v1:eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NksifQ.eyJnYWlhQ2hhbGxlbmdlIjoiW1wiZ2FpYWh1YlwiLFwiMjAxOFwiLFwic3RvcmFnZS5ibG9ja3N0YWNrLm9yZ1wiLFwiYmxvY2tzdGFja19zdG9yYWdlX3BsZWFzZV9zaWduXCJdIiwiaHViVXJsIjoiaHR0cHM6Ly9odWIuYmxvY2tzdGFjay5vcmciLCJpc3MiOiIwMzVlODg4YTU4NDc3MGNjMGMyOTZkNDBjNGJhZDI3N2Y5MzA4OTllNjczMzZmYjFmNDdmNTIxNGQ5MDZmODkzNjIiLCJzYWx0IjoiZjdiOTcwNzc5NmQ1MjhiMDE3Y2M3YjZkMjk0NDJhNTYifQ.0M4dD2Ub7MVQpnqSreKySgAVRM0cvmlxEUFEIH1ZOfIsrsiZuYhFGflrCqmXrtH2yO4yLtbcUshlgAq2vxDK0w forms.js:54:2
+
+// 14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv

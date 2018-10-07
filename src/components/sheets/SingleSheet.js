@@ -460,29 +460,6 @@ renderView() {
   const {  hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
 
-  // const stealthy = (hideStealthy) ? "hide" : ""
-  // let users = '&length=' + length
-  // let k = 0
-  // for (const i of contacts) {
-  //   users += '&id' + k + "=" + i.contact
-  //   k += 1
-  // }
-  // const to = (sharedWith && sharedWith[sharedWith.length - 1] && sharedWith[sharedWith.length - 1].contact) ? sharedWith[sharedWith.length - 1].contact : ''
-  // const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
-  //   'http://localhost:3030/?app=gd04012018' :
-  //   'https://www.stealthy.im/?app=gd04012018';
-  // const stealthyUrl = stealthyUrlStub + users;
-  //
-  // // const stealthyModule = (length > 0) ? (
-  // const stealthyModule =  (<div className={stealthy}>
-  //     <div id='stealthyCol' className='card'>
-  //     <div className={revealModule}>
-  //       <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
-  //     </div>
-  //   </div>
-  //   </div>
-  // )
-
   if(this.state.initialLoad === "") {
     return (
       <div className="center-align sheets-loader">
