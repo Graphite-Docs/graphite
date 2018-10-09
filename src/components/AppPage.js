@@ -5,7 +5,10 @@ import {
   isUserSignedIn,
   redirectToSignIn,
   loadUserData,
-  signUserOut
+  signUserOut,
+  // generateAndStoreTransitKey,
+  // makeAuthRequest,
+  // redirectToSignInWithAuthRequest
 } from "blockstack";
 
 export default class AppPage extends Component {
@@ -17,6 +20,16 @@ export default class AppPage extends Component {
       "store_write",
       "publish_data"
     ])
+
+    // const transitPrivateKey = generateAndStoreTransitKey()
+    // const redirectURI = 'http://localhost:3000'
+    // const manifestURI = 'http://localhost:3000/manifest.json'
+    // const scopes = ['scope_write', 'publish_data']
+    // const appDomain = 'http://localhost:3000'
+    //
+    // const authRequest = makeAuthRequest(transitPrivateKey, redirectURI, manifestURI, scopes, appDomain)
+    //
+    // redirectToSignInWithAuthRequest(authRequest)
   }
 
   handleSignOut(e) {
