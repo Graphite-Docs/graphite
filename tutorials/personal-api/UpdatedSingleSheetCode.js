@@ -174,7 +174,7 @@ export default class SingleSheet extends Component {
     console.log("Not a form")
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
-    getFile(fullFile, {decrypt: true})
+    getFile(fullFile, {decrypt: false})
      .then((fileContents) => {
        if(fileContents) {
          this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
@@ -464,7 +464,7 @@ renderView() {
   window.$('.modal').modal();
   const {  hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
-
+  console.log(this.state.title);
   if(this.state.initialLoad === "") {
     return (
       <div className="center-align sheets-loader">
