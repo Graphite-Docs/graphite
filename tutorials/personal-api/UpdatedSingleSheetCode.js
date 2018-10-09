@@ -177,7 +177,7 @@ export default class SingleSheet extends Component {
     getFile(fullFile, {decrypt: false})
      .then((fileContents) => {
        if(fileContents) {
-         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content, api: 'https://gaia-gateway.com/' + loadUserData().username + '/localhost%3A3000/' + fullFile  })
        }
      })
      .then(() => {
