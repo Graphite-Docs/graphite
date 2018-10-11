@@ -4,8 +4,11 @@ import {
   getFile,
   putFile
 } from 'blockstack';
+// import {
+//   SUPPORTED_FORMULAS
+// } from '../helpers/formulas.js';
 import { HotTable } from '@handsontable/react';
-// import Handsontable from 'handsontable';
+// import Handsontable from 'handsontable-pro';
 import update from 'immutability-helper';
 import {CSVLink} from 'react-csv';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
@@ -52,8 +55,51 @@ export default class SingleSheet extends Component {
       remoteStorage: false,
       hideStealthy: true,
       revealModule: "innerStealthy",
-      decryption: true
+      decryption: true,
+      selectedData: "",
+      dataLocation: [],
+      range: false,
+      rangeParams: [],
+      selectedRange: {}
     }
+
+    //Handsontable
+    this.id = 'hot';
+    this.hotSettings = {
+      data: this.state.grid,
+      renderer: 'html',
+      stretchH: 'all',
+      manualRowResize: true,
+      manualColumnResize: true,
+      colHeaders: true,
+      rowHeaders: true,
+      colWidths: 100,
+      rowHeights: 30,
+      minCols: 26,
+      minRows: 100,
+      contextMenu: true,
+      formulas: true,
+      columnSorting: true,
+      autoRowSize: true,
+      manualColumnMove: true,
+      manualRowMove: true,
+      ref: "hot",
+      fixedRowsTop: 0,
+      minSpareRows: 1,
+      comments: true,
+      licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
+      onAfterChange: (changes, source) => {if(changes){
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(this.handleAddItem, 3000)
+      }},
+      onAfterSelection: (r, c, r2, c2, preventScrolling) => {
+         preventScrolling.value = true;
+         console.log(r, c);
+         this.captureCellData([r, c]);
+       },
+    };
+    this.hotTableComponent = React.createRef();
+
     this.autoSave = this.autoSave.bind(this);
     this.shareModal = this.shareModal.bind(this);
     this.hideModal = this.hideModal.bind(this);
@@ -69,9 +115,22 @@ export default class SingleSheet extends Component {
     this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
     this.loadSingle = this.loadSingle.bind(this);
     this.loadSingleForm = this.loadSingleForm.bind(this);
+    this.captureCellData = this.captureCellData.bind(this);
   }
   componentDidMount() {
-
+    document.addEventListener("keydown", (event) => {
+      let ctrl = event.which === 66 && event.ctrlKey;
+      let cmd = event.metaKey && event.which === 66;
+      let ctrli = event.which === 73 && event.ctrlKey;
+      let cmdi = event.metaKey && event.which === 73;
+      if(ctrl || cmd) {
+        this.makeItBold();
+      }
+      if(ctrli || cmdi) {
+        this.makeItItalic();
+      }
+    });
+    window.$('.modal').modal();
     window.$('.dropdown-button').dropdown({
       inDuration: 300,
       outDuration: 225,
@@ -181,6 +240,7 @@ export default class SingleSheet extends Component {
      })
      .then(() => {
        this.setState({ initialLoad: "hide" });
+       this.hotTableComponent.current.hotInstance.loadData(this.state.grid);
      })
       .catch(error => {
         console.log(error);
@@ -454,12 +514,91 @@ print(){
   window.history.replaceState(window.history.state, '', curURL);
 }
 
+captureCellData (props) {
+  this.setState({ dataLocation: props, selectedData: this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1])})
+  if(this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row > this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row) {
+    console.log(this.hotTableComponent.current.hotInstance.getSelectedRange()[0])
+    this.setState({ selectedRange: this.hotTableComponent.current.hotInstance.getSelectedRange()[0] })
+    this.setState({ range: true, rangeParams: [this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col] })
+  }
+}
 
+makeItBold = () => {
+  if(this.state.range) {
+    var i;
+    var b = this.state.selectedRange.to.row;
+    var c = this.state.selectedRange.from.col;
+    for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+      let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
+      if(data.includes('<strong>')) {
+        this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, data.split('<strong>')[1].split('</strong>')[0]);
+      } else {
+        this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<strong>'+ data +'</strong>');
+      }
+    }
+
+  } else {
+    if(this.state.selectedData.includes('<strong>')) {
+      this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData.split('<strong>')[1].split('</strong>')[0]);
+    } else {
+      this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '<strong>'+ this.state.selectedData +'</strong>');
+    }
+  }
+
+}
+
+makeItItalic = () => {
+  if(this.state.range) {
+    var i;
+    var b = this.state.selectedRange.to.row;
+    var c = this.state.selectedRange.from.col;
+    for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+      let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
+      if(data.includes('<em>')) {
+        this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, data.split('<em>')[1].split('</em>')[0]);
+      } else {
+        this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<em>'+ data +'</em>');
+      }
+    }
+
+  } else {
+    if(this.state.selectedData.includes('<em>')) {
+      this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData.split('<em>')[1].split('</em>')[0]);
+    } else {
+      this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '<em>'+ this.state.selectedData +'</em>');
+    }
+  }
+}
+
+handleInput = (e) => {
+  this.setState({ selectedData: e.target.value }, () => {
+    this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData);
+  });
+
+  let data = this.state.dataLocation;
+  let oldData = data;
+  this.setState({ selectedData: e.target.value })
+  if(window.event.which === 13 || window.event.which === 9 || oldData !== data ) {
+    this.setState({ selectedData: "" })
+  }
+}
 
 renderView() {
+  window.$('.modal').modal();
+  window.$('.dropdown-button').dropdown({
+      inDuration: 300,
+      outDuration: 225,
+      constrainWidth: false, // Does not change width of dropdown to that of the activator
+      hover: false, // Activate on hover
+      gutter: 0, // Spacing from edge
+      belowOrigin: false, // Displays dropdown below the button
+      alignment: 'left', // Displays dropdown with edge aligned to the left of button
+      stopPropagation: false // Stops event propagation
+    }
+  );
+  console.log(this.state.rangeParams);
   const {  hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
-
   if(this.state.initialLoad === "") {
     return (
       <div className="center-align sheets-loader">
@@ -668,7 +807,26 @@ renderView() {
         </div>
         <div>
           <div className={hideSheet}>
+          <nav className="spreadsheet-tools">
+              <div className="nav-wrapper">
+                <ul className="left">
+                  <li><a><input type="text" onChange={this.handleInput} value={this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData} placeholder="fx" /></a></li>
+                  <li><a onClick={this.makeItBold}><i className="tiny material-icons">format_bold</i></a></li>
+                  <li><a onClick={this.makeItItalic}><i className="tiny material-icons">format_italic</i></a></li>
+                  <li><a className="dropdown-button" data-activates='formulas-drop'><i className="tiny material-icons">functions</i></a></li>
+                </ul>
+              </div>
+            </nav>
+            <ul id='formulas-drop' className='dropdown-content'>
+              <li><a>one</a></li>
+              <li><a>two</a></li>
+              <li className="divider"></li>
+              <li><a>three</a></li>
+              <li><a><i className="material-icons">view_module</i>four</a></li>
+              <li><a><i className="material-icons">cloud</i>five</a></li>
+            </ul>
             <div className="spreadsheet-table">
+
               {
                 this.state.decryption !==true ?
                 <HotTable id='table' root="hot" settings={{
@@ -696,41 +854,12 @@ renderView() {
                   licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
                   onAfterChange: (changes, source) => {if(changes){
                     clearTimeout(this.timeout);
-                    this.timeout = setTimeout(this.handleAddItem, 1000)
+                    this.timeout = setTimeout(this.handleAddItem, 3000)
                   }},
 
                 }}
                  /> :
-                 <HotTable id='table' root="hot" settings={{
-                   data: this.state.grid,
-                   renderer: 'html',
-                   stretchH: 'all',
-                   manualRowResize: true,
-                   manualColumnResize: true,
-                   colHeaders: true,
-                   rowHeaders: true,
-                   colWidths: 100,
-                   rowHeights: 30,
-                   minCols: 26,
-                   minRows: 100,
-                   contextMenu: true,
-                   formulas: true,
-                   columnSorting: true,
-                   autoRowSize: true,
-                   manualColumnMove: true,
-                   manualRowMove: true,
-                   ref: "hot",
-                   fixedRowsTop: 0,
-                   minSpareRows: 1,
-                   comments: true,
-                   licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
-                   onAfterChange: (changes, source) => {if(changes){
-                     clearTimeout(this.timeout);
-                     this.timeout = setTimeout(this.handleAddItem, 1000)
-                   }},
-
-                 }}
-                  />
+                 <HotTable data={this.state.grid} ref={this.hotTableComponent} id={this.id} settings={this.hotSettings} />
               }
             </div>
           </div>

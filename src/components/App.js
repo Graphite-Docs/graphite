@@ -3,6 +3,7 @@ import { BrowserRouter, Route } from 'react-router-dom';
 import Profile from './Profile';
 import AppPage from './AppPage';
 import Signin from './Signin';
+import SSO from './SSO';
 import Collections from './documents/Collections';
 import SingleDoc from './documents/SingleDoc';
 import SingleRTCDoc from './documents/SingleRTCDoc';
@@ -1550,6 +1551,11 @@ export default class App extends Component {
                   postFormResponses={this.postFormResponses}
                   publicForm={publicForm}
                   formContents={formContents}
+                />
+              }/>
+              <Route exact path="/sso/verify/:id/:id" render={(location, match, props) =>
+                <SSO {...props}
+
                 />
               }/>
             </div>

@@ -1396,6 +1396,10 @@ h5, h6 {
   margin-left: 25px;
 }
 
+.sso-app {
+  border-bottom: #282828 2px solid;
+}
+
 .card.horizontal .card-image.sheets-side {
     margin-top: 70px!important;
 }
@@ -1505,6 +1509,10 @@ div.card.form-view form div div div input, div.card.form-view div div div textar
 
 .app-page {
   padding: 0!important;
+}
+
+td, th {
+  border-radius: 0px;
 }
 
 .conversations-icon-image {
@@ -3043,7 +3051,52 @@ polygon.ql-stroke {
 }
 
 .spreadsheet-table {
-  margin-top: 60px;
+  margin-top: 113px;
+}
+
+.spreadsheet-tools {
+  position: fixed;
+  top: 64px;
+  z-index: 999;
+  height: 50px;
+}
+
+.spreadsheet-tools .nav-wrapper {
+  background: #eee!important;
+  border-bottom: 1px solid #ccc;
+}
+
+.spreadsheet-tools .nav-wrapper ul {
+  margin-top: -5px;
+}
+
+.spreadsheet-tools .nav-wrapper ul:hover {
+  background: none;
+}
+
+.spreadsheet-tools .nav-wrapper ul li a {
+  color: #282828;
+  height: 50px;
+}
+
+.spreadsheet-tools .nav-wrapper ul li a input {
+  background: #fff;
+  color: #282828;
+  height: 20px;
+  padding: 5px;
+  width: 200px;
+}
+
+#forumlas-drop {
+  z-index: 1001;
+}
+
+.spreadsheet-tools .nav-wrapper ul li a input[type=text]:not(.browser-default):focus:not([readonly]) {
+  border-bottom: none!important;
+}
+
+.tiny {
+  font-size: 1.2rem!important;
 }
 
 .intro-text {
