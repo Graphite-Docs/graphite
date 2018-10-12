@@ -3087,6 +3087,21 @@ polygon.ql-stroke {
   width: 200px;
 }
 
+td strong {
+  font-weight: 800;
+}
+
+.color-picker {
+  height: 15px!important;
+  width: 15px!important;
+  margin: 5px;
+}
+
+#colors-drop {
+  max-width: 20%;
+  padding-left: 20px;
+}
+
 #forumlas-drop {
   z-index: 1001;
 }

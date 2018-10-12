@@ -126,7 +126,7 @@ export function loadVaultSingle() {
            type: JSON.parse(fileContents || "{}").type,
            id: JSON.parse(fileContents || "{}").id,
            sharedWithSingle: JSON.parse(fileContents || "{}").sharedWith,
-           singleFileTags: JSON.parse(fileContents || "{}").tags,
+           singleFileTags: JSON.parse(fileContents || "{}").tags || [],
            uploaded: JSON.parse(fileContents || "{}").uploaded
         });
       } else {
@@ -139,7 +139,7 @@ export function loadVaultSingle() {
           id: JSON.parse(fileContents || "{}").id,
           type: JSON.parse(fileContents || "{}").type,
           sharedWithSingle: [],
-          singleFileTags: JSON.parse(fileContents || "{}").tags,
+          singleFileTags: JSON.parse(fileContents || "{}").tags || [],
           uploaded: JSON.parse(fileContents || "{}").uploaded
        });
       }

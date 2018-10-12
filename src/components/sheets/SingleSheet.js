@@ -60,7 +60,8 @@ export default class SingleSheet extends Component {
       dataLocation: [],
       range: false,
       rangeParams: [],
-      selectedRange: {}
+      selectedRange: {},
+      colWidths: 100
     }
 
     //Handsontable
@@ -73,7 +74,7 @@ export default class SingleSheet extends Component {
       manualColumnResize: true,
       colHeaders: true,
       rowHeaders: true,
-      colWidths: 100,
+      colWidths: this.state.colWidths,
       rowHeights: 30,
       minCols: 26,
       minRows: 100,
@@ -94,9 +95,12 @@ export default class SingleSheet extends Component {
       }},
       onAfterSelection: (r, c, r2, c2, preventScrolling) => {
          preventScrolling.value = true;
-         console.log(r, c);
          this.captureCellData([r, c]);
        },
+       onAfterColumnResize: (currentColumn, newSize, isDoubleClick) => {
+         this.handleResizeColumn([currentColumn, newSize]);
+         setTimeout(this.handleAddItem, 3000)
+       }
     };
     this.hotTableComponent = React.createRef();
 
@@ -235,10 +239,15 @@ export default class SingleSheet extends Component {
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
-         this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
+         if(JSON.parse(fileContents).colWidths) {
+           this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content, colWidths: JSON.parse(fileContents || '{}').colWidths })
+         } else {
+           this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content, colWidths: 100 })
+         }
        }
      })
      .then(() => {
+       this.hotSettings.colWidths = this.state.colWidths;
        this.setState({ initialLoad: "hide" });
        this.hotTableComponent.current.hotInstance.loadData(this.state.grid);
      })
@@ -262,6 +271,7 @@ export default class SingleSheet extends Component {
       object.sharedWith = this.state.sharedWith;
       object.fileType = "sheets";
       object.form = this.state.singleSheet.form;
+      object.colWidths = this.state.colWidths;
       const objectTwo = {};
       objectTwo.title = object.title;
       objectTwo.id = object.id;
@@ -515,7 +525,11 @@ print(){
 }
 
 captureCellData (props) {
-  this.setState({ dataLocation: props, selectedData: this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1])})
+  this.setState({ dataLocation: props, selectedData: this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1])}, () => {
+    if(this.state.selectedData === null) {
+      this.setState({ selectedData: "" });
+    }
+  })
   if(this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row > this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row) {
     console.log(this.hotTableComponent.current.hotInstance.getSelectedRange()[0])
     this.setState({ selectedRange: this.hotTableComponent.current.hotInstance.getSelectedRange()[0] })
@@ -583,7 +597,51 @@ handleInput = (e) => {
   }
 }
 
+handleResizeColumn = (props) => {
+  if(this.hotSettings.colWidths === 100) {
+    var i;
+    var b = this.hotTableComponent.current.hotInstance.countCols();
+    let cols = [];
+    for (i = 0; i < b; i++) {
+      cols = [...cols, 100];
+    }
+    cols[props[0]] = props[1];
+    this.setState({ colWidths: cols });
+  } else {
+    let cols = this.state.colWidths;
+    cols[props[0]] = props[1];
+    this.setState({ colWidths: cols });
+  }
+}
+
+handleColorSelect = (props) => {
+  console.log(props);
+  let color = '#' + props;
+  if(this.state.range) {
+    var i;
+    var b = this.state.selectedRange.to.row;
+    var c = this.state.selectedRange.from.col;
+    for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+      let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
+      // this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<span style="color:' + color + ';"' + '>'+ data +'</span>');
+      if(data.includes('<span')) {
+        this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<span style="color:' + color + ';">'+ data.split(';">')[1].split('</span>')[0]+'</span>');
+      } else {
+        this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<span style="color:' + color + ';">'+ data +'</span>');
+      }
+    }
+
+  } else {
+    if(this.state.selectedData.includes('<span')) {
+      this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '<span style="color:' + color + ';">'+ this.state.selectedData.split(';">')[1].split('</span>')[0]+'</span>');
+    } else {
+      this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '<span style="color:' + color + ';">'+ this.state.selectedData +'</span>');
+    }
+  }
+}
+
 renderView() {
+
   window.$('.modal').modal();
   window.$('.dropdown-button').dropdown({
       inDuration: 300,
@@ -596,9 +654,10 @@ renderView() {
       stopPropagation: false // Stops event propagation
     }
   );
-  console.log(this.state.rangeParams);
   const {  hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
   const remoteStorageActivator = remoteStorage === true ? "" : "hide";
+  const colorList = [ '000000', '993300', '333300', '003300', '003366', '000066', '333399', '333333',
+'660000', 'FF6633', '666633', '336633', '336666', '0066FF', '666699', '666666', 'CC3333', 'FF9933', '99CC33', '669966', '66CCCC', '3366FF', '663366', '999999', 'CC66FF', 'FFCC33', 'FFFF66', '99FF66', '99CCCC', '66CCFF', '993366', 'CCCCCC', 'FF99CC', 'FFCC99', 'FFFF99', 'CCffCC', 'CCFFff', '99CCFF', 'CC99FF', 'FFFFFF' ];
   if(this.state.initialLoad === "") {
     return (
       <div className="center-align sheets-loader">
@@ -810,9 +869,10 @@ renderView() {
           <nav className="spreadsheet-tools">
               <div className="nav-wrapper">
                 <ul className="left">
-                  <li><a><input type="text" onChange={this.handleInput} value={this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData} placeholder="fx" /></a></li>
+                  <li><a><input type="text" onChange={this.handleInput} value={this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData === null ? "" : this.state.selectedData} placeholder="fx" /></a></li>
                   <li><a onClick={this.makeItBold}><i className="tiny material-icons">format_bold</i></a></li>
                   <li><a onClick={this.makeItItalic}><i className="tiny material-icons">format_italic</i></a></li>
+                  <li><a className="dropdown-button" data-activates='colors-drop'><i className="tiny material-icons">format_color_text</i></a></li>
                   <li><a className="dropdown-button" data-activates='formulas-drop'><i className="tiny material-icons">functions</i></a></li>
                 </ul>
               </div>
@@ -825,6 +885,22 @@ renderView() {
               <li><a><i className="material-icons">view_module</i>four</a></li>
               <li><a><i className="material-icons">cloud</i>five</a></li>
             </ul>
+            <div id='colors-drop' className='dropdown-content'>
+              <div className="row center-align">
+                {
+                  colorList.map(c => {
+                    let backgroundColor = '#' + c;
+                    let bColor = {
+                      background: backgroundColor
+                    }
+
+                    return(
+                      <a onClick={() => this.handleColorSelect(c)} key={c} style={bColor} className="col s2 color-picker"><span className="hide">a</span></a>
+                    )
+                  })
+                }
+              </div>
+            </div>
             <div className="spreadsheet-table">
 
               {
