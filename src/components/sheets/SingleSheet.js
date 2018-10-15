@@ -4,9 +4,9 @@ import {
   getFile,
   putFile
 } from 'blockstack';
-// import {
-//   SUPPORTED_FORMULAS
-// } from '../helpers/formulas.js';
+import {
+  SUPPORTED_FORMULAS
+} from '../helpers/formulas.js';
 import { HotTable } from '@handsontable/react';
 // import Handsontable from 'handsontable-pro';
 import update from 'immutability-helper';
@@ -59,6 +59,7 @@ export default class SingleSheet extends Component {
       selectedData: "",
       dataLocation: [],
       range: false,
+      colRange: false,
       rangeParams: [],
       selectedRange: {},
       colWidths: 100
@@ -150,7 +151,6 @@ export default class SingleSheet extends Component {
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
-         console.log("Contacts are here");
          this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
        } else {
          console.log("No contacts");
@@ -176,13 +176,9 @@ export default class SingleSheet extends Component {
     getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
-        console.log("loaded");
      }).then(() =>{
        let sheets = this.state.sheets;
-       console.log(this.state.sheets);
        const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === window.location.href.split('/sheets/sheet/')[1]}); //this is comparing strings
-       console.log('this sheet: ')
-       console.log(thisSheet)
        let index = thisSheet && thisSheet.id;
        function findObjectIndex(sheet) {
            return sheet.id === index; //this is comparing numbers
@@ -214,12 +210,10 @@ export default class SingleSheet extends Component {
   }
 
   loadSingleForm() {
-    console.log("From form")
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: this.state.decryption})
      .then((fileContents) => {
-       console.log(JSON.parse(fileContents));
        if(fileContents) {
          this.setState({ singleSheet: JSON.parse(fileContents), title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content  })
        }
@@ -233,7 +227,6 @@ export default class SingleSheet extends Component {
   }
 
   loadSingle() {
-    console.log("Not a form")
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: true})
@@ -531,17 +524,22 @@ captureCellData (props) {
     }
   })
   if(this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row > this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row) {
-    console.log(this.hotTableComponent.current.hotInstance.getSelectedRange()[0])
     this.setState({ selectedRange: this.hotTableComponent.current.hotInstance.getSelectedRange()[0] })
     this.setState({ range: true, rangeParams: [this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col] })
+  }
+  if(this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col > this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col) {
+    this.setState({ selectedRange: this.hotTableComponent.current.hotInstance.getSelectedRange()[0] })
+    this.setState({ colRange: true, range: true, rangeParams: [this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col] })
+  } else {
+    this.setState({ colRange: false });
   }
 }
 
 makeItBold = () => {
-  if(this.state.range) {
-    var i;
-    var b = this.state.selectedRange.to.row;
-    var c = this.state.selectedRange.from.col;
+  var i;
+  var b = this.state.selectedRange.to.row;
+  var c = this.state.selectedRange.from.col;
+  if(this.state.range && !this.state.colRange) {
     for (i=this.state.selectedRange.from.row; i < b +1; i++) {
       let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
       if(data.includes('<strong>')) {
@@ -550,7 +548,19 @@ makeItBold = () => {
         this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<strong>'+ data +'</strong>');
       }
     }
-
+  } else if(this.state.range && this.state.colRange) {
+    var v;
+    var d = this.state.selectedRange.to.col;
+    for (v=this.state.selectedRange.from.col; v < d + 1; v++) {
+      for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+        let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, v)
+        if(data.includes('<strong>')) {
+          this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, data.split('<strong>')[1].split('</strong>')[0]);
+        } else {
+          this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, '<strong>'+ data +'</strong>');
+        }
+      }
+    }
   } else {
     if(this.state.selectedData.includes('<strong>')) {
       this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData.split('<strong>')[1].split('</strong>')[0]);
@@ -562,10 +572,11 @@ makeItBold = () => {
 }
 
 makeItItalic = () => {
-  if(this.state.range) {
-    var i;
-    var b = this.state.selectedRange.to.row;
-    var c = this.state.selectedRange.from.col;
+  var i;
+  var b = this.state.selectedRange.to.row;
+  var c = this.state.selectedRange.from.col;
+  if(this.state.range && !this.state.colRange) {
+
     for (i=this.state.selectedRange.from.row; i < b +1; i++) {
       let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
       if(data.includes('<em>')) {
@@ -575,6 +586,19 @@ makeItItalic = () => {
       }
     }
 
+  } else if(this.state.range && this.state.colRange) {
+    var v;
+    var d = this.state.selectedRange.to.col;
+    for (v=this.state.selectedRange.from.col; v < d + 1; v++) {
+      for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+        let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, v)
+        if(data.includes('<em>')) {
+          this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, data.split('<em>')[1].split('</em>')[0]);
+        } else {
+          this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, '<em>'+ data +'</em>');
+        }
+      }
+    }
   } else {
     if(this.state.selectedData.includes('<em>')) {
       this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData.split('<em>')[1].split('</em>')[0]);
@@ -615,12 +639,12 @@ handleResizeColumn = (props) => {
 }
 
 handleColorSelect = (props) => {
-  console.log(props);
   let color = '#' + props;
-  if(this.state.range) {
-    var i;
-    var b = this.state.selectedRange.to.row;
-    var c = this.state.selectedRange.from.col;
+  var i;
+  var b = this.state.selectedRange.to.row;
+  var c = this.state.selectedRange.from.col;
+  if(this.state.range && !this.state.colRange) {
+
     for (i=this.state.selectedRange.from.row; i < b +1; i++) {
       let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
       // this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<span style="color:' + color + ';"' + '>'+ data +'</span>');
@@ -631,6 +655,19 @@ handleColorSelect = (props) => {
       }
     }
 
+  } else if(this.state.range && this.state.colRange) {
+    var v;
+    var d = this.state.selectedRange.to.col;
+    for (v=this.state.selectedRange.from.col; v < d + 1; v++) {
+      for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+        let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, v)
+        if(data.includes('<span')) {
+          this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, '<span style="color:' + color + ';">'+ data.split(';">')[1].split('</span>')[0]+'</span>');
+        } else {
+          this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, '<span style="color:' + color + ';">'+ data +'</span>');
+        }
+      }
+    }
   } else {
     if(this.state.selectedData.includes('<span')) {
       this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '<span style="color:' + color + ';">'+ this.state.selectedData.split(';">')[1].split('</span>')[0]+'</span>');
@@ -640,8 +677,12 @@ handleColorSelect = (props) => {
   }
 }
 
-renderView() {
+handleFormulaSet = (props) => {
+  this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '=' + props + '()');
+  this.hotTableComponent.current.hotInstance.selectCell(this.state.dataLocation[0],this.state.dataLocation[1]);
+}
 
+renderView() {
   window.$('.modal').modal();
   window.$('.dropdown-button').dropdown({
       inDuration: 300,
@@ -869,7 +910,7 @@ renderView() {
           <nav className="spreadsheet-tools">
               <div className="nav-wrapper">
                 <ul className="left">
-                  <li><a><input type="text" onChange={this.handleInput} value={this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData === null ? "" : this.state.selectedData} placeholder="fx" /></a></li>
+                  <li><a><input type="text" onChange={this.handleInput} value={!isNaN(this.state.selectedData) ? this.state.selectedData : this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData === null ? "" : this.state.selectedData} placeholder="fx" /></a></li>
                   <li><a onClick={this.makeItBold}><i className="tiny material-icons">format_bold</i></a></li>
                   <li><a onClick={this.makeItItalic}><i className="tiny material-icons">format_italic</i></a></li>
                   <li><a className="dropdown-button" data-activates='colors-drop'><i className="tiny material-icons">format_color_text</i></a></li>
@@ -877,14 +918,27 @@ renderView() {
                 </ul>
               </div>
             </nav>
-            <ul id='formulas-drop' className='dropdown-content'>
-              <li><a>one</a></li>
-              <li><a>two</a></li>
-              <li className="divider"></li>
-              <li><a>three</a></li>
-              <li><a><i className="material-icons">view_module</i>four</a></li>
-              <li><a><i className="material-icons">cloud</i>five</a></li>
-            </ul>
+            <div id='formulas-drop' className='dropdown-content'>
+              <div className="container">
+              <h6 className="black-text">Most Used</h6>
+              <ul>
+                <li><a onClick={() => this.handleFormulaSet("SUM")}>SUM</a></li>
+                <li><a onClick={() => this.handleFormulaSet("COUNT")}>COUNT</a></li>
+                <li><a onClick={() => this.handleFormulaSet("AVERAGE")}>AVERAGE</a></li>
+              </ul>
+              <hr />
+              <h6 className="black-text">All Formulas</h6>
+              <ul>
+              {
+                SUPPORTED_FORMULAS.map(formula => {
+                  return (
+                    <li key={formula}><a onClick={() => this.handleFormulaSet(formula)}>{formula}</a></li>
+                  )
+                })
+              }
+              </ul>
+              </div>
+            </div>
             <div id='colors-drop' className='dropdown-content'>
               <div className="row center-align">
                 {
