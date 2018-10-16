@@ -215,11 +215,12 @@ export default class SingleDoc extends Component {
                   </li>
 
                   {
-                    Object.keys(mediumConnected).length > 0 && graphitePro ?
+                    mediumConnected ? Object.keys(mediumConnected).length > 0 && graphitePro ?
                     <li>
                       <a onClick={this.props.postToMedium}>Post to Medium</a>
                     </li>
                     :
+                    <li className="hide"></li> :
                     <li className="hide"></li>
                   }
                   <li className="divider"></li>
