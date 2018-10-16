@@ -120,7 +120,6 @@ export default class SingleSheet extends Component {
     this.handleBack = this.handleBack.bind(this); //this is here to resolve auto-save and home button conflicts
     this.loadSingle = this.loadSingle.bind(this);
     this.loadSingleForm = this.loadSingleForm.bind(this);
-    this.captureCellData = this.captureCellData.bind(this);
   }
   componentDidMount() {
     document.addEventListener("keydown", (event) => {
@@ -517,7 +516,7 @@ print(){
   window.history.replaceState(window.history.state, '', curURL);
 }
 
-captureCellData (props) {
+captureCellData = (props) => {
   this.setState({ dataLocation: props, selectedData: this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1])}, () => {
     if(this.state.selectedData === null) {
       this.setState({ selectedData: "" });

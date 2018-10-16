@@ -1213,8 +1213,6 @@ export default class App extends Component {
               <Route exact path="/sheets/single/shared/:id" component={SingleSharedSheet} />
               <Route exact path="/testsheet" component={TestSheet} />
               <Route exact path="/shared-sheets" component={SharedSheets} />
-
-              <Route exact path="/export" component={Export} />
               <Route exact path="/contacts" render={(location, match, props) =>
                 <Contacts {...props}
                   loadContactsCollection={this.loadContactsCollection}
@@ -1556,6 +1554,14 @@ export default class App extends Component {
               <Route exact path="/sso/verify/:id/:id" render={(location, match, props) =>
                 <SSO {...props}
 
+                />
+              }/>
+              <Route exact path="/export" render={(location, match, props) =>
+                <Export {...props}
+                  sheets={sheets}
+                  value={value}
+                  files={files}
+                  contacts={contacts}
                 />
               }/>
             </div>
