@@ -140,7 +140,7 @@ export default class Pricing extends Component {
                     </div>
                     <ul className='collection center'>
                       <li className='collection-item'>
-                        <strong><a href="github.com/Graphite-Docs/graphite">Github</a></strong>
+                        <strong><a href="https://github.com/Graphite-Docs/graphite">Github</a></strong>
                       </li>
                     </ul>
                   </div>

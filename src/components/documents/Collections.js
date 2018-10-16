@@ -149,7 +149,7 @@ export default class Collections extends Component {
               teamDocs.slice(indexOfFirstDoc, indexOfLastDoc).reverse().map(doc => {
               return(
                 <tr key={doc.id}>
-                  <td><Link to={'/documents/single/shared/'+ doc.user + '/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
+                  <td><Link to={'/documents/single/shared/'+ doc.user + '/' + doc.id}>{doc.title ? doc.title : "Untitled"}</Link></td>
                   <td>{this.state.user}</td>
                   <td>{doc.rtc === true ? "False" : "True"}</td>
                   <td>{doc.shared}</td>
