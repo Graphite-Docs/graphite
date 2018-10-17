@@ -96,7 +96,9 @@ export default class SingleSheet extends Component {
       }},
       onAfterSelection: (r, c, r2, c2, preventScrolling) => {
          preventScrolling.value = true;
-         this.captureCellData([r, c]);
+         clearTimeout(this.timeout);
+         this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
+         // this.captureCellData([r, c]);
        },
        onAfterColumnResize: (currentColumn, newSize, isDoubleClick) => {
          this.handleResizeColumn([currentColumn, newSize]);
@@ -517,7 +519,10 @@ print(){
 }
 
 captureCellData = (props) => {
-  this.setState({ dataLocation: props, selectedData: this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1])}, () => {
+  console.log(props);
+  let data;
+  this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1]) == null ? data = "" : data = this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1]);
+  this.setState({ dataLocation: props, selectedData: data}, () => {
     if(this.state.selectedData === null) {
       this.setState({ selectedData: "" });
     }
@@ -536,9 +541,9 @@ captureCellData = (props) => {
 
 makeItBold = () => {
   var i;
-  var b = this.state.selectedRange.to.row;
-  var c = this.state.selectedRange.from.col;
   if(this.state.range && !this.state.colRange) {
+    var b = this.state.selectedRange.to.row;
+    var c = this.state.selectedRange.from.col;
     for (i=this.state.selectedRange.from.row; i < b +1; i++) {
       let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
       if(data.includes('<strong>')) {
@@ -548,10 +553,11 @@ makeItBold = () => {
       }
     }
   } else if(this.state.range && this.state.colRange) {
+    var e = this.state.selectedRange.to.row;
     var v;
     var d = this.state.selectedRange.to.col;
     for (v=this.state.selectedRange.from.col; v < d + 1; v++) {
-      for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+      for (i=this.state.selectedRange.from.row; i < e +1; i++) {
         let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, v)
         if(data.includes('<strong>')) {
           this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, data.split('<strong>')[1].split('</strong>')[0]);
@@ -572,10 +578,9 @@ makeItBold = () => {
 
 makeItItalic = () => {
   var i;
-  var b = this.state.selectedRange.to.row;
-  var c = this.state.selectedRange.from.col;
   if(this.state.range && !this.state.colRange) {
-
+    var b = this.state.selectedRange.to.row;
+    var c = this.state.selectedRange.from.col;
     for (i=this.state.selectedRange.from.row; i < b +1; i++) {
       let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
       if(data.includes('<em>')) {
@@ -587,9 +592,10 @@ makeItItalic = () => {
 
   } else if(this.state.range && this.state.colRange) {
     var v;
+    var e = this.state.selectedRange.to.row;
     var d = this.state.selectedRange.to.col;
     for (v=this.state.selectedRange.from.col; v < d + 1; v++) {
-      for (i=this.state.selectedRange.from.row; i < b +1; i++) {
+      for (i=this.state.selectedRange.from.row; i < e +1; i++) {
         let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, v)
         if(data.includes('<em>')) {
           this.hotTableComponent.current.hotInstance.setDataAtCell(i,v, data.split('<em>')[1].split('</em>')[0]);
@@ -640,10 +646,9 @@ handleResizeColumn = (props) => {
 handleColorSelect = (props) => {
   let color = '#' + props;
   var i;
-  var b = this.state.selectedRange.to.row;
-  var c = this.state.selectedRange.from.col;
   if(this.state.range && !this.state.colRange) {
-
+    var b = this.state.selectedRange.to.row;
+    var c = this.state.selectedRange.from.col;
     for (i=this.state.selectedRange.from.row; i < b +1; i++) {
       let data = this.hotTableComponent.current.hotInstance.getDataAtCell(i, c)
       // this.hotTableComponent.current.hotInstance.setDataAtCell(i,c, '<span style="color:' + color + ';"' + '>'+ data +'</span>');
