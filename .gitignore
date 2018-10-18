@@ -6,5 +6,5 @@ npm-debug.log
 src/projects
 dist
 src/components/helpers/dev.js
-# src/components/helpers/prod.js
+src/components/helpers/prod.js
 .env
