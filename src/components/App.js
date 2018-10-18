@@ -1551,7 +1551,7 @@ export default class App extends Component {
                   formContents={formContents}
                 />
               }/>
-              <Route exact path="/sso/verify/:id/:id" render={(location, match, props) =>
+              <Route exact path="/oauth/verify" render={(location, match, props) =>
                 <SSO {...props}
 
                 />

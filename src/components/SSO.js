@@ -2,15 +2,14 @@ import React, { Component } from 'react';
 import Header from './Header';
 import {
   isUserSignedIn,
-  putFile,
   loadUserData,
   redirectToSignIn,
   isSignInPending,
   handlePendingSignIn
 } from 'blockstack';
+import { createUnsecuredToken } from 'jsontokens'
 const { encryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
-const { createECDH } = require('crypto');
 let redirect;
 
 export default class SSO extends Component {
@@ -18,7 +17,7 @@ export default class SSO extends Component {
   componentDidMount() {
     if (isSignInPending()) {
       handlePendingSignIn().then((userData) => {
-        window.location = window.location.href.split('?')[0];
+        window.location = window.location.href.split('=?')[0];
       });
     }
     // console.log(decodeToken(JSON.parse(localStorage.blockstack).authResponseToken).payload.public_keys[0])
@@ -26,28 +25,20 @@ export default class SSO extends Component {
   }
 
   approveSSO = () => {
-    const array = [];
-    const ecdh = createECDH('secp256k1');
-    ecdh.generateKeys('hex');
-    const pubKey = ecdh.getPublicKey('hex')
-    const privKey = ecdh.getPrivateKey('hex');
-    const hub = localStorage.getItem('blockstack-gaia-hub-config');
-    const key = {};
-    key.private = loadUserData().appPrivateKey;
-    key.public = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
-    array.push(hub);
-    array.push(key);
-    const data = array;
-    console.log(data);
-    const encryptedData = JSON.stringify(encryptECIES(pubKey, JSON.stringify(data)));
-    putFile('sso-config.json', encryptedData, {encrypt: false})
-    .then(() => {
-      console.log(redirect);
-      window.location.replace('http://' + redirect + '/auth=' + privKey + '/user=' + loadUserData().username);
-    })
-    .catch(e => {
-      console.log(e);
-    });
+    let pubKey;
+    if(window.location.href.includes('=?')) {
+     pubKey = window.location.href.split('token=')[1].split('=?')[0];
+    } else {
+     pubKey = window.location.href.split('token=')[1];
+    }
+    const payload = {};
+    payload.private = loadUserData().appPrivateKey;
+    payload.public = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+    payload.gaiaConfig = localStorage.getItem('blockstack-gaia-hub-config');
+    const encryptedPayload = encryptECIES(pubKey, JSON.stringify(payload));
+    const unsecuredToken = createUnsecuredToken(encryptedPayload)
+    redirect = 'http://' + decodeURIComponent(window.location.href.split('?')[2]);
+    window.location.replace(redirect + '?response=' + unsecuredToken);
   }
 
   handleSignIn(e) {
@@ -61,8 +52,7 @@ export default class SSO extends Component {
 
 
   render() {
-    const appName = decodeURIComponent(window.location.href.split('verify/')[1].split('/')[0]);
-    redirect = decodeURIComponent(window.location.href.split('verify/')[1].split('/')[1]);
+    const appName = decodeURIComponent(window.location.href.split('?')[1]);
 
     return (
       <div>

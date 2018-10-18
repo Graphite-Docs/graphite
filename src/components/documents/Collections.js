@@ -313,7 +313,7 @@ export default class Collections extends Component {
               return(
                 <tr key={doc.id}>
                   <td><input type="checkbox" checked={this.props.checked} value={doc.id} id={doc.id} onChange={this.props.handleCheckbox} /><label htmlFor={doc.id}></label></td>
-                  <td><Link to={'/documents/doc/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title} <span>{doc.singleDocIsPublic ? <i className="material-icons tiny">public</i> : <i className="material-icons tiny">lock</i>}</span></Link></td>
+                  <td><Link to={'/documents/doc/' + doc.id}>{doc.title ? doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <i className="material-icons tiny">public</i> : <i className="material-icons tiny">lock</i>}</span></Link></td>
                   {/*<td>{doc.singleDocIsPublic === true ? "public" : "private"}</td>*/}
                   <td>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</td>
                   <td>{doc.updated}</td>
@@ -353,7 +353,7 @@ export default class Collections extends Component {
                   <h4>Select Contact</h4>
                   <ul className="collection">
                   {
-                  contacts.length < 1 ?
+                  contacts && contacts.length < 1 ?
 
                         <p className="center-align no-contacts">You do not have any contacts. Add some <a href="/contacts">here</a> before you share.</p>
                        : <p className="hide"></p>

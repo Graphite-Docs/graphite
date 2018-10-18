@@ -98,7 +98,6 @@ export default class SingleSheet extends Component {
          preventScrolling.value = true;
          clearTimeout(this.timeout);
          this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
-         // this.captureCellData([r, c]);
        },
        onAfterColumnResize: (currentColumn, newSize, isDoubleClick) => {
          this.handleResizeColumn([currentColumn, newSize]);
