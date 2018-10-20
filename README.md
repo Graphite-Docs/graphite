@@ -17,7 +17,9 @@ Steps to install:
 3) Run `npm install`
 4) Run `npm run start`
 
-Note: Local development will result in CORS errors on authentication. Use a CORS browser extension to get around this. Future version will eliminate this need and when pushed to a hosted site, the CORS error is resolved. 
+Note 1: Local development will result in CORS errors on authentication. Use a CORS browser extension to get around this. Future version will eliminate this need and when pushed to a hosted site, the CORS error is resolved. 
+
+Note 2: Configuration files `src/components/helpers/prod.js` and `src/components/helpers/dev.js` both need to be present in order to compile successfully. In case they are missing, add them before starting the project.
 
 ## Motivation
 
