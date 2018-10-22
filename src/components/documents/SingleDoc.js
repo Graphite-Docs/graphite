@@ -130,8 +130,14 @@ export default class SingleDoc extends Component {
               <ul className="avatar-ul">
                 {
                   uniqueAva ? uniqueAva.map(img => {
+                    let image;
+                    if(img.image) {
+                      image = img.image[0].contentUrl;
+                    } else {
+                      image = avatarFallbackImage
+                    }
                     return(
-                      <li key={img.name} className="avatar-li"><span className="hidden-span">{img.name}</span><img src={img.image[0].contentUrl || avatarFallbackImage} alt='shared with avatar' className='shared-avatar circle' /></li>
+                        <li key={img.name} className="avatar-li"><span className="hidden-span">{img.name}</span><img src={image} alt='shared with avatar' className='shared-avatar circle' /></li>
                     )
                   })
                    : <li className="hide" />

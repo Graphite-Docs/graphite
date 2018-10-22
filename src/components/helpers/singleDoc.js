@@ -282,7 +282,6 @@ export function sharedInfoSingleDocStatic(props){
   this.setState({ receiverID: props, rtc: false });
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-
   getFile('key.json', options)
     .then((file) => {
       this.setState({ pubKey: JSON.parse(file)})
