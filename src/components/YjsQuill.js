@@ -1,4 +1,8 @@
 import React from 'react';
+import Quill from 'quill';
+import Delta from 'quill-delta';
+
+const Clipboard = Quill.import('modules/clipboard')
 
 const Y = require('yjs')
 
@@ -74,10 +78,32 @@ export default class YjsQuill extends React.Component {
         modules: {
           toolbar: toolbarOptions,
         },
+        scrollingContainer: 'html, body',
         theme: 'snow',
         readOnly: (that.props.readOnly === true ? true : false), //readOnly is from QuillEditorPublic, which gets prop from PublicDoc... QuillEditorPrivate won't have this prop, so adding this boolean...
         placeholder: "Write something great..."
       });
+
+      class CustomClipboard extends Clipboard {
+        onPaste(e) {
+          console.log("pasting")
+          if (e.defaultPrevented || !this.quill.isEnabled()) return;
+          let range = this.quill.getSelection();
+          let delta = new Delta().retain(range.index);
+          this.container.style.top = (window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0).toString() + 'px';
+          this.container.focus();
+          setTimeout(() => {
+            this.quill.selection.update(Quill.sources.SILENT);
+            delta = delta.concat(this.convert()).delete(range.length);
+            this.quill.updateContents(delta, Quill.sources.USER);
+            this.quill.setSelection(delta.length() - range.length, Quill.sources.SILENT);
+            let bounds = this.quill.getBounds(delta.length() - range.length, Quill.sources.SILENT);
+            this.quill.scrollingContainer.scrollTop = bounds.top;
+          }, 1);
+        }
+        }
+
+        Quill.register('modules/clipboard', CustomClipboard, true);
 
       setTimeout(this.setInner, 700); //calling setInner function below to add content to Quill editor...
 

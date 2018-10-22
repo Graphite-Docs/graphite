@@ -3,6 +3,7 @@ import {
   loadUserData
 } from 'blockstack';
 import LoadingBar from '../LoadingBar';
+import Menu from './Menu';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
 import QuillEditorPrivate from '../QuillEditorPrivate.js';
 const wordcount = require("wordcount");
@@ -18,6 +19,7 @@ export default class SingleDoc extends Component {
 
   componentDidMount() {
     this.props.initialDocLoad();
+    window.$('.collapsible').collapsible();
     window.$('.modal').modal();
     window.$('.tooltipped').tooltip();
     window.$('.dropdown-button').dropdown({
@@ -65,9 +67,6 @@ export default class SingleDoc extends Component {
       words = 0;
     }
     const stealthy = (hideStealthy) ? "hide" : "";
-    var htmlContent = "<p style='text-align: center;'>" + title + "</p> <div style='text-indent: 30px;'>" + content + "</div>";
-    var htmlDocument = '<html xmlns:office="urn:schemas-microsoft-com:office:office" xmlns:word="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><xml><word:WordDocument><word:View>Print</word:View><word:Zoom>90</word:Zoom><word:DoNotOptimizeForBrowser/></word:WordDocument></xml></head><body>' + htmlContent + '</body></html>';
-    var dataUri = 'data:text/html,' + encodeURIComponent(htmlDocument);
 
     const {length} = contacts
     let users = '&length=' + length
@@ -112,13 +111,16 @@ export default class SingleDoc extends Component {
 
               <ul className="left toolbar-menu">
                 <li className="document-title">
-                  {
-                    title
-                    ?
-                    (length > 15 ? title.substring(0,15)+"..." : title)
-                    :
-                    "Title here..."
-                  }
+                  <a className="modal-trigger" href="#editName">
+                    {
+                      title
+                      ?
+                      (length > 15 ? title.substring(0,15)+"..." : title)
+                      :
+                      "Title here..."
+                    }
+                    <i className="material-icons right tiny">edit</i>
+                  </a>
                 </li>
                 <li>
                   <a className="small-menu muted">{autoSave}</a>
@@ -135,17 +137,6 @@ export default class SingleDoc extends Component {
                    : <li className="hide" />
                 }
                 </ul>
-                {/*this.state.role === "Editor" && this.state.editorShare === true || this.state.role === "Journalist" && this.state.journoShare === true ? <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li> : <li className="hide"/>*/}
-                <li>
-                  <a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share">
-                    <i className="small-menu material-icons">people</i>
-                  </a>
-                </li>
-                <li>
-                  <a className="dropdown-button" data-activates="singleDoc">
-                    <i className="small-menu material-icons">more_vert</i>
-                  </a>
-                </li>
                 <li>
                   <a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={this.props.stealthyChat}>
                     <img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/>
@@ -153,87 +144,72 @@ export default class SingleDoc extends Component {
                 </li>
               </ul>
 
-              {/*Share Menu Dropdown*/}
-              <ul id="dropdown2"className="dropdown-content collection cointainer">
-                <li>
-                  <span className="center-align">Select a contact to share with</span>
-                </li>
-                <a href="/contacts">
-                  <li>
-                    <span className="muted blue-text center-align">Or add new contact</span>
-                  </li>
-                </a>
-                <li className="divider" />
-                {
-                  graphitePro ?
-                  <li className="collection-item">
-                    <a className="modal-trigger" href="#teamShare">Share to entire team</a>
-                  </li>
-                  :
-                  <li className="hide" />
-                }
-                {
-                  teamDoc && userRole === "User" ?
-                  <div className="hide" /> :
-                  contacts.slice(0).reverse().map(contact => {
-                    return (
-                      <li key={contact.contact}className="collection-item">
-                        {/*<a onClick={() => this.props.sharedInfoSingleDoc(contact.contact)}>
-                          <p>{contact.contact}</p>
-                        </a>*/}
-                        <a onClick={() => this.setState({ contactToShareWith: contact.contact})} className='modal-trigger' href='#encryptedModal'>{contact.contact}</a>
-                      </li>
-                    )
-                  })
-                }
-                </ul>
-                {/*Share Menu Dropdown*/}
-
-                {/* Dropdown menu content */}
-                <ul id="singleDoc" className="dropdown-content single-doc-dropdown-content">
-                  {/*<li>
-                    <a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a>
-                  </li>*/}
-                  <li className="divider"></li>
-                  {
-                    teamDoc && userRole === "User" ?
-                    <li className="hide"></li>:
-                    <li>
-                      <a onClick={this.props.print}>Print</a>
-                    </li>
-                  }
-                  {
-                    teamDoc && userRole === "User" ?
-                    <li className="hide"></li> :
-                    <li>
-                      <a download={title + ".doc"} href={dataUri}>Download</a>
-                    </li>
-                  }
-
-                  <li>
-                    <a className="modal-trigger" href="#publicModal">Public Link</a>
-                  </li>
-
-                  {
-                    mediumConnected ? Object.keys(mediumConnected).length > 0 && graphitePro ?
-                    <li>
-                      <a onClick={this.props.postToMedium}>Post to Medium</a>
-                    </li>
-                    :
-                    <li className="hide"></li> :
-                    <li className="hide"></li>
-                  }
-                  <li className="divider"></li>
-                  {/*<li>
-                    <a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a>
-                  </li>*/}
-                  {/*this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>*/}
-                  {/*this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>*/}
-                </ul>
-              {/* End dropdown menu content */}
           </div>
         </nav>
+        <Menu
+          downloadDoc={this.props.downloadDoc}
+          handleaddItem={this.props.handleaddItem}
+          formatSpacing={this.props.formatSpacing}
+          print={this.props.print}
+          graphitePro={graphitePro}
+          teamDoc={teamDoc}
+          userRole={userRole}
+          mediumConnected={mediumConnected}
+        />
       </div>
+
+      {/* Contacts Modal */}
+
+      <div id="contactsModal" className="modal">
+        <div className="modal-content">
+          <h4>Share With a Contact</h4>
+          <p>Select a contact or add a new one <a href="/contacts">here</a>.</p>
+          <ul className="collection cointainer">
+          {
+          contacts.slice(0).reverse().map(contact => {
+            return (
+              <li key={contact.contact}className="collection-item">
+                <a onClick={() => this.setState({ contactToShareWith: contact.contact})} className='modal-trigger' href='#encryptedModal'>{contact.contact}</a>
+              </li>
+            )
+          })
+          }
+          </ul>
+        </div>
+        <div className="modal-footer">
+          <a className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+        </div>
+      </div>
+      {/* End Contacts Modal */}
+
+      {/* Edit Name Modal */}
+      <div id="editName" className="modal">
+        <div className="modal-content">
+          <h4>Edit Document Title</h4>
+          {
+            title === "Untitled" ?
+            <input
+              className="edit-title"
+              placeholder="Give it a title"
+              type="text"
+              onChange={this.props.handleTitleChange}
+            />
+            :
+            <input
+              className="edit-title"
+              placeholder="Title"
+              type="text"
+              value={title}
+              onChange={this.props.handleTitleChange}
+            />
+          }
+        </div>
+        <div className="modal-footer">
+          <a className="modal-action modal-close waves-effect waves-green btn-flat">Save</a>
+          <a className="modal-action modal-close waves-effect waves-green btn-flat">Cancel</a>
+        </div>
+      </div>
+      {/*End Edit Name Modal */}
 
       {/* Team Share Modal */}
 
@@ -337,24 +313,6 @@ export default class SingleDoc extends Component {
         <div className="test-docs">
           <div className={docFlex}>
             <div className="double-space doc-margin">
-
-              {
-                title === "Untitled" ?
-                <textarea
-                  className="doc-title materialize-textarea"
-                  placeholder="Give it a title"
-                  type="text"
-                  onChange={this.props.handleTitleChange}
-                />
-                :
-                <textarea
-                  className="doc-title materialize-textarea"
-                  placeholder="Title"
-                  type="text"
-                  value={title}
-                  onChange={this.props.handleTitleChange}
-                />
-              }
 
               <p className="hide">
                 document access: <span>&nbsp;</span>

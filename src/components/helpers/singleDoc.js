@@ -10,11 +10,12 @@ import {
 import {
   getMonthDayYear
 } from './getMonthDayYear';
+import {
+  html2pdf
+} from 'html2pdf';
 import update from 'immutability-helper';
-// import RemoteStorage from 'remotestoragejs';
-// import Widget from 'remotestorage-widget';
-// const remoteStorage = new RemoteStorage({logging: false});
-// const widget = new Widget(remoteStorage);
+const FileSaver = require('file-saver');
+const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const wordcount = require("wordcount");
@@ -70,6 +71,7 @@ export function initialDocLoad() {
 
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
+    console.log(JSON.parse(fileContents));
     if(JSON.parse(fileContents).compressed === true) {
       this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content)})
     } else {
@@ -86,7 +88,8 @@ export function initialDocLoad() {
       rtc: JSON.parse(fileContents || '{}').rtc || false,
       sharedWith: JSON.parse(fileContents || '{}').sharedWith,
       teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-      compressed: JSON.parse(fileContents || '{}').compressed || false
+      compressed: JSON.parse(fileContents || '{}').compressed || false,
+      spacing: JSON.parse(fileContents || '{}').spacing
     })
   //   if(JSON.parse(fileContents).rtc) {
   //     this.setState({
@@ -116,6 +119,8 @@ export function initialDocLoad() {
   })
   .then(() => {
     this.loadAvatars();
+    console.log(this.state.spacing)
+    document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
   })
   .catch(error => {
     console.log(error);
@@ -438,6 +443,8 @@ export function handleAutoAdd() {
   object.words = wordcount(this.state.content) || "";
   object.tags = this.state.tags || [];
   object.fileType = "documents";
+  object.spacing = this.state.spacing;
+  console.log(object)
   this.setState({singleDoc: object}); //NOTE: this saves singleDoc...
   this.setState({autoSave: "Saving..."});
   const objectTwo = {};
@@ -596,4 +603,32 @@ export function sendArticle() {
   this.setState({sentArticles: [...this.state.sentArticles, this.state.singleDoc]})
   setTimeout(this.saveSend, 300);
   this.setState({send: false})
+}
+
+export function downloadDoc(props) {
+  if(props === "word") {
+    var content = '<!DOCTYPE html>' + this.state.content;
+    var converted = htmlDocx.asBlob(content);
+    var blob = new Blob([converted], {type: "application/msword"});
+    FileSaver.saveAs(blob, "helloworld.docx");
+  } else if(props === "rtf") {
+    console.log("rtf")
+  } else if(props === 'pdf') {
+    console.log('pdf')
+    html2pdf(this.state.content);
+  } else if(props === 'txt') {
+    window.open("data:application/txt," + encodeURIComponent(this.state.content.replace(/<[^>]+>/g, '')), "_self");
+  }
+
+}
+
+export function formatSpacing(props) {
+  if(props === 'single') {
+    document.getElementsByClassName('ql-editor')[0].style.lineHeight = 1;
+    this.setState({spacing: 1})
+  } else if(props === 'double') {
+    document.getElementsByClassName('ql-editor')[0].style.lineHeight = 2;
+    this.setState({spacing: 2})
+  }
+
 }

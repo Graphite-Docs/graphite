@@ -121,7 +121,9 @@ import {
   toggleReadOnly,
   stealthyChat,
   loadAvatars,
-  noCollaboration
+  noCollaboration,
+  downloadDoc,
+  formatSpacing
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -613,7 +615,8 @@ export default class App extends Component {
       required: false,
       deleteLastOption: false,
       publicForm: {},
-      fullFile: ""
+      fullFile: "",
+      spacing: 2
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -666,6 +669,7 @@ export default class App extends Component {
     this.shareModal = shareModal.bind(this);
     this.hideModal = hideModal.bind(this);
     this.shareDoc = shareDoc.bind(this);
+    this.downloadDoc = downloadDoc.bind(this);
     // this.sharedInfoSingleDoc = sharedInfoSingleDoc.bind(this);
     this.sharedInfoSingleDocRTC = sharedInfoSingleDocRTC.bind(this);
     this.sharedInfoSingleDocStatic = sharedInfoSingleDocStatic.bind(this);
@@ -693,6 +697,7 @@ export default class App extends Component {
     this.stealthyChat = stealthyChat.bind(this);
     this.loadAvatars = loadAvatars.bind(this);
     this.noCollaboration = noCollaboration.bind(this);
+    this.formatSpacing = formatSpacing.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -1013,7 +1018,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required, publicForm, fullFile
+      optionValue, required, publicForm, fullFile, spacing
     } = this.state;
     return (
       <div>
@@ -1127,6 +1132,10 @@ export default class App extends Component {
                   toggleReadOnly={this.toggleReadOnly}
                   stopSharing={this.stopSharing}
                   stealthyChat={this.stealthyChat}
+                  downloadDoc={this.downloadDoc}
+                  handleaddItem={this.handleaddItem}
+                  formatSpacing={this.formatSpacing}
+                  spacing={spacing}
                   teamDoc={teamDoc}
                   loadingIndicator={loadingIndicator}
                   userRole={userRole}

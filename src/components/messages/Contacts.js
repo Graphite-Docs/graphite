@@ -144,7 +144,7 @@ export default class Contacts extends Component {
             {
               manualResults !== {} ?
               <div key={this.props.newContact} className={showFirstLink}>
-              <a className="contact-add" onClick={() => this.props.handleAddContact(manualResults)}>
+              <a className="contact-add" onClick={() => this.props.handleAddContact(newContact)}>
                 <li className="collection-item avatar">
                   <img src={searchImg} alt="avatar" className="circle" />
                   <span className="title">{manualResults.name}</span>

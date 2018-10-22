@@ -63,11 +63,9 @@ export function handleaddItem() {
   objectTwo.tags = [];
   objectTwo.sharedWith = [];
 
-  this.setState({ value: [...this.state.value, object] });
-  this.setState({ filteredValue: [...this.state.filteredValue, object] });
-  this.setState({ singleDoc: objectTwo });
-  this.setState({ tempDocId: object.id });
-  setTimeout(this.saveNewFile, 500);
+  this.setState({ value: [...this.state.value, object], filteredValue: [...this.state.filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
+    this.saveNewFile();
+  });
 }
 
 export function filterList(event){
@@ -97,8 +95,10 @@ export function saveNewSingleDoc() {
   const fullFile = '/documents/' + file + '.json'
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
-      if(!window.location.href.includes('google')) {
+      if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/')) {
         this.setState({ redirect: true });
+      } else if(window.location.href.includes('documents/doc/')) {
+        window.open(window.location.origin + '/documents/doc/' + this.state.tempDocId, '_blank');
       } else {
         window.Materialize.toast(this.state.title + " added!", 4000);
       }

@@ -30,7 +30,6 @@ export function addNewContact() {
 }
 
 export function handleAddContact(props) {
-  console.log(props);
   const object = {};
   lookupProfile(props, "https://core.blockstack.org/v1/names")
     .then((profile) => {
@@ -49,31 +48,6 @@ export function handleAddContact(props) {
     .catch((error) => {
       console.log(error)
     })
-  // object.contact = props;
-  // props.profile.image ? object.img = props.profile.image[0].contentUrl : object.img = avatarFallbackImage;
-  // object.name = props.profile.name;
-  // object.dateAdded = getMonthDayYear();
-  // object.types = [];
-  // object.fileType = "contacts";
-  // let link = 'https://core.blockstack.org/v1/names/' + props;
-  // axios
-  //   .get(
-  //     link
-  //   )
-  //   .then(res => {
-  //     if(res.data.zonefile.indexOf('https://blockstack.s3.amazonaws.com/') >= 0){
-  //       window.Materialize.toast(object.contact + " is a legacy Blockstack ID and cannot access Graphite.", 3000);
-  //     } else {
-  //       console.log(res);
-  //       // this.setState({ showResults: "hide", loading: "", show: "hide", confirmAdd: false })
-  //       // this.setState({ contacts: [...this.state.contacts, object], add: false });
-  //       // this.setState({ filteredContacts: this.state.contacts });
-  //       // setTimeout(this.saveNewContactsFile, 500);
-  //     }
-  //   })
-  //   .catch(error => {
-  //     console.log(error);
-  //   });
 }
 
 export function saveNewContactsFile() {

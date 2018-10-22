@@ -2143,6 +2143,86 @@ button:active, button:focus {
 
 /* Quill Editor */
 
+.cm-e-menu {
+  background-color: #282828;
+  position: fixed;
+  top: 55px;
+  z-index: 1000;
+  color: #fff;
+  font-weight: 200;
+  width: 100%;
+}
+.cm-e-menu ul {
+	margin: 0; padding: 0;
+}
+.cm-e-menu li {
+	position: relative;
+	white-space: nowrap;
+	cursor: pointer;
+	text-transform: capitalize !important;
+	list-style: none;
+
+	-webkit-transition: background-color ease-in 300ms;
+	-moz-transition: background-color ease-in 300ms;
+	-ms-transition: background-color ease-in 300ms;
+	-o-transition: background-color ease-in 300ms;
+	transition: background-color ease-in 300ms;
+}
+
+.cm-e-menu .submenu li:hover {
+	background-color: #eee;
+}
+.cm-e-menu ul li.topmenu {
+	display: inline-table;
+	padding: .3em 1em;
+}
+.cm-e-menu .topmenu ul {
+	display:none;
+	position: absolute;
+	background-color: #fff;
+}
+
+.topmenu a {
+  color: #fff!important;
+}
+
+.submenu li a {
+  color: #000!important;
+}
+.cm-e-menu li:hover > ul {
+	display: table;
+}
+.cm-e-menu ul.submenu {
+	top: 100%; left: 0;
+	padding-top: .5em;
+	padding-bottom: .5em;
+}
+.cm-e-menu ul.submenu .submenu {
+	top: -.5em; left: 100%;
+	font-size: 1em
+}
+.cm-e-menu ul.submenu li {
+	padding: .2em 1.5em;
+	font-size: .9rem;
+}
+
+.submenu {
+  box-shadow: 0 0 10px black;
+}
+
+.cm-e-menu li.divider-menu:hover {
+	cursor: default;
+  background: #fff;
+}
+
+.ql-editor {
+  margin-top: 200px;
+}
+
+.edit-title {
+  font-size: 30px!important;
+  font-weight: 200!important;
+}
 
 /* Font families begin */
 
@@ -2946,13 +3026,12 @@ input:focus {
     -webkit-box-sizing: border-box;
     box-sizing: border-box;
     font-family: inherit;
-    top: 0;
     z-index: 980;
     width: 100%;
     background: #fff;
     height: auto;
     position: fixed;
-    top: 64px;
+    top: 80px;
     left: 0;
     padding-left: 20px;
     padding-bottom: 15px;
@@ -3250,7 +3329,7 @@ blockquote {
     font-family: inherit;
     /* padding: 8px; */
     position: fixed;
-    top: 56px;
+    top: 80px;
     z-index: 999;
     width: 100%;
     /* right: 150px; */
@@ -3793,6 +3872,14 @@ nav .brand-logo.left {
 
   .card-stacked a {
     margin-top: 25px;
+  }
+
+  .cm-e-menu {
+    display: none;
+  }
+
+  .ql-editor {
+    margin-top: 45px;
   }
 
   .doc-card, .doc-margin {
