@@ -6,12 +6,19 @@ import {
   redirectToSignIn,
   loadUserData,
   signUserOut,
+  // listFiles
   // generateAndStoreTransitKey,
   // makeAuthRequest,
   // redirectToSignInWithAuthRequest
 } from "blockstack";
 
 export default class AppPage extends Component {
+
+  componentDidMount() {
+    // listFiles((res) => {
+    //   console.log(res);
+    // })
+  }
 
   handleSignIn(e) {
     e.preventDefault();

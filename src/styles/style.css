@@ -1950,6 +1950,10 @@ td, th {
   border-bottom: 1px solid #C4C4C4;
 }
 
+.profile-card {
+  padding: 5px;
+}
+
 .sender h6, .receiver h6 {
   margin-top: 25px;
 }

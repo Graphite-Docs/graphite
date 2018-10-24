@@ -198,6 +198,7 @@ export default class SingleDoc extends Component {
               className="edit-title"
               placeholder="Give it a title"
               type="text"
+              value=""
               onChange={this.props.handleTitleChange}
             />
             :
@@ -336,7 +337,7 @@ export default class SingleDoc extends Component {
                 {
                   (docLoaded === true) ?
                   <QuillEditorPublic
-                    roomId={idToLoad.toString()} //this needs to be a string!
+                    roomId={typeof idToLoad === 'string' || idToLoad instanceof String ? idToLoad : idToLoad.toString()} //this needs to be a string!
                     docLoaded={docLoaded} //this is set by getFile
                     value={content}
                     onChange={this.props.handleChange}

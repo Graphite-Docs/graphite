@@ -21,7 +21,7 @@ export default class SharedVault extends Component {
         </div>
 
         <div className="container">
-
+        <ul className="collection">
         {contacts.slice(0).reverse().map(contact => {
           let imageLink;
           let name;
@@ -36,9 +36,8 @@ export default class SharedVault extends Component {
           } else {
             name = "";
           }
-
             return (
-              <ul className="collection">
+
                 <li key={contact.contact} className="collection-item avatar">
                   <Link to={'/vault/shared/'+ contact.contact}>
                     <img src={imageLink} alt="Profile" className="circle" />
@@ -46,10 +45,11 @@ export default class SharedVault extends Component {
                     <p>{name}</p>
                   </Link>
                 </li>
-              </ul>
+
             )
           })
         }
+        </ul>
         </div>
       </div>
     );

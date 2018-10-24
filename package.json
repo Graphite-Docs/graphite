@@ -27,7 +27,7 @@
     "babel-loader": "7.1.2",
     "babel-preset-react-app": "^3.1.2",
     "babel-runtime": "6.26.0",
-    "blockstack": "^18.0.4",
+    "blockstack": "^18.1.0",
     "blockstack-large-storage": "0.0.2",
     "bower": "^1.8.2",
     "case-sensitive-paths-webpack-plugin": "2.1.1",

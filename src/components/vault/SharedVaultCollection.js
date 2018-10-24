@@ -44,7 +44,7 @@ export default class SharedVaultCollection extends Component {
 
               return(
                 <tr key={file.id}>
-                  <td><Link to={'/vault/single/shared/' + file.id}>{file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name}</Link></td>
+                  <td><Link to={'/vault/single/shared/' + window.location.href.split('shared/')[1] + '/' + file.id}>{file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name}</Link></td>
                   <td>{this.props.user}</td>
                   <td>{file.uploaded}</td>
                 </tr>

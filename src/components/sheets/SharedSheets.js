@@ -5,7 +5,8 @@ import {
   Person,
   getFile,
   putFile,
-  lookupProfile
+  lookupProfile,
+  signUserOut
 } from 'blockstack';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
@@ -92,6 +93,11 @@ export default class SharedSheets extends Component {
     this.setState({
       person: new Person(loadUserData().profile),
     });
+  }
+
+  handleSignOut(e) {
+    e.preventDefault();
+    signUserOut(window.location.origin);
   }
 
   handleaddItem() {

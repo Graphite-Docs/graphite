@@ -1,139 +1,75 @@
 import React, { Component } from 'react';
+import Header from './Header';
 import {
-  isSignInPending,
-  loadUserData,
-  Person,
-  getFile,
+  loadUserData
 } from 'blockstack';
-import {Bar} from 'react-chartjs-2';
-import {Line} from 'react-chartjs-2';
 
-const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+// const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Profile extends Component {
-  constructor(props) {
-  	super(props);
 
-  	this.state = {
-  	  person: {
-  	  	name() {
-          return 'Anonymous';
-        },
-  	  	avatarUrl() {
-  	  	  return avatarFallbackImage;
-  	  	},
-  	  },
-      value: []
-  	};
-  }
-
-  componentWillMount() {
-    this.setState({
-      person: new Person(loadUserData().profile),
-    });
-    getFile("documents.json", {decrypt: true})
-     .then((fileContents) => {
-        this.setState({ value: JSON.parse(fileContents || '{}').value })
-     })
-      .catch(error => {
-        console.log(error);
-      });
+  componentDidMount() {
+    window.$('.modal').modal();
+    this.props.loadProfile();
   }
 
   render() {
-    const value = this.state.value;
-    const words = value.reduce(function(prevVal, elem) {
-      return prevVal + elem.words;
-    }, 0);
-    const docArray = value.map(function(doc) {
-      return doc.title;
-    })
-    const wordsArray = value.map(function(doc) {
-      return doc.words;
-    })
-    const dateArray = value.map(function(doc) {
-      return doc.updated;
-    })
-    const data = {
-      labels: docArray,
-      datasets: [
-        {
-          label: 'Word Count',
-          backgroundColor: 'rgba(136,148,237,0.2)',
-          borderColor: 'rgba(136,148,237,1)',
-          borderWidth: 1,
-          hoverBackgroundColor: 'rgba(136,148,237,0.2)',
-          hoverBorderColor: 'rgba(136,148,237,1)',
-          data: wordsArray
-        }
-      ]
-    };
-
-    const lineData = {
-      labels: dateArray,
-      datasets: [
-        {
-          label: 'Words',
-          fill: false,
-          lineTension: 0.1,
-          backgroundColor: 'rgba(75,192,192,0.4)',
-          borderColor: 'rgba(75,192,192,1)',
-          borderCapStyle: 'butt',
-          borderDash: [],
-          borderDashOffset: 0.0,
-          borderJoinStyle: 'miter',
-          pointBorderColor: 'rgba(75,192,192,1)',
-          pointBackgroundColor: '#fff',
-          pointBorderWidth: 1,
-          pointHoverRadius: 5,
-          pointHoverBackgroundColor: 'rgba(75,192,192,1)',
-          pointHoverBorderColor: 'rgba(220,220,220,1)',
-          pointHoverBorderWidth: 2,
-          pointRadius: 1,
-          pointHitRadius: 10,
-          data: wordsArray
-        }
-      ]
-    };
-
-    const { person } = this.state;
-    console.log(words);
     return (
-      !isSignInPending() ?
-      <div className="container" id="section-2">
-      <div className="center-align">
-        <h3>Hello, <span id="heading-name">{ person.name() ? person.name() : 'Nameless Person' }</span>!</h3>
-        <h4>Check out your stats</h4>
-        <div className="row">
-          <div className="col s12 m6">
-            <div className="profile-stats hoverable card">
-              <p className="stats">{words}</p>
-              <h5 className="muted">Total Words Written</h5>
+      <div>
+        <Header />
+        <div className="container">
+          <h3 className="center-align">Profile</h3>
+          <p className="note center-align">Any updates made here are public</p>
+          <div className="row">
+            <div className="col s12 m12 l6">
+              <div className="card medium center-align profile-card">
+                <h4>Basic Info</h4>
+                <h5>Name</h5>
+                <p>{loadUserData().profile.name ? loadUserData().profile.name : "Anonymous"}</p>
+                <h5>Username</h5>
+                <p>{loadUserData().username}</p>
+                <h5>Identity Address</h5>
+                <p>{loadUserData().identityAddress}</p>
+                <h5>Decentralized Identifier</h5>
+                <p>{loadUserData().decentralizedID}</p>
+              </div>
             </div>
-          </div>
-          <div className="col s12 m6">
-            <div className="profile-stats hoverable card">
-              <p className="stats">{docArray.length}</p>
-              <h5 className="muted">Total Documents Created</h5>
+            <div className="col s12 m12 l6">
+              <div className="card medium center-align profile-card">
+                <h4>Settings</h4>
+                <h5>Email Notifications <span className="note"><a href="#emailInfo" className="modal-trigger"><i className="material-icons">info_outline</i></a></span></h5>
+                <p>When someone shares files with you</p>
+                <div className="switch">
+                  <label>
+                    No
+                    <input type="checkbox" name="emailOK" checked={this.props.emailOK} onChange={this.props.handleEmailSetting} />
+                    <span className="lever"></span>
+                    Yes
+                  </label>
+                </div>
+                <h5>Email (required for notifications)</h5>
+                <p className="container"><input type='text' placeholder='sally@email.com' value={this.props.profileEmail} onChange={this.props.handleProfileEmail} /></p>
+                <div>
+                  <button className="btn" onClick={this.props.saveProfile}>Save</button>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="col s12">
-            <div className="profile-stats hoverable card">
-              <h5 className="muted">Words Per Document</h5>
-              <Bar
-                data={data}
-              />
+            {/*email info modal*/}
+            <div id="emailInfo" className="modal">
+              <div className="modal-content">
+                <h4>Email Notifications</h4>
+                <p>By adding your email address here, you are exposing that email in a publicly accessible file, stored in your Gaia storage hub.
+                The email will never be used for anything other than sending a notification that a new file has been shared, but if you are not comfortable with your
+                email address being discoverable, do not opt into this and do not enter your email address.</p>
+              </div>
+              <div className="modal-footer">
+                <a className="modal-action modal-close waves-effect waves-green btn-flat">Got it</a>
+              </div>
             </div>
-          </div>
-          <div className="col s12">
-            <div className="profile-stats hoverable card">
-            <h5 className="muted">Words By Date</h5>
-              <Line data={lineData} />
-            </div>
+            {/*end email info modal */}
           </div>
         </div>
       </div>
-      </div> : null
     );
   }
 }

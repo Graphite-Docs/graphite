@@ -73,9 +73,10 @@ getOther() {
   let fileID = loadUserData().username;
   let fileString = 'sharedsheets.json'
   let file = fileID.slice(0, -3) + fileString;
+  const user = window.location.href.split('shared/')[1].split('/')[0];
   const directory = '/shared/' + file;
-  const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  console.log(this.state.user);
+  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  console.log(user);
   getFile(directory, options)
   .then((fileContents) => {
     let privateKey = loadUserData().appPrivateKey;
@@ -84,7 +85,7 @@ getOther() {
     console.log("loaded");
     let allSheets = this.state.shareFile;
     // let sheets = allSheets.shareFile;
-    const thisSheet = allSheets.find((sheet) => { return sheet.id.toString() === this.props.match.params.id}); //this is comparing strings
+    const thisSheet = allSheets.find((sheet) => { return sheet.id.toString() === window.location.href.split('shared/')[1].split('/')[1]}); //this is comparing strings
     let index = thisSheet && thisSheet.id;
     console.log(index);
     function findObjectIndex(sheet) {

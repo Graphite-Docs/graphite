@@ -381,6 +381,12 @@ import {
   loadPublicForm,
   postFormResponses
 } from './helpers/publicForms';
+import {
+  handleEmailSetting,
+  handleProfileEmail,
+  saveProfile,
+  loadProfile
+} from './helpers/profile';
 import work from 'webworkify-webpack';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -616,7 +622,9 @@ export default class App extends Component {
       deleteLastOption: false,
       publicForm: {},
       fullFile: "",
-      spacing: 2
+      spacing: 2,
+      emailOK: false,
+      profileEmail: ""
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -938,6 +946,11 @@ export default class App extends Component {
     this.deleteForm = deleteForm.bind(this);
     this.finalDelete = finalDelete.bind(this);
 
+    //Profile
+    this.handleEmailSetting = handleEmailSetting.bind(this);
+    this.handleProfileEmail = handleProfileEmail.bind(this);
+    this.saveProfile = saveProfile.bind(this);
+    this.loadProfile = loadProfile.bind(this);
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
     // isUserSignedIn() ? this.loadAccountPlan() : loadUserData();
@@ -1018,7 +1031,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required, publicForm, fullFile, spacing
+      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail
     } = this.state;
     return (
       <div>
@@ -1211,7 +1224,16 @@ export default class App extends Component {
               <Route exact path="/documents/sent/:id" component={SentCollection} />
               <Route exact path="/documents/single/shared/:id" component={SingleSharedDoc} />
               <Route exact path="/admin-docs" component={Admin} />
-              <Route exact path="/profile" component={Profile} />
+              <Route exact path="/profile" render={(props) =>
+                <Profile {...props}
+                    handleEmailSetting={this.handleEmailSetting}
+                    handleProfileEmail={this.handleProfileEmail}
+                    saveProfile={this.saveProfile}
+                    loadProfile={this.loadProfile}
+                    emailOK={emailOK}
+                    profileEmail={profileEmail}
+                  />
+              }/>
               <Route exact path="/shared-docs" component={SharedDocs} />
 
               <Route exact path="/sheets" component={MainSheets} />
@@ -1219,7 +1241,7 @@ export default class App extends Component {
               <Route exact path="/sheets/sheet/delete/:id" component={DeleteSheet} />
               <Route exact path="/sheets/shared/:id" component={SharedSheetsCollection} />
               <Route exact path="/sheets/sent/:id" component={SentSheetsCollection} />
-              <Route exact path="/sheets/single/shared/:id" component={SingleSharedSheet} />
+              <Route exact path="/sheets/single/shared/:id/:id" component={SingleSharedSheet} />
               <Route exact path="/testsheet" component={TestSheet} />
               <Route exact path="/shared-sheets" component={SharedSheets} />
               <Route exact path="/contacts" render={(location, match, props) =>
@@ -1395,7 +1417,7 @@ export default class App extends Component {
                   shareFileIndex={shareFileIndex}
                 />
               }/>
-              <Route exact path="/vault/single/shared/:id" render={(location, match, props) =>
+              <Route exact path="/vault/single/shared/:id/:id" render={(location, match, props) =>
                 <SingleSharedFile {...props}
                   loadSingleSharedVault={this.loadSingleSharedVault}
                   onDocumentComplete={this.onDocumentComplete}

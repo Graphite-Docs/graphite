@@ -104,28 +104,16 @@ export function loadSingleSharedVault() {
      let fileString = 'sharedvault.json'
      let file = fileID.slice(0, -3) + fileString;
      const directory = '/shared/' + file;
-     const options = { username: this.state.user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+     const user = window.location.href.split('shared/')[1].split('/')[0];
+     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
      const privateKey = loadUserData().appPrivateKey;
      getFile(directory, options)
       .then((fileContents) => {
-        lookupProfile(this.state.user, "https://core.blockstack.org/v1/names")
-          .then((profile) => {
-            let image = profile.image;
-            console.log(profile);
-            if(profile.image){
-              this.setState({img: image[0].contentUrl})
-            } else {
-              this.setState({ img: avatarFallbackImage })
-            }
-          })
-          .catch((error) => {
-            console.log('could not resolve profile')
-          })
          this.setState({ shareFileIndex: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
          console.log("loaded");
          let wholeFile = this.state.shareFileIndex;
          console.log(wholeFile)
-         const thisFile = wholeFile.find((file) => {return file.id.toString() === this.props.match.params.id}); //this is comparing strings
+         const thisFile = wholeFile.find((file) => {return file.id.toString() === window.location.href.split('shared/')[1].split('/')[1]}); //this is comparing strings
          let index = thisFile && thisFile.id;
          console.log(index);
          function findObjectIndex(file) {

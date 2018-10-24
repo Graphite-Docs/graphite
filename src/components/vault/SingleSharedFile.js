@@ -64,7 +64,7 @@ export default class SingleSharedFile extends Component {
       display: "none"
     };
     let pagination = null;
-    if (this.state.pages) {
+    if (pages) {
       pagination = this.renderPagination(page, pages);
     }
 

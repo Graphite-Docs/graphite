@@ -136,7 +136,7 @@ export default class SharedSheetsCollection extends Component {
 
               return(
                 <tr key={sheet.id}>
-                  <td><Link to={'/sheets/single/shared/'+ sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></td>
+                  <td><Link to={'/sheets/single/shared/'+ window.location.href.split('shared/')[1] + '/' + sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></td>
                   <td>{this.state.user}</td>
                   <td>{sheet.shared}</td>
                 </tr>
