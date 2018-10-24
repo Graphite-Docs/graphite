@@ -243,9 +243,7 @@ import {
   saveDocFileTwo
 } from './helpers/deleteDoc';
 import {
-  dataLoad,
-  postToDB,
-  loadAnalytics
+  analyticsRun
 } from './helpers/analytics';
 import {
   loadFilesCollection,
@@ -624,7 +622,8 @@ export default class App extends Component {
       fullFile: "",
       spacing: 2,
       emailOK: false,
-      profileEmail: ""
+      profileEmail: "",
+      countFilesDone: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -817,9 +816,7 @@ export default class App extends Component {
     this.postToLog = postToLog.bind(this);
 
     //Analytics
-    this.dataLoad = dataLoad.bind(this);
-    this.postToDB = postToDB.bind(this);
-    this.loadAnalytics = loadAnalytics.bind(this);
+    this.analyticsRun = analyticsRun.bind(this);
 
     //Vault
     this.loadFilesCollection = loadFilesCollection.bind(this);

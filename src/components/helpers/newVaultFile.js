@@ -8,6 +8,7 @@ import XLSX from 'xlsx';
 const str2ab = require('string-to-arraybuffer');
 
 export function handleVaultDrop(files) {
+  this.analyticsRun('vault');
   var file = files[0]
   const reader = new FileReader();
   reader.onload = (event) => {

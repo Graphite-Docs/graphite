@@ -35,6 +35,13 @@ export function loadIntegrations() {
       }
     })
     .then(() => {
+      if(!this.state.countFilesDone) {
+        this.setState({countFilesDone: true}, () => {
+          this.analyticsRun('main');
+        })
+      }
+    })
+    .then(() => {
       this.loadAccountPlan()
     })
     .then(() => {

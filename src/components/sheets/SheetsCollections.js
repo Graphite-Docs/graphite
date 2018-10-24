@@ -9,6 +9,9 @@ import {
   signUserOut,
   handlePendingSignIn,
 } from 'blockstack';
+import {
+  analyticsRun
+} from '../helpers/analytics';
 import Header from '../Header';
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
@@ -112,6 +115,7 @@ export default class SheetsCollections extends Component {
   }
 
   componentWillMount() {
+    this.analyticsRun = analyticsRun.bind(this);
     if (isSignInPending()) {
       handlePendingSignIn().then(userData => {
         window.location = window.location.origin;
@@ -272,6 +276,7 @@ migrationComplete() {
   }
 
   handleaddItem() {
+    this.analyticsRun('sheets');
     const rando = Date.now();
     const object = {};
     object.title = "Untitled";

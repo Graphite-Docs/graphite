@@ -122,7 +122,7 @@ export function  sharedFilesInfo() {
             if(window.location.href.includes('/vault')) {
               object.subject = 'New Graphite Vault File Shared by ' + loadUserData().username;
               object.link = window.location.origin + '/vault/single/shared/' + loadUserData().username + '/' + this.state.filesSelected[0];
-              object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + "has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
+              object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
               axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
                 .then((res) => {
                   console.log(res);

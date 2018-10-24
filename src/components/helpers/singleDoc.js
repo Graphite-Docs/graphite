@@ -278,7 +278,7 @@ export function sharedInfoSingleDocRTC(props){
             if(window.location.href.includes('/documents')) {
               object.subject = 'New Graphite document shared by ' + loadUserData().username;
               object.link = window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1];
-              object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + "has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
+              object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
               axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
                 .then((res) => {
                   console.log(res);
@@ -321,7 +321,7 @@ export function sharedInfoSingleDocStatic(props){
               if(window.location.href.includes('/documents')) {
                 object.subject = 'New Graphite document shared by ' + loadUserData().username;
                 object.link = window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1];
-                object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + "has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
+                object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
                 axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
                   .then((res) => {
                     console.log(res);
@@ -469,6 +469,7 @@ export function handleBack() {
 }
 
 export function handleAutoAdd() {
+  this.analyticsRun('documents');
   const object = {};
   object.title = this.state.title;
   object.content = lzjs.compress(this.state.content);
@@ -657,7 +658,7 @@ export function downloadDoc(props) {
     var content = '<!DOCTYPE html>' + this.state.content;
     var converted = htmlDocx.asBlob(content);
     var blob = new Blob([converted], {type: "application/msword"});
-    FileSaver.saveAs(blob, "helloworld.docx");
+    FileSaver.saveAs(blob, this.state.title + '.docx');
   } else if(props === "rtf") {
     console.log("rtf")
   } else if(props === 'pdf') {
