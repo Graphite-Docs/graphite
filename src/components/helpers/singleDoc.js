@@ -407,6 +407,8 @@ export function shareDoc() {
   putFile(directory, encryptedData, {encrypt: false})
   .then(() => {
     window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+    window.$('#contactsModal').modal('close');
+    window.$('#encryptedModal').modal('close');
   })
   .catch(e => {
     console.log(e);
