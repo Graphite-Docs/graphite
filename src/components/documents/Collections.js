@@ -268,7 +268,7 @@ export default class Collections extends Component {
               this.props.activeIndicator === true ?
                 <ul className="pagination action-items">
                   <li><a className="modal-trigger" href="#shareModal">Share</a></li>
-                  <li><a className="modal-trigger" href="#tagModal" onClick={this.props.loadSingleTags}>Tag</a></li>
+                  <li><a className="modal-trigger" onClick={this.props.loadSingleTags}>Tag</a></li>
                   {graphitePro && docs ? <li className="right"><a className="tooltipped" data-position="bottom" data-delay="50" data-tooltip="Toggle Graphite Pro team documents" onClick={() => this.setState({ teamView: !this.state.teamView})}><i className="material-icons teamDocs">people</i></a></li> : <li className="hide"></li>}
                 </ul>
              :
@@ -419,8 +419,8 @@ export default class Collections extends Component {
                     <h4>Tags</h4>
                     <p>Add a new tag or remove an existing tag.</p>
                     <div className="row">
-                      <div className="col s9">
-                        <input type="text" value={this.props.tag} onChange={this.props.setTags} onKeyPress={this.props.handleKeyPress} />
+                      <div className="col s9 input-field">
+                        <input type="text" className="tag-input" placeholder="Add a tag" value={this.props.tag} onChange={this.props.setTags} onKeyPress={this.props.handleKeyPress} />
                       </div>
                       <div className="col s3">
                         <a onClick={this.props.addTagManual}><i className="material-icons">check</i></a>

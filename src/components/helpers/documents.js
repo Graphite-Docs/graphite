@@ -37,14 +37,16 @@ export function setTags(e) {
 
 export function handleKeyPress(e) {
   if (e.key === 'Enter') {
-    this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]});
-    this.setState({ tag: "" });
+    this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+      this.setState({ tag: "" });
+    });
   }
 }
 
 export function addTagManual() {
-  this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]});
-  this.setState({ tag: "" });
+  this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+    this.setState({ tag: "" });
+  });
 }
 
 export function handleaddItem() {
@@ -386,8 +388,6 @@ export function sendFile() {
 }
 
 export function loadSingleTags() {
-
-  this.setState({tagDownload: false});
   const thisFile = this.state.docsSelected[0];
   const fullFile = '/documents/' + thisFile + '.json';
 
@@ -401,7 +401,8 @@ export function loadSingleTags() {
          updated: JSON.parse(fileContents || '{}').updated,
          sharedWith: JSON.parse(fileContents || '{}').sharedWith,
          singleDocTags: JSON.parse(fileContents || '{}').tags,
-         content: JSON.parse(fileContents || '{}').content
+         content: JSON.parse(fileContents || '{}').content,
+         lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
       });
     } else {
       this.setState({
@@ -411,13 +412,14 @@ export function loadSingleTags() {
         updated: JSON.parse(fileContents || '{}').updated,
         sharedWith: JSON.parse(fileContents || '{}').sharedWith,
         singleDocTags: [],
-        content: JSON.parse(fileContents || '{}').content
+        content: JSON.parse(fileContents || '{}').content,
+        lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
      });
     }
    })
    .then(() => {
-     this.setState({ tagModal: ""});
-     setTimeout(this.getCollectionTags, 300);
+     window.$('#tagModal').modal('open');
+     this.getCollectionTags();
    })
     .catch(error => {
       console.log(error);
@@ -457,12 +459,15 @@ export function saveNewTags() {
   objectTwo.id = this.state.id;
   objectTwo.updated = this.state.updated;
   objectTwo.sharedWith = this.state.sharedWith;
-  objectTwo.tags = this.state.singleDocTags
+  objectTwo.tags = this.state.singleDocTags;
+  objectTwo.lastUpdate = this.state.lastUpdate;
   const index = this.state.index;
   const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
-  this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object });
-  setTimeout(this.saveFullCollectionTags, 500);
-  window.$('#tagModal').modal('close');
+  this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object }, () => {
+    // setTimeout(this.saveFullCollectionTags, 500);
+    this.saveFullCollectionTags();
+  });
+
 }
 
 export function saveFullCollectionTags() {
@@ -483,6 +488,7 @@ export function saveSingleDocTags() {
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved tags");
+      window.$('#tagModal').modal('close');
       this.setState({ tagModal: "hide", loadingTwo: "hide" });
       this.loadCollection();
     })

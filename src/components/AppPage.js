@@ -266,7 +266,6 @@ export default class AppPage extends Component {
                     <tbody>
                     {
                       recentFiles.map(merge => {
-                        console.log(merge)
                         var link;
                         var name;
                         var date;
