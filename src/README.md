@@ -1,8 +1,7 @@
-import axios from 'axios';
-import {
-  putFile
-} from 'blockstack';
+## Graphite's Analytics
+In addition to total user counts, as obtained by indexing all Blockstack profiles that have Graphite as an app listed in the profile, Graphite also tracks total files created. No user data whatsoever is collected. In an effort to be transparent, this small write-up shows how the data is collected. It's a simple function that utilizes Webtask to post data to a Graphite Dropbox file. Here is the function:
 
+```
 export function analyticsRun(props) {
   if(!window.location.origin.includes('localhost') && !window.location.origin.includes('serene')) {
     let countObject = {};
@@ -41,3 +40,6 @@ export function analyticsRun(props) {
       })
   }
 }
+```
+
+The Dropbox file is public and can be viewed here: [https://www.dropbox.com/s/bke6dnmj5ix8931/counts.txt?dl=0](https://www.dropbox.com/s/bke6dnmj5ix8931/counts.txt?dl=0)
