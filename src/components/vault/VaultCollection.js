@@ -200,8 +200,8 @@ export default class VaultCollection extends Component {
             currentFiles.slice(indexOfFirstFile, indexOfLastFile).map(file => {
               var tags;
               var collabs;
-              if(file.tags) {
-                tags = Array.prototype.slice.call(file.tags);
+              if(file.singleFileTags) {
+                tags = Array.prototype.slice.call(file.singleFileTags);
               } else {
                 tags = "";
               }
@@ -297,7 +297,7 @@ export default class VaultCollection extends Component {
                   <p>Add a new tag or remove an existing tag.</p>
                   <div className="row">
                     <div className="col s9">
-                      <input type="text" value={tag} onChange={this.props.setVaultTags} onKeyPress={this.props.handleVaultKeyPress} />
+                      <input className="tag-input"type="text" value={tag} onChange={this.props.setVaultTags} onKeyPress={this.props.handleVaultKeyPress} />
                     </div>
                     <div className="col s3">
                       <a onClick={this.props.addVaultTagManual}><i className="material-icons">check</i></a>

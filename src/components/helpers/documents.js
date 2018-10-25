@@ -500,13 +500,15 @@ export function saveSingleDocTags() {
 
 export function deleteTag(props) {
   let tags = this.state.singleDocTags;
-  const thisTag = tags.find((tag) => { return tag.id === props});
-  let tagIndex = thisTag && thisTag.id;
+  const thisTag = tags.find((tag) => { return tag === props});
+  let tagIndex = thisTag;
   function findObjectIndex(tag) {
-      return tag.id === tagIndex; //this is comparing numbers
+      return tag === tagIndex; //this is comparing numbers
   }
-  this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
-  this.setState({singleDocTags: update(this.state.singleDocTags, {$splice: [[this.state.tagIndex, 1]]})});
+  this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
+    this.setState({singleDocTags: update(this.state.singleDocTags, {$splice: [[this.state.tagIndex, 1]]})});
+  });
+
 }
 
 export function collabFilter(props) {

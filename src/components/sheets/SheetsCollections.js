@@ -648,15 +648,15 @@ migrationComplete() {
     this.setState({ deleteState: false });
 
     let tags = this.state.singleSheetTags;
-    const thisTag = tags.find((tag) => { return tag.id === this.state.selectedTagId}); //this is comparing strings
-    let index = thisTag && thisTag.id;
+    const thisTag = tags.find((tag) => { return tag === this.state.selectedTagId}); //this is comparing strings
+    let index = thisTag
     function findObjectIndex(tag) {
-        return tag.id === index; //this is comparing numbers
+        return tag === index; //this is comparing numbers
     }
-    this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
-    // setTimeout(this.finalDelete, 300);
-    const updatedTags = update(this.state.singleSheetTags, {$splice: [[this.state.tagIndex, 1]]});
-    this.setState({singleSheetTags: updatedTags });
+    this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
+      const updatedTags = update(this.state.singleSheetTags, {$splice: [[this.state.tagIndex, 1]]});
+      this.setState({singleSheetTags: updatedTags });
+    });
   }
 
   setTags(e) {
@@ -962,7 +962,7 @@ migrationComplete() {
                 <p>Add a new tag or remove an existing tag.</p>
                 <div className="row">
                   <div className="col s9">
-                    <input type="text" value={this.state.tag} onChange={this.setTags} onKeyPress={this.handleKeyPress} />
+                    <input className="tag-input" type="text" value={this.state.tag} onChange={this.setTags} onKeyPress={this.handleKeyPress} />
                   </div>
                   <div className="col s3">
                     <a onClick={this.addTagManual}><i className="material-icons">check</i></a>

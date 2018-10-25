@@ -286,22 +286,20 @@ export function sendVaultFile() {
 }
 
 export function loadSingleVaultTags() {
-  console.log("boomtown usa")
   this.setState({tagDownload: false});
   const thisFile = this.state.filesSelected[0];
-  console.log(thisFile);
   const fullFile = thisFile + '.json';
   getFile(fullFile, {decrypt: true})
    .then((fileContents) => {
-     console.log(JSON.parse(fileContents || '{}'));
-     if(JSON.parse(fileContents || '{}')) {
+     console.log(JSON.parse(fileContents || '{}'))
+     if(JSON.parse(fileContents || '{}').singleFileTags) {
        this.setState({
          shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
          name: JSON.parse(fileContents || '{}').name,
          id: JSON.parse(fileContents || '{}').id,
          lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
          sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith || [],
-         singleFileTags: JSON.parse(fileContents || '{}').tags,
+         singleFileTags: JSON.parse(fileContents || '{}').singleFileTags,
          file: JSON.parse(fileContents || "{}").file,
          size: JSON.parse(fileContents || "{}").size,
          link: JSON.parse(fileContents || "{}").link,
@@ -325,7 +323,6 @@ export function loadSingleVaultTags() {
     }
    })
    .then(() => {
-     this.setState({ tagModal: ""});
      setTimeout(this.getVaultCollectionTags, 300);
    })
     .catch(error => {
@@ -358,14 +355,17 @@ export function setVaultTags(e) {
 
 export function handleVaultKeyPress(e) {
     if (e.key === 'Enter') {
-      this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]});
-      this.setState({ tag: "" });
+      this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]}, () => {
+        this.setState({ tag: "" });
+      });
+
     }
   }
 
 export function addVaultTagManual() {
-    this.setState({ singleFileTags: [...this.state.singleDocTags, this.state.tag]});
-    this.setState({ tag: "" });
+    this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]}, () => {
+      this.setState({ tag: "" });
+    });
   }
 
 export function saveNewVaultTags() {
@@ -379,7 +379,7 @@ export function saveNewVaultTags() {
     object.size = this.state.size;
     object.link = this.state.link;
     object.type = this.state.type;
-    object.tags = this.state.singleFileTags;
+    object.singleFileTags = this.state.singleFileTags;
     object.uploaded = this.state.uploaded;
     const index = this.state.index;
     const objectTwo = {};
@@ -388,7 +388,7 @@ export function saveNewVaultTags() {
     objectTwo.id = this.state.id;
     objectTwo.lastModifiedDate = this.state.lastModifiedDate;
     objectTwo.sharedWith = this.state.sharedWithSingle;
-    objectTwo.tags = this.state.singleFileTags;
+    objectTwo.singleFileTags = this.state.singleFileTags;
     objectTwo.type = this.state.type;
     objectTwo.uploaded = this.state.uploaded;
     const updatedFile = update(this.state.files, {$splice: [[index, 1, objectTwo]]});
@@ -459,15 +459,15 @@ export function deleteVaultTag(props) {
     this.setState({ deleteState: false, selectedTagId: props });
 
     let tags = this.state.singleFileTags;
-    const thisTag = tags.find((tag) => { return tag.id === props}); //this is comparing strings
-    let index = thisTag && thisTag.id;
+    const thisTag = tags.find((tag) => { return tag === props}); //this is comparing strings
+    let index = thisTag;
     function findObjectIndex(tag) {
-        return tag.id === index; //this is comparing numbers
+        return tag === index; //this is comparing numbers
     }
-    this.setState({ tagIndex: tags.findIndex(findObjectIndex) });
-    // setTimeout(this.finalDelete, 300);
-    const updatedTags = update(this.state.singleFileTags, {$splice: [[this.state.tagIndex, 1]]});
-    this.setState({singleFileTags: updatedTags });
+    this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
+      const updatedTags = update(this.state.singleFileTags, {$splice: [[this.state.tagIndex, 1]]});
+      this.setState({singleFileTags: updatedTags });
+    });
   }
 
   export function collabVaultFilter(props) {
