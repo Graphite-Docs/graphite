@@ -70,7 +70,6 @@ export function loadAccountPlan() {
   getFile('accountdetails.json', {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
-        console.log(JSON.parse(fileContents))
         this.setState({
           accountInfo: JSON.parse(fileContents),
           accountOwner: JSON.parse(fileContents || '{}').accountOwner,
@@ -145,7 +144,6 @@ export function loadAccountPlan() {
 }
 
 export function loadMainAccount() {
-  console.log("Loading Main Account");
   const privateKey = this.state.privateKey.data;
   const options = { username: this.state.accountOwner, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
     getFile('accountdetailsMain.json', options)

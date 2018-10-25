@@ -4,11 +4,10 @@ import {
 } from 'blockstack';
 
 export function analyticsRun(props) {
-  if(!window.location.origin.includes('localhost')) {
+  if(!window.location.origin.includes('localhost') && !window.location.origin.includes('serene')) {
     let countObject = {};
     axios.get('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getCount')
       .then((res) => {
-        console.log(JSON.parse(res.data))
         let counts = JSON.parse(res.data);
         if(props === 'documents') {
           countObject.docs = counts.docs + 1;
@@ -35,14 +34,12 @@ export function analyticsRun(props) {
         axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/postCount', JSON.stringify(countObject))
       })
       .then(() => {
-        console.log(this.state.countFilesDone);
         if(this.state.countFilesDone) {
-          console.log("updating here");
           putFile('documentscollection.json', JSON.stringify(this.state), {encrypt: true})
         }
       })
       .catch(error => {
         console.log(error);
-      })  
+      })
   }
 }

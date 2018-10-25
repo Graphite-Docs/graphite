@@ -9,10 +9,8 @@ const { encryptECIES } = require('blockstack/lib/encryption');
 const { decryptECIES } = require('blockstack/lib/encryption');
 
 export function loadInviteStatus() {
-    console.log("Loading Invite Status")
     getFile('inviteStatus.json', {decrypt: true})
       .then((fileContents) => {
-        console.log(JSON.parse(fileContents));
         if(fileContents) {
           this.setState({
             inviteAccepted: JSON.parse(fileContents || '{}').inviteAccepted,
@@ -165,15 +163,11 @@ export function sendAcceptEmail() {
 }
 
 export function loadBasicInviteInfo() {
-  console.log("Loading Basic Info");
-  console.log(getPublicKeyFromPrivate(loadUserData().appPrivateKey));
   let privateKey = loadUserData().appPrivateKey;
-  console.log(privateKey)
   let file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + '0.json';
   const options = { username: this.state.inviter, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile(file, options)
     .then((fileContents) => {
-      console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
       this.setState({
         accountInfo: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))),
         accountOwner: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).accountOwner,

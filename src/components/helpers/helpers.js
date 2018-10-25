@@ -6,7 +6,6 @@ export function loadDocs() {
   this.setState({ loadingIndicator: true });
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
-     console.log(JSON.parse(fileContents));
      if(JSON.parse(fileContents || '{}').value) {
        this.setState({ value: JSON.parse(fileContents || '{}').value, countFilesDone: JSON.parse(fileContents || '{}').countFilesDone });
        this.setState({filteredValue: JSON.parse(fileContents || '{}').value})
