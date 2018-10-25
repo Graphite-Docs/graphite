@@ -273,6 +273,7 @@ export default class SingleSheet extends Component {
       objectTwo.sharedWith = object.sharedWith;
       objectTwo.fileType = "sheets";
       objectTwo.form = this.state.singleSheet.form;
+      objectTwo.lastUpdate = Date.now();
       const index = this.state.index;
       const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});  // array.splice(start, deleteCount, item1)
       this.setState({sheets: updatedSheet, singleSheet: object, autoSave: "Saving..." }, () => {

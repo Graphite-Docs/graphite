@@ -505,6 +505,7 @@ export function handleAutoAdd() {
   }
   objectTwo.updated = getMonthDayYear();
   objectTwo.words = wordcount(this.state.content);
+  objectTwo.lastUpdate = Date.now();
   objectTwo.sharedWith = this.state.sharedWith;
   objectTwo.rtc = this.state.rtc;
   objectTwo.singleDocIsPublic = this.state.singleDocIsPublic; //true or false...

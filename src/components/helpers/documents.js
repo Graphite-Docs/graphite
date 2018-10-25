@@ -9,7 +9,7 @@ import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
-
+const uuidv4 = require('uuid/v4');
 
 const { encryptECIES } = require('blockstack/lib/encryption');
 
@@ -48,9 +48,10 @@ export function addTagManual() {
 }
 
 export function handleaddItem() {
-  const rando = Date.now();
+  const rando = uuidv4();
   const object = {};
   object.title = "Untitled";
+  object.lastUpdate = Date.now();
   object.id = rando;
   object.updated = getMonthDayYear();
   object.tags = [];

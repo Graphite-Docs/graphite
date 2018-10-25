@@ -5,13 +5,17 @@ import {
   isUserSignedIn,
   redirectToSignIn,
   loadUserData,
-  signUserOut
+  signUserOut,
+  // listFiles
 } from "blockstack";
 
 export default class AppPage extends Component {
 
   componentDidMount() {
-
+    // listFiles((files) => {
+    //  console.log(files);
+    //  return true;
+    // })
   }
 
   handleSignIn(e) {
@@ -40,24 +44,11 @@ export default class AppPage extends Component {
 
   render() {
     const { value, sheets, files, contacts, graphitePro } = this.props;
-    let merged = sheets.concat(value).concat(files);
-    let recentFiles;
-    let mergedRecent = merged.map(merge => {
-      let date;
-      if(merge.updated) {
-        date = merge.updated;
-      } else {
-        date = merge.uploaded;
-      }
-      let d = new Date();
-      d.setDate(d.getDate()-14);
-      if(new Date(date) > d) {
-        return merge;
-      }
-      return merge;
-    })
-    // recentFiles = mergedRecent.filter(function(n){ return n !== undefined })
-    recentFiles = mergedRecent.sort(function(a, b){return a.id - b.id}).slice(0,15);
+    let merged = sheets.reverse().concat(value.reverse()).concat(files.reverse());
+    let d = new Date();
+    d.setDate(d.getDate()-14);
+    let mergedRecent = merged.filter(merge => merge.lastUpdate > d);
+    let recentFiles = mergedRecent.sort(function(a, b){return a.lastUpdated - b.lastUpdated}).slice(0,15);
 
     //Docs variables
 
@@ -275,6 +266,7 @@ export default class AppPage extends Component {
                     <tbody>
                     {
                       recentFiles.map(merge => {
+                        console.log(merge)
                         var link;
                         var name;
                         var date;

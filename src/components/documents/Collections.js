@@ -50,7 +50,7 @@ export default class Collections extends Component {
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
     // const currentDocs = filteredValue.slice(0).reverse();
-    const currentDocs = filteredValue.sort(function(a,b){return new Date(parseInt(b.id,10)) - new Date(parseInt(a.id,10))});
+    const currentDocs = filteredValue.sort(function(a,b){return new Date(b.updated) - new Date(a.updated)});
     let shared = currentDocs.map(a => a.sharedWith);
     let newShared = shared.filter(function(n){ return n !== undefined });
     let mergedShared = [].concat.apply([], newShared);

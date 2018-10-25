@@ -28,6 +28,7 @@ export function handleVaultDrop(files) {
      const objectTwo = {};
      objectTwo.uploaded = getMonthDayYear();
      objectTwo.id = object.id;
+     objectTwo.lastUpdate = Date.now();
      objectTwo.name = object.name;
      objectTwo.type = object.type;
      objectTwo.tags = this.state.tags;

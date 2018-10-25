@@ -291,6 +291,7 @@ migrationComplete() {
     objectTwo.created = object.created
     objectTwo.sharedWith = [];
     objectTwo.tags = [];
+    objectTwo.lastUpdate = Date.now();
     this.setState({
       sheets: [...this.state.sheets, objectTwo],
       filteredSheets: [...this.state.filteredSheets, objectTwo],
