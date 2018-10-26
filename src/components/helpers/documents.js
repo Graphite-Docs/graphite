@@ -52,19 +52,37 @@ export function addTagManual() {
 export function handleaddItem() {
   const rando = uuidv4();
   const object = {};
-  object.title = "Untitled";
-  object.lastUpdate = Date.now();
-  object.id = rando;
-  object.updated = getMonthDayYear();
-  object.tags = [];
-  object.sharedWith = [];
   const objectTwo = {}
-  objectTwo.title = object.title;
-  objectTwo.id = object.id;
-  objectTwo.updated = object.created;
-  objectTwo.content = "";
-  objectTwo.tags = [];
-  objectTwo.sharedWith = [];
+  if(window.location.href.includes('vault')) {
+    this.setState({ loading: "", })
+    object.title = this.state.name;
+    object.lastUpdate = Date.now();
+    object.id = rando;
+    object.updated = getMonthDayYear();
+    object.tags = [];
+    object.sharedWith = [];
+
+    objectTwo.title = object.title;
+    objectTwo.id = object.id;
+    objectTwo.updated = object.created;
+    objectTwo.content = this.state.content;
+    objectTwo.tags = [];
+    objectTwo.sharedWith = [];
+  } else {
+    object.title = "Untitled";
+    object.lastUpdate = Date.now();
+    object.id = rando;
+    object.updated = getMonthDayYear();
+    object.tags = [];
+    object.sharedWith = [];
+
+    objectTwo.title = object.title;
+    objectTwo.id = object.id;
+    objectTwo.updated = object.created;
+    objectTwo.content = "";
+    objectTwo.tags = [];
+    objectTwo.sharedWith = [];
+  }
 
   this.setState({ value: [...this.state.value, object], filteredValue: [...this.state.filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
     this.saveNewFile();
@@ -98,7 +116,9 @@ export function saveNewSingleDoc() {
   const fullFile = '/documents/' + file + '.json'
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
-      if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/')) {
+      if(window.location.href.includes('vault')) {
+        window.location.replace('/documents');
+      } else if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/')) {
         this.setState({ redirect: true });
       } else if(window.location.href.includes('documents/doc/')) {
         window.open(window.location.origin + '/documents/doc/' + this.state.tempDocId, '_blank');

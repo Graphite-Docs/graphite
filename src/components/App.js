@@ -1375,6 +1375,7 @@ export default class App extends Component {
                   downloadPDF={this.downloadPDF}
                   handleToDocs={this.handleToDocs}
                   handleaddSheet={this.handleaddSheet}
+                  handleaddItem={this.handleaddItem}
                   page={page}
                   type={type}
                   loading={loading}
