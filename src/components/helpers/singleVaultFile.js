@@ -167,7 +167,7 @@ export function handleAddToDocsTwo() {
 }
 
 export function handleaddSheet() {
-    getFile("spread.json", { decrypt: true })
+    getFile("sheetscollection.json", { decrypt: true })
       .then(fileContents => {
         this.setState({ sheets: JSON.parse(fileContents || "{}").sheets });
         console.log("Sheets added");
@@ -183,17 +183,32 @@ export function handleaddSheet() {
 export function handleaddTwoSheet() {
   this.setState({ show: "hide" });
   this.setState({ hideButton: "hide", loading: "" });
+  this.analyticsRun('sheets');
   const rando = Date.now();
   const object = {};
   object.title = this.state.name;
   object.content = this.state.grid;
   object.id = rando;
   object.created = getMonthDayYear();
-
-  this.setState({ sheets: [...this.state.sheets, object], singleSheet: object });
-  this.setState({ loading: "" });
-  console.log("adding new sheet");
-  setTimeout(this.saveToSheets, 500);
+  object.sharedWith = [];
+  object.tags = [];
+  const objectTwo = {};
+  objectTwo.title = object.title;
+  objectTwo.id = object.id;
+  objectTwo.created = object.created
+  objectTwo.sharedWith = [];
+  objectTwo.tags = [];
+  objectTwo.lastUpdate = Date.now();
+  this.setState({
+    sheets: [...this.state.sheets, objectTwo],
+    filteredSheets: [...this.state.filteredSheets, objectTwo],
+    tempSheetId: object.id,
+    singleSheet: object,
+    loading: ""
+  }, () => {
+    console.log("adding new sheet");
+    this.saveToSheets();
+  })
 }
 
 export function saveToDocs() {
@@ -223,10 +238,10 @@ export function saveToDocsTwo() {
   }
 
 export function saveToSheets() {
-    putFile("spread.json", JSON.stringify(this.state), { encrypt: true })
+    putFile("sheetscollection.json", JSON.stringify(this.state), { encrypt: true })
       .then(() => {
         console.log("Saved!");
-        window.location.replace("/sheets");
+        this.saveToSheetsTwo();
       })
       .catch(e => {
         console.log("e");
@@ -235,12 +250,12 @@ export function saveToSheets() {
   }
 
 export function saveToSheetsTwo() {
-  const file = Date.now();
+  const file = this.state.tempSheetId;
   const fullFile = '/sheets/' + file + '.json'
   putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      // this.setState({ redirect: true });
+      window.location.replace("/sheets");
     })
     .catch(e => {
       console.log("e");
