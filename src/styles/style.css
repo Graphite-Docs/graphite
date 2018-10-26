@@ -3160,7 +3160,7 @@ polygon.ql-stroke {
 .spreadsheet-tools {
   position: fixed;
   top: 64px;
-  z-index: 999;
+  z-index: 995;
   height: 50px;
 }
 

@@ -92,8 +92,8 @@ export default class SingleSheet extends Component {
       comments: true,
       licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
       onAfterChange: (changes, source) => {if(changes){
-        clearTimeout(this.timeout);
-        this.timeout = setTimeout(this.handleAddItem, 3000)
+        clearTimeout(this.changeTimeout);
+        this.changeTimeout = setTimeout(this.handleAddItem, 3000)
       }},
       onAfterSelection: (r, c, r2, c2, preventScrolling) => {
          preventScrolling.value = true;
@@ -543,7 +543,6 @@ print(){
 }
 
 captureCellData = (props) => {
-  console.log(props);
   let data;
   this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1]) == null ? data = "" : data = this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1]);
   this.setState({ dataLocation: props, selectedData: data}, () => {
@@ -765,7 +764,6 @@ renderView() {
 
               {/* Dropdown menu content */}
               <ul id="singleSheet" className="dropdown-content single-doc-dropdown-content">
-                <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
                 <li className="divider"></li>
                 <li><a onClick={this.print}>Print</a></li>
                 <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
@@ -842,15 +840,10 @@ renderView() {
 
               {/* Dropdown menu content */}
               <ul id="singleSheet" className="dropdown-content single-doc-dropdown-content">
-                <li><a onClick={() => this.setState({ remoteStorage: !remoteStorage })}>Remote Storage</a></li>
                 <li className="divider"></li>
                 <li><a onClick={this.print}>Print</a></li>
                 <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
                 {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
-                <li className="divider"></li>
-                <li><a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
-                {this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>}
-                {this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>}
               </ul>
             {/* End dropdown menu content */}
             {/*Remote storae widget*/}
