@@ -8,8 +8,12 @@ export default class SingleRTCDoc extends Component {
   }
 
   renderView() {
-    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave, hideButton } = this.props;
+    let toolbar = window.document.getElementsByClassName('ql-toolbar');
+    if(toolbar[0]) {
+      toolbar[0].style.top = "63px";
+    }
 
+    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave, hideButton } = this.props;
     return(
     <div>
     <div className="navbar-fixed toolbar">
@@ -51,23 +55,6 @@ export default class SingleRTCDoc extends Component {
           {
             (rtc === true) ?
             <div>
-            {
-              title === "Untitled" ?
-              <textarea
-                className="doc-title materialize-textarea"
-                placeholder="Give it a title"
-                type="text"
-                onChange={this.props.handleTitleChange}
-              />
-              :
-              <textarea
-                className="doc-title materialize-textarea"
-                placeholder="Title"
-                type="text"
-                value={title}
-                onChange={this.props.handleTitleChange}
-              />
-            }
               {
                 (docLoaded === true) ?
                 <QuillEditorPublic

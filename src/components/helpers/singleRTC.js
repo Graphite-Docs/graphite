@@ -43,10 +43,16 @@ export function loadSharedRTC() {
 export function findDoc() {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
+    console.log()
     this.setState({ value: JSON.parse(fileContents || '{}').value })
     let value = this.state.value;
     const thisDoc = value.find((doc) => {
-      return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
+      if(!isNaN(parseFloat(doc.id)) && isFinite(doc.id)) {
+        return doc.id === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
+      } else {
+        return doc.id === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
+      }
+
     });
     if(thisDoc) {
       console.log("found it")

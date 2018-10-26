@@ -220,7 +220,7 @@ export default class VaultCollection extends Component {
                 <td>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</td>
                 <td>{file.uploaded}</td>
                 <td>{tags === "" ? tags : tags.join(', ')}</td>
-                <td>{file.type.split('/')[1]}</td>
+                <td>{file.type.includes('openxml') ? file.type.split('/')[1].split('ml.')[1] : file.type.split('/')[1]}</td>
                 <td><Link to={'/vault/delete/'+ file.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
               </tr>
             );

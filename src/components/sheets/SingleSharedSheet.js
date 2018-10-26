@@ -187,7 +187,7 @@ getOther() {
     </div>
     <div className="">
 
-        <div className="spreadsheet-table">
+        <div className="spreadsheet-table1">
         <HotTable root="hot" settings={{
           data: this.state.grid,
           stretchH: 'all',
