@@ -437,7 +437,8 @@ export function filterVaultNow() {
       this.setState({ filteredVault: tagFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedDate !== "") {
-      let dateFilter = files.filter(x => x.updated.includes(this.state.selectedDate));
+      let definedDate = files.filter((val) => { return val.uploaded !==undefined });
+      let dateFilter = definedDate.filter(x => x.uploaded.includes(this.state.selectedDate));
       this.setState({ filteredVault: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedCollab !== "") {

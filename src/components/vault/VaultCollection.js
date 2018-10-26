@@ -200,6 +200,7 @@ export default class VaultCollection extends Component {
             currentFiles.slice(indexOfFirstFile, indexOfLastFile).map(file => {
               var tags;
               var collabs;
+              var uniqueCollaborators;
               if(file.singleFileTags) {
                 tags = Array.prototype.slice.call(file.singleFileTags);
               } else {
@@ -207,14 +208,16 @@ export default class VaultCollection extends Component {
               }
               if(file.sharedWith) {
                 collabs = Array.prototype.slice.call(file.sharedWith);
+                uniqueCollaborators = collabs.filter((thing, index, self) => self.findIndex(t => t === thing) === index);
               } else {
                 collabs = "";
+                uniqueCollaborators = "";
               }
             return(
               <tr key={file.id}>
                 <td><input type="checkbox" checked={checked} value={file.id} id={file.id} onChange={this.props.handleVaultCheckbox} /><label htmlFor={file.id}></label></td>
                 <td><Link to={'/vault/' + file.id}>{file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name}</Link></td>
-                <td>{collabs === "" ? collabs : collabs.join(', ')}</td>
+                <td>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</td>
                 <td>{file.uploaded}</td>
                 <td>{tags === "" ? tags : tags.join(', ')}</td>
                 <td>{file.type.split('/')[1]}</td>

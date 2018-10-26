@@ -493,8 +493,6 @@ export function handleAutoAdd() {
   object.fileType = "documents";
   object.spacing = this.state.spacing;
   console.log(object)
-  this.setState({singleDoc: object}); //NOTE: this saves singleDoc...
-  this.setState({autoSave: "Saving..."});
   const objectTwo = {};
   objectTwo.title = this.state.title;
   this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
@@ -515,8 +513,10 @@ export function handleAutoAdd() {
   objectTwo.fileType = "documents";
   const index = this.state.index;
   const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo
-  this.setState({value: updatedDoc});
-  this.autoSave();
+  this.setState({value: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+    this.autoSave();
+  });
+
 }
 
 export function autoSave() {
@@ -674,10 +674,14 @@ export function downloadDoc(props) {
 export function formatSpacing(props) {
   if(props === 'single') {
     document.getElementsByClassName('ql-editor')[0].style.lineHeight = 1;
-    this.setState({spacing: 1})
+    this.setState({spacing: 1}, () => {
+      this.handleAutoAdd();
+    })
   } else if(props === 'double') {
     document.getElementsByClassName('ql-editor')[0].style.lineHeight = 2;
-    this.setState({spacing: 2})
+    this.setState({spacing: 2}, () => {
+      this.handleAutoAdd();
+    })
   }
 
 }

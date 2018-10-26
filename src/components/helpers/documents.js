@@ -527,7 +527,8 @@ export function tagFilter(props) {
 
 export function dateFilter(props) {
   let value = this.state.value;
-  let dateFilter = value.filter(x => x.updated.includes(props));
+  let definedDate = value.filter((val) => { return val.updated !==undefined });
+  let dateFilter = definedDate.filter(x => x.updated.includes(props));
   this.setState({ filteredValue: dateFilter, appliedFilter: true});
   window.$('.button-collapse').sideNav('hide');
 }

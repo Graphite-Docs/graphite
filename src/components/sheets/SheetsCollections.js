@@ -688,12 +688,12 @@ migrationComplete() {
       this.setState({ filteredSheets: tagFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedDate !== "") {
-      let dateFilter = sheets.filter(x => x.updated.includes(this.state.selectedDate));
+      let definedDate = sheets.filter((val) => { return val.updated !==undefined });
+      let dateFilter = definedDate.filter(x => x.updated.includes(this.state.selectedDate));
       this.setState({ filteredSheets: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedCollab !== "") {
       let collaboratorFilter = sheets.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
-      // let collaboratorFilter = sheets.filter(x => x.sharedWith.includes(this.state.selectedCollab));
       this.setState({ filteredSheets: collaboratorFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     }
@@ -865,10 +865,13 @@ migrationComplete() {
         {
           currentSheets.slice(indexOfFirstSheet, indexOfLastSheet).map(sheet => {
             let collabs;
+            let uniqueCollaborators;
             if(sheet.sharedWith) {
               collabs = Array.prototype.slice.call(sheet.sharedWith);
+              uniqueCollaborators = collabs.filter((thing, index, self) => self.findIndex(t => t === thing) === index)
             } else {
               collabs = "";
+              uniqueCollaborators = "";
             }
             var tags;
 
@@ -881,7 +884,7 @@ migrationComplete() {
             <tr key={sheet.id}>
               <td><input type="checkbox" checked={this.state.checked} value={sheet.id} id={sheet.id} onChange={this.handleCheckbox} /><label htmlFor={sheet.id}></label></td>
               <td><Link to={'/sheets/sheet/'+ sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></td>
-              <td>{collabs === "" ? collabs : collabs.join(', ')}</td>
+              <td>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</td>
               <td>{sheet.updated}</td>
               <td>{tags === "" ? tags : tags.join(', ')}</td>
               <td><Link to={'/sheets/sheet/delete/'+ sheet.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
