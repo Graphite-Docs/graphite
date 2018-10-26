@@ -3,6 +3,7 @@ import React, { Component } from "react";
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import HotTable from "react-handsontable";
+import {CSVLink} from 'react-csv';
 
 
 export default class SingleVaultFile extends Component {
@@ -66,6 +67,12 @@ export default class SingleVaultFile extends Component {
     if (pages) {
       pagination = this.renderPagination(page, pages);
     }
+    let cells;
+    if(grid) {
+      cells = grid;
+    } else {
+      cells = [];
+    }
     return (
       <div>
         <div className="navbar-fixed toolbar">
@@ -111,12 +118,7 @@ export default class SingleVaultFile extends Component {
                   </li>
                 ) : type.includes("sheet")|| type.includes("csv") ? (
                   <li>
-                    <a
-                      onClick={this.props.downloadPDF}
-                      title={name}
-                    >
-                      <i className="material-icons">cloud_download</i>
-                    </a>
+                    <CSVLink data={cells} filename={name + '.csv'} ><i className="material-icons">cloud_download</i></CSVLink>
                   </li>
                 ) : (
                   <li />
@@ -276,7 +278,7 @@ export default class SingleVaultFile extends Component {
                   </div>
                 ) : type.includes("sheet") || type.includes("csv") ? (
                   <div>
-                    <div className="spreadsheet-table">
+                    <div className="spreadsheet-table1">
                       <HotTable
                         root="hot"
                         settings={{

@@ -516,7 +516,6 @@ export function handleAutoAdd() {
   this.setState({value: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
     this.autoSave();
   });
-
 }
 
 export function autoSave() {
