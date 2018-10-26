@@ -15,44 +15,42 @@ export default class SingleVaultFile extends Component {
 
   renderPagination(page, pages) {
     let previousButton = (
-      <li className="previous" onClick={this.props.handlePrevious}>
+      <div className="left-arrow" onClick={this.props.handlePrevious}>
         <a>
-          <i className="fa fa-arrow-left" /> Previous
+          <i className="medium material-icons">arrow_back</i>
         </a>
-      </li>
+      </div>
     );
     if (page === 1) {
       previousButton = (
-        <li className="previous disabled">
+        <div className="left-arrow disabled">
           <a>
-            <i className="fa fa-arrow-left" /> Previous
+            <i className="medium material-icons">arrow_back</i>
           </a>
-        </li>
+        </div>
       );
     }
     let nextButton = (
-      <li className="next" onClick={this.props.handleNext}>
+      <div className="right-arrow" onClick={this.props.handleNext}>
         <a>
-          Next <i className="fa fa-arrow-right" />
+          <i className="medium material-icons">arrow_forward</i>
         </a>
-      </li>
+      </div>
     );
     if (page === pages) {
       nextButton = (
-        <li className="next disabled">
+        <div className="right-arrow disabled">
           <a>
-            Next <i className="fa fa-arrow-right" />
+            <i className="medium material-icons">arrow_forward</i>
           </a>
-        </li>
+        </div>
       );
     }
     return (
-      <nav>
-        <ul className="pager">
-          {previousButton}
-          {nextButton}
-        </ul>
-      </nav>
+          <div>
+            {previousButton}
+            {nextButton}
+          </div>
     );
   }
 
@@ -227,11 +225,12 @@ export default class SingleVaultFile extends Component {
                         page={page}
                       />
                       {pagination}
-                      <link
+                      <a
                         id="dwnldLnk"
                         download={name}
+                        className="hide"
                         style={thisStyle}
-                      />
+                      >download</a>
                     </div>
                   </div>
                 ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (

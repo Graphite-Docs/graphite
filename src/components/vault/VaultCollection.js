@@ -140,8 +140,9 @@ export default class VaultCollection extends Component {
               <ul id='typeDrop' className='dropdown-content'>
               {
                 uniqueType.map(type => {
+                  console.log(type.split('/')[1].includes('ml.'))
                   return (
-                    <li className="filter-li" key={Math.random()}><a onClick={() => this.props.typeVaultFilter(type)}>{type.split('/')[1].toUpperCase()}</a></li>
+                    <li className="filter-li" key={Math.random()}><a onClick={() => this.props.typeVaultFilter(type)}>{type.split('/')[1].includes('ml.') ? type.split('/')[1].split('ml.')[1].toUpperCase() : type.split('/')[1].toUpperCase()}</a></li>
                   )
                 })
               }

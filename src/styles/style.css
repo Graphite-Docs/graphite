@@ -3145,6 +3145,18 @@ polygon.ql-stroke {
   margin-top: 64px;
 }
 
+.left-arrow {
+  position: fixed;
+  top: 100px;
+  left: 25px;
+}
+
+.right-arrow {
+  position: fixed;
+  top: 100px;
+  right: 25px;
+}
+
 .spreadsheet-tools {
   position: fixed;
   top: 64px;
@@ -3236,7 +3248,7 @@ td strong {
 }
 
 .single-file-div {
-  padding-top: 80px;
+  padding-top: 145px;
 }
 
 .contact-add {

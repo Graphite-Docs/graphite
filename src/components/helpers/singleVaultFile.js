@@ -119,10 +119,9 @@ export function handleNext() {
 }
 
 export function downloadPDF() {
-  console.log("it's working");
   var dlnk = document.getElementById("dwnldLnk");
   dlnk.href = this.state.link;
-
+  console.log(dlnk);
   dlnk.click();
 }
 
