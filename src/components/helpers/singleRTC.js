@@ -78,11 +78,17 @@ export function loadSingleRTC() {
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
     console.log(JSON.parse(fileContents))
+    if(JSON.parse(fileContents).compressed) {
+      this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content) })
+    } else {
+      this.setState({ content: JSON.parse(fileContents).content });
+    }
     this.setState({
       //NOTE: don't need author, not setting that state attribute...
       title: JSON.parse(fileContents || '{}').title,
-      content: JSON.parse(fileContents || '{}').content,
+      // content: JSON.parse(fileContents || '{}').content,
       tags: JSON.parse(fileContents || '{}').tags,
+      compressed: JSON.parse(fileContents).compressed,
       idToLoad: JSON.parse(fileContents || '{}').id,
       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
       docLoaded: true,
@@ -97,7 +103,6 @@ export function loadSingleRTC() {
 }
 
 export function handleAddRTC() {
-  console.warn(this.state.teamDoc);
   // const object = {};
   // object.title = this.state.title;
   // object.id = this.state.tempDocId;

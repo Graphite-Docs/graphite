@@ -70,14 +70,14 @@ export function initialDocLoad() {
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
     console.log(JSON.parse(fileContents));
-    if(JSON.parse(fileContents).compressed === true) {
-      this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content)})
-    } else {
-      this.setState({ content: JSON.parse(fileContents).content});
-    }
+    // if(JSON.parse(fileContents).compressed === true) {
+    //   this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content)})
+    // } else {
+    //   this.setState({ content: JSON.parse(fileContents).content});
+    // }
     this.setState({
       title: JSON.parse(fileContents || '{}').title,
-      // content: JSON.parse(fileContents || '{}').content,
+      content: lzjs.decompress(JSON.parse(fileContents).content),
       tags: JSON.parse(fileContents || '{}').tags,
       idToLoad: JSON.parse(fileContents || '{}').id,
       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...

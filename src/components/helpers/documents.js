@@ -9,7 +9,7 @@ import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
-const uuidv4 = require('uuid/v4');
+// const uuidv4 = require('uuid/v4');
 
 const { encryptECIES } = require('blockstack/lib/encryption');
 
@@ -50,7 +50,7 @@ export function addTagManual() {
 }
 
 export function handleaddItem() {
-  const rando = uuidv4();
+  const rando = Date.now();
   const object = {};
   const objectTwo = {}
   if(window.location.href.includes('vault')) {
@@ -92,8 +92,11 @@ export function handleaddItem() {
 export function filterList(event){
   var updatedList = this.state.value;
   updatedList = updatedList.filter(function(item){
-    return item.title.toLowerCase().search(
-      event.target.value.toLowerCase()) !== -1;
+    if(item.title !== undefined) {
+      return item.title.toLowerCase().search(
+        event.target.value.toLowerCase()) !== -1;
+    }
+    return null;
   });
   this.setState({filteredValue: updatedList});
 }
