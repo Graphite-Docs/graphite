@@ -40,7 +40,7 @@ export default class VaultCollection extends Component {
       if(window.$.inArray(el, uniqueCollabs) === -1) uniqueCollabs.push(el);
     });
 
-    let tags = currentFiles.map(a => a.tags);
+    let tags = currentFiles.map(a => a.singleFileTags);
     let newTags = tags.filter(function(n){ return n !== undefined });
     let mergedTags = [].concat.apply([], newTags);
     let uniqueTags = [];

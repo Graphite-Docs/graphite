@@ -261,11 +261,12 @@ export default class SingleVaultFile extends Component {
                           }}
                         />
                       </div>
-                      <link
+                      <a
                         id="dwnldLnk"
                         download={name}
                         style={thisStyle}
-                      />
+                        className="hide"
+                      >Hide</a>
                     </div>
                   </div>
                 ) : type.includes("video") ? (

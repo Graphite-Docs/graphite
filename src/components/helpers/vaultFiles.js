@@ -432,7 +432,7 @@ export function applyVaultFilter() {
 export function filterVaultNow() {
     let files = this.state.files;
     if(this.state.selectedTag !== "") {
-      let tagFilter = files.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(this.state.selectedTag) : console.log("nada"));
+      let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(this.state.selectedTag) : console.log("nada"));
       // let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
       this.setState({ filteredVault: tagFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
