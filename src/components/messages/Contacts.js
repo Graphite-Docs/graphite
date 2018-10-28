@@ -319,7 +319,7 @@ export default class Contacts extends Component {
                   <p>Add a new contact type or remove an existing contact type.</p>
                   <div className="row">
                     <div className="col s9">
-                      <input type="text" value={this.props.type} onChange={this.props.setTypes} onKeyPress={this.props.handleContactsKeyPress} />
+                      <input className="tag-input" type="text" value={this.props.type} onChange={this.props.setTypes} onKeyPress={this.props.handleContactsKeyPress} />
                     </div>
                     <div className="col s3">
                       <a onClick={this.props.addTypeManual}><i className="material-icons">check</i></a>

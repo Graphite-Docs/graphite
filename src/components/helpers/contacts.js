@@ -267,14 +267,16 @@ export function deleteType(props) {
   this.setState({ deleteState: false });
 
   let types = this.state.types;
-  const thisType = types.find((type) => { return type.id === props});
-  let typeIndex = thisType && thisType.id;
+  const thisType = types.find((type) => { return type === props});
+  let typeIndex = thisType;
   function findObjectIndex(type) {
-      return type.id === typeIndex;
+      return type === typeIndex;
   }
-  this.setState({ typeIndex: types.findIndex(findObjectIndex) });
-  const updatedTypes = update(this.state.types, {$splice: [[this.state.typeIndex, 1]]});
-  this.setState({types: updatedTypes });
+  this.setState({ typeIndex: types.findIndex(findObjectIndex) }, () => {
+    const updatedTypes = update(this.state.types, {$splice: [[this.state.typeIndex, 1]]});
+    this.setState({types: updatedTypes });
+  });
+
 }
 
 export function applyContactsFilter() {
