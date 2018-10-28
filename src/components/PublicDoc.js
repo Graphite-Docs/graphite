@@ -16,7 +16,12 @@ export default class PublicDoc extends Component {
   render() {
     let toolbar = window.document.getElementsByClassName('ql-toolbar');
     if(toolbar[0]) {
-      toolbar[0].style.top = "63px";
+      if(this.props.readOnly) {
+        toolbar.style.display = "none";
+      } else {
+        toolbar[0].style.top = "63px";
+      }
+
     }
     return (
       <div>
