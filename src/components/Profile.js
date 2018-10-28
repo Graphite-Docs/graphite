@@ -48,7 +48,7 @@ export default class Profile extends Component {
                   </label>
                 </div>
                 <h5>Email (required for notifications)</h5>
-                <p className="container"><input type='text' placeholder='sally@email.com' value={this.props.profileEmail} onChange={this.props.handleProfileEmail} /></p>
+                <p className="container"><input className="tag-input" type='text' placeholder='sally@email.com' value={this.props.profileEmail} onChange={this.props.handleProfileEmail} /></p>
                 <div>
                   <button className="btn" onClick={this.props.saveProfile}>Save</button>
                 </div>
@@ -67,6 +67,10 @@ export default class Profile extends Component {
               </div>
             </div>
             {/*end email info modal */}
+
+            <div className="center-align">
+              <a className="btn" href="/explorer">Explore Your Files</a>
+            </div>
           </div>
         </div>
       </div>

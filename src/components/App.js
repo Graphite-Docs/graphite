@@ -44,6 +44,8 @@ import Calendar from './Calendar';
 import Forms from './forms/Forms';
 import SingleForm from './forms/SingleForm';
 import PublicForm from './forms/PublicForm';
+import Explorer from './Explorer';
+import SingleExplorerFile from './SingleExplorerFile';
 import ios from '../images/ios.png';
 import {
   savePubKey
@@ -1591,6 +1593,16 @@ export default class App extends Component {
                   value={value}
                   files={files}
                   contacts={contacts}
+                />
+              }/>
+              <Route exact path="/explorer" render={(location, match, props) =>
+                <Explorer {...props}
+
+                />
+              }/>
+              <Route path="/file-explorer" render={(location, match, props) =>
+                <SingleExplorerFile {...props}
+
                 />
               }/>
             </div>
