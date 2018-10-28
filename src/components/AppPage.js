@@ -11,7 +11,7 @@ import {
 export default class AppPage extends Component {
 
   componentDidMount() {
-    
+
   }
 
   handleSignIn(e) {
@@ -40,11 +40,9 @@ export default class AppPage extends Component {
 
   render() {
     const { value, sheets, files, contacts, graphitePro } = this.props;
-    let merged = sheets.reverse().concat(value.reverse()).concat(files.reverse());
-    let d = new Date();
-    d.setDate(d.getDate()-14);
-    let mergedRecent = merged.filter(merge => merge.lastUpdate > d);
-    let recentFiles = mergedRecent.sort(function(a, b){return a.lastUpdated - b.lastUpdated}).slice(0,15);
+    let merged = sheets.reverse().concat(value.reverse());
+    let recentWithDate = merged.filter(x => x.lastUpdate && x.updated);
+    let recentFiles = recentWithDate.sort(function(a, b){return a.lastUpdate - b.lastUpdate}).slice(0,15);
 
     //Docs variables
 
