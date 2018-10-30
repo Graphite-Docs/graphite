@@ -31,13 +31,13 @@ export function loadDocs() {
 export function loadSheets() {
   getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
-     if(fileContents) {
+     if(JSON.parse(fileContents).sheets) {
        this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
        this.setState({filteredSheets: this.state.sheets})
        this.setState({ loading: "hide" });
      } else {
        console.log("Nothing to see here");
-       this.setState({ loading: "hide" });
+       this.setState({ loading: "hide", sheets: [], filteredSheets: [] });
      }
    })
     .then(() => {

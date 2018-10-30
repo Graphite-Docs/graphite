@@ -317,7 +317,6 @@ migrationComplete() {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
       });
   }
 
