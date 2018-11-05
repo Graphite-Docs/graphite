@@ -1,5 +1,232 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat|Muli|Muli:200');
+
+/* Apply to all */
+
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: 'Montserrat', sans-serif!important;
+}
+
+p {
+  font-size: 1.25rem;
+}
+
+h1 {
+  font-size: 3rem!important;
+}
+
+h1, h2, h3, h4, button {
+  font-family: 'Muli', sans-serif!important;
+  font-weight: 200!important;
+}
+
+h5, h6 {
+  font-family: 'Muli', sans-serif!important;
+  text-transform: uppercase;
+}
+
+.hide {
+  display: none;
+}
+
+.loading-indicator {
+  width: 200px;
+  height: 200px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: #eee;
+  border-radius: 400px;
+  -webkit-clip-path: polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%);
+  clip-path: polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%);
+  animation: rotate 1s infinite linear;
+  transition: all .25s ease-in-out;
+  &:before {
+    z-index: 1;
+    content: '';
+    display: block;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 100%;
+    background: #eee;
+    left: 6%;
+    top: 1%;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Header */
+
+.header-menu .item {
+  color: #fff!important;
+  padding: 0!important;
+}
+
+.app-switcher i {
+  font-size: 1.5em!important;
+}
+
+.app-switcher .menu div a {
+  color: #282828!important;
+}
+
+.app-switcher .menu, .actions .menu {
+  left: -100px!important;
+}
+
+/* App Page */
+
+.appPageCard {
+  background: #eee!important;
+  border-radius: 0!important;
+  border: none!important;
+}
+
+/* Doc Page */
+
+.contact-search:hover {
+  cursor: pointer;
+}
+
+.teamButton:hover {
+  cursor: pointer;
+}
+
+/* Single Doc */
+
+.avatar-ul {
+  list-style-type: none;
+  padding: 0;
+  margin-left: -50px;
+}
+
+.avatar-li {
+  margin-top: 5px;
+  width: 35px;
+  height: 35px;
+}
+
+.hidden-span {
+  display: none;
+}
+
+.avatar-li:nth-child(2) { margin-left: -40px; }
+.avatar-li:nth-child(3) { margin-left: -50px; }
+.avatar-li:nth-child(4) { margin-left: -60px; }
+.avatar-li:nth-child(5) { margin-left: -70px; }
+
+.avatar-ul:hover .avatar-li:nth-child(2) {margin-left: -60px;}
+.avatar-ul:hover .avatar-li:nth-child(3) {margin-left: -80px;}
+.avatar-ul:hover .avatar-li:nth-child(4) {margin-left: -100px;}
+.avatar-ul:hover .avatar-li:nth-child(5) {margin-left: -120px;}
+
+.avatar-li:hover .hidden-span {display: block; position:fixed; top: 80px; padding-left: 5px; padding-right: 5px; background: #282828; color: #fff; border: 1px solid #282828; border-radius: 2px;}
+
+
+@media screen and (max-width: 800px) {
+  .avatar-ul:hover .avatar-li:nth-child(2) {margin-top: 25px; margin-left: -35px;}
+  .avatar-ul:hover .avatar-li:nth-child(3) {margin-top: 45px; margin-left: -35px;}
+  .avatar-ul:hover .avatar-li:nth-child(4) {margin-top: 65px; margin-left: -35px;}
+  .avatar-ul:hover .avatar-li:nth-child(5) {margin-top: 85px; margin-left: -35px;}
+}
+
+.cm-e-menu {
+  background-color: #282828;
+  position: fixed;
+  top: 55px;
+  z-index: 1000;
+  color: #fff;
+  font-weight: 200;
+  width: 100%;
+  margin-top: 15px;
+}
+.cm-e-menu ul {
+	margin: 0; padding: 0;
+}
+.cm-e-menu li {
+	position: relative;
+	white-space: nowrap;
+	cursor: pointer;
+	text-transform: capitalize !important;
+	list-style: none;
+
+	-webkit-transition: background-color ease-in 300ms;
+	-moz-transition: background-color ease-in 300ms;
+	-ms-transition: background-color ease-in 300ms;
+	-o-transition: background-color ease-in 300ms;
+	transition: background-color ease-in 300ms;
+}
+
+.cm-e-menu .submenu li:hover {
+	background-color: #eee;
+}
+.cm-e-menu ul li.topmenu {
+	display: inline-table;
+	padding: .3em 1em;
+}
+.cm-e-menu .topmenu ul {
+	display:none;
+	position: absolute;
+	background-color: #fff;
+}
+
+.topmenu a {
+  color: #fff!important;
+}
+
+.submenu li a {
+  color: #000!important;
+}
+.cm-e-menu li:hover > ul {
+	display: table;
+}
+.cm-e-menu ul.submenu {
+	top: 100%; left: 0;
+	padding-top: .5em;
+	padding-bottom: .5em;
+}
+.cm-e-menu ul.submenu .submenu {
+	top: -.5em; left: 100%;
+	font-size: 1em
+}
+.cm-e-menu ul.submenu li {
+	padding: .2em 1.5em;
+	font-size: .9rem;
+}
+
+.submenu {
+  border: 1px solid #eee;
+}
+
+.cm-e-menu li.divider-menu:hover {
+	cursor: default;
+  background: #fff;
+}
+
+
+.stealthylogo {
+  height: 30px;
+}
+
+.item-menu .item {
+  color: #fff!important;
+  padding: 10px!important;
+  font-family: 'Muli', sans-serif;
+}
+
+.item-menu {
+  position: fixed;
+  top: 0;
+  width: 100%;
 }

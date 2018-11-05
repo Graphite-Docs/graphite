@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import Header from './Header';
-import LoadingBar from './LoadingBar';
+import Loading from './Loading';
 import GDocs from './documents/GDocs';
 
 // const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -38,7 +38,7 @@ export default class OAUTH extends Component {
             /> :
             <div>
               {window.location.href.includes('gdocs') ? <h3>Fetching Google Docs</h3> : <h3>Saving Integration...</h3>}
-              <LoadingBar />
+              <Loading />
             </div>
           }
         </div>

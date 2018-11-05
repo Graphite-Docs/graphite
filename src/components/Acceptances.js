@@ -6,7 +6,7 @@ import {
   signUserOut,
   isUserSignedIn,
 } from 'blockstack';
-import LoadingBar from './LoadingBar';
+import Loading from './Loading';
 import Signin from './Signin';
 import Header from './Header';
 
@@ -44,7 +44,7 @@ export default class Acceptances extends Component {
             <div className="center-align">
 
               {loadingIndicator ?
-                <LoadingBar /> :
+                <Loading /> :
                 <div>
                   <h3>Confirm invite acceptance</h3>
                   <button onClick={this.props.confirmAcceptance} className="btn black">Confirm Invite Acceptance</button>

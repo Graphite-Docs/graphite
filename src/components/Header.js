@@ -8,6 +8,10 @@ import {
   Person,
   signUserOut,
 } from 'blockstack';
+import { Link } from 'react-router-dom';
+import logo from '../assets/images/whitelogo.svg';
+import logoSquare from '../assets/images/gIcon.png';
+import { Menu, Image, Icon, Dropdown } from 'semantic-ui-react'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Header extends Component {
@@ -24,6 +28,14 @@ export default class Header extends Component {
   	  	},
   	  },
   	};
+  }
+
+  componentWillMount() {
+    if (isSignInPending()) {
+      handlePendingSignIn().then((userData) => {
+        window.location = window.location.origin;
+      });
+    }
   }
 
   handleSignIn(e) {
@@ -43,69 +55,62 @@ export default class Header extends Component {
       // console.log('userData', userData);
 
       const person = new Person(userData.profile);
+      const trigger = (
+        <span>
+          <Image src={person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage} avatar style={{ width: "40px", height: "40px", marginRight: "15px" }} />
+        </span>
+      )
       return (
-
-        <div className="navbar-fixed toolbar">
-          <nav className="toolbar-nav">
-            <div className="nav-wrapper">
-              <a href="/" className="brand-logo left text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
-
-              <ul id="nav-mobile" className="right">
-                <ul id="dropdown1" className="dropdown-content">
-                  <li><a href="/profile">Profile</a></li>
-                  {
-                    window.location.pathname === '/documents' ? <li><a href="/shared-docs">Shared Files</a></li> :
-                    window.location.pathname === '/sheets' ? <li><a href="/shared-sheets">Shared Files</a></li> :
-                    window.location.pathname === '/vault' ? <li><a href="/shared-vault">Shared Files</a></li> :
-                    <li className="hide"></li>
-                  }
-                  <li><a href="/integrations">Integrations</a></li>
-                  <li><a href="/settings">Settings</a></li>
-                  <li><a href="/export">Export All Data</a></li>
-                  <li className="divider"></li>
-                  <li><a onClick={ this.handleSignOut }>Sign out</a></li>
-                </ul>
-                <ul id="dropdown2" className="dropdown-content">
-                  <li><a href="/documents"><img src="https://i.imgur.com/C71m2Zs.png" alt="documents-icon" className="dropdown-icon" /><br />Documents</a></li>
-                  <li><a href="/sheets"><img src="https://i.imgur.com/6jzdbhE.png" alt="sheets-icon" className="dropdown-icon-bigger" /><br />Sheets</a></li>
-                  <li><a href="/contacts"><img src="https://i.imgur.com/st3JArl.png" alt="contacts-icon" className="dropdown-icon" /><br />Contacts</a></li>
-                  <li><a href="/vault"><img src="https://i.imgur.com/9ZlABws.png" alt="vault-icon" className="dropdown-icon-file" /><br />Vault</a></li>
-                </ul>
-                  <li><a className="dropdown-button" href="#!" data-activates="dropdown2"><i className="material-icons apps">apps</i></a></li>
-                  <li><a className="dropdown-button" href="#!" data-activates="dropdown1"><img alt="dropdown1" src={ person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage } className="img-rounded avatar" id="avatar-image" /><i className="material-icons right">arrow_drop_down</i></a></li>
-              </ul>
-            </div>
-          </nav>
-          </div>
-
-
-
+        <Menu className='header-menu' style={{ borderRadius: "0", background: "#282828", border: "none" }}>
+          <Menu.Item>
+            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px" }} /></Link>
+          </Menu.Item>
+          <Menu.Item position="right">
+          <Dropdown icon='th' className="app-switcher" style={{ color: "#fff", marginRight: "15px" }}>
+            <Dropdown.Menu>
+              <Dropdown.Item><Link to={'/documents'}><Icon name='file alternate outline'/>Documents</Link></Dropdown.Item>
+              <Dropdown.Item><Link to={'/sheets'}><Icon name='table' />Sheet</Link></Dropdown.Item>
+              <Dropdown.Item><Link to={'/vault'}><Icon name='shield alternate' />Vault</Link></Dropdown.Item>
+              <Dropdown.Item><Link to={'/contacts'}><Icon name='address book outline' />Contacts</Link></Dropdown.Item>
+            </Dropdown.Menu>
+          </Dropdown>
+          <Dropdown trigger={trigger} icon={null} className="app-switcher">
+              <Dropdown.Menu>
+                {
+                  window.location.pathname === '/documents' ? <Dropdown.Item><Link to={'/shared-docs'}>Shared Docs</Link></Dropdown.Item> :
+                  window.location.pathname === '/sheets' ? <Dropdown.Item><Link to={'/shared-sheets'}>Shared Sheets</Link></Dropdown.Item> :
+                  window.location.pathname === '/vault' ? <Dropdown.Item><Link to={'/shared-vault'}>Shared Vault</Link></Dropdown.Item> :
+                  null
+                }
+                <Dropdown.Item><Link to={'/integrations'}>Integrations</Link></Dropdown.Item>
+                <Dropdown.Item><Link to={'/settings'}>Settings</Link></Dropdown.Item>
+                <Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item><a onClick={this.handleSignOut}>Sign Out</a></Dropdown.Item>
+              </Dropdown.Menu>
+          </Dropdown>
+          </Menu.Item>
+        </Menu>
+      );
+    } else if(!isUserSignedIn) {
+      return(
+        <Menu style={{ borderRadius: "0", background: "#282828", border: "none" }}>
+          <Menu.Item>
+            <Link to={'/'}><Image src={logo} style={{ maxHeight: "50px" }} /></Link>
+          </Menu.Item>
+          <Menu.Item position="right">
+            <a style={{ color: "#fff" }} href="https://graphitedocs.com/about" target="_blank" rel="noopener noreferrer">About</a>
+          </Menu.Item>
+        </Menu>
       );
     } else {
-      return(
-        <ul id="nav-mobile" className="right">
-          <li><a href="http://graphitedocs.com" target="_blank" rel="noopener noreferrer">About Graphite</a></li>
-        </ul>
-      );
+
     }
   }
 
   render() {
     return (
-      <nav>
-        <div className="nav-wrapper">
-          <a href="/" className="left brand-logo text-white">Graphite.<img className="pencil" src="https://i.imgur.com/2diRYIZ.png" alt="pencil" /></a>
-          {this.renderHeader()}
-        </div>
-      </nav>
+        <div>{this.renderHeader()}</div>
     );
-  }
-
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
-      });
-    }
   }
 }

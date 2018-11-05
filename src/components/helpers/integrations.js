@@ -42,7 +42,9 @@ export function loadIntegrations() {
       }
     })
     .then(() => {
-      this.loadAccountPlan()
+      this.setState({ loading: false}, () => {
+        this.loadAccountPlan()
+      })
     })
     .then(() => {
       if(window.location.href.includes("medium")) {

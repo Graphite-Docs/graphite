@@ -64,8 +64,6 @@ import {
 import {
   loadCollection,
   setTags,
-  handleKeyPress,
-  addTagManual,
   handleaddItem,
   filterList,
   saveNewFile,
@@ -86,7 +84,6 @@ import {
   saveFullCollectionTags,
   saveSingleDocTags,
   saveCollection,
-  deleteTag,
   collabFilter,
   tagFilter,
   dateFilter,
@@ -387,6 +384,12 @@ import {
   saveProfile,
   loadProfile
 } from './helpers/profile';
+import {
+  handleTagChange,
+  handleKeyPress,
+  addTagManual,
+  deleteTag
+} from './helpers/shared';
 import work from 'webworkify-webpack';
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -416,7 +419,7 @@ export default class App extends Component {
       sharedWith: [],
       tempDocId: "",
       redirect: false,
-      loading: "",
+      loading: false,
       migrationLength: 1,
       migrationCount: 0,
       migrationComplete: false,
@@ -625,7 +628,8 @@ export default class App extends Component {
       spacing: 2,
       emailOK: false,
       profileEmail: "",
-      countFilesDone: false
+      countFilesDone: false,
+      displayMessage: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -950,6 +954,10 @@ export default class App extends Component {
     this.handleProfileEmail = handleProfileEmail.bind(this);
     this.saveProfile = saveProfile.bind(this);
     this.loadProfile = loadProfile.bind(this);
+
+    //Shared
+
+    this.handleTagChange = handleTagChange.bind(this);
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
     // isUserSignedIn() ? this.loadAccountPlan() : loadUserData();
@@ -1030,7 +1038,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail
+      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage
     } = this.state;
     return (
       <div>
@@ -1097,6 +1105,11 @@ export default class App extends Component {
                       setDocsPerPage={this.setDocsPerPage}
                       sharedInfoStatic={this.sharedInfoStatic}
                       loadTeamDocs={this.loadTeamDocs}
+                      handleDeleteDoc={this.handleDeleteDoc}
+                      handleNewContact={this.handleNewContact}
+                      handleTagChange={this.handleTagChange}
+                      displayMessage={displayMessage}
+                      results={results}
                       docs={docs}
                       graphitePro={graphitePro}
                       rtc={rtc}
@@ -1147,6 +1160,9 @@ export default class App extends Component {
                   downloadDoc={this.downloadDoc}
                   handleaddItem={this.handleaddItem}
                   formatSpacing={this.formatSpacing}
+                  handleNewContact={this.handleNewContact}
+                  results={results}
+                  displayMessage={displayMessage}
                   spacing={spacing}
                   teamDoc={teamDoc}
                   loadingIndicator={loadingIndicator}

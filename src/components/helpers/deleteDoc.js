@@ -35,25 +35,31 @@ export function loadDocToDelete() {
       });
 }
 
-export function handleDeleteDoc() {
-  const object = {};
-  object.title = this.state.title;
-  object.content = this.state.content;
-  object.id = parseInt(window.location.href.split('/documents/doc/delete/')[1], 10);
-  let updatedArray = this.state.value.splice(this.state.index, 1)
-  this.setState({ value: updatedArray})
-  this.setState({ singleDoc: {}, deleteDoc: true });
-  this.setState({ loading: "show", save: "hide", action: "Deleted document: " +  window.location.href.split('/documents/doc/delete/')[1]});
-  this.saveNewDocFile();
+export function handleDeleteDoc(props) {
+  let value = this.state.value;
+  const thisDoc = value.find((doc) => { return doc.id.toString() === props.id.toString()});
+  let index = thisDoc && thisDoc.id;
+  function findObjectIndex(doc) {
+      return doc.id === index; //comparing numbers
+  }
+  this.setState({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: value.findIndex(findObjectIndex) }, () => {
+    if(this.state.index > -1) {
+      value.splice(this.state.index,1);
+    } else {
+      console.log("Error with index")
+    }
+
+    this.setState({ value: value, singleDoc: {}, deleteDoc: true, loading: "show", save: "hide", action: "Deleted document: " +  props.id}, () => {
+      this.saveNewDocFile(props);
+    })
+  })
+
 };
 
-export function saveNewDocFile() {
-  this.setState({ loading: "show" });
-  this.setState({ save: "hide"});
+export function saveNewDocFile(props) {
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
-
     .then(() => {
-      this.saveDocFileTwo();
+      this.saveDocFileTwo(props);
     })
     .catch(e => {
       console.log("e");
@@ -61,17 +67,15 @@ export function saveNewDocFile() {
     });
 }
 
-export function saveDocFileTwo() {
-  const file = window.location.href.split('/documents/doc/delete/')[1];
+export function saveDocFileTwo(props) {
+  const file = props.id;
   const fullFile = '/documents/' + file + '.json';
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
-      this.setState({ loading: "hide" });
       window.location.href = '/documents';
     })
     .catch(e => {
       console.log("e");
       console.log(e);
-      alert(e.message);
     });
 }

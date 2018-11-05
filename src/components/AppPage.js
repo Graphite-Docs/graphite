@@ -1,12 +1,14 @@
 import React, { Component } from "react";
+import { Link } from 'react-router-dom';
 import Signin from "./Signin";
 import Header from "./Header";
 import {
   isUserSignedIn,
   redirectToSignIn,
-  loadUserData,
   signUserOut
 } from "blockstack";
+import {Doughnut} from 'react-chartjs-2';
+import { Grid, Icon, Segment, Container, Card, Table } from 'semantic-ui-react'
 
 export default class AppPage extends Component {
 
@@ -21,16 +23,6 @@ export default class AppPage extends Component {
       "store_write",
       "publish_data"
     ])
-
-    // const transitPrivateKey = generateAndStoreTransitKey()
-    // const redirectURI = 'http://localhost:3000'
-    // const manifestURI = 'http://localhost:3000/manifest.json'
-    // const scopes = ['scope_write', 'publish_data']
-    // const appDomain = 'http://localhost:3000'
-    //
-    // const authRequest = makeAuthRequest(transitPrivateKey, redirectURI, manifestURI, scopes, appDomain)
-    //
-    // redirectToSignInWithAuthRequest(authRequest)
   }
 
   handleSignOut(e) {
@@ -43,7 +35,7 @@ export default class AppPage extends Component {
     let merged = sheets.reverse().concat(value.reverse());
     let recentWithDate = merged.filter(x => x.lastUpdate && x.updated);
     let recentFiles = recentWithDate.sort(function(a, b){return a.lastUpdate - b.lastUpdate}).slice(0,15);
-
+    console.log(recentFiles);
     //Docs variables
 
     let docTags = value.map(a => a.tags);
@@ -83,6 +75,158 @@ export default class AppPage extends Component {
     let newContactsTypes = contactsTypes.filter(function(n){ return n !== undefined });
     let mergedContactsTypes = [].concat.apply([], newContactsTypes).length;
 
+    let sheetsData={
+        labels: [
+          'Sheets',
+          'Tags',
+          'Collaborators'
+        ],
+        datasets: [{
+          data: [sheets.length, mergedSheetsTags, mergedSheetsCollabs],
+          backgroundColor: [
+          '#308502',
+          '#18b003',
+          '#1cd903'
+          ],
+          hoverBackgroundColor: [
+            '#308502',
+            '#18b003',
+            '#1cd903'
+          ]
+        }]
+      }
+
+      let sheetsDataEmptyState={
+          labels: [
+            'Sheets',
+            'Tags',
+            'Collaborators'
+          ],
+          datasets: [{
+            data: [20, 10, 8],
+            backgroundColor: [
+            '#b9b7b7',
+            '#b9b7b7',
+            '#b9b7b7'
+            ],
+
+          }]
+        }
+
+        let docsDataEmptyState={
+            labels: [
+              'Documents',
+              'Tags',
+              'Collaborators'
+            ],
+            datasets: [{
+              data: [20, 10, 8],
+              backgroundColor: [
+              '#b9b7b7',
+              '#b9b7b7',
+              '#b9b7b7'
+              ],
+
+            }]
+          }
+
+      let docsData={
+          labels: [
+            'Documents',
+            'Tags',
+            'Collaborators'
+          ],
+          datasets: [{
+            data: [value.length, mergedDocTags, mergedDocCollabs],
+            backgroundColor: [
+            '#023cc4',
+            '#2a38fc',
+            '#4141fa'
+            ],
+            hoverBackgroundColor: [
+              '#023cc4',
+              '#2a38fc',
+              '#4141fa'
+            ]
+          }]
+        }
+
+        let FilesDataEmptyState={
+            labels: [
+              'Files',
+              'Tags',
+              'Collaborators'
+            ],
+            datasets: [{
+              data: [20, 10, 8],
+              backgroundColor: [
+              '#b9b7b7',
+              '#b9b7b7',
+              '#b9b7b7'
+              ],
+
+            }]
+          }
+
+        let filesData={
+            labels: [
+              'Files',
+              'Tags',
+              'Collaborators'
+            ],
+            datasets: [{
+              data: [files.length, mergedFilesTags, mergedFilesCollabs],
+              backgroundColor: [
+              '#ff6384',
+              '#e6879c',
+              '#f090e6'
+              ],
+              hoverBackgroundColor: [
+                '#ff6384',
+                '#e6879c',
+                '#f090e6'
+              ]
+            }]
+          }
+
+          let contactsDataEmptyState={
+              labels: [
+                'Contacts',
+                'Types',
+                'Notes'
+              ],
+              datasets: [{
+                data: [20, 10, 8],
+                backgroundColor: [
+                '#b9b7b7',
+                '#b9b7b7',
+                '#b9b7b7'
+                ],
+
+              }]
+            }
+
+        let contactsData={
+            labels: [
+              'Contacts',
+              'Types',
+              'Notes'
+            ],
+            datasets: [{
+              data: [contacts.length, mergedContactsTypes, 0],
+              backgroundColor: [
+              '#c012eb',
+              '#944da1',
+              '#8a0b84'
+              ],
+              hoverBackgroundColor: [
+                '#c012eb',
+                '#944da1',
+                '#8a0b84'
+              ]
+            }]
+          }
+
     return (
       <div>
         <Header
@@ -93,208 +237,101 @@ export default class AppPage extends Component {
             {!isUserSignedIn() ? (
               <Signin handleSignIn={this.handleSignIn} />
             ) : (
-              <div>
-                <div>
-                  {/*teammate.includes(loadUserData().username) || loadUserData().username === 'admin.graphite' ? <p className="settings-icon"><a href="/admin"><i className="material-icons">settings</i></a></p> : <p />*/}
-                  {loadUserData().username === "justin.personal.id" ? (
-                    <p className="settings-icon">
-                      <a href="/journalism-admin">
-                        <i className="material-icons">settings</i>
-                      </a>
-                    </p>
-                  ) : (
-                    <p />
-                  )}
-                  {loadUserData().username === "admin.graphite" ? (
-                    <p className="settings-icon">
-                      <a href="/admin">
-                        <i className="material-icons">settings</i>
-                      </a>
-                    </p>
-                  ) : (
-                    <p />
-                  )}
-                </div>
-                <div className="row app-page">
+            <Container>
+            <Grid style={{ marginTop: "25px" }} stackable columns={2}>
+              <Grid.Column>
+                <Link to={'/documents'} style={{color:"#282828"}}><Segment className='appPageCard'>
+                <Card.Content>
+                  <Icon style={{ float: "right"}} size='large' name='file alternate outline' />
+                  <h2>Documents ({value.length})</h2>
+                  {
+                    docsData.datasets[0].data.some(a => a > 0) ? <Doughnut data={docsData} /> : <Doughnut data={docsDataEmptyState} />
+                  }
+                </Card.Content>
+                </Segment></Link>
+              </Grid.Column>
+              <Grid.Column>
+                <Link to={'/sheets'} style={{color:"#282828"}}><Segment className='appPageCard'>
+                  <Card.Content>
+                  <Icon style={{ float: "right"}} size='large' name='table' />
+                  <h2>Sheets ({sheets.length})</h2>
+                  {
+                    sheetsData.datasets[0].data.some(a => a > 0) ? <Doughnut data={sheetsData} /> : <Doughnut data={sheetsDataEmptyState} />
+                  }
+                  </Card.Content>
+                </Segment></Link>
+              </Grid.Column>
+              <Grid.Column>
+                <Link to={'/vault'} style={{color:"#282828"}}><Segment className='appPageCard'>
+                <Card.Content>
+                <Icon style={{ float: "right"}} size='large' name='shield alternate' />
+                <h2>Vault ({files.length})</h2>
+                {
+                  filesData.datasets[0].data.some(a => a > 0) ? <Doughnut data={filesData} /> : <Doughnut data={FilesDataEmptyState} />
+                }
+                </Card.Content>
+                </Segment></Link>
+              </Grid.Column>
+              <Grid.Column>
+                <Link to={'/contacts'} style={{color:"#282828"}}><Segment className='appPageCard'>
+                  <Card.Content>
+                  <Icon style={{ float: "right"}} size='large' name='address book outline' />
+                  <h2>Contacts ({contacts.length})</h2>
+                  {
+                    contactsData.datasets[0].data.some(a => a > 0) ? <Doughnut data={contactsData} /> : <Doughnut data={contactsDataEmptyState} />
+                  }
+                  </Card.Content>
+                </Segment></Link>
+              </Grid.Column>
+            </Grid>
+            <h4 style={{fontFamily: 'Muli, san-serif', fontWeight: "200"}}>Opened Recently ({recentFiles.length})</h4>
+            <Table unstackable style={{borderRadius: "0", marginBottom: "45px"}}>
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Name</Table.HeaderCell>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
 
-                  <div className="col s12 m6 l3">
-                    <a href="/documents">
-                    <div className="appPage">
-                      <div className="row">
-
-                          <div className="col s12">
-                            <h5>Documents
-                              <span>
-                                <img
-                                  alt="documents"
-                                  className="appPageIcons"
-                                  src="https://i.imgur.com/C71m2Zs.png"
-                                  />
-                              </span>
-                            </h5>
-                            <strong><h3>{value.length}</h3></strong>
-                          </div>
-                          {/*<div className="col s6">
-                            <p>Words</p>
-                            <strong><h5>{words}</h5></strong>
-                          </div>*/}
-                          <div className="col s6">
-                            <p>Tags</p>
-                            <strong><h5>{mergedDocTags}</h5></strong>
-                          </div>
-                          <div className="col s6">
-                            <p>Collaborators</p>
-                            <strong><h5>{mergedDocCollabs}</h5></strong>
-                          </div>
-
-                        </div>
-                      </div>
-                    </a>
-                  </div>
-
-                  <div className="col s12 m6 l3">
-                    <a href="/sheets">
-                    <div className="appPage">
-                      <div className="row">
-                          <div className="col s12">
-                            <h5>Sheets
-                              <span>
-                                <img
-                                  alt="Sheets"
-                                  className="appPageIcons"
-                                  src="https://i.imgur.com/6jzdbhE.png"
-                                  />
-                              </span>
-                            </h5>
-                            <h3>{sheets.length}</h3>
-                          </div>
-                          <div className="col s6">
-                            <p>Tags</p>
-                            <strong><h5>{mergedSheetsTags}</h5></strong>
-                          </div>
-                          <div className="col s6">
-                            <p>Collaborators</p>
-                            <strong><h5>{mergedSheetsCollabs}</h5></strong>
-                          </div>
-
-
-                      </div>
-                      </div>
-                    </a>
-                  </div>
-
-                  <div className="col s12 m6 l3">
-                    <a href="/vault">
-                    <div className="appPage small">
-                      <div className="row">
-                          <div className="col s12">
-                            <h5>Files
-                              <span>
-                                <img
-                                  alt="Vault"
-                                  className="vaultIcon"
-                                  src="https://i.imgur.com/9ZlABws.png"
-                                  />
-                              </span>
-                            </h5>
-                            <h3>{files.length}</h3>
-                          </div>
-                          {/*<div className="col s6">
-                            <p>Types</p>
-                            <strong><h5>{fileTypesCount}</h5></strong>
-                          </div>*/}
-                          <div className="col s6">
-                            <p>Tags</p>
-                            <strong><h5>{mergedFilesTags}</h5></strong>
-                          </div>
-                          <div className="col s6">
-                            <p>Collaborators</p>
-                            <strong><h5>{mergedFilesCollabs}</h5></strong>
-                          </div>
-
-                      </div>
-                      </div>
-                    </a>
-                  </div>
-
-                  <div className="col s12 m6 l3">
-                    <a href="/contacts">
-                    <div className="appPage">
-                      <div className="row">
-
-                          <div className="col s12">
-                              <h5>Contacts
-                                <span>
-                                  <img
-                                    alt="Contacts"
-                                    className="appPageIcons"
-                                    src="https://i.imgur.com/st3JArl.png"
-                                    />
-                                </span>
-                              </h5>
-                            <h3>{contacts.length}</h3>
-                          </div>
-                          <div className="col s6">
-                            <p>Types</p>
-                            <h5>{mergedContactsTypes}</h5>
-                          </div>
-                          <div className="col s6">
-                            <p>Notes</p>
-                            <h5>0</h5>
-                          </div>
-
-                      </div>
-                      </div>
-                    </a>
-                  </div>
-                  <div className="allFilesTable">
-                  <h6>Opened Recently <span>({recentFiles.length})</span></h6>
-                  <table className="bordered">
-                    <thead>
-                      <tr>
-                          <th>Name</th>
-                          <th>Date</th>
-                      </tr>
-                    </thead>
-
-                    <tbody>
-                    {
-                      recentFiles.map(merge => {
-                        var link;
-                        var name;
-                        var date;
-                        if(merge.title) {
-                          name = merge.title;
-                        } else {
-                          name = merge.name;
-                        }
-                        if(merge.updated) {
-                          date = merge.updated;
-                        } else {
-                          date = merge.uploaded;
-                        }
-                        if(merge.fileType === "documents") {
-                          link = '/documents/doc/' + merge.id;
-                        } else if(merge.fileType === "sheets") {
-                          link = '/sheets/sheet/' + merge.id;
-                        } else if(merge.fileType === "vault") {
-                          link = '/vault/' + merge.id;
-                        } else {
-                          link = '#';
-                        }
-                      return(
-                        <tr key={merge.id}>
-                          <td className="appTD"><a href={link}>{name}</a></td>
-                          <td className="">{date}</td>
-                        </tr>
-                      );
-                      })
+              <Table.Body>
+              {
+                recentFiles.map(merge => {
+                    var link;
+                    var name;
+                    var date;
+                    if(merge.title) {
+                      name = merge.title;
+                    } else {
+                      name = merge.name;
                     }
-                    </tbody>
-                  </table>
-                  </div>
-                </div>
-              </div>
+                    if(merge.updated) {
+                      date = merge.updated;
+                    } else {
+                      date = merge.uploaded;
+                    }
+                    if(merge.fileType === "documents") {
+                      link = '/documents/doc/' + merge.id;
+                    } else if(merge.fileType === "sheets") {
+                      link = '/sheets/sheet/' + merge.id;
+                    } else if(merge.fileType === "vault") {
+                      link = '/vault/' + merge.id;
+                    } else if(merge.fileType === undefined || merge.fileType === null) {
+                      link = '/';
+                    } else {
+                      link = '/';
+                    }
+                  return(
+                    <Table.Row key={merge.id}>
+                      <Table.Cell><Link to={link}>{name}</Link></Table.Cell>
+                      <Table.Cell>{date}</Table.Cell>
+                    </Table.Row>
+                  );
+                  })
+              }
+
+              </Table.Body>
+            </Table>
+            </Container>
             )}
           </div>
         </div>

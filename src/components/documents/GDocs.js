@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import LoadingBar from '../LoadingBar';
+import Loading from '../Loading';
 
 export default class GDocs extends Component {
 
@@ -11,7 +11,7 @@ export default class GDocs extends Component {
         importAll ?
         <div>
           <h3>Please wait while your Google Docs are imported...</h3>
-          <LoadingBar />
+          <Loading />
         </div> :
         <div>
         <div className="row">

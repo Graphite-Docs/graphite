@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import Header from './Header';
 import Onboarding from './Onboarding';
-import LoadingBar from './LoadingBar';
+import Loading from './Loading';
 import RoleTable from './RoleTable';
 import Logs from './Logs';
 import {
@@ -34,7 +34,7 @@ export default class Settings extends Component {
             <div className={loadingBar}>
               <Header />
               <div className="container account-settings">
-                <LoadingBar />
+                <Loading />
               </div>
             </div>
 
@@ -198,7 +198,7 @@ export default class Settings extends Component {
           <div className={loadingBar}>
             <Header />
             <div className="container account-settings">
-              <LoadingBar />
+              <Loading />
             </div>
           </div>
 

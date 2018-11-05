@@ -14,16 +14,15 @@ const { decryptECIES } = require('blockstack/lib/encryption');
 const { encryptECIES } = require('blockstack/lib/encryption');
 
 export function loadCollection() {
+  this.setState({ results: [] })
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
 
      if(JSON.parse(fileContents || '{}').value) {
-       this.setState({ value: JSON.parse(fileContents || '{}').value });
-       this.setState({filteredValue: JSON.parse(fileContents || '{}').value})
-       this.setState({ loading: "hide" });
+       this.setState({ value: JSON.parse(fileContents || '{}').value, filteredValue: JSON.parse(fileContents || '{}').value, loading: false });
      } else {
        console.log("No saved files");
-       this.setState({ loading: "hide" });
+       this.setState({ loading: false });
      }
    })
     .catch(error => {
@@ -36,20 +35,39 @@ export function setTags(e) {
 }
 
 export function handleKeyPress(e) {
-  if (e.key === 'Enter') {
-    this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
-      this.setState({ tag: "" });
-    });
-  }
+  let keycode = (e.keyCode ? e.keyCode : e.which);
+    if (keycode === '13') {
+      if(this.state.tag !=="") {
+        this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+          this.setState({ tag: "" });
+        });
+      }
+    }
+  // if (e.key === 'Enter') {
+  //   console.log("trying")
+  //   this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+  //     this.setState({ tag: "" });
+  //   });
+  // }
 }
 
-export function addTagManual() {
-  this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
-    this.setState({ tag: "" });
-  });
+export function addTagManual(doc) {
+  if(this.state.tag !=="") {
+    this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+      let value = this.state.value;
+      const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
+      let index = thisDoc && thisDoc.id;
+      function findObjectIndex(doc) {
+          return doc.id === index; //this is comparing numbers
+      }
+      this.setState({index: value.findIndex(findObjectIndex), tag: "" });
+    });
+  }
+
 }
 
 export function handleaddItem() {
+  this.setState({loading: true})
   const rando = Date.now();
   const object = {};
   const objectTwo = {}
@@ -59,9 +77,9 @@ export function handleaddItem() {
     object.lastUpdate = Date.now();
     object.id = rando;
     object.updated = getMonthDayYear();
-    object.tags = [];
+    object.singleDocTags = [];
     object.sharedWith = [];
-
+    object.fileType = 'documents';
     objectTwo.title = object.title;
     objectTwo.id = object.id;
     objectTwo.updated = object.created;
@@ -73,9 +91,9 @@ export function handleaddItem() {
     object.lastUpdate = Date.now();
     object.id = rando;
     object.updated = getMonthDayYear();
-    object.tags = [];
+    object.singleDocTags = [];
     object.sharedWith = [];
-
+    object.fileType = 'documents';
     objectTwo.title = object.title;
     objectTwo.id = object.id;
     objectTwo.updated = object.created;
@@ -143,9 +161,9 @@ export function saveNewSingleDoc() {
     });
 }
 
-export function handlePageChange(event) {
+export function handlePageChange(props) {
   this.setState({
-    currentPage: Number(event.target.id)
+    currentPage: props
   });
 }
 
@@ -180,21 +198,22 @@ export function handleCheckbox(event) {
       }
 }
 
-export function sharedInfo(props) {
+export function sharedInfo(props, doc) {
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  this.setState({ receiverID: props, rtc: true })
+  this.setState({ receiverID: props, rtc: true, loading: true })
   getFile('key.json', options)
     .then((file) => {
       this.setState({ pubKey: JSON.parse(file)})
     })
       .then(() => {
-        this.loadSharedCollection();
+        this.loadSharedCollection(doc);
       })
       .catch(error => {
         console.log("No key: " + error);
-        window.Materialize.toast(props + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-        this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
+        this.setState({ loading: false, displayMessage: true, results: [] }, () => {
+          setTimeout(() => this.setState({displayMessage: false}), 3000);
+        });
       });
 }
 
@@ -216,7 +235,7 @@ export function sharedInfoStatic(props) {
       });
 }
 
-export function loadSharedCollection () {
+export function loadSharedCollection (doc) {
   // const user = this.state.receiverID;
   // const file = "shared.json";
   // getFile(user + file, {decrypt: true})
@@ -232,19 +251,16 @@ export function loadSharedCollection () {
       }
     })
     .then(() => {
-      this.loadSingle();
+      this.loadSingle(doc);
     })
     .catch((error) => {
       console.log(error)
     });
 }
 
-export function loadSingle() {
-
-  if(this.state.docsSelected.length > 1) {
-    //TODO figure out how to handle this
-  } else {
-    const thisFile = this.state.docsSelected[0];
+export function loadSingle(doc) {
+    console.log(doc)
+    const thisFile = doc.id;
     const fullFile = '/documents/' + thisFile + '.json';
 
     getFile(fullFile, {decrypt: true})
@@ -254,17 +270,18 @@ export function loadSingle() {
          this.setState({
            title: JSON.parse(fileContents || '{}').title,
            content: JSON.parse(fileContents || '{}').content,
-           tags: JSON.parse(fileContents || '{}').tags,
+           singleDocTags: JSON.parse(fileContents || '{}').singleDocTags,
            updated: JSON.parse(fileContents || '{}').updated,
            words: JSON.parse(fileContents || '{}').words,
            id: JSON.parse(fileContents || '{}').id,
+           lastUpdate: JSON.parse(fileContents).lastUpdate,
            sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
         });
       } else {
         this.setState({
           title: JSON.parse(fileContents || '{}').title,
           content: JSON.parse(fileContents || '{}').content,
-          tags: JSON.parse(fileContents || '{}').tags,
+          singleDocTags: JSON.parse(fileContents || '{}').singleDocTags,
           updated: JSON.parse(fileContents || '{}').updated,
           words: JSON.parse(fileContents || '{}').words,
           id: JSON.parse(fileContents || '{}').id,
@@ -275,22 +292,21 @@ export function loadSingle() {
      })
       .then(() => {
         this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
-        setTimeout(this.getCollection, 300);
+        setTimeout(() => this.getCollection(doc), 300);
       })
       .catch(error => {
         console.log(error);
       });
-    }
 }
 
-export function getCollection() {
+export function getCollection(doc) {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
      this.setState({ value: JSON.parse(fileContents || '{}').value })
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id.toString() === this.state.docsSelected[0]});
+    const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
         return doc.id === index; //this is comparing numbers
@@ -298,31 +314,32 @@ export function getCollection() {
     this.setState({index: value.findIndex(findObjectIndex) });
   })
     .then(() => {
-      this.share();
+      this.share(doc);
     })
     .catch(error => {
       console.log(error);
     });
 }
 
-export function share() {
+export function share(doc) {
   const object = {};
   object.title = this.state.title;
   object.content = this.state.content;
-  object.id = this.state.id.toString();
-  object.updated = this.state.updated;
+  object.id = doc.id;
+  object.updated = getMonthDayYear();
   object.sharedWith = this.state.sharedWithSingle;
-  object.tags = this.state.tags;
+  object.lastUpdate = Date.now
+  object.singleDocTags = this.state.singleDocTags;
   object.words = this.state.words;
   object.rtc = this.state.rtc;
   const index = this.state.index;
   const updatedDocs = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
   this.setState({value: updatedDocs, singleDoc: object, sharedCollection: [...this.state.sharedCollection, object]});
 
-  setTimeout(this.saveSharedFile, 300);
+  setTimeout(() => this.saveSharedFile(doc), 300);
 }
 
-export function saveSharedFile() {
+export function saveSharedFile(doc) {
   // const user = this.state.receiverID;
   // const file = "shared.json";
   //
@@ -333,9 +350,7 @@ export function saveSharedFile() {
   putFile(file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
     .then(() => {
       console.log("Shared Collection Saved");
-      // this.saveSingleFile();
-      window.$('#shareModal').modal('close');
-      window.$('#encryptedModal').modal('close');
+
     })
 
     const data = this.state.sharedCollection;
@@ -343,24 +358,24 @@ export function saveSharedFile() {
     const directory = 'shared/' + pubKey + fileName;
     putFile(directory, encryptedData, {encrypt: false})
     .then(() => {
-      window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
+      console.log("saved")
     })
     .catch(e => {
       console.log(e);
     });
-    putFile(this.state.docsSelected[0] + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
+    putFile(doc.id + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
     .then(() => {
       // this.handleAutoAdd();
       // this.loadAvatars();
-      this.saveSingleFile();
+      this.saveSingleFile(doc);
     })
     .catch(e => {
       console.log(e);
     });
 }
 
-export function saveSingleFile() {
-  const file = this.state.docsSelected[0];
+export function saveSingleFile(doc) {
+  const file = doc.id;
   const fullFile = '/documents/' + file + '.json'
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
@@ -410,23 +425,49 @@ export function sendFile() {
     });
 }
 
-export function loadSingleTags() {
-  const thisFile = this.state.docsSelected[0];
+export function loadSingleTags(doc) {
+  const thisFile = doc.id;
   const fullFile = '/documents/' + thisFile + '.json';
 
   getFile(fullFile, {decrypt: true})
    .then((fileContents) => {
-     if(JSON.parse(fileContents || '{}').tags) {
-       this.setState({
-         shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-         title: JSON.parse(fileContents || '{}').title,
-         id: JSON.parse(fileContents || '{}').id,
-         updated: JSON.parse(fileContents || '{}').updated,
-         sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-         singleDocTags: JSON.parse(fileContents || '{}').tags,
-         content: JSON.parse(fileContents || '{}').content,
-         lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
-      });
+     if(JSON.parse(fileContents || '{}').singleDocTags || JSON.parse(fileContents).tags) {
+       if(JSON.parse(fileContents).singleDocTags) {
+         this.setState({
+           shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+           title: JSON.parse(fileContents || '{}').title,
+           id: JSON.parse(fileContents || '{}').id,
+           singleDocTags: JSON.parse(fileContents || '{}').singleDocTags,
+           updated: JSON.parse(fileContents || '{}').updated,
+           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+           content: JSON.parse(fileContents || '{}').content,
+           lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
+        }, () => {
+          if(this.state.tag !=="") {
+            this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+              this.setState({ tag: "" });
+            });
+          }
+        });
+      } else if(JSON.parse(fileContents).tags) {
+        this.setState({
+          shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+          title: JSON.parse(fileContents || '{}').title,
+          id: JSON.parse(fileContents || '{}').id,
+          singleDocTags: JSON.parse(fileContents || '{}').tags,
+          updated: JSON.parse(fileContents || '{}').updated,
+          sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+          content: JSON.parse(fileContents || '{}').content,
+          lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
+       }, () => {
+         if(this.state.tag !=="") {
+           this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+             this.setState({ tag: "" });
+           });
+         }
+       });
+      }
+
     } else {
       this.setState({
         shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
@@ -441,63 +482,62 @@ export function loadSingleTags() {
     }
    })
    .then(() => {
-     window.$('#tagModal').modal('open');
-     this.getCollectionTags();
+     this.getCollectionTags(doc);
    })
     .catch(error => {
       console.log(error);
     });
 }
 
-export function getCollectionTags() {
+export function getCollectionTags(doc) {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
      this.setState({ value: JSON.parse(fileContents || '{}').value })
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let value = this.state.value;
-    const thisDoc = value.find((doc) => { return doc.id.toString() === this.state.docsSelected[0]});
+    const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
         return doc.id === index; //this is comparing numbers
     }
-    this.setState({index: value.findIndex(findObjectIndex) });
+    this.setState({ index: value.findIndex(findObjectIndex) });
   })
     .catch(error => {
       console.log(error);
     });
 }
 
-export function saveNewTags() {
-  this.setState({ loadingTwo: ""});
+export function saveNewTags(doc) {
+  this.setState({ loading: true });
   const object = {};
-  object.id = this.state.id;
+  object.id = doc.id;
   object.title = this.state.title;
-  object.updated = this.state.updated;
-  object.tags = this.state.singleDocTags;
+  object.updated = getMonthDayYear();
+  object.singleDocTags = this.state.singleDocTags;
   object.content = this.state.content;
   object.sharedWith = this.state.sharedWith;
+  object.lastUpdate = Date.now();
   const objectTwo = {};
   objectTwo.title = this.state.title;
-  objectTwo.id = this.state.id;
-  objectTwo.updated = this.state.updated;
+  objectTwo.id = doc.id;
+  objectTwo.updated = getMonthDayYear();
   objectTwo.sharedWith = this.state.sharedWith;
-  objectTwo.tags = this.state.singleDocTags;
-  objectTwo.lastUpdate = this.state.lastUpdate;
+  objectTwo.singleDocTags = this.state.singleDocTags;
+  objectTwo.lastUpdate = Date.now;
   const index = this.state.index;
   const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]});
   this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object }, () => {
-    // setTimeout(this.saveFullCollectionTags, 500);
-    this.saveFullCollectionTags();
+    this.saveFullCollectionTags(doc);
   });
 
 }
 
-export function saveFullCollectionTags() {
+export function saveFullCollectionTags(doc) {
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
       console.log("Saved");
-      this.saveSingleDocTags();
+      this.saveSingleDocTags(doc);
     })
     .catch(e => {
       console.log("e");
@@ -505,14 +545,12 @@ export function saveFullCollectionTags() {
     });
 }
 
-export function saveSingleDocTags() {
-  const thisFile = this.state.docsSelected[0];
+export function saveSingleDocTags(doc) {
+  const thisFile = doc.id;
   const fullFile = '/documents/' + thisFile + '.json';
   putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved tags");
-      window.$('#tagModal').modal('close');
-      this.setState({ tagModal: "hide", loadingTwo: "hide" });
       this.loadCollection();
     })
     .catch(e => {
@@ -521,31 +559,37 @@ export function saveSingleDocTags() {
     });
 }
 
-export function deleteTag(props) {
-  let tags = this.state.singleDocTags;
-  const thisTag = tags.find((tag) => { return tag === props});
-  let tagIndex = thisTag;
-  function findObjectIndex(tag) {
-      return tag === tagIndex; //this is comparing numbers
-  }
-  this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
-    this.setState({singleDocTags: update(this.state.singleDocTags, {$splice: [[this.state.tagIndex, 1]]})});
-  });
-
+export function deleteTag(tag, type) {
+  // let tags;
+  // if(doc.singleDocTags) {
+  //   tags = doc.singleDocTags;
+  // } else if(doc.tags) {
+  //   tags = doc.tags;
+  // }
+  // this.setState({ singleDocTags: tags}, () => {
+  //   let singleDocTags = this.state.singleDocTags;
+  //   const thisTag = singleDocTags.find((a) => { return a === tag});
+  //   let tagIndex = thisTag;
+  //   function findObjectIndex(a) {
+  //       return a === tagIndex; //this is comparing numbers
+  //   }
+  //   this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
+  //     tags.splice(this.state.tagIndex, 1);
+  //     this.setState({singleDocTags: tags});
+  //   });
+  // })
 }
 
 export function collabFilter(props) {
   let value = this.state.value;
   let collaboratorFilter = value.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(props) : console.log(""));
   this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
-  window.$('.button-collapse').sideNav('hide');
 }
 
 export function tagFilter(props) {
   let value = this.state.value;
-  let tagFilter = value.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(props) : console.log(""));
+  let tagFilter = value.filter(x => typeof x.singleDocTags !== 'undefined' ? x.singleDocTags.includes(props) : null);
   this.setState({ filteredValue: tagFilter, appliedFilter: true});
-  window.$('.button-collapse').sideNav('hide');
 }
 
 export function dateFilter(props) {
@@ -553,7 +597,6 @@ export function dateFilter(props) {
   let definedDate = value.filter((val) => { return val.updated !==undefined });
   let dateFilter = definedDate.filter(x => x.updated.includes(props));
   this.setState({ filteredValue: dateFilter, appliedFilter: true});
-  window.$('.button-collapse').sideNav('hide');
 }
 
 export function clearFilter() {

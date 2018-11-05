@@ -257,7 +257,7 @@ export function copyLink() {
   }
 
 export function sharedInfoSingleDocRTC(props){
-  this.setState({ receiverID: props, rtc: true });
+  this.setState({ receiverID: props, rtc: true, loading: true });
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
@@ -295,13 +295,14 @@ export function sharedInfoSingleDocRTC(props){
       })
       .catch(error => {
         console.log("No key: " + error);
-        window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-        this.setState({ shareModal: "hide", loading: "hide", show: "" });
+        this.setState({ loading: false, displayMessage: true, results: [] }, () => {
+          setTimeout(() => this.setState({displayMessage: false}), 3000);
+        });
       });
 }
 
 export function sharedInfoSingleDocStatic(props){
-  this.setState({ receiverID: props, rtc: false });
+  this.setState({ receiverID: props, rtc: false, loading: true });
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
   getFile('key.json', options)
@@ -338,8 +339,9 @@ export function sharedInfoSingleDocStatic(props){
       })
       .catch(error => {
         console.log("No key: " + error);
-        window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-        this.setState({ shareModal: "hide", loading: "hide", show: "" });
+        this.setState({ loading: false, displayMessage: true, results: [] }, () => {
+          setTimeout(() => this.setState({displayMessage: false}), 3000);
+        });
       });
 }
 
@@ -350,7 +352,7 @@ export function loadMyFile() {
   getFile(file, {decrypt: true})
   .then((fileContents) => {
     this.setState({ shareFile: JSON.parse(fileContents || '{}') })
-    this.setState({ loading: "", show: "hide" });
+    this.setState({ show: "hide" });
   })
   .then(() => {
     const object = {};
@@ -393,9 +395,6 @@ export function shareDoc() {
   const pubKey = this.state.pubKey;
   const file = 'mine/' + pubKey + '/' + fileName;
   putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
-  .then(() => {
-    this.setState({ shareModal: "hide", loading: "hide", show: "" });
-  })
   .catch(e => {
     console.log("e");
     console.log(e);
@@ -406,9 +405,9 @@ export function shareDoc() {
   const directory = 'shared/' + pubKey + fileName;
   putFile(directory, encryptedData, {encrypt: false})
   .then(() => {
-    window.Materialize.toast('Document shared with ' + this.state.receiverID, 4000);
-    window.$('#contactsModal').modal('close');
-    window.$('#encryptedModal').modal('close');
+    this.setState({ loading: false, displayMessageSuccess: true, results: [] }, () => {
+      console.log("Success")
+    });
   })
   .catch(e => {
     console.log(e);

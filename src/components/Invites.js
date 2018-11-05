@@ -9,7 +9,7 @@ import {
 } from 'blockstack';
 import Signin from './Signin';
 import Header from './Header';
-import LoadingBar from './LoadingBar';
+import Loading from './Loading';
 
 export default class Invites extends Component {
 
@@ -45,7 +45,7 @@ export default class Invites extends Component {
             <div className="container payment-wrapper">
               <div className="center-align">
                 {loadingIndicator ?
-                  <LoadingBar /> :
+                  <Loading /> :
                   <div>
                     <h3>You have been invited to join a Graphite Pro team.</h3>
                     <p>Learn more about Graphite Pro here.</p>

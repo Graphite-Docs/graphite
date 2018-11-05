@@ -61,30 +61,36 @@ export function saveNewContactsFile() {
 }
 
 export function handleNewContact(e) {
-    this.setState({ newContact: e.target.value })
-    let link = 'https://core.blockstack.org/v1/search?query=';
-    axios
-      .get(
-        link + e.target.value
-      )
-      .then(res => {
-        if(res.data.results.length > 0){
-          this.setState({ results: res.data.results });
+    this.setState({ newContact: e.target.value }, () => {
+      let link = 'https://core.blockstack.org/v1/search?query=';
+      axios
+        .get(
+          link + this.state.newContact
+        )
+        .then(res => {
+          console.log('calling: ' + link + this.state.newContact)
+          console.log(res.data);
+          if(res.data.results){
+            this.setState({ results: res.data.results });
+          // } else {
+          //   this.setState({ results: [] })
+          //   lookupProfile(this.state.newContact, "https://core.blockstack.org/v1/names")
+          //     .then((profile) => {
+          //       console.log(profile);
+          //       this.setState({ manualResults: profile });
+          //     })
+          //     .catch((error) => {
+          //       console.log('could not resolve profile')
+          //     })
+          // }
         } else {
-          this.setState({ results: [] })
-          lookupProfile(this.state.newContact, "https://core.blockstack.org/v1/names")
-            .then((profile) => {
-              console.log(profile);
-              this.setState({ manualResults: profile });
-            })
-            .catch((error) => {
-              console.log('could not resolve profile')
-            })
+          this.setState({ results: []})
         }
-      })
-      .catch(error => {
-        console.log(error);
-      });
+        })
+        .catch(error => {
+          console.log(error);
+        });
+    })
   }
 
   export function handleManualAdd(e) {
