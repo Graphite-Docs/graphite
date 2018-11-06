@@ -23,7 +23,7 @@ export default class Menu extends Component {
 
   render() {
 
-    const { title, results, contacts } = this.props;
+    const { title, results, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.props;
 
     return (
 
@@ -35,7 +35,14 @@ export default class Menu extends Component {
                               <li><a onClick={this.props.handleaddItem}>New document</a></li>
                               {/*<li><a>Add tag</a></li>*/}
                               <li className="divider-menu"><hr /></li>
-                              <li><Modal trigger={<a onClick={() => this.setState({ modalOpen: true })}>rename</a> } closeIcon open={this.state.modalOpen}>
+                              <li><Modal
+                                trigger={<a onClick={() => this.setState({ modalOpen: true })}>rename</a> }
+                                closeIcon
+                                open={this.state.modalOpen}
+                                closeOnEscape={true}
+                                closeOnDimmerClick={true}
+                                onClose={() => this.setState({ modalOpen: false})}
+                                >
                                 <Modal.Header>Edit Document Title</Modal.Header>
                                 <Modal.Content>
                                   <Modal.Description>
@@ -96,9 +103,72 @@ export default class Menu extends Component {
                       <li className="topmenu">
                       <a>Share</a>
                       <ul className="submenu">
-                          <li><a className="modal-trigger" href="#publicModal">Public link</a></li>
+                          <li>
+                            <Modal closeIcon style={{borderRadius: "0"}}
+                              trigger={<a>Public link</a>}>
+                              <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
+                              <Modal.Content>
+                                <Modal.Description>
+                                  <h3>Search for a contact</h3>
+                                  <p>This data is not encrypted and can be accessed by anyone with the link that will be generated.</p>
+                                  {
+                                    singleDocIsPublic === true ?
+                                    <div>
+                                      <p>This document is already being shared publicly.</p>
+                                      <Button style={{ borderRadius: "0" }} onClick={this.props.sharePublicly} color='blue'>Show Link</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={this.props.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={this.props.stopSharing} color="red">Stop Sharing Publicly</Button>
+                                      <p>
+                                        {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
+                                      </p>
+                                    </div>
+                                    :
+                                    <Button style={{ borderRadius: "0" }} secondary onClick={this.props.sharePublicly}>Share publicly</Button>
+                                  }
+
+                                  {
+                                    gaiaLink !== "" ?
+                                    <div>
+                                      <p><a href={gaiaLink}>{gaiaLink}</a></p>
+                                    </div>
+                                    :
+                                    <div className="hide" />
+                                  }
+                                </Modal.Description>
+                              </Modal.Content>
+                            </Modal>
+
+                          </li>
                           {
-                            this.props.graphitePro ? <li><a className="modal-trigger" href="#teamShare">Share with team</a></li> : <li className="hide"></li>
+                            this.props.graphitePro ? <li>
+                            <Modal closeIcon style={{borderRadius: "0"}}
+                              trigger={<a>Share with team</a>}>
+                              <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
+                              <Modal.Content>
+                                <Modal.Description>
+                                  <h3>Search for a contact</h3>
+                                  <p>By sharing with your entire team, each teammate will have immediate access to the document and will be able to collaborate in real-time.</p>
+                                  <p>For reference, you can see your list of teammates below:</p>
+                                  <Item.Group divided>
+                                  {teamList.map(mate => {
+                                      return (
+                                          <Item className="contact-search" key={mate.name}>
+                                          <Item.Content verticalAlign='middle'>{mate.email}
+                                          <br/>
+                                          {mate.role}
+                                          </Item.Content>
+                                          </Item>
+                                          )
+                                        }
+                                      )
+                                  }
+                                  </Item.Group>
+                                  <Button secondary style={{borderRadius: "0"}} onClick={this.props.shareToTeam}>Share</Button>
+                                </Modal.Description>
+                              </Modal.Content>
+                            </Modal>
+                            </li> :
+                            <li className="hide"></li>
                           }
                           {
                             this.props.teamDoc && this.props.userRole === "User" ?

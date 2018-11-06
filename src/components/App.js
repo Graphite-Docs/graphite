@@ -581,7 +581,7 @@ export default class App extends Component {
       shareFileIndex: [],
       user: "",
       singleDocIsPublic: false,
-      readOnly: false,
+      readOnly: true,
       filteredContacts: [],
       add: false,
       results: [],

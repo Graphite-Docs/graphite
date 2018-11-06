@@ -20,6 +20,7 @@ const wordcount = require("wordcount");
 // const { getPublicKeyFromPrivate } = require('blockstack');
 
 export function initialDocLoad() {
+  this.setState({ loading: true})
   const thisFile = window.location.href.split('doc/')[1];
   const fullFile = '/documents/' + thisFile + '.json';
 
@@ -116,9 +117,10 @@ export function initialDocLoad() {
   //   }
   })
   .then(() => {
-    this.loadAvatars();
-    console.log(this.state.spacing)
-    document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
+    this.setState({ loading: false}, () => {
+      // document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
+      this.loadAvatars();
+    })
   })
   .catch(error => {
     console.log(error);
@@ -196,19 +198,23 @@ export function handleAutoSave(e) {
 }
 
 export function sharePublicly() {
-  this.setState({ publicShare: ""});
   const object = {};
   object.title = this.state.title;
   object.content = this.state.content;
+  if(this.state.readOnly !== undefined) {
+    object.readOnly = this.state.readOnly;
+  } else {
+    object.readOnly = true;
+  }
   object.words = wordcount(this.state.content);
   object.shared = getMonthDayYear();
-  object.readOnly = this.state.readOnly;
   object.singleDocIsPublic = true;
   this.setState({
     singlePublic: object,
     singleDocIsPublic: true
+  }, () => {
+    this.savePublic();
   })
-  setTimeout(this.savePublic, 700);
 }
 
 export function stopSharing() {
@@ -225,7 +231,6 @@ export function saveStop() {
   const file = directory + params + '.json'
   putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
   .then(() => {
-    window.Materialize.toast(this.state.title + " is no longer publicly shared.", 4000);
     this.handleAutoAdd();
   })
   .catch(e => {
@@ -670,13 +675,26 @@ export function downloadDoc(props) {
 }
 
 export function formatSpacing(props) {
+  var nodes = document.getElementsByClassName('ql-editor')[0].childNodes;
+  var i=0;
   if(props === 'single') {
-    document.getElementsByClassName('ql-editor')[0].style.lineHeight = 1;
+
+      for(i; i<nodes.length; i++) {
+          if (nodes[i].nodeName.toLowerCase() === 'p') {
+               nodes[i].style.lineHeight = 1;
+           }
+      }
+    // document.getElementsByClassName('ql-editor')[0].querySelectorAll("p").style.lineHeight = 1;
     this.setState({spacing: 1}, () => {
       this.handleAutoAdd();
     })
   } else if(props === 'double') {
-    document.getElementsByClassName('ql-editor')[0].style.lineHeight = 2;
+      for(i; i<nodes.length; i++) {
+          if (nodes[i].nodeName.toLowerCase() === 'p') {
+               nodes[i].style.lineHeight = 2;
+           }
+      }
+    // document.getElementsByClassName('ql-editor')[0].style.lineHeight = 2;
     this.setState({spacing: 2}, () => {
       this.handleAutoAdd();
     })

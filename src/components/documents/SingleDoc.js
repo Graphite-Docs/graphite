@@ -1,9 +1,6 @@
 import React, { Component } from "react";
 import { Image, Icon, Modal, Input, Button, Message } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
-import {
-  loadUserData
-} from 'blockstack';
 import Loading from '../Loading';
 import Menu from './Menu';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
@@ -26,7 +23,7 @@ export default class SingleDoc extends Component {
 
 
   render() {
-    const { displayMessage, userRole, teamDoc, avatars, loadingIndicator, yjsConnected, docLoaded, rtc, idToLoad, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, revealModule, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
+    const { displayMessage, userRole, teamDoc, avatars, yjsConnected, docLoaded, rtc, idToLoad, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
     let teamList;
     if(team) {
       teamList = team;
@@ -40,31 +37,32 @@ export default class SingleDoc extends Component {
     } else {
       words = 0;
     }
-    const stealthy = (hideStealthy) ? "hide" : "";
+    // const stealthy = (hideStealthy) ? "hide" : "";
 
     const {length} = contacts
-    let users = '&length=' + length
-    let k = 0
-    for (const i of contacts) {
-      users += '&id' + k + "=" + i.contact
-      k += 1
-    }
+    // let users = '&length=' + length
+    // let k = 0
+    // for (const i of contacts) {
+    //   users += '&id' + k + "=" + i.contact
+    //   k += 1
+    // }
 
-    const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
-    'http://localhost:3030/?app=gd04012018' :
-    'https://www.stealthy.im/?app=gd04012018';
-    const stealthyUrl = stealthyUrlStub + users;
-
-
-    const stealthyModule =  (
-      <div className={stealthy}>
-        <div id='stealthyCol' className='card'>
-          <div className={revealModule}>
-            <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
-          </div>
-        </div>
-      </div>
-    )
+    //
+    // const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
+    // 'http://localhost:3030/?app=gd04012018' :
+    // 'https://www.stealthy.im/?app=gd04012018';
+    // const stealthyUrl = stealthyUrlStub + users;
+    //
+    //
+    // const stealthyModule =  (
+    //   <div className={stealthy}>
+    //     <div id='stealthyCol' className='card'>
+    //       <div className={revealModule}>
+    //         <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
+    //       </div>
+    //     </div>
+    //   </div>
+    // )
     // ) : null
 
     let docFlex;
@@ -79,7 +77,7 @@ export default class SingleDoc extends Component {
         <div>
 
         <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
-          <MainMenu.Item onClick={this.handleItemClick}>
+          <MainMenu.Item onClick={this.props.handleBack}>
             <Icon name='arrow left' />
           </MainMenu.Item>
           <MainMenu.Item>
@@ -90,7 +88,14 @@ export default class SingleDoc extends Component {
             :
             "Title here..."
           }
-          <Modal trigger={<Icon onClick={() => this.setState({ modalOpen: true})} style={{marginLeft: "10px"}} name='edit outline' /> } closeIcon open={this.state.modalOpen}>
+          <Modal
+            trigger={<a style={{ cursor: "pointer", color: "#fff"}}  onClick={() => this.setState({ modalOpen: true})}><Icon style={{marginLeft: "10px"}} name='edit outline' /></a> }
+            closeIcon
+            open={this.state.modalOpen}
+            closeOnEscape={true}
+            closeOnDimmerClick={true}
+            onClose={() => this.setState({ modalOpen: false})}
+            >
             <Modal.Header>Edit Document Title</Modal.Header>
             <Modal.Content>
               <Modal.Description>
@@ -145,9 +150,9 @@ export default class SingleDoc extends Component {
               }
               </ul>
             </MainMenu.Item>
-            <MainMenu.Item>
+            {/*<MainMenu.Item>
               <Image className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/>
-            </MainMenu.Item>
+            </MainMenu.Item>*/}
           </MainMenu.Menu>
           </MainMenu>
           <Menu
@@ -161,6 +166,14 @@ export default class SingleDoc extends Component {
             sharedInfoSingleDocRTC={this.props.sharedInfoSingleDocRTC}
             sharedInfoSingleDocStatic={this.props.sharedInfoSingleDocStatic}
             results={this.props.results}
+            shareToTeam={this.props.shareToTeam}
+            sharePublicly={this.props.sharePublicly}
+            toggleReadOnly={this.props.toggleReadOnly}
+            stopSharing={this.props.stopSharing}
+            singleDocIsPublic={singleDocIsPublic}
+            readOnly={readOnly}
+            gaiaLink={gaiaLink}
+            teamList={teamList}
             contacts={contacts}
             title={title}
             graphitePro={graphitePro}
@@ -177,105 +190,6 @@ export default class SingleDoc extends Component {
             /> :
             null
           }
-
-        {/* Team Share Modal */}
-
-        <div id="teamShare" className="modal">
-          <div className="modal-content">
-            <h4>Share to Your Graphite Pro Team</h4>
-            { loadingIndicator === true ?
-              <div className="container">
-                <Loading />
-              </div> :
-              <div>
-              <p>By sharing with your entire team, each teammate will have immediate access to the document and will be able to collaborate in real-time.</p>
-              <p>For reference, you can see your list of teammates below:</p>
-              {
-                teamList.slice(0).reverse().map(mate => {
-                  return (
-                    <div key={mate.blockstackId} className="col s12 m7">
-                      <div className="card horizontal">
-                        <div className="card-stacked">
-                          <div className="card-content">
-                            <h5 className="header">{mate.name}</h5>
-                            <p>{mate.email}</p>
-                            <p>{mate.role}</p>
-                          </div>
-
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })
-              }
-              </div>
-            }
-          </div>
-          <div className="modal-footer">
-            <a onClick={this.props.shareToTeam} className="modal-action btn green">Share</a>
-            <a className="modal-action modal-close btn grey">Cancel</a>
-            </div>
-          </div>
-
-          {/* End Team Share Modal */}
-
-        {/* Public Link Modal */}
-
-        <div id="publicModal" className="modal">
-          <div className="modal-content">
-            <h4>Share Publicly</h4>
-            <p>This data is not encrypted and can be accessed by anyone with the link that will be generated.</p>
-            {
-              singleDocIsPublic === true ?
-              <div>
-                <p>This document is already being shared publicly.</p>
-                <button onClick={this.props.sharePublicly} className="btn black">Show Link</button>
-                <button onClick={this.props.toggleReadOnly} className="btn green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</button>
-                <button onClick={this.props.stopSharing} className="btn red">Stop Sharing Publicly</button>
-                <p>
-                  {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
-                </p>
-              </div>
-              :
-              <button className="btn" onClick={this.props.sharePublicly}>Share publicly</button>
-            }
-
-            {
-              gaiaLink !== "" ?
-              <div>
-                <p><a href={gaiaLink}>{gaiaLink}</a></p>
-              </div>
-              :
-              <div className="hide" />
-            }
-          </div>
-          <div className="modal-footer">
-            <a className="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
-            </div>
-          </div>
-
-          {/* End Public Link Modal */}
-
-          {/* Encrypted Collab Modal */}
-          <div id="encryptedModal" className="modal">
-            <div className="modal-content">
-              <h4>Choose How to Share</h4>
-              <p>All data is encrypted, but if you choose to enable real-time collaboration, a websockets server will be utilized. If you do not wish to utlize any server, choose "Static Sharing."</p>
-              <button onClick={() => this.props.sharedInfoSingleDocRTC(this.state.contactToShareWith)} className='btn green'>Enable Real-Time Collaboration</button>
-              <button onClick={() => this.props.sharedInfoSingleDocStatic(this.state.contactToShareWith)} className='btn blue'>Share Static Copy</button>
-              <div>
-              {rtc === true ?
-                <p>Share this link with your collaborator(s) or they can access all shared files next time they log into Graphite. <br/><a href={window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1]}>{window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1]}</a></p> :
-                null
-              }
-              </div>
-            </div>
-            <div className="modal-footer">
-              <a className="modal-action modal-close waves-effect waves-green btn-flat">Close</a>
-              </div>
-            </div>
-          {/* End Encrypted Collab Modal */}
-
 
           <div className="test-docs">
             <div className={docFlex}>
@@ -329,14 +243,13 @@ export default class SingleDoc extends Component {
                 </div>
               }
 
-              <div className="right-align wordcounter">
+              <div style={{ float: "right", margin: "40px"}} className="right-align wordcounter">
                 <p className="wordcount">
                   {words} words
                 </p>
               </div>
               <div className={save}></div>
             </div>
-            {stealthyModule}
           </div>
         </div>
       </div>

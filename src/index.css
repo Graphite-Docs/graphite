@@ -105,6 +105,10 @@ h5, h6 {
 
 /* Single Doc */
 
+.wordcounter {
+  color: grey;
+}
+
 .avatar-ul {
   list-style-type: none;
   padding: 0;
@@ -219,6 +223,10 @@ h5, h6 {
   height: 30px;
 }
 
+.item-menu {
+  z-index: 980!important;
+}
+
 .item-menu .item {
   color: #fff!important;
   padding: 10px!important;
@@ -229,4 +237,289 @@ h5, h6 {
   position: fixed;
   top: 0;
   width: 100%;
+}
+
+/* Quill Editor */
+
+.ql-editor {
+  max-width: 80%;
+  margin: auto;
+  margin-top: 200px;
+  line-height: 1;
+}
+
+@media screen and (max-width: 800px) {
+  .ql-editor {
+    max-width: 85%;
+    margin: auto;
+    margin-top: 200px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .ql-editor {
+    max-width: 90%;
+    margin: auto;
+    margin-top: 200px;
+  }
+}
+
+@media screen and (max-width: 400px) {
+  .ql-editor {
+    max-width: 95%;
+    margin: auto;
+    margin-top: 200px;
+  }
+}
+
+@media screen and (max-width: 350px) {
+  .ql-editor {
+    max-width: 95%;
+    margin: auto;
+    margin-top: 270px;
+  }
+}
+
+.ql-snow .ql-picker.ql-font {
+  margin-left: 10px;
+}
+
+.ql-font span[data-label="Ubuntu"]::before {
+  font-family: "Ubuntu";
+  content: "Ubuntu";
+}
+.ql-font span[data-label="Raleway"]::before {
+  font-family: "Raleway";
+  content: "Raleway";
+}
+.ql-font span[data-label="Roboto"]::before {
+  font-family: "Roboto" !important;
+  content: "Roboto";
+}
+.ql-font span[data-label="Lato"]::before {
+  font-family: "Lato" !important;
+  content: "Lato"!important;
+}
+.ql-font span[data-label="Open Sans"]::before {
+  font-family: "Open Sans" !important;
+  content: "Open Sans";
+}
+.ql-font span[data-label="Montserrat"]::before {
+  font-family: "Montserrat" !important;
+  content: "Montserrat";
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='Roboto']::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='Roboto']::before {
+  font-family: "Roboto" !important;
+  content: "Roboto";
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='Ubunut']::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='Ubunut']::before {
+  font-family: "Ubuntu" !important;
+  content: "Ubuntu";
+}
+
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='Raleway']::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='Raleway']::before {
+  font-family: "Raleway" !important;
+  content: "Raleway";
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='Lato']::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='Lato']::before {
+  font-family: "Lato" !important;
+  content: "Lato";
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='Open Sans']::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='Open Sans']::before {
+  font-family: "Open Sans" !important;
+  content: "Open Sans";
+}
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value='Montserrat']::before, .ql-snow .ql-picker.ql-font .ql-picker-item[data-value='Montserrat']::before {
+  font-family: "Montserrat" !important;
+  content: "Montserrat";
+}
+
+.ql-font-Raleway {
+  font-family: "Raleway";
+}
+.ql-font-Roboto {
+  font-family: "Roboto";
+}
+.ql-font-Ubuntu {
+  font-family: "Ubuntu";
+}
+.ql-font-Lato {
+  font-family: "Lato";
+}
+.ql-font-Lato {
+  font-family: "Open Sans";
+}
+.ql-font-Lato {
+  font-family: "Montserrat";
+}
+
+/* Font families end */
+
+/* Font size begin */
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=small]::before {
+  font-size: 13px;
+}
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=normal]::before {
+  font-size: 16px;
+}
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=large]::before {
+  font-size: 22px;
+}
+.ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before {
+  font-size: 32px;
+}
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=small]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=small]::before {
+  content: "10";
+}
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=normal]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=normal]::before {
+  content: "12";
+}
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=large]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=large]::before {
+  content: "16";
+}
+.ql-snow .ql-picker.ql-size .ql-picker-label[data-value=huge]::before, .ql-snow .ql-picker.ql-size .ql-picker-item[data-value=huge]::before {
+  content: "24";
+}
+.ql-snow .ql-picker.ql-size .ql-picker-label::before, .ql-snow .ql-picker.ql-size .ql-picker-item::before {
+  content: "12";
+}
+
+.ql-editor.ql-blank::before {
+  font-style: normal!important;
+  color: #c9c7c7!important;
+}
+
+.ql-toolbar.ql-snow {
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    font-family: inherit;
+    z-index: 980;
+    width: 100%;
+    background: #fff;
+    height: auto;
+    position: fixed;
+    top: 95px;
+    left: 0;
+    padding-left: 20px;
+    padding-bottom: 15px;
+}
+
+.ql-toolbar.ql-snow .ql-picker-label {
+  background: #fff;
+  padding-bottom: 30px;
+  border-radius: 5px;
+}
+
+.ql-snow .ql-fill, .ql-snow .ql-stroke.ql-fill {
+  fill: #282828;
+}
+
+.ql-snow .ql-stroke {
+  stroke: #282828!important;
+}
+
+.ql-toolbar.ql-snow .ql-picker-label {
+  background: #fff;
+}
+
+polygon.ql-stroke {
+  stroke: #444;
+}
+
+.ql-container.ql-snow {
+  border: none;
+}
+.ql-editor {
+  font-family: "Times New Roman", Georgia, Serif;
+  line-height: 2;
+  font-size: 16px;
+}
+
+.ql-formats {
+  margin-top: 5px;
+}
+
+/* Print Layout */
+
+@media print {
+  body {
+    margin-bottom: 25mm;
+    background: #fff
+  }
+  a:after {
+    content: none;
+  }
+
+  .docs {
+    margin-top: 0;
+    width: 100%;
+  }
+
+  .card-stacked a {
+    margin-top: 25px;
+  }
+
+  .cm-e-menu {
+    display: none;
+  }
+
+  .ql-editor {
+    width: 90%;
+    margin: auto;
+    margin-top: 45px;
+  }
+
+  .doc-card, .doc-margin {
+    padding: 0;
+  }
+  .btn, nav {
+    display: none;
+  }
+  .container {
+    width: 95%;
+  }
+  .print-view {
+    font-family: "Times New Roman", Georgia, Serif;
+    line-height: 200%;
+  }
+  .card {
+    border: none;
+    box-shadow: none;
+  }
+  textarea {
+    border: none;
+  }
+
+  .print-content {
+    /* font-size: 16px!important;
+    line-height: 200% */
+  }
+
+  .note-toolbar {
+    display: none;
+  }
+
+  .print-title {
+    font-size: 20px!important;
+    border: none!important;
+  }
+
+  .item-menu {
+    display: none!important;
+  }
+
+  .wordcount {
+    display: none;
+  }
+
+  .ql-toolbar.ql-snow {
+    display: none;
+  }
+
+  @page {
+  margin: 2cm;
+  size: auto;
+  }
 }
