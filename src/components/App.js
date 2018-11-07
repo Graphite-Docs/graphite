@@ -339,7 +339,9 @@ import {
   filterContactsNow,
   dateFilterContacts,
   typeFilter,
-  clearContactsFilter
+  clearContactsFilter,
+  handleDeleteContact,
+  setContactsPerPage
 } from './helpers/contacts';
 import {
   loadSharedRTC,
@@ -629,7 +631,8 @@ export default class App extends Component {
       emailOK: false,
       profileEmail: "",
       countFilesDone: false,
-      displayMessage: false
+      displayMessage: false,
+      visible: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -910,6 +913,8 @@ export default class App extends Component {
     this.dateFilterContacts = dateFilterContacts.bind(this);
     this.typeFilter = typeFilter.bind(this);
     this.clearContactsFilter = clearContactsFilter.bind(this);
+    this.handleDeleteContact = handleDeleteContact.bind(this);
+    this.setContactsPerPage = setContactsPerPage.bind(this);
 
     //Single rtc
     this.loadSharedRTC = loadSharedRTC.bind(this);
@@ -1038,7 +1043,7 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage
+      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible
     } = this.state;
     return (
       <div>
@@ -1250,8 +1255,18 @@ export default class App extends Component {
                   />
               }/>
               <Route exact path="/shared-docs" component={SharedDocs} />
-
-              <Route exact path="/sheets" component={MainSheets} />
+              <Route exact path="/sheets" render={(props) =>
+                <MainSheets {...props}
+                    results={results}
+                    loading={loading}
+                    handleNewContact={this.handleNewContact}
+                    handleTagChange={this.handleTagChange}
+                    addTagManual={this.addTagManual}
+                    deleteTag={this.deleteTag}
+                    displayMessage={displayMessage}
+                    tag={tag}
+                  />
+              }/>
               <Route exact path="/sheets/sheet/:id" component={SingleSheet} />
               <Route exact path="/sheets/sheet/delete/:id" component={DeleteSheet} />
               <Route exact path="/sheets/shared/:id" component={SharedSheetsCollection} />
@@ -1282,6 +1297,10 @@ export default class App extends Component {
                   dateFilterContacts={this.dateFilterContacts}
                   typeFilter={this.typeFilter}
                   clearContactsFilter={this.clearContactsFilter}
+                  handleDeleteContact={this.handleDeleteContact}
+                  setContactsPerPage={this.setContactsPerPage}
+                  visible={visible}
+                  loading={loading}
                   graphitePro={graphitePro}
                   manualResults={manualResults}
                   typesList={typesList}
@@ -1296,7 +1315,6 @@ export default class App extends Component {
                   add={add}
                   filteredContacts={filteredContacts}
                   show={show}
-                  loading={loading}
                   results={results}
                   newContact={newContact}
                   showFirstLink={showFirstLink}

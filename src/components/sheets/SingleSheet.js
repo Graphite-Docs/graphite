@@ -5,13 +5,17 @@ import {
   putFile
 } from 'blockstack';
 import axios from 'axios';
+import { Icon, Modal, Input, Button, Dropdown } from 'semantic-ui-react';
+import {Menu as MainMenu} from 'semantic-ui-react';
 import {
   SUPPORTED_FORMULAS
 } from '../helpers/formulas.js';
-import { HotTable } from '@handsontable/react';
+import { HotTable } from '@handsontable-pro/react';
+import Loading from '../Loading';
+import 'handsontable-pro/dist/handsontable.full.css';
 // import Handsontable from 'handsontable-pro';
 import update from 'immutability-helper';
-import {CSVLink} from 'react-csv';
+// import {CSVLink} from 'react-csv';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 const { encryptECIES } = require('blockstack/lib/encryption');
 
@@ -33,7 +37,7 @@ export default class SingleSheet extends Component {
       index: "",
       save: "",
       saveNow: false,
-      loading: "hide",
+      loading: false,
       printPreview: false,
       confirmAdd: false,
       autoSave: "Saved",
@@ -63,7 +67,8 @@ export default class SingleSheet extends Component {
       colRange: false,
       rangeParams: [],
       selectedRange: {},
-      colWidths: 100
+      colWidths: 100,
+      modalOpen: false
     }
 
     //Handsontable
@@ -91,16 +96,16 @@ export default class SingleSheet extends Component {
       minSpareRows: 1,
       comments: true,
       licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
-      onAfterChange: (changes, source) => {if(changes){
+      afterChange: (changes, source) => {if(changes){
         clearTimeout(this.changeTimeout);
         this.changeTimeout = setTimeout(this.handleAddItem, 3000)
       }},
-      onAfterSelection: (r, c, r2, c2, preventScrolling) => {
+      afterSelection: (r, c, r2, c2, preventScrolling) => {
          preventScrolling.value = true;
          clearTimeout(this.timeout);
          this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
        },
-       onAfterColumnResize: (currentColumn, newSize, isDoubleClick) => {
+       afterColumnResize: (currentColumn, newSize, isDoubleClick) => {
          this.handleResizeColumn([currentColumn, newSize]);
          setTimeout(this.handleAddItem, 3000)
        }
@@ -136,18 +141,6 @@ export default class SingleSheet extends Component {
         this.makeItItalic();
       }
     });
-    window.$('.modal').modal();
-    window.$('.dropdown-button').dropdown({
-      inDuration: 300,
-      outDuration: 225,
-      constrainWidth: false, // Does not change width of dropdown to that of the activator
-      hover: false, // Activate on hover
-      gutter: 0, // Spacing from edge
-      belowOrigin: false, // Displays dropdown below the button
-      alignment: 'left', // Displays dropdown with edge aligned to the left of button
-      stopPropagation: false // Stops event propagation
-    }
-  );
 
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
@@ -161,7 +154,7 @@ export default class SingleSheet extends Component {
         console.log(error);
       });
 
-      getFile(this.props.match.params.id + 'sharedwith.json', {decrypt: true})
+      getFile(window.location.href.split('sheet/') + 'sharedwith.json', {decrypt: true})
        .then((fileContents) => {
          if(JSON.parse(fileContents || '{}').length > 0) {
            this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
@@ -710,158 +703,119 @@ handleFormulaSet = (props) => {
 }
 
 renderView() {
-  window.$('.modal').modal();
-  window.$('.dropdown-button').dropdown({
-      inDuration: 300,
-      outDuration: 225,
-      constrainWidth: false, // Does not change width of dropdown to that of the activator
-      hover: false, // Activate on hover
-      gutter: 0, // Spacing from edge
-      belowOrigin: false, // Displays dropdown below the button
-      alignment: 'left', // Displays dropdown with edge aligned to the left of button
-      stopPropagation: false // Stops event propagation
-    }
-  );
-  const {  hideStealthy, loading, autoSave, shareModal, show, hideSheet, initialLoad, contacts, publicShare, remoteStorage } = this.state;
-  const remoteStorageActivator = remoteStorage === true ? "" : "hide";
+  const {  loading, autoSave, shareModal, show, contacts, publicShare, title } = this.state;
+
   const colorList = [ '000000', '993300', '333300', '003300', '003366', '000066', '333399', '333333',
 '660000', 'FF6633', '666633', '336633', '336666', '0066FF', '666699', '666666', 'CC3333', 'FF9933', '99CC33', '669966', '66CCCC', '3366FF', '663366', '999999', 'CC66FF', 'FFCC33', 'FFFF66', '99FF66', '99CCCC', '66CCFF', '993366', 'CCCCCC', 'FF99CC', 'FFCC99', 'FFFF99', 'CCffCC', 'CCFFff', '99CCFF', 'CC99FF', 'FFFFFF' ];
-  if(this.state.initialLoad === "") {
+  if(loading) {
     return (
-      <div className="center-align sheets-loader">
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
-
-              <ul className="left toolbar-menu">
-              <li><input className="white-text small-menu" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
-              <li><a className="small-menu muted">{autoSave}</a></li>
-              </ul>
-              <ul className="right toolbar-menu small-toolbar-menu auto-save">
-              <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
-              <li><a className="dropdown-button" data-activates="singleSheet"><i className="small-menu material-icons">more_vert</i></a></li>
-              <li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>
-              </ul>
-
-              {/*Share Menu Dropdown*/}
-              <ul id="dropdown2"className="dropdown-content collection cointainer">
-              <li><span className="center-align">Select a contact to share with</span></li>
-              <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
-              <li className="divider" />
-              {contacts.slice(0).reverse().map(contact => {
-                  return (
-                    <li key={contact.contact}className="collection-item">
-                      <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
-                      <p>{contact.contact}</p>
-                      </a>
-                    </li>
-                  )
-                })
-              }
-              </ul>
-              {/*Share Menu Dropdown*/}
-
-              {/* Dropdown menu content */}
-              <ul id="singleSheet" className="dropdown-content single-doc-dropdown-content">
-                <li className="divider"></li>
-                <li><a onClick={this.print}>Print</a></li>
-                <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
-                {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
-                <li className="divider"></li>
-                <li><a data-activates="slide-out" className="menu-button-collapse button-collapse">Comments</a></li>
-                {this.state.enterpriseUser === true ? <li><a href="#!">Tag</a></li> : <li className="hide"/>}
-                {this.state.enterpriseUser === true ? <li><a href="#!">History</a></li> : <li className="hide"/>}
-              </ul>
-            {/* End dropdown menu content */}
-            {/*Remote storae widget*/}
-              <div className={remoteStorageActivator} id="remotestorage">
-                <div id='remote-storage-element-id'></div>
-              </div>
-              {/*Remote storae widget*/}
-
-          </div>
-        </nav>
-      </div>
-
-
-
-      <div className={initialLoad}>
-        <div className="preloader-wrapper big active">
-          <div className="spinner-layer spinner-green-only">
-            <div className="circle-clipper left">
-              <div className="circle"></div>
-            </div><div className="gap-patch">
-              <div className="circle"></div>
-            </div><div className="circle-clipper right">
-              <div className="circle"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
+      <Loading />
     );
   } else {
     return (
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a onClick={this.handleBack} className="left brand-logo"><i className="small-brand material-icons">arrow_back</i></a>
+      <div className="center-align sheets-loader">
+      <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu.Item onClick={this.handleBack}>
+          <Icon name='arrow left' />
+        </MainMenu.Item>
+        <MainMenu.Item>
+        {
+          title
+          ?
+          (title.length > 15 ? title.substring(0,15)+"..." : title)
+          :
+          "Title here..."
+        }
+        <Modal
+          trigger={<a style={{ cursor: "pointer", color: "#fff"}}  onClick={() => this.setState({ modalOpen: true})}><Icon style={{marginLeft: "10px"}} name='edit outline' /></a> }
+          closeIcon
+          open={this.state.modalOpen}
+          closeOnEscape={true}
+          closeOnDimmerClick={true}
+          onClose={() => this.setState({ modalOpen: false})}
+          >
+          <Modal.Header>Edit Sheet Title</Modal.Header>
+          <Modal.Content>
+            <Modal.Description>
 
-              <ul className="left toolbar-menu">
-              <li><input className="white-text small-menu" type="text" placeholder="Sheet Title" value={this.state.title} onChange={this.handleTitleChange} /></li>
-              <li><a className="small-menu muted">{autoSave}</a></li>
-              </ul>
-              <ul className="right toolbar-menu small-toolbar-menu auto-save">
+              {
+                title === "Untitled" ?
+                <div>
+                Title <br/>
+                <Input
+                  placeholder="Give it a title"
+                  type="text"
+                  value=""
+                  onChange={this.handleTitleChange}
+                />
+                </div>
+                :
+                <div>
+                Title<br/>
+                <Input
+                  placeholder="Title"
+                  type="text"
+                  value={title}
+                  onChange={this.handleTitleChange}
+                />
+                <Button onClick={() => this.setState({ modalOpen: false })} style={{ borderRadius: "0"}} secondary>Save</Button>
+                </div>
+              }
+            </Modal.Description>
+          </Modal.Content>
+        </Modal>
+        </MainMenu.Item>
+        <MainMenu.Item>
+          {autoSave}
+        </MainMenu.Item>
+        </MainMenu>
+        <div>
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff", top: "37px" }}>
+          <MainMenu.Item>
+            <Input onChange={this.handleInput} value={!isNaN(this.state.selectedData) ? this.state.selectedData : this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData === null ? "" : this.state.selectedData} placeholder="fx" />
+          </MainMenu.Item>
+          <MainMenu.Item>
+            <a style={{color: "#fff"}} onClick={this.makeItBold}><Icon name='bold' /></a>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            <a style={{color: "#fff"}} onClick={this.makeItItalic}><Icon name='italic' /></a>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            <Dropdown icon='eye dropper'>
+              <Dropdown.Menu>
+              <Dropdown.Menu scrolling>
+                {
+                  colorList.map(c => {
 
-              <li><a className="tooltipped dropdown-button" data-activates="dropdown2" data-position="bottom" data-delay="50" data-tooltip="Share"><i className="small-menu material-icons">people</i></a></li>
-              <li><a className="dropdown-button" data-activates="singleSheet"><i className="small-menu material-icons">more_vert</i></a></li>
-              {/*<li><a className="small-menu tooltipped stealthy-logo" data-position="bottom" data-delay="50" data-tooltip="Stealthy Chat" onClick={() => this.setState({hideStealthy: !hideStealthy})}><img className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/></a></li>*/}
-              </ul>
-
-              {/*Share Menu Dropdown*/}
-              <ul id="dropdown2"className="dropdown-content collection cointainer">
-              <li><span className="center-align">Select a contact to share with</span></li>
-              <a href="/contacts"><li><span className="muted blue-text center-align">Or add new contact</span></li></a>
-              <li className="divider" />
-              {contacts.slice(0).reverse().map(contact => {
+                    return(
+                      <Dropdown.Item key={c}><a style={{background: "#" + c.toString(), padding: "5px"}} onClick={() => this.handleColorSelect(c)}>{c}</a></Dropdown.Item>
+                    )
+                  })
+                }
+              </Dropdown.Menu>
+              </Dropdown.Menu>
+              </Dropdown>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            <Dropdown text='Formulas'>
+              <Dropdown.Menu>
+              <Dropdown.Menu scrolling>
+              {
+                SUPPORTED_FORMULAS.map(formula => {
                   return (
-                    <li key={contact.contact}className="collection-item">
-                      <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true })}>
-                      <p>{contact.contact}</p>
-                      </a>
-                    </li>
+                    <Dropdown.Item key={formula}><a onClick={() => this.handleFormulaSet(formula)}>{formula}</a></Dropdown.Item>
                   )
                 })
               }
-              </ul>
-              {/*Share Menu Dropdown*/}
-
-              {/* Dropdown menu content */}
-              <ul id="singleSheet" className="dropdown-content single-doc-dropdown-content">
-                <li className="divider"></li>
-                <li><a onClick={this.print}>Print</a></li>
-                <li><CSVLink data={this.state.grid} filename={this.state.title + '.csv'} >Download</CSVLink></li>
-                {this.state.journalismUser === true ? <li><a onClick={() => this.setState({send: true})}>Submit Article</a></li> : <li className="hide"/>}
-              </ul>
-            {/* End dropdown menu content */}
-            {/*Remote storae widget*/}
-              <div className={remoteStorageActivator} id="remotestorage">
-                <div id='remote-storage-element-id'></div>
-              </div>
-              {/*Remote storae widget*/}
-
-          </div>
-        </nav>
+              </Dropdown.Menu>
+              </Dropdown.Menu>
+              </Dropdown>
+          </MainMenu.Item>
+          </MainMenu>
+        </div>
       </div>
-      {/*<nav className="sheets-bar">
-        <div className="ql-toolbar ql-snow">
-        <div className="row">
-          <i className="col s1 material-icons right-align black-text">functions</i><input type="text" className="browser-default col s10 black-text" /><div className="col s1" />
-        </div>
-        </div>
-      </nav>*/}
+
 
       <div className={publicShare}>
         <div id="modal1" className="modal bottom-sheet">
@@ -910,73 +864,9 @@ renderView() {
             </div>
           </div>
         </div>
-
-          <div className={loading}>
-            <div className="preloader-wrapper small active">
-              <div className="spinner-layer spinner-green-only">
-                <div className="circle-clipper left">
-                  <div className="circle"></div>
-                </div><div className="gap-patch">
-                  <div className="circle"></div>
-                </div><div className="circle-clipper right">
-                  <div className="circle"></div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
         </div>
         <div>
-          <div className={hideSheet}>
-          <nav className="spreadsheet-tools">
-              <div className="nav-wrapper">
-                <ul className="left">
-                  <li><a><input type="text" onChange={this.handleInput} value={!isNaN(this.state.selectedData) ? this.state.selectedData : this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData === null ? "" : this.state.selectedData} placeholder="fx" /></a></li>
-                  <li><a onClick={this.makeItBold}><i className="tiny material-icons">format_bold</i></a></li>
-                  <li><a onClick={this.makeItItalic}><i className="tiny material-icons">format_italic</i></a></li>
-                  <li><a className="dropdown-button" data-activates='colors-drop'><i className="tiny material-icons">format_color_text</i></a></li>
-                  <li><a className="dropdown-button" data-activates='formulas-drop'><i className="tiny material-icons">functions</i></a></li>
-                </ul>
-              </div>
-            </nav>
-            <div id='formulas-drop' className='dropdown-content'>
-              <div className="container">
-              <h6 className="black-text">Most Used</h6>
-              <ul>
-                <li><a onClick={() => this.handleFormulaSet("SUM")}>SUM</a></li>
-                <li><a onClick={() => this.handleFormulaSet("COUNT")}>COUNT</a></li>
-                <li><a onClick={() => this.handleFormulaSet("AVERAGE")}>AVERAGE</a></li>
-              </ul>
-              <hr />
-              <h6 className="black-text">All Formulas</h6>
-              <ul>
-              {
-                SUPPORTED_FORMULAS.map(formula => {
-                  return (
-                    <li key={formula}><a onClick={() => this.handleFormulaSet(formula)}>{formula}</a></li>
-                  )
-                })
-              }
-              </ul>
-              </div>
-            </div>
-            <div id='colors-drop' className='dropdown-content'>
-              <div className="row center-align">
-                {
-                  colorList.map(c => {
-                    let backgroundColor = '#' + c;
-                    let bColor = {
-                      background: backgroundColor
-                    }
-
-                    return(
-                      <a onClick={() => this.handleColorSelect(c)} key={c} style={bColor} className="col s2 color-picker"><span className="hide">a</span></a>
-                    )
-                  })
-                }
-              </div>
-            </div>
-            <div className="spreadsheet-table">
 
               {
                 this.state.decryption !==true ?
@@ -1012,9 +902,6 @@ renderView() {
                  /> :
                  <HotTable data={this.state.grid} ref={this.hotTableComponent} id={this.id} settings={this.hotSettings} />
               }
-            </div>
-          </div>
-          {/*stealthyModule*/}
         </div>
         </div>
 

@@ -1,6 +1,9 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
+import Loading from '../Loading';
+import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 import {
   isSignInPending,
   loadUserData,
@@ -45,7 +48,7 @@ export default class SheetsCollections extends Component {
       filteredSheets: [],
       tempSheetId: "",
       redirect: false,
-      loading: "",
+      loading: false,
       alert: "",
       currentPage: 1,
       sheetsPerPage: 10,
@@ -83,7 +86,9 @@ export default class SheetsCollections extends Component {
       selectedTag: "",
       selectedCollab: "",
       selectedDate: "",
-      tagIndex: ""
+      tagIndex: "",
+      visible: false,
+      displayMessage: false
     }
     this.handleaddItem = this.handleaddItem.bind(this);
     this.saveNewFile = this.saveNewFile.bind(this);
@@ -123,14 +128,7 @@ export default class SheetsCollections extends Component {
     }
   }
   componentDidMount() {
-    window.$('.modal').modal();
-    window.$('.button-collapse').sideNav({
-      menuWidth: 400, // Default is 300
-      edge: 'left', // Choose the horizontal origin
-      closeOnClick: false, // Closes side-nav on <a> clicks, useful for Angular/Meteor
-      draggable: true, // Choose whether you can drag to open on touch screens
-    }
-  );
+    this.setState({ loading: true });
   const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
   putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
     .catch(e => {
@@ -174,10 +172,13 @@ loadCollection() {
      if(fileContents) {
        this.setState({ sheets: JSON.parse(fileContents || '{}').sheets });
        this.setState({filteredSheets: this.state.sheets})
-       this.setState({ loading: "hide" });
+
      } else {
-       this.setState({ loading: "hide" });
+       this.setState({ loading: false });
      }
+   })
+   .then(() => {
+     this.setState({ loading: false });
    })
     .catch(error => {
       console.log(error);
@@ -283,12 +284,15 @@ migrationComplete() {
     object.content = [[]];
     object.id = rando;
     object.created = getMonthDayYear();
+    object.updated = getMonthDayYear();
     object.sharedWith = [];
     object.tags = [];
+    object.lastUpdate = Date.now();
     const objectTwo = {};
     objectTwo.title = object.title;
     objectTwo.id = object.id;
-    objectTwo.created = object.created
+    objectTwo.created = object.created;
+    objectTwo.updated = object.updated;
     objectTwo.sharedWith = [];
     objectTwo.tags = [];
     objectTwo.lastUpdate = Date.now();
@@ -360,9 +364,9 @@ migrationComplete() {
         }
   }
 
-  sharedInfo() {
-    this.setState({ confirmAdd: false });
-    const user = this.state.receiverID;
+  sharedInfo(contact, sheet) {
+    this.setState({ loading: true, receiverID: contact, sharedWithSingle: [...this.state.sharedWithSingle, contact] });
+    const user = contact;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
     getFile('key.json', options)
@@ -370,17 +374,18 @@ migrationComplete() {
         this.setState({ pubKey: JSON.parse(file)})
       })
         .then(() => {
-          this.loadSharedCollection();
+          this.loadSharedCollection(contact);
         })
         .catch(error => {
           console.log("No key: " + error);
-          window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-          this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
+          this.setState({ displayMessage: true, loading: false}, () => {
+            setTimeout(() => this.setState({ displayMessage: false}), 3000);
+          });
         });
   }
 
-  loadSharedCollection() {
-    const user = this.state.receiverID;
+  loadSharedCollection(contact, sheet) {
+    const user = contact;
     const file = "sharedsheets.json";
     getFile(user + file, {decrypt: true})
       .then((fileContents) => {
@@ -391,62 +396,57 @@ migrationComplete() {
         }
       })
       .then(() => {
-        this.loadSingle();
+        this.share(contact, sheet);
       })
       .catch((error) => {
         console.log(error)
       });
   }
 
-  loadSingle() {
-    if(this.state.sheetsSelected.length > 1) {
-      //TODO figure out how to handle this
-    } else {
-      const thisFile = this.state.sheetsSelected[0];
-      const fullFile = '/sheets/' + thisFile + '.json';
+  loadSingle(sheet) {
+    const thisFile = sheet.id;
+    const fullFile = '/sheets/' + thisFile + '.json';
 
-      getFile(fullFile, {decrypt: true})
-       .then((fileContents) => {
-         if(JSON.parse(fileContents || '{}').sharedWith) {
-           this.setState({
-             title: JSON.parse(fileContents || '{}').title,
-             grid: JSON.parse(fileContents || '{}').content,
-             tags: JSON.parse(fileContents || '{}').tags,
-             updated: JSON.parse(fileContents || '{}').updated,
-             id: JSON.parse(fileContents || '{}').id,
-             sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
-          });
-        } else {
-          this.setState({
-            title: JSON.parse(fileContents || '{}').title,
-            grid: JSON.parse(fileContents || '{}').content,
-            tags: JSON.parse(fileContents || '{}').tags,
-            updated: JSON.parse(fileContents || '{}').updated,
-            id: JSON.parse(fileContents || '{}').id,
-            sharedWithSingle: []
-         });
-        }
-
-       })
-        .then(() => {
-          this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
-          setTimeout(this.getCollection, 300);
-        })
-        .catch(error => {
-          console.log(error);
+    getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       if(JSON.parse(fileContents || '{}').sharedWith) {
+         this.setState({
+           title: JSON.parse(fileContents || '{}').title,
+           grid: JSON.parse(fileContents || '{}').content,
+           tags: JSON.parse(fileContents || '{}').tags,
+           updated: JSON.parse(fileContents || '{}').updated,
+           id: JSON.parse(fileContents || '{}').id,
+           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
         });
+      } else {
+        this.setState({
+          title: JSON.parse(fileContents || '{}').title,
+          grid: JSON.parse(fileContents || '{}').content,
+          tags: JSON.parse(fileContents || '{}').tags,
+          updated: JSON.parse(fileContents || '{}').updated,
+          id: JSON.parse(fileContents || '{}').id,
+          sharedWithSingle: [],
+       });
       }
+
+     })
+      .then(() => {
+        this.getCollection(sheet)
+      })
+      .catch(error => {
+        console.log(error);
+      });
   }
 
 
-  getCollection() {
+  getCollection(sheet) {
     getFile("sheetscollection.json", {decrypt: true})
     .then((fileContents) => {
        this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
        this.setState({ initialLoad: "hide" });
     }).then(() =>{
       let sheets = this.state.sheets;
-      const thisSheet = sheets.find((sheet) => { return sheet.id.toString() === this.state.sheetsSelected[0]}); //this is comparing strings
+      const thisSheet = sheets.find((a) => { return a.id.toString() === sheet.id.toString()}); //this is comparing strings
       let index = thisSheet && thisSheet.id;
       function findObjectIndex(sheet) {
           return sheet.id === index; //this is comparing numbers
@@ -454,14 +454,14 @@ migrationComplete() {
       this.setState({index: sheets.findIndex(findObjectIndex) });
     })
       .then(() => {
-        this.share();
+        // this.share();
       })
       .catch(error => {
         console.log(error);
       });
   }
 
-  share() {
+  share(contact, sheet) {
     const object = {};
     object.title = this.state.title;
     object.content = this.state.grid;
@@ -471,24 +471,24 @@ migrationComplete() {
     object.tags = this.state.tags;
     const index = this.state.index;
     const updatedSheets = update(this.state.sheets, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-    this.setState({sheets: updatedSheets, singleSheet: object, sharedCollection: [...this.state.sharedCollection, object]});
-
-    setTimeout(this.saveSharedFile, 300);
+    this.setState({sheets: updatedSheets, singleSheet: object, sharedCollection: [...this.state.sharedCollection, object]}, () => {
+      this.saveSharedFile(contact, sheet);
+    });
   }
 
-  saveSharedFile() {
-    const user = this.state.receiverID;
+  saveSharedFile(contact, sheet) {
+    const user = contact;
     const file = "sharedsheets.json";
 
     putFile(user + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
       .then(() => {
         console.log("Shared Collection Saved");
-        this.saveSingleFile();
+        this.saveSingleFile(contact, sheet);
       })
   }
 
-  saveSingleFile() {
-    const file = this.state.sheetsSelected[0];
+  saveSingleFile(contact, sheet) {
+    const file = this.state.id;
     const fullFile = '/sheets/' + file + '.json'
     putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt:true})
       .then(() => {
@@ -525,10 +525,10 @@ migrationComplete() {
     putFile(directory, encryptedData, {encrypt: false})
       .then(() => {
         console.log("Shared encrypted file ");
-        window.Materialize.toast('Sheet shared with ' + this.state.receiverID, 4000);
-        this.loadCollection();
-        this.setState({shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
-        window.$('#shareModal').modal('close');
+        this.setState({ loading: false }, () => {
+          this.loadCollection();
+        })
+
       })
       .catch(e => {
         console.log(e);
@@ -593,13 +593,13 @@ migrationComplete() {
       });
   }
 
-  saveNewTags() {
-    this.setState({ loadingTwo: ""});
+  saveNewTags(sheet) {
+    this.setState({ loading: true});
     const object = {};
     object.id = this.state.id;
     object.title = this.state.title;
     object.updated = this.state.updated;
-    object.tags = this.state.singleSheetTags;
+    object.tags = this.state.tags;
     object.content = this.state.grid;
     object.sharedWith = this.state.sharedWith;
     const objectTwo = {};
@@ -607,18 +607,19 @@ migrationComplete() {
     objectTwo.id = this.state.id;
     objectTwo.updated = this.state.updated;
     objectTwo.sharedWith = this.state.sharedWith;
-    objectTwo.tags = this.state.singleSheetTags
+    objectTwo.tags = this.state.tags;
     const index = this.state.index;
     const updatedSheet = update(this.state.sheets, {$splice: [[index, 1, objectTwo]]});
-    this.setState({sheets: updatedSheet, filteredSheets: updatedSheet, singleSheet: object });
-    setTimeout(this.saveFullCollectionTags, 500);
+    this.setState({sheets: updatedSheet, filteredSheets: updatedSheet, singleSheet: object }, () => {
+      this.saveFullCollectionTags(sheet)
+    });
   }
 
-  saveFullCollectionTags() {
+  saveFullCollectionTags(sheet) {
     putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log("Saved");
-        this.saveSingleSheetTags();
+        this.saveSingleSheetTags(sheet);
       })
       .catch(e => {
         console.log("e");
@@ -627,13 +628,12 @@ migrationComplete() {
   }
 
   saveSingleSheetTags() {
-    const thisFile = this.state.sheetsSelected[0];
+    const thisFile = this.state.id;
     const fullFile = '/sheets/' + thisFile + '.json';
     putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt:true})
       .then(() => {
         console.log("Saved tags");
-        this.setState({ tagModal: "hide", loadingTwo: "hide" });
-        window.$('#tagModal').modal('close');
+        this.setState({ loading: false, singleSheetTags: [] });
         this.loadCollection();
       })
       .catch(e => {
@@ -642,19 +642,16 @@ migrationComplete() {
       });
   }
 
-  deleteTag() {
-    console.log("Deleted");
-    this.setState({ deleteState: false });
-
-    let tags = this.state.singleSheetTags;
-    const thisTag = tags.find((tag) => { return tag === this.state.selectedTagId}); //this is comparing strings
-    let index = thisTag
-    function findObjectIndex(tag) {
-        return tag === index; //this is comparing numbers
+  deleteTag(tag) {
+    let singleDocTags = this.state.tags;
+    const thisTag = singleDocTags.find((a) => { return a === tag});
+    let tagIndex = thisTag;
+    function findObjectIndex(a) {
+        return a === tagIndex; //this is comparing numbers
     }
-    this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
-      const updatedTags = update(this.state.singleSheetTags, {$splice: [[this.state.tagIndex, 1]]});
-      this.setState({singleSheetTags: updatedTags });
+    this.setState({ tagIndex: singleDocTags.findIndex(findObjectIndex) }, () => {
+      singleDocTags.splice(this.state.tagIndex, 1);
+      this.setState({tags: singleDocTags});
     });
   }
 
@@ -664,14 +661,21 @@ migrationComplete() {
 
   handleKeyPress(e) {
     if (e.key === 'Enter') {
-      this.setState({ singleSheetTags: [...this.state.singleSheetTags, this.state.tag]});
+      this.setState({ tags: [...this.state.tags, this.state.tag]});
       this.setState({ tag: "" });
     }
   }
 
-  addTagManual() {
-    this.setState({ singleSheetTags: [...this.state.singleSheetTags, this.state.tag]});
-    this.setState({ tag: "" });
+  addTagManual(sheet) {
+    this.setState({ tags: [...this.state.tags, this.state.tag]}, () => {
+      let sheets = this.state.sheets;
+      const thisSheet = sheets.find((a) => { return a.id.toString() === sheet.id.toString()});
+      let index = thisSheet && thisSheet.id;
+      function findObjectIndex(sheet) {
+          return sheet.id === index; //this is comparing numbers
+      }
+      this.setState({tagIndex: sheets.findIndex(findObjectIndex), tag: "" });
+    });
   }
 
   applyFilter() {
@@ -679,24 +683,89 @@ migrationComplete() {
     setTimeout(this.filterNow, 500);
   }
 
-  filterNow() {
+  filterNow(item, type) {
     let sheets = this.state.sheets;
-    if(this.state.selectedTag !== "") {
-      let tagFilter = sheets.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(this.state.selectedTag) : console.log("nada"));
+    if(type === 'tag') {
+      let tagFilter = sheets.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(item) : null);
       // let tagFilter = sheets.filter(x => x.tags.includes(this.state.selectedTag));
-      this.setState({ filteredSheets: tagFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate !== "") {
+      this.setState({ filteredSheets: tagFilter, appliedFilter: true, visible: false});
+    } else if(type === 'date') {
       let definedDate = sheets.filter((val) => { return val.updated !==undefined });
-      let dateFilter = definedDate.filter(x => x.updated.includes(this.state.selectedDate));
-      this.setState({ filteredSheets: dateFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedCollab !== "") {
-      let collaboratorFilter = sheets.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
-      this.setState({ filteredSheets: collaboratorFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
+      let dateFilter = definedDate.filter(x => x.updated.includes(item));
+      this.setState({ filteredSheets: dateFilter, appliedFilter: true, visible: false});
+    } else if(type === 'collab') {
+      let collaboratorFilter = sheets.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(item) : null);
+      this.setState({ filteredSheets: collaboratorFilter, appliedFilter: true, visible: false});
     }
   }
+
+ tagFilter = (props) => {
+    let sheets = this.state.sheets;
+    let tagFilter = sheets.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(props) : null);
+    this.setState({ filteredValue: tagFilter, appliedFilter: true});
+  }
+
+collabFilter = (props) => {
+  let sheets = this.state.sheets;
+  let collaboratorFilter = sheets.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(props) : console.log(""));
+  this.setState({ filteredValue: collaboratorFilter, appliedFilter: true});
+}
+
+dateFilter = (props) => {
+  let sheets = this.state.sheets;
+  let definedDate = sheets.filter((val) => { return val.updated !==undefined });
+  let dateFilter = definedDate.filter(x => x.updated.includes(props));
+  this.setState({ filteredValue: dateFilter, appliedFilter: true});
+}
+
+handleDeleteItem = (sheet) => {
+  let sheets = this.state.sheets;
+  const thisSheet = sheets.find((a) => { return a.id.toString() === sheet.id.toString()});
+  let index = thisSheet && thisSheet.id;
+  function findObjectIndex(sheet) {
+      return sheet.id === index; //comparing numbers
+  }
+  this.setState({ title: thisSheet && thisSheet.title, index: sheets.findIndex(findObjectIndex) }, () => {
+    if(this.state.index > -1) {
+      sheets.splice(this.state.index,1);
+    } else {
+      console.log("Error with index")
+    }
+
+    this.setState({ sheets: sheets, singleSheet: {}, loading: true,  action: "Deleted document: " +  sheet.id}, () => {
+      this.saveAfterDelete(sheet);
+    })
+  })
+
+
+};
+
+saveAfterDelete = (sheet) => {
+  const thisFile = sheet.id;
+  const fullFile = '/sheets/' + thisFile + '.json';
+  putFile(fullFile, JSON.stringify(this.state.singleSheet), {encrypt: true})
+    .then(() => {
+      putFile("sheetscollection.json", JSON.stringify(this.state), {encrypt: true})
+        .then(() => {
+          this.setState({ loading: false });
+          this.loadCollection();
+        })
+        .catch(e => {
+          console.log("e");
+          console.log(e);
+        });
+    })
+    .catch(e => {
+      console.log("e");
+      console.log(e);
+    });
+}
+
+handlePageChange = (props) => {
+  this.setState({
+    currentPage: props
+  });
+}
 
 
   render() {
@@ -704,12 +773,19 @@ migrationComplete() {
     this.state.applyFilter === true ? this.applyFilter() : loadUserData();
     let sheets;
     this.state.filteredSheets === [] ? sheets = [] : sheets = this.state.filteredSheets;
-    const { collaboratorsModal, tagList, dateList, appliedFilter, singleSheetTags, contactDisplay, loadingTwo, confirmAdd, contacts, currentPage, sheetsPerPage, loading } = this.state;
+    const { displayMessage, loading, visible, appliedFilter, contacts, currentPage, sheetsPerPage } = this.state;
+    const { results } = this.props;
+    let contactResults;
+    if(results) {
+      contactResults = results;
+    } else {
+      contactResults = [];
+    }
     const link = '/sheets/sheet/' + this.state.tempSheetId;
     if (this.state.redirect) {
       return <Redirect push to={link} />;
     }
-    confirmAdd === false ? loadUserData() : this.sharedInfo();
+    // confirmAdd === false ? loadUserData() : this.sharedInfo();
     this.state.tagDownload === true ? this.loadSingleTags() : loadUserData();
 
     const indexOfLastSheet = currentPage * sheetsPerPage;
@@ -747,266 +823,281 @@ migrationComplete() {
 
    const renderPageNumbers = pageNumbers.map(number => {
           return (
-            <li
-              key={number}
-              id={number}
-              className={number === this.state.currentPage ? "active" : ""}
-            >
-              <a id={number} onClick={this.handlePageChange}>{number}</a>
-            </li>
+            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.state.currentPage.toString() === number.toString()} onClick={() => this.handlePageChange(number)} />
           );
         });
-    return (
-      <div>
-        <Header />
-        <div className="docs">
-        <div className="row container">
-          <div className="col s12 m6">
-            <h5>Sheets ({currentSheets.length})  <a onClick={this.handleaddItem} className="btn-floating btn black">
-              <i className="material-icons">add</i>
-            </a>
 
-            {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
-            {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={() => this.setState({ appliedFilter: false, filteredSheets: this.state.sheets})}>Clear</a></span> : <div />}
-            </h5>
-            {/* Filter Dropdown */}
-            <ul id="slide-out" className="comments-side-nav side-nav">
-              <h5 className="center-align">Filter</h5>
-              <li><a onClick={() => this.setState({collaboratorsModal: ""})}>Collaborators</a></li>
-                {/* Collaborator list */}
-                  <ul className={collaboratorsModal}>
-                  {
-                    uniqueCollabs.map(collab => {
-                      return (
-                        <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedCollab: collab, collaboratorsModal: "hide", applyFilter: true})}>{collab}</a></li>
-                      )
-                    })
-                  }
-                  </ul>
-                {/* End Collaborator list */}
-              <li><a onClick={() => this.setState({tagList: ""})}>Tags</a></li>
-              {/* Tags list */}
-                <ul className={tagList}>
-                {
-                  uniqueTags.map(tag => {
-                    return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedTag: tag, tagList: "hide", applyFilter: true})}>{tag}</a></li>
-                    )
-                  })
-                }
-                </ul>
-              {/* End Tag list */}
-              <li><a onClick={() => this.setState({dateList: ""})}>Updated</a></li>
-              {/* Date list */}
-                <ul className={dateList}>
-                {
-                  uniqueDate.map(date => {
-                    return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.setState({ selectedDate: date, dateList: "hide", applyFilter: true})}>{date}</a></li>
-                    )
-                  })
-                }
-                </ul>
-              {/* End Date list */}
-            </ul>
-            {/* End Filter Dropdown */}
-          </div>
-          <div className="col right s12 m6">
-          <form className="searchform">
-          <fieldset className=" form-group searchfield">
-          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Sheets" onChange={this.filterList}/>
-          </fieldset>
-          </form>
-          </div>
-        </div>
+    if(!loading && !this.props.loading) {
+      return (
+        <div>
+          <Header />
+          <Container style={{marginTop:"65px"}}>
+          <Grid stackable style={{marginBottom: "25px"}} columns={2}>
+            <Grid.Column>
+              <h2>Sheets ({currentSheets.length})
+                <Button onClick={this.handleaddItem} style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>
+                {appliedFilter === false ? <span className="filter"><a onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer"}}>Filter<Icon name='caret down' /></a></span> : <span className="hide"><a>Filter</a></span>}
+                {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={() => this.setState({ appliedFilter: false, visible: false, filteredSheets: this.state.sheets})}>Clear</Label></span> : <div />}
+              </h2>
+            </Grid.Column>
+            <Grid.Column>
+              <Input onChange={this.filterList} icon='search' placeholder='Search...' />
+            </Grid.Column>
+          </Grid>
+
+          <Sidebar
+            as={Menu}
+            animation='overlay'
+            icon='labeled'
+            inverted
+            onHide={() => this.setState({ visible: false })}
+            vertical
+            visible={visible}
+            width='thin'
+            style={{width: "250px"}}
+          >
+          <Menu.Item as='a'>
+            Tags
+            <Dropdown style={{marginTop: "10px", borderRadius: "0"}} name='Date'>
+              <Dropdown.Menu style={{left: "-70px", borderRadius: "0"}}>
+              {
+                uniqueTags.map(tag => {
+                  return (
+                    <Dropdown.Item key={Math.random()} text={tag} onClick={() => this.filterNow(tag, 'tag')} />
+                  )
+                })
+              }
+              </Dropdown.Menu>
+            </Dropdown>
+          </Menu.Item>
+          <Menu.Item as='a'>
+            Collaborators
+            <Dropdown style={{marginTop: "10px", borderRadius: "0"}} name='Date'>
+              <Dropdown.Menu style={{left: "-70px", borderRadius: "0"}}>
+              {
+                uniqueCollabs.map(collab => {
+                  return (
+                    <Dropdown.Item key={Math.random()} text={collab} onClick={() => this.filterNow(collab, 'collab')} />
+                  )
+                })
+
+              }
+              </Dropdown.Menu>
+            </Dropdown>
+          </Menu.Item>
+          <Menu.Item as='a'>
+            Date
+            <Dropdown style={{marginTop: "10px", borderRadius: "0"}} name='Date'>
+              <Dropdown.Menu style={{left: "-70px", borderRadius: "0"}}>
+              {
+                uniqueDate.map(date => {
+                  return (
+                    <Dropdown.Item key={Math.random()} text={date} onClick={() => this.filterNow(date, 'date')} />
+                  )
+                })
+
+              }
+              </Dropdown.Menu>
+            </Dropdown>
+          </Menu.Item>
+        </Sidebar>
+
+          <div className="docs">
+
           <div className="container">
-            <div className={loading}>
-              <div className="progress center-align">
-                <p>Loading...</p>
-                <div className="indeterminate"></div>
-              </div>
-            </div>
-          </div>
-        <div className="container">
 
-        {/*<div className="fixed-action-btn">
-          <a onClick={this.handleaddItem} className="btn-floating btn-large black">
-            <i className="large material-icons">add</i>
-          </a>
-        </div>*/}
+          <Table unstackable style={{borderRadius: "0"}}>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Collaborators</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Updated</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Tags</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}></Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+          {
+            currentSheets.slice(indexOfFirstSheet, indexOfLastSheet).map(sheet => {
+              let collabs;
+              let uniqueCollaborators;
+              if(sheet.sharedWith) {
+                collabs = Array.prototype.slice.call(sheet.sharedWith);
+                uniqueCollaborators = collabs.filter((thing, index, self) => self.findIndex(t => t === thing) === index)
+              } else {
+                collabs = "";
+                uniqueCollaborators = "";
+              }
+              var gridTags;
 
+              if(sheet.tags) {
+                gridTags = Array.prototype.slice.call(sheet.tags);
+              } else if(sheet.singleSheetTags) {
+                gridTags = Array.prototype.slice.call(sheet.singleSheetTags);
+              } else {
+                gridTags = [];
+              }
+            return(
+              <Table.Row key={sheet.id}>
+                <Table.Cell><Link to={'/sheets/sheet/'+ sheet.id}>{sheet.title ? sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title : "Untitled"}</Link></Table.Cell>
+                <Table.Cell>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</Table.Cell>
+                <Table.Cell>{sheet.updated}</Table.Cell>
+                <Table.Cell>{gridTags === "" ? gridTags : gridTags.join(', ')}</Table.Cell>
+                <Table.Cell>
+                  <Dropdown icon='ellipsis vertical' className='actions'>
+                    <Dropdown.Menu>
+                      <Dropdown.Item>
+                        <Modal closeIcon style={{borderRadius: "0"}} trigger={<a onClick={() => this.loadSingle(sheet)} style={{color: "#282828"}}><Icon name='share alternate'/>Share</a>}>
+                          <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Sheet</Modal.Header>
+                          <Modal.Content>
+                            <Modal.Description>
+                              <h3>Search for a contact</h3>
+                              <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={this.props.handleNewContact} />
+                              <Item.Group divided>
+                              {contactResults.map(result => {
+                                let profile = result.profile;
+                                let image = profile.image;
+                                let imageLink;
+                                if(image !=null) {
+                                  if(image[0]){
+                                    imageLink = image[0].contentUrl;
+                                  } else {
+                                    imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+                                  }
+                                } else {
+                                  imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+                                }
+
+                                  return (
+                                      <Item className="contact-search" onClick={() => this.sharedInfo(result.fullyQualifiedName, sheet)} key={result.username}>
+                                      <Item.Image size='tiny' src={imageLink} />
+                                      <Item.Content verticalAlign='middle'>{result.username}</Item.Content>
+                                      </Item>
+                                      )
+                                    }
+                                  )
+                              }
+                              </Item.Group>
+                              <hr />
+                              <Item.Group divided>
+                              <h4>Your Contacts</h4>
+                              {contacts.slice(0).reverse().map(contact => {
+                                return (
+                                  <Item className="contact-search" onClick={() => this.sharedInfo(contact.contact, sheet)} key={contact.contact}>
+                                    <Item.Image size='tiny' src={contact.img} />
+                                    <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
+                                  </Item>
+                                )
+                              })
+                            }
+                            </Item.Group>
+                            </Modal.Description>
+                          </Modal.Content>
+                        </Modal>
+                      </Dropdown.Item>
+                      <Dropdown.Item>
+                        <Modal closeIcon trigger={<Link onClick={() => this.loadSingle(sheet)} to={'/sheets'} style={{color: "#282828"}}><Icon name='tag'/>Tag</Link>}>
+                          <Modal.Header>Manage Tags</Modal.Header>
+                          <Modal.Content>
+                            <Modal.Description>
+                            <Input placeholder='Type a tag...' value={this.state.tag} onChange={this.setTags} />
+                            <Button onClick={() => this.addTagManual(sheet)} style={{borderRadius: "0"}}>Add Tag</Button><br/>
+                            {
+                              this.state.tags ? this.state.tags.slice(0).reverse().map(tag => {
+                                return (
+                                  <Label style={{marginTop: "10px"}} key={tag} as='a' tag>
+                                    {tag}
+                                    <Icon onClick={() => this.deleteTag(tag)} name='delete' />
+                                  </Label>
+                                )
+                              }) :
+                              null
+                            }
+                            <div>
+                              <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => this.saveNewTags(sheet)}>Save Tags</Button>
+                            </div>
+                            </Modal.Description>
+                          </Modal.Content>
+                        </Modal>
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+                      <Dropdown.Item>
+                        <Modal open={this.state.open} trigger={
+                          <a onClick={() => this.loadSingle(sheet)} to={'/documents'} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</a>
+                        } basic size='small'>
+                          <SemanticHeader icon='trash alternate outline' content={sheet.title ? 'Delete ' + sheet.title + '?' : 'Delete sheet?'} />
+                          <Modal.Content>
+                            <p>
+                              The sheet cannot be restored.
+                            </p>
+                          </Modal.Content>
+                          <Modal.Actions>
+                            <div>
+                              {
+                                this.state.loading ?
+                                <Loading style={{bottom: "0"}} /> :
+                                <div>
+                                  <Button onClick={() => this.setState({ visible: false })} basic color='red' inverted>
+                                    <Icon name='remove' /> No
+                                  </Button>
+                                  <Button onClick={() => this.handleDeleteItem(sheet)} color='red' inverted>
+                                    <Icon name='checkmark' /> Delete
+                                  </Button>
+                                </div>
+                              }
+                            </div>
+                          </Modal.Actions>
+                        </Modal>
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </Table.Cell>
+              </Table.Row>
+            );
+            })
+          }
+          </Table.Body>
+        </Table>
         {
-          this.state.activeIndicator === true ?
-            <ul className="pagination action-items">
-            <li><a className="modal-trigger" href="#shareModal">Share</a></li>
-            <li><a className="modal-trigger" href="#tagModal" onClick={this.loadSingleTags}>Tag</a></li>
-            </ul>
-         :
-            <ul className="pagination inactive action-items">
-              <li><a>Share</a></li>
-              <li><a>Tag</a></li>
-            </ul>
-
+          pageNumbers.length > 0 ?
+          <div style={{maxWidth: "50%", margin:"auto"}}>
+            <Menu pagination>
+            {renderPageNumbers}
+            </Menu>
+          </div> :
+          <div />
         }
-
-        <table className="bordered">
-          <thead>
-            <tr>
-              <th></th>
-              <th>Title</th>
-              <th>Collaborators</th>
-              <th>Updated</th>
-              <th>Tags</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-        {
-          currentSheets.slice(indexOfFirstSheet, indexOfLastSheet).map(sheet => {
-            let collabs;
-            let uniqueCollaborators;
-            if(sheet.sharedWith) {
-              collabs = Array.prototype.slice.call(sheet.sharedWith);
-              uniqueCollaborators = collabs.filter((thing, index, self) => self.findIndex(t => t === thing) === index)
-            } else {
-              collabs = "";
-              uniqueCollaborators = "";
-            }
-            var tags;
-
-            if(sheet.tags) {
-              tags = Array.prototype.slice.call(sheet.tags);
-            } else {
-              tags = "";
-            }
-          return(
-            <tr key={sheet.id}>
-              <td><input type="checkbox" checked={this.state.checked} value={sheet.id} id={sheet.id} onChange={this.handleCheckbox} /><label htmlFor={sheet.id}></label></td>
-              <td><Link to={'/sheets/sheet/'+ sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></td>
-              <td>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</td>
-              <td>{sheet.updated}</td>
-              <td>{tags === "" ? tags : tags.join(', ')}</td>
-              <td><Link to={'/sheets/sheet/delete/'+ sheet.id}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
-            </tr>
-          );
-          })
+          <div style={{float: "right", marginBottom: "25px"}}>
+            <label>Sheets per page</label>
+            <select value={this.state.sheetsPerPage} onChange={(event) => this.setState({ sheetsPerPage: event.target.value})}>
+              <option value={10}>
+              10
+              </option>
+              <option value={20}>
+              20
+              </option>
+              <option value={50}>
+              50
+              </option>
+            </select>
+          </div>
+        </div>
+        {displayMessage ?
+          <Message
+            style={{borderRadius: "0", background: "#282828", bottom: "200px", color: "#fff"}}
+            header='This user has not yet logged into Graphite'
+            content='Ask them to log in first so that you can share encrypted files.'
+          /> :
+          null
         }
-        </tbody>
-      </table>
-      <div>
-        <ul className="center-align pagination">
-        {renderPageNumbers}
-        </ul>
-        <div className="docs-per-page right-align">
-          <label>Sheets per page</label>
-          <select value={this.state.sheetsPerPage} onChange={(event) => this.setState({ sheetsPerPage: event.target.value})}>
-            <option value={10}>
-            10
-            </option>
-            <option value={20}>
-            20
-            </option>
-            <option value={50}>
-            50
-            </option>
-          </select>
-        </div>
-      </div>
-      {/* Share Modal */}
-
-          <div id="shareModal" className="project-page-modal modal">
-            <div className="modal-content">
-              <a className="btn-floating modal-action modal-close right grey"><i className="material-icons">close</i></a>
-              <div className={contactDisplay}>
-                <h4>Select Contact</h4>
-                <ul className="collection">
-                {contacts.slice(0).reverse().map(contact => {
-                    return (
-                      <li key={contact.contact}className="collection-item">
-                        <a onClick={() => this.setState({ receiverID: contact.contact, confirmAdd: true, contactDisplay: "hide", loadingTwo: "" })}>
-                        <p>{contact.contact}</p>
-                        </a>
-                      </li>
-                    )
-                  })
-                }
-                </ul>
-              </div>
-            </div>
-            {/*loading */}
-            <div className={loadingTwo}>
-              <div className="center">
-                <div className="preloader-wrapper small active">
-                  <div className="spinner-layer spinner-green-only">
-                    <div className="circle-clipper left">
-                      <div className="circle"></div>
-                    </div><div className="gap-patch">
-                      <div className="circle"></div>
-                    </div><div className="circle-clipper right">
-                      <div className="circle"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/*end loading */}
           </div>
-
-      {/* End Share Modal */}
-
-      {/* Tag Modal */}
-
-          <div id="tagModal" className="project-page-modal modal">
-            <div className="modal-content">
-              <a className="btn-floating modal-action modal-close right grey"><i className="material-icons">close</i></a>
-
-                <h4>Tags</h4>
-                <p>Add a new tag or remove an existing tag.</p>
-                <div className="row">
-                  <div className="col s9">
-                    <input className="tag-input" type="text" value={this.state.tag} onChange={this.setTags} onKeyPress={this.handleKeyPress} />
-                  </div>
-                  <div className="col s3">
-                    <a onClick={this.addTagManual}><i className="material-icons">check</i></a>
-                  </div>
-                </div>
-                <div>
-                {singleSheetTags.slice(0).reverse().map(tag => {
-                    return (
-                      <div key={tag} className="chip">
-                        {tag}<a onClick={() => this.setState({selectedTagId: tag, deleteState: true})}><i className="close material-icons">close</i></a>
-                      </div>
-                    )
-                  })
-                }
-                </div>
-                <div>
-                  <button onClick={this.saveNewTags} className="btn">Save</button>
-                </div>
-            </div>
-            {/*loading */}
-            <div className={loadingTwo}>
-              <div className="center">
-                <div className="preloader-wrapper small active">
-                  <div className="spinner-layer spinner-green-only">
-                    <div className="circle-clipper left">
-                      <div className="circle"></div>
-                    </div><div className="gap-patch">
-                      <div className="circle"></div>
-                    </div><div className="circle-clipper right">
-                      <div className="circle"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/*end loading */}
-          </div>
-
-      {/* End tag Modal */}
-        </div>
+        </Container>
       </div>
-    </div>
-    );
+      );
+    } else {
+      return (
+        <Loading />
+      )
+    }
   }
 }

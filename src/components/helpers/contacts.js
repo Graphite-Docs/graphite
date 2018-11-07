@@ -11,17 +11,22 @@ import update from 'immutability-helper';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export function loadContactsCollection() {
+  this.setState({ loading: true})
   getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
-       this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
+       this.setState({ contacts: JSON.parse(fileContents || '{}').contacts, types: [] });
        this.setState({ filteredContacts: this.state.contacts });
      } else {
        console.log("No contacts");
      }
    })
+   .then(() => {
+     this.setState({ loading: false})
+   })
     .catch(error => {
       console.log(error);
+      this.setState({ loading: false})
     });
 }
 
@@ -30,6 +35,7 @@ export function addNewContact() {
 }
 
 export function handleAddContact(props) {
+  this.setState({loading: true})
   const object = {};
   lookupProfile(props, "https://core.blockstack.org/v1/names")
     .then((profile) => {
@@ -47,13 +53,15 @@ export function handleAddContact(props) {
     })
     .catch((error) => {
       console.log(error)
+      this.setState({ loading: false })
     })
 }
 
 export function saveNewContactsFile() {
   putFile("contact.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
-      this.setState({loading: "hide", show: "" });
+      this.setState({loading: false });
+      this.loadContactsCollection();
     })
     .catch(e => {
       console.log(e);
@@ -202,12 +210,13 @@ export function handleContactsKeyPress(e) {
   }
 
   export function addTypeManual(){
-    this.setState({ types: [...this.state.types, this.state.type]});
-    this.setState({ type: "" });
+    this.setState({ types: [...this.state.types, this.state.type]}, () => {
+      this.setState({ type: "" });
+    });
+
   }
 
-  export function loadSingleTypes() {
-    window.$('#typeModal').modal('open');
+  export function loadSingleTypes(contact) {
     this.setState({typeDownload: false});
     getFile("contact.json", {decrypt: true})
     .then((fileContents) => {
@@ -215,7 +224,7 @@ export function handleContactsKeyPress(e) {
       this.setState({ filteredContacts: this.state.contacts });
     }).then(() =>{
       let contacts = this.state.contacts;
-      const thisContact = contacts.find((contact) => { return contact.contact === this.state.contactsSelected[0]});
+      const thisContact = contacts.find((a) => { return a.contact === contact.contact});
       let index = thisContact && thisContact.contact;
       function findObjectIndex(contact) {
           return contact.contact === index;
@@ -236,7 +245,7 @@ export function handleContactsKeyPress(e) {
   }
 
   export function saveNewTypes() {
-    this.setState({ loadingTwo: ""});
+    this.setState({ loading: true })
     const object = {};
     object.contact = this.state.contact;
     object.name = this.state.name;
@@ -250,11 +259,10 @@ export function handleContactsKeyPress(e) {
   }
 
   export function saveFullCollectionTypes() {
-    window.$('#typeModal').modal('close');
     putFile("contact.json", JSON.stringify(this.state), {encrypt: true})
       .then(() => {
         console.log("Saved");
-        this.setState({typeModal: "hide", type: "", loadingTwo: "hide"})
+        this.setState({loading: false})
         this.loadContactsCollection();
       })
       .catch(e => {
@@ -294,15 +302,13 @@ export function applyContactsFilter() {
   export function dateFilterContacts(props) {
     let contacts = this.state.contacts;
     let dateFilter = contacts.filter(x => x.dateAdded.includes(props));
-    this.setState({ filteredContacts: dateFilter, appliedFilter: true});
-    window.$('.button-collapse').sideNav('hide');
+    this.setState({ filteredContacts: dateFilter, appliedFilter: true, visible: false});
   }
 
   export function typeFilter(props) {
     let contacts = this.state.contacts;
     let tagFilter = contacts.filter(x => typeof x.types !== 'undefined' ? x.types.includes(props) : console.log(""));
-    this.setState({ filteredContacts: tagFilter, appliedFilter: true});
-    window.$('.button-collapse').sideNav('hide');
+    this.setState({ filteredContacts: tagFilter, appliedFilter: true, visible: false});
   }
 
   export function clearContactsFilter() {
@@ -323,4 +329,31 @@ export function applyContactsFilter() {
       this.setState({ filteredContacts: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     }
+  }
+
+
+  export function handleDeleteContact(contact) {
+    let contacts = this.state.contacts;
+    const thisContact = contacts.find((a) => { return a.contact === contact.contact});
+    let index = thisContact && thisContact.contact;
+    function findObjectIndex(contact) {
+        return contact.contact === index; //comparing numbers
+    }
+    console.log(thisContact);
+    console.log(contacts.findIndex(findObjectIndex))
+    this.setState({ index: contacts.findIndex(findObjectIndex) }, () => {
+      if(this.state.index > -1) {
+        contacts.splice(this.state.index,1);
+      } else {
+        console.log("Error with index")
+      }
+
+      this.setState({ contacts: contacts, loading: true,  action: "Deleted contact: " +  contact.contact}, () => {
+        this.saveNewContactsFile();
+      })
+    })
+  };
+
+  export function setContactsPerPage(event) {
+    this.setState({ contactsPerPage: event.target.value})
   }

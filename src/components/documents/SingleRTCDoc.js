@@ -1,4 +1,7 @@
 import React, { Component } from "react";
+import { Link } from 'react-router-dom';
+import { Icon } from 'semantic-ui-react';
+import {Menu as MainMenu} from 'semantic-ui-react';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
 
 export default class SingleRTCDoc extends Component {
@@ -13,42 +16,27 @@ export default class SingleRTCDoc extends Component {
       toolbar[0].style.top = "63px";
     }
 
-    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave, hideButton } = this.props;
+    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave } = this.props;
     return(
     <div>
-    <div className="navbar-fixed toolbar">
-      <nav className="toolbar-nav">
-        <div className="nav-wrapper">
-          <a href="/shared-docs" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
-          <ul className="left toolbar-menu">
-          {
-            rtc === true ?
-            <li className="document-title">
-              {
-                title
-                ?
-                (title.length > 15 ? title.substring(0,15)+"..." : title)
-                :
-                "Title here..."
-              }
-            </li>
-            :
-            <li className={hideButton}><a onClick={this.props.handleAddStatic}>Add to Documents</a></li>
-          }
-          {
-            rtc === true ?
-            <li>
-              <a className="small-menu muted">{autoSave}</a>
-            </li>
-            :
-            <li className="hide" />
-          }
-          </ul>
-        </div>
-      </nav>
-    </div>
+    <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff", height: "100px", paddingBottom: "30px" }}>
+      <MainMenu.Item onClick={this.props.handleBack}>
+        <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
+      </MainMenu.Item>
+      <MainMenu.Item>
+      {
+        title
+        ?
+        (title.length > 15 ? title.substring(0,15)+"..." : title)
+        :
+        "Title here..."
+      }
+      </MainMenu.Item>
+      <MainMenu.Item>
+        {autoSave}
+      </MainMenu.Item>
+      </MainMenu>
     <div className="test-docs">
-
       <div className="test-doc-card">
         <div className="double-space doc-margin">
 

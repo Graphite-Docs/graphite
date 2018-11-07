@@ -3,22 +3,25 @@ import { Link } from "react-router-dom";
 import {
   loadUserData
 } from 'blockstack';
+import Loading from '../Loading';
+import { Image, Card, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 import Header from '../Header';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Contacts extends Component {
 
+  constructor(props) {
+    super(props);
+    this.state = {
+      visible: false,
+      open: false,
+      contact: {}
+    }
+  }
+
   componentDidMount() {
     this.props.loadContactsCollection();
-    window.$('.dropdown-trigger').dropdown();
-    window.$('.modal').modal();
-    window.$('.button-collapse').sideNav({
-      menuWidth: 400, // Default is 300
-      edge: 'left', // Choose the horizontal origin
-      closeOnClick: false, // Closes side-nav on <a> clicks, useful for Angular/Meteor
-      draggable: true, // Choose whether you can drag to open on touch screens
-    }
-  );
   }
 
   componentDidUpdate() {
@@ -30,26 +33,39 @@ export default class Contacts extends Component {
     }
   }
 
+  handleDelete = () => {
+    console.log(this.state.contact)
+    this.setState({ open: false }, () => {
+      this.props.handleDeleteContact(this.state.contact)
+    })
+  }
 
-  renderView() {
+  typeFilter = (tag) => {
+    this.setState({ visible: false}, () => {
+      this.props.typeFilter(tag);
+    })
+  }
+
+  dateFilterContacts = (date) => {
+    this.setState({ visible: false}, () => {
+      this.props.dateFilterContacts(date)
+    })
+  }
+
+  render(){
     this.props.applyFilter === true ? this.props.applyContactsFilter() : loadUserData();
-    const {show, newContact, loading, filteredContacts, manualResults, appliedFilter, deleteState, loadingTwo, typeModal, currentPage, contactsPerPage, add} = this.props;
+    const { loading, filteredContacts, appliedFilter, deleteState, currentPage, contactsPerPage} = this.props;
+    const { visible } = this.state;
     let contacts = filteredContacts;
-    let showFirstLink;
-    let showResults = "";
     let results;
     if(this.props.results !=null) {
       results = this.props.results;
     } else {
       results = [];
     }
-    if(newContact.length < 1) {
-      showResults = "hide";
-    } else {
-      showResults = "";
-    }
+
     let types;
-    if(this.props.types !== null) {
+    if(this.props.types) {
       types = this.props.types;
     } else {
       types = [];
@@ -60,16 +76,9 @@ export default class Contacts extends Component {
    for (let i = 1; i <= Math.ceil(contacts.length / contactsPerPage); i++) {
      pageNumbers.push(i);
    }
-
    const renderPageNumbers = pageNumbers.map(number => {
           return (
-            <li
-              key={number}
-              id={number}
-              className={number === this.props.currentPage ? "active" : ""}
-            >
-              <a id={number} onClick={this.props.handleContactsPageChange}>{number}</a>
-            </li>
+            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.props.currentPage.toString() === number.toString()} onClick={() => this.props.handleContactsPageChange(number)} />
           );
         });
 
@@ -77,12 +86,6 @@ export default class Contacts extends Component {
     const indexOfLastContact = currentPage * contactsPerPage;
     const indexOfFirstContact = indexOfLastContact - contactsPerPage;
     const currentContacts = contacts.slice(0).reverse();
-    let searchImg;
-    if(manualResults.image) {
-      searchImg = manualResults.image[0].contentUrl;
-    } else {
-      searchImg = avatarFallbackImage;
-    }
 
     let contactTypes = currentContacts.map(a => a.types);
     let mergedTypes = [].concat.apply([], contactTypes);
@@ -98,204 +101,234 @@ export default class Contacts extends Component {
       if(window.$.inArray(el, uniqueDate) === -1) uniqueDate.push(el);
     })
 
-    if(add === true){
-    return (
-      <div className="add-contact row">
-        <h3 className="center-align">Add a new contact</h3>
-
-
-        <div className="card-add col s12">
-          <div className="add-new">
-            <div>
-              <p>Search for a contact</p>
-              <label>Search</label>
-              <input type="text" placeholder="Ex: Johnny Cash" onChange={this.props.handleNewContact} />
-            </div>
-            <div className={showResults}>
-
-            <ul className="collection">
-            {results.map(result => {
-              let profile = result.profile;
-              let image = profile.image;
-              let imageLink;
-              if(image !=null) {
-                if(image[0]){
-                  imageLink = image[0].contentUrl;
-                } else {
-                  imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-                }
-              } else {
-                imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-              }
-
-                return (
-                  <div key={result.username} className={showFirstLink}>
-                  <a className="contact-add" onClick={() => this.props.handleAddContact(result.fullyQualifiedName)}>
-                    <li className="collection-item avatar">
-                      <img src={imageLink} alt="avatar" className="circle" />
-                      <span className="title">{result.profile.name}</span>
-                      <p>{result.username}</p>
-                    </li>
-                  </a>
-                  </div>
-                )
-              })
-            }
-            {
-              manualResults !== {} ?
-              <div key={this.props.newContact} className={showFirstLink}>
-              <a className="contact-add" onClick={() => this.props.handleAddContact(newContact)}>
-                <li className="collection-item avatar">
-                  <img src={searchImg} alt="avatar" className="circle" />
-                  <span className="title">{manualResults.name}</span>
-                  <p>{this.props.newContact}</p>
-                </li>
-              </a>
-              </div>:
-              <div />
-
-            }
-            </ul>
-
-            </div>
-            <div className={show}>
-            </div>
-            <div className={loading}>
-              <div className="preloader-wrapper small active">
-                <div className="spinner-layer spinner-green-only">
-                  <div className="circle-clipper left">
-                    <div className="circle"></div>
-                  </div><div className="gap-patch">
-                    <div className="circle"></div>
-                  </div><div className="circle-clipper right">
-                    <div className="circle"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  } else {
+    if(!loading) {
     return (
       <div>
+        <Header />
         <div className="docs">
+        <Container style={{marginTop:"65px"}}>
+        <Grid stackable columns={2}>
+          <Grid.Column>
+            <h2>Contacts ({currentContacts.length})
+            <Modal closeIcon style={{borderRadius: "0"}} trigger={<Button style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>}>
+              <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Add a New Contact</Modal.Header>
+              <Modal.Content>
+                <Modal.Description>
+                  <h3>Search for a contact</h3>
+                  <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={this.props.handleNewContact} />
+                  <Item.Group divided>
+                  {results.map(result => {
+                    let profile = result.profile;
+                    let image = profile.image;
+                    let imageLink;
+                    if(image !=null) {
+                      if(image[0]){
+                        imageLink = image[0].contentUrl;
+                      } else {
+                        imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+                      }
+                    } else {
+                      imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+                    }
 
-        {/* Add button */}
-        <div className="container">
-          {/*<div className="fixed-action-btn">
-            <a onClick={this.props.addNewContact} className="btn-floating btn-large black">
-              <i className="large material-icons">add</i>
-            </a>
-        </div> */}
-        {/* End Add Button */}
+                      return (
+                          <Item className="contact-search" onClick={() => this.props.handleAddContact(result.fullyQualifiedName)} key={result.username}>
+                          <Item.Image size='tiny' src={imageLink} />
+                          <Item.Content verticalAlign='middle'>{result.username}</Item.Content>
+                          </Item>
+                          )
+                        }
+                      )
+                  }
+                  </Item.Group>
+                </Modal.Description>
+              </Modal.Content>
+            </Modal>
+              {appliedFilter === false ? <span className="filter"><a onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer"}}>Filter<Icon name='caret down' /></a></span> : <span className="hide"><a>Filter</a></span>}
+              {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={this.props.clearContactsFilter}>Clear</Label></span> : <div />}
+            </h2>
+          </Grid.Column>
+          <Grid.Column>
+            <Input onChange={this.props.filterContactsList} icon='search' placeholder='Search...' />
+          </Grid.Column>
+        </Grid>
+        <Sidebar
+          as={Menu}
+          animation='overlay'
+          icon='labeled'
+          inverted
+          onHide={() => this.setState({ visible: false })}
+          vertical
+          visible={visible}
+          width='thin'
+          style={{width: "250px"}}
+        >
 
-        <div className="row">
-          <div className="col s12 m6">
-            <h5>Contacts ({currentContacts.length}) <a onClick={this.props.addNewContact} className="btn-floating btn black">
-              <i className="material-icons">add</i>
-            </a>
 
-              {appliedFilter === false ? <span className="filter"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span> : <span className="hide"><a data-activates="slide-out" className="menu-button-collapse button-collapse">Filter<i className="filter-icon material-icons">arrow_drop_down</i></a></span>}
-              {appliedFilter === true ? <span className="filter"><a className="card filter-applied" onClick={this.props.clearContactsFilter}>Clear</a></span> : <div />}
-            </h5>
-            {/* Filter Dropdown */}
-            <ul id="slide-out" className="comments-side-nav side-nav">
-              <h5 className="center-align">Filter</h5>
-              <li><a className="dropdown-trigger" data-activates='typeDrop'>Contact Types</a></li>
-              {/* Types list */}
-                <ul id='typeDrop' className="dropdown-content">
-                {
-                  uniqueTypes.map(type => {
-                    return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.props.typeFilter(type)}>{type}</a></li>
-                    )
-                  })
-                }
-                </ul>
-              {/* End Tag list */}
-              <li><a className="dropdown-trigger" data-activates='dateDrop'>Date Added</a></li>
-              {/* Date list */}
-                <ul id='dateDrop' className="dropdown-content">
-                {
-                  uniqueDate.map(date => {
-                    return (
-                      <li className="filter-li" key={Math.random()}><a onClick={() => this.props.dateFilterContacts(date)}>{date}</a></li>
-                    )
-                  })
-                }
-                </ul>
-              {/* End Date list */}
-            </ul>
-            {/* End Filter Dropdown */}
-          </div>
-          <div className="col right s12 m6">
-          <form className="searchform">
-          <fieldset className=" form-group searchfield">
-          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Contacts" onChange={this.props.filterContactsList}/>
-          </fieldset>
-          </form>
-          </div>
-        </div>
-        {
-          this.props.activeIndicator === true ?
-            <ul className="pagination action-items">
-              <li><a onClick={() => this.props.loadSingleTypes()}>Contact Type</a></li>
-            </ul>
-         :
-            <ul className="pagination inactive action-items">
-              <li><a>Contact Type</a></li>
-            </ul>
+          <Menu.Item as='a'>
+            Types
+            <Dropdown style={{marginTop: "10px", borderRadius: "0"}} name='Date'>
+              <Dropdown.Menu style={{left: "-70px", borderRadius: "0"}}>
+              {
+                uniqueTypes.map(tag => {
+                  return (
+                    <Dropdown.Item key={Math.random()} text={tag} onClick={() => this.typeFilter(tag)} />
+                  )
+                })
+              }
+              </Dropdown.Menu>
+            </Dropdown>
+          </Menu.Item>
+          <Menu.Item as='a'>
+            Date
+            <Dropdown style={{marginTop: "10px", borderRadius: "0"}} name='Date'>
+              <Dropdown.Menu style={{left: "-70px", borderRadius: "0"}}>
+              {
+                uniqueDate.map(date => {
+                  return (
+                    <Dropdown.Item key={Math.random()} text={date} onClick={() => this.dateFilterContacts(date)} />
+                  )
+                })
 
-        }
+              }
+              </Dropdown.Menu>
+            </Dropdown>
+          </Menu.Item>
+        </Sidebar>
+
           <div className="">
-            <table className="bordered">
-              <thead>
-                <tr>
-                  <th></th>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Date Added</th>
-                  <th>Contact Type</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
+          <Table unstackable style={{borderRadius: "0", marginTop: "35px"}}>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>ID</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Name</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date Added</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Type</Table.HeaderCell>
+                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}></Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
+
+            <Table.Body>
             {
               currentContacts.slice(indexOfFirstContact, indexOfLastContact).map(contact => {
-                var types;
+                var gridTypes;
                 if(contact.types) {
-                  types = Array.prototype.slice.call(contact.types);
+                  gridTypes = Array.prototype.slice.call(contact.types);
                 } else {
-                  types = "";
+                  gridTypes = [];
                 }
-
               return(
-                <tr key={contact.contact}>
-                  <td><input type="checkbox" checked={this.props.checked} value={contact.contact} id={contact.contact} onChange={this.props.handleContactsCheckbox} /><label htmlFor={contact.contact}></label></td>
-                  <td><img src={contact.img || avatarFallbackImage} className="profile-grid-img circle" alt="img" />
-                    <Link className="profile-name-link" to={'/contacts/profile/'+ contact.contact}>
-                      {contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact}
-                    </Link>
-                  </td>
-                  <td>{contact.name || ""}</td>
-                  <td>{contact.dateAdded}</td>
-                  <td>{types === "" ? types : types.join(', ')}</td>
-                  <td><Link to={'/contacts/delete/'+ contact.contact}><i className="modal-trigger material-icons red-text delete-button">delete</i></Link></td>
-                </tr>
+                <Table.Row key={contact.contact}>
+                  <Table.Cell>
+                  <Image style={{height: "40px", width: "40px", marginRight: "10px"}} src={contact.img || avatarFallbackImage} avatar /><span>
+                  <Modal closeIcon style={{borderRadius: "0"}} trigger={<Link to={'/contacts'}>
+                    {contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact}
+                  </Link>}>
+                    <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>{contact.contact}</Modal.Header>
+                    <Modal.Content>
+                    <Card style={{margin: "auto"}}>
+                      <Image src={contact.img || avatarFallbackImage} />
+                      <Card.Content>
+                        <Card.Header>{contact.name ? contact.name : contact.contact}</Card.Header>
+                        <Card.Description>{contact.description} <br/></Card.Description>
+                      </Card.Content>
+                      <Card.Content extra>
+                        <Link to={'/documents/shared/' + contact.contact}>
+                          <Icon style={{fontSize: "26px"}} name='file alternate outline' />
+                          Shared Docs
+                        </Link>
+                        <Link to={'/vault/shared/' + contact.contact}>
+                          <Icon style={{fontSize: "26px", marginLeft: "5px"}} name='shield alternate' />
+                          Shared Files
+                        </Link>
+                      </Card.Content>
+                    </Card>
+                    </Modal.Content>
+                  </Modal>
+
+                  </span>
+                  </Table.Cell>
+                  <Table.Cell>{contact.name || ""}</Table.Cell>
+                  <Table.Cell>{contact.dateAdded}</Table.Cell>
+                  <Table.Cell>{gridTypes === [] ? gridTypes : gridTypes.join(', ')}</Table.Cell>
+                  <Table.Cell>
+                  <Dropdown icon='ellipsis vertical' className='actions'>
+                    <Dropdown.Menu>
+                      <Dropdown.Item>
+                        <Modal closeIcon trigger={<Link onClick={() => this.props.loadSingleTypes(contact)} to={'/contacts'} style={{color: "#282828"}}><Icon name='tag'/>Type</Link>}>
+                          <Modal.Header>Manage Types</Modal.Header>
+                          <Modal.Content>
+                            <Modal.Description>
+                            <Input placeholder='Enter a type...' value={this.props.type} onChange={this.props.setTypes} />
+                            <Button onClick={() => this.props.addTypeManual(contact, 'contact')} style={{borderRadius: "0"}}>Add Type</Button><br/>
+                            {
+                              types.slice(0).reverse().map(tag => {
+                                return (
+                                  <Label style={{marginTop: "10px"}} key={tag} as='a' tag>
+                                    {tag}
+                                    <Icon onClick={() => this.props.deleteType(tag, 'contact')} name='delete' />
+                                  </Label>
+                                )
+                              })
+                            }
+                            <div>
+                              <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => this.props.saveNewTypes(contact)}>Save Types</Button>
+                            </div>
+                            </Modal.Description>
+                          </Modal.Content>
+                        </Modal>
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+                      <Dropdown.Item>
+                        <Modal open={this.state.open} trigger={
+                          <a onClick={() => this.setState({ open: true, contact: contact })} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</a>
+                        } basic size='small'>
+                          <SemanticHeader icon='trash alternate outline' content={this.state.contact.contact ? 'Delete ' + this.state.contact.contact + '?' : 'Delete contact?'} />
+                          <Modal.Content>
+                            <p>
+                              The contact can be restored by re-adding the user.
+                            </p>
+                          </Modal.Content>
+                          <Modal.Actions>
+                            <div>
+                              {
+                                loading ?
+                                <Loading style={{bottom: "0"}} /> :
+                                <div>
+                                  <Button onClick={() => this.setState({ open: false })} basic color='red' inverted>
+                                    <Icon name='remove' /> No
+                                  </Button>
+                                  <Button onClick={this.handleDelete} color='red' inverted>
+                                    <Icon name='checkmark' /> Delete
+                                  </Button>
+                                </div>
+                              }
+                            </div>
+                          </Modal.Actions>
+                        </Modal>
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                  </Table.Cell>
+                </Table.Row>
               );
               })
-            }
-            </tbody>
-          </table>
+              }
+            </Table.Body>
+          </Table>
           <div>
-            <ul className="center-align pagination">
-            {renderPageNumbers}
-            </ul>
-            <div className="docs-per-page right-align">
+          {
+            pageNumbers.length > 0 ?
+            <div style={{maxWidth: "50%", margin:"auto"}}>
+              <Menu pagination>
+              {renderPageNumbers}
+              </Menu>
+            </div> :
+            <div />
+          }
+            <div style={{float: "right", marginBottom: "25px"}}>
               <label>Contacts per page</label>
-              <select value={this.props.contactsPerPage} onChange={(event) => this.setState({ contactsPerPage: event.target.value})}>
+              <select value={this.props.contactsPerPage} onChange={this.props.setContactsPerPage}>
                 <option value={10}>
                 10
                 </option>
@@ -309,72 +342,16 @@ export default class Contacts extends Component {
             </div>
           </div>
         </div>
-        {/* Type Modal */}
-          <div className={typeModal}>
-            <div id="typeModal" className="project-page-modal modal">
-              <div className="modal-content">
-                <a onClick={() => window.$('#typeModal').modal('close')} className="btn-floating modal-close modalClose grey"><i className="material-icons">close</i></a>
-
-                  <h4>Contact Types</h4>
-                  <p>Add a new contact type or remove an existing contact type.</p>
-                  <div className="row">
-                    <div className="col s9">
-                      <input className="tag-input" type="text" value={this.props.type} onChange={this.props.setTypes} onKeyPress={this.props.handleContactsKeyPress} />
-                    </div>
-                    <div className="col s3">
-                      <a onClick={this.props.addTypeManual}><i className="material-icons">check</i></a>
-                    </div>
-                  </div>
-                  <div>
-                  {types.slice(0).reverse().map(type => {
-                      return (
-                        <div key={type} className="chip">
-                          {type}<a onClick={() => this.props.deleteType(type)}><i className="close material-icons">close</i></a>
-                        </div>
-                      )
-                    })
-                  }
-                  </div>
-                  <div>
-                    <button onClick={this.props.saveNewTypes} className="btn">Save</button>
-                  </div>
-              </div>
-              {/*loading */}
-              <div className={loadingTwo}>
-                <div className="center">
-                  <div className="preloader-wrapper small active">
-                    <div className="spinner-layer spinner-green-only">
-                      <div className="circle-clipper left">
-                        <div className="circle"></div>
-                      </div><div className="gap-patch">
-                        <div className="circle"></div>
-                      </div><div className="circle-clipper right">
-                        <div className="circle"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              {/*end loading */}
-            </div>
-          </div>
-        {/* End type Modal */}
-            </div>
+            </Container>
           </div>
 
       </div>
     );
-  }
-  }
-
-  render(){
+  } else {
     return(
-      <div>
-        <Header
-          graphitePro={this.props.graphitePro}
-        />
-        {this.renderView()}
-      </div>
+        <Loading />
     )
+
+  }
   }
 }

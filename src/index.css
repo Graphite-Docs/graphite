@@ -148,7 +148,7 @@ h5, h6 {
 .cm-e-menu {
   background-color: #282828;
   position: fixed;
-  top: 55px;
+  top: 30px;
   z-index: 1000;
   color: #fff;
   font-weight: 200;
@@ -400,7 +400,7 @@ h5, h6 {
     background: #fff;
     height: auto;
     position: fixed;
-    top: 95px;
+    top: 70px;
     left: 0;
     padding-left: 20px;
     padding-bottom: 15px;
@@ -522,4 +522,12 @@ polygon.ql-stroke {
   margin: 2cm;
   size: auto;
   }
+}
+
+/* Sheets */
+
+.color-picker {
+  height: 15px!important;
+  width: 15px!important;
+  margin: 5px;
 }
