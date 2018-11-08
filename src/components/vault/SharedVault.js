@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '../Header';
+import { Container, Grid, Item } from 'semantic-ui-react';
+import Loading from '../Loading';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedVault extends Component {
@@ -10,89 +12,53 @@ export default class SharedVault extends Component {
   }
 
   renderView() {
-    const { show, contacts, sharedWithMe } = this.props;
+    const { contacts, loading } = this.props;
 
-    if(sharedWithMe === true) {
+    if(!loading) {
       return(
-      <div className={show}>
+      <div style={{marginTop: "45px", textAlign: "center"}}>
         <div className="container center-align">
           <h3>Files Shared With Me</h3>
           <h5>Select the contact who shared with you</h5>
         </div>
+        <Grid style={{maxWidth: "85%", margin: "auto"}} relaxed columns={2}>
+          {contacts.slice(0).reverse().map(contact => {
+            let imageLink;
+            let name;
+            if(contact.img) {
+              imageLink = contact.img;
+            } else {
+              imageLink = avatarFallbackImage;
+            }
 
-        <div className="container">
-        <ul className="collection">
-        {contacts.slice(0).reverse().map(contact => {
-          let imageLink;
-          let name;
-          if(contact.img) {
-            imageLink = contact.img;
-          } else {
-            imageLink = avatarFallbackImage;
+            if(contact.name) {
+              name = contact.name;
+            } else {
+              name = "";
+            }
+              return (
+                <Grid.Column style={{textAlign: "center"}} key={contact.contact}>
+                  <Item.Group>
+                    <Item className="contacts-items">
+                      <Link to={'/vault/shared/'+ contact.contact}>
+                        <Item.Image size='tiny' src={imageLink} />
+                        <Item.Content>
+                          <Item.Header>{contact.contact}</Item.Header>
+                          <Item.Meta>{name}</Item.Meta>
+                        </Item.Content>
+                      </Link>
+                    </Item>
+                  </Item.Group>
+                </Grid.Column>
+              )
+            })
           }
-
-          if(contact.name) {
-            name = contact.name;
-          } else {
-            name = "";
-          }
-            return (
-
-                <li key={contact.contact} className="collection-item avatar">
-                  <Link to={'/vault/shared/'+ contact.contact}>
-                    <img src={imageLink} alt="Profile" className="circle" />
-                    <span className="title">{contact.contact}</span>
-                    <p>{name}</p>
-                  </Link>
-                </li>
-
-            )
-          })
-        }
-        </ul>
-        </div>
+          </Grid>
       </div>
     );
     } else {
       return (
-      <div className={show}>
-        <div className="container center-align">
-          <h3>Files Shared With Others</h3>
-          <h5 >Select the contact you shared with</h5>
-        </div>
-
-        <div className="container">
-
-        {contacts.slice(0).reverse().map(contact => {
-          let imageLink;
-          let name;
-          if(contact.img) {
-            imageLink = contact.img;
-          } else {
-            imageLink = avatarFallbackImage;
-          }
-
-          if(contact.name) {
-            name = contact.name;
-          } else {
-            name = "";
-          }
-
-            return (
-              <ul className="collection">
-                <li key={contact.contact} className="collection-item avatar">
-                  <Link to={'/vault/sent/'+ contact.contact}>
-                    <img src={imageLink} alt="Profile" className="circle" />
-                    <span className="title">{contact.contact}</span>
-                    <p>{name}</p>
-                  </Link>
-                </li>
-              </ul>
-            )
-          })
-        }
-        </div>
-      </div>
+      <Loading />
     );
     }
   }
@@ -101,12 +67,11 @@ export default class SharedVault extends Component {
   render() {
       return (
         <div>
-        <Header />
-        <div className="shared-docs-page">
-
+          <Header />
+          <Container>
+            {this.renderView()}
+          </Container>
         </div>
-        {this.renderView()}
-      </div>
       );
     }
 

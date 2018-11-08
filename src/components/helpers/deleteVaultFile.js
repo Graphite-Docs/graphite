@@ -30,38 +30,45 @@ export function initialDeleteLoad() {
     });
 }
 
-export function handleDeleteVaultItem() {
-  const object = {};
-  object.title = this.state.textvalue;
-  object.content = this.state.test;
-  object.id = parseInt(window.location.href.split('delete/')[1], 10);
-  this.setState({ singleFile: {} })
-  this.setState({ files: [...this.state.files, this.state.files.splice(this.state.index, 1)]})
-  this.setState({ loading: "show", save: "hide" });
-  this.saveVaultDelete();
+export function handleDeleteVaultItem(file) {
+  let files = this.state.files;
+  const thisFile = files.find((a) => {return a.id.toString() === file.id.toString()}); //this is comparing strings
+  let index = thisFile && thisFile.id;
+  function findObjectIndex(a) {
+    return a.id === index; //this is comparing numbers
+  }
+  this.setState({index: files.findIndex(findObjectIndex)}, () => {
+    if(this.state.index > -1) {
+      files.splice(this.state.index,1);
+    } else {
+      console.log("Error with index")
+    }
+    this.setState({ singleFile: {}, files: files, loading: true }, () => {
+      this.saveVaultDelete(file);
+    })
+  });
+
 };
 
-export function saveVaultDelete() {
-  this.setState({ loading: "show" });
-  this.setState({ save: "hide"});
+export function saveVaultDelete(file) {
   putFile("uploads.json", JSON.stringify(this.state.files), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      this.saveVaultDeleteTwo();
+      this.saveVaultDeleteTwo(file);
     })
     .catch(e => {
       console.log("e");
       console.log(e);
-      alert(e.message);
     });
 }
 
-export function saveVaultDeleteTwo() {
-  const file = window.location.href.split('delete/')[1];
-  putFile(file + '.json', JSON.stringify(this.state.singleFile), {encrypt:true})
+export function saveVaultDeleteTwo(file) {
+  const fileID = file.id;
+  putFile(fileID + '.json', JSON.stringify(this.state.singleFile), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      window.location.replace("/vault");
+      this.setState({loading: false});
+      this.loadVault();
     })
     .catch(e => {
       console.log("e");

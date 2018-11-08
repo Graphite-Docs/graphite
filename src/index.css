@@ -531,3 +531,13 @@ polygon.ql-stroke {
   width: 15px!important;
   margin: 5px;
 }
+
+/* Vault */
+
+.material-icons {
+  color: #fff!important;
+}
+
+.ui.items>.contacts-items {
+  display: block!important;
+}

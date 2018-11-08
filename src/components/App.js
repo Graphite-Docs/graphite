@@ -1254,7 +1254,12 @@ export default class App extends Component {
                     profileEmail={profileEmail}
                   />
               }/>
-              <Route exact path="/shared-docs" component={SharedDocs} />
+              <Route exact path="/shared-docs" render={(props) =>
+                <SharedDocs {...props}
+                    contacts={contacts}
+                    loading={loading}
+                  />
+              }/>
               <Route exact path="/sheets" render={(props) =>
                 <MainSheets {...props}
                     results={results}
@@ -1368,6 +1373,13 @@ export default class App extends Component {
                   dateVaultFilter={this.dateVaultFilter}
                   typeVaultFilter={this.typeVaultFilter}
                   setPagination={this.setPagination}
+                  handleNewContact={this.handleNewContact}
+                  handleDeleteVaultItem={this.handleDeleteVaultItem}
+                  handleVaultDrop={this.handleVaultDrop}
+                  handleDropRejected={this.handleDropRejected}
+                  displayMessage={displayMessage}
+                  loading={loading}
+                  results={results}
                   graphitePro={graphitePro}
                   files={files}
                   filteredVault={filteredVault}
@@ -1439,6 +1451,7 @@ export default class App extends Component {
                 <SharedVault {...props}
                   loadVaultContacts={this.loadVaultContacts}
                   handleIDChangeVault={this.handleIDChangeVault}
+                  loading={loading}
                   show={show}
                   contacts={contacts}
                   sharedWithMe={sharedWithMe}
@@ -1447,6 +1460,7 @@ export default class App extends Component {
               <Route exact path="/vault/shared/:id" render={(location, match, props) =>
                 <SharedVaultCollection {...props}
                   loadSharedVault={this.loadSharedVault}
+                  loading={loading}
                   user={user}
                   shareFileIndex={shareFileIndex}
                 />

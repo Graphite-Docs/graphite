@@ -9,6 +9,7 @@ const str2ab = require('string-to-arraybuffer');
 
 export function handleVaultDrop(files) {
   this.analyticsRun('vault');
+  this.setState({ loading: true });
   var file = files[0]
   const reader = new FileReader();
   reader.onload = (event) => {
@@ -49,10 +50,9 @@ export function handleVaultDrop(files) {
      if(object.size > 111048576) {
        this.handleDropRejected();
      }else {
-       this.setState({singleFile: object});
-       this.setState({files: [...this.state.files, objectTwo] });
-       this.setState({ loading: "", show: "hide"})
-       setTimeout(this.saveNewVaultFile, 700)
+       this.setState({singleFile: object, files: [...this.state.files, objectTwo] }, () => {
+         this.saveNewVaultFile();
+       });
      }
  };
  reader.readAsDataURL(file);
@@ -64,8 +64,6 @@ export function handleDropRejected(files) {
 }
 
 export function saveNewVaultFile() {
-    console.log(this.state.files);
-    console.log(this.state.singleFile);
     const file = this.state.id + '.json';
     putFile(file, JSON.stringify(this.state.singleFile), {encrypt:true})
       .then(() => {
@@ -75,7 +73,7 @@ export function saveNewVaultFile() {
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+        this.setState({ loading: false });
       });
 
   }
@@ -83,12 +81,12 @@ export function saveNewVaultFile() {
   export function saveNewVaultFileTwo() {
     putFile("uploads.json", JSON.stringify(this.state.files), {encrypt:true})
       .then(() => {
-        console.log("Saved!");
-        window.location.replace("/vault");
+        this.loadVault();
+        this.setState({ loading: false })
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-        alert(e.message);
+        this.setState({ loading: false });
       });
   }

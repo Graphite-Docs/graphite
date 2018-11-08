@@ -14,6 +14,7 @@ const rtfToHTML = require('../vault/rtf-to-html.js');
 const Papa = require('papaparse');
 
 export function loadVaultContacts() {
+  this.setState({ loading: true });
   getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
      let file = JSON.parse(fileContents || '{}');
@@ -23,6 +24,9 @@ export function loadVaultContacts() {
      } else {
        this.setState({ contacts: [] });
      }
+   })
+   .then(() => {
+     this.setState({ loading: false });
    })
     .catch(error => {
       console.log(error);
@@ -39,7 +43,7 @@ export function pullData() {
   }
 
 export function loadSharedVault() {
-  console.log("heyo")
+  this.setState({ loading: true });
   getFile("uploads.json", {decrypt: true})
    .then((fileContents) => {
      this.setState({ files: JSON.parse(fileContents || '{}') });
@@ -75,7 +79,9 @@ export function loadSharedVault() {
        .catch((error) => {
          console.log('could not resolve profile')
        })
-      this.setState({ shareFileIndex: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
+      this.setState({ shareFileIndex: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
+        this.setState({ loading: false });
+      })
       console.log("loaded");
       this.saveVaultUser();
    })
@@ -95,6 +101,7 @@ export function saveVaultUser() {
 }
 
 export function loadSingleSharedVault() {
+  this.setState({ loading: true });
   getFile("shareuser.json", {decrypt: true})
    .then((fileContents) => {
       this.setState({ user: JSON.parse(fileContents || '{}') });
@@ -177,9 +184,12 @@ export function loadSingleSharedVault() {
          }
 
          else {
-           this.setState({ loading: "hide", show: "" });
+           this.setState({ loading: false, show: "" });
          }
      })
+   })
+   .then(() => {
+     this.setState({ loading: false })
    })
     .catch(error => {
       console.log(error);

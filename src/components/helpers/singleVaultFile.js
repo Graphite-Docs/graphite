@@ -14,27 +14,16 @@ const { encryptECIES, } = require('blockstack/lib/encryption');
 let abuf4;
 
 export function loadSingleVaultFile() {
-  getFile("uploads.json", {decrypt: true})
-   .then((fileContents) => {
-      this.setState({ files: JSON.parse(fileContents || '{}') })
-      console.log("loaded");
-      this.setState({ initialLoad: "hide" });
-   }).then(() => {
-     let files = this.state.files;
-     const thisFile = files.find((file) => { return file.id.toString() === window.location.href.split('vault/')[1]}); //this is comparing strings
-     console.log("SingleVaultFile - componentDidMount - thisFile is: ", thisFile);
-     let index = thisFile && thisFile.id;
-     console.log("SingleVaultFile - componentDidMount - index is: ", index);
-     function findObjectIndex(file) {
-         return file.id === index; //this is comparing numbers
-     }
-     // let grid = thisSheet && thisSheet.content;
-     this.setState({ tags: thisFile && thisFile.tags, sharedWith: thisFile && thisFile.sharedWith, index: files.findIndex(findObjectIndex) })
-     // console.log(this.state.title);
-   })
-    .catch(error => {
-      console.log(error);
-    });
+  this.setState({ loading: true });
+   let files = this.state.files;
+   const thisFile = files.find((file) => { return file.id.toString() === window.location.href.split('vault/')[1]}); //this is comparing strings
+   console.log("SingleVaultFile - componentDidMount - thisFile is: ", thisFile);
+   let index = thisFile && thisFile.id;
+   console.log("SingleVaultFile - componentDidMount - index is: ", index);
+   function findObjectIndex(file) {
+       return file.id === index; //this is comparing numbers
+   }
+   this.setState({ index: files.findIndex(findObjectIndex) })
 
 getFile(window.location.href.split('vault/')[1]+ ".json", { decrypt: true })
   .then(file => {
@@ -56,7 +45,7 @@ getFile(window.location.href.split('vault/')[1]+ ".json", { decrypt: true })
           var html = result.value; // The generated HTML
           this.setState({ content: html });
           console.log(this.state.content);
-          this.setState({ loading: "hide", show: "" });
+          this.setState({ loading: false });
         })
         .done();
     }
@@ -94,8 +83,11 @@ getFile(window.location.href.split('vault/')[1]+ ".json", { decrypt: true })
     }
 
     else {
-      this.setState({ loading: "hide", show: "" });
+      this.setState({ loading: false });
     }
+  })
+  .then(() => {
+    this.setState({ loading: false });
   })
   .catch(error => {
     console.log(error);
@@ -110,8 +102,8 @@ export function onPageComplete(page) {
   this.setState({ page });
 }
 
-export function handlePrevious() {
-  this.setState({ page: this.state.page - 1 });
+export function handlePrevious (props){
+  this.setState({ page: props })
 }
 
 export function handleNext() {

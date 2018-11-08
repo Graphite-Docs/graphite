@@ -71,52 +71,62 @@ export function  handleVaultCheckbox(event) {
         }
   }
 
-export function sharedVaultInfo(props) {
-    this.setState({ confirmAdd: false, receiverID: props });
-    const user = props;
+export function sharedVaultInfo(contact, file) {
+    this.setState({ confirmAdd: false, receiverID: contact });
+    const user = contact;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    this.setState({ shareModal: "hide", loadingTwo: "", contactDisplay: "hide"});
+    this.setState({ loading: true });
     getFile('key.json', options)
       .then((file) => {
-        this.setState({ pubKey: JSON.parse(file)})
+        if(file) {
+          this.setState({ pubKey: JSON.parse(file)})
+        } else {
+          console.log("No key");
+          this.setState({ loading: false, displayMessage: true}, () => {
+            setTimeout(() => this.setState({ displayMessage: false}), 3000)
+          })
+        }
       })
       .then(() => {
         getFile('graphiteprofile.json', options)
           .then((fileContents) => {
-            if(JSON.parse(fileContents).emailOK) {
-              const object = {};
-              object.sharedBy = loadUserData().username;
-              object.from_email = "contact@graphitedocs.com";
-              object.to_email = JSON.parse(fileContents).profileEmail;
-              if(window.location.href.includes('/vault')) {
-                object.subject = 'New Graphite Vault File Shared by ' + loadUserData().username;
-                object.link = window.location.origin + '/vault/single/shared/' + loadUserData().username + '/' + this.state.filesSelected[0];
-                object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
-                axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
-                  .then((res) => {
-                    console.log(res);
-                  })
-                console.log(object);
+            if(fileContents) {
+              if(JSON.parse(fileContents).emailOK) {
+                const object = {};
+                object.sharedBy = loadUserData().username;
+                object.from_email = "contact@graphitedocs.com";
+                object.to_email = JSON.parse(fileContents).profileEmail;
+                if(window.location.href.includes('/vault')) {
+                  object.subject = 'New Graphite Vault File Shared by ' + loadUserData().username;
+                  object.link = window.location.origin + '/vault/single/shared/' + loadUserData().username + '/' + this.state.filesSelected[0];
+                  object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
+                  axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
+                    .then((res) => {
+                      console.log(res);
+                    })
+                  console.log(object);
+                }
               }
-            } else {
-
             }
           })
         })
         .then(() => {
-          this.loadSharedVaultCollection();
+          if(this.state.loading) {
+            this.loadSharedVaultCollection(contact, file);
+          }
         })
         .catch(error => {
           console.log("No key: " + error);
-          window.Materialize.toast(props + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-          this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
+          this.setState({ loading: false, displayMessage: true}, () => {
+            setTimeout(() => this.setState({ displayMessage: false}), 3000)
+          })
         });
   }
 
-export function loadSharedVaultCollection() {
-  const user = this.state.receiverID;
-  const file = "sharedvault.json";
-  getFile(user + file, {decrypt: true})
+export function loadSharedVaultCollection(contact, file) {
+  const user = contact;
+  const fileName = "sharedvault.json";
+  getFile(user + fileName, {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
         this.setState({ sharedCollection: JSON.parse(fileContents || '{}') })
@@ -125,64 +135,59 @@ export function loadSharedVaultCollection() {
       }
     })
     .then(() => {
-      this.loadVaultSingle();
+      this.loadVaultSingle(contact, file);
     })
     .catch((error) => {
       console.log(error)
     });
 }
 
-export function loadVaultSingle() {
-  if(this.state.filesSelected.length > 1) {
-    //TODO figure out how to handle this
-  } else {
-    const thisFile = this.state.filesSelected[0];
-    const fullFile = thisFile + '.json';
+export function loadVaultSingle(contact, file) {
+  const thisFile = file.id;
+  const fullFile = thisFile + '.json';
 
-    getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}').sharedWith) {
-         this.setState({
-           file: JSON.parse(fileContents || "{}").file,
-           name: JSON.parse(fileContents || "{}").name,
-           lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
-           size: JSON.parse(fileContents || "{}").size,
-           link: JSON.parse(fileContents || "{}").link,
-           type: JSON.parse(fileContents || "{}").type,
-           id: JSON.parse(fileContents || "{}").id,
-           sharedWithSingle: JSON.parse(fileContents || "{}").sharedWith,
-           singleFileTags: JSON.parse(fileContents || "{}").tags || [],
-           uploaded: JSON.parse(fileContents || "{}").uploaded
-        });
-      } else {
-        this.setState({
-          file: JSON.parse(fileContents || "{}").file,
-          name: JSON.parse(fileContents || "{}").name,
-          lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
-          size: JSON.parse(fileContents || "{}").size,
-          link: JSON.parse(fileContents || "{}").link,
-          id: JSON.parse(fileContents || "{}").id,
-          type: JSON.parse(fileContents || "{}").type,
-          sharedWithSingle: [],
-          singleFileTags: JSON.parse(fileContents || "{}").tags || [],
-          uploaded: JSON.parse(fileContents || "{}").uploaded
-       });
-      }
-
-     })
-      .then(() => {
-        this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
-        this.setState({ shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
-        window.$('#shareModal').modal('close');
-        setTimeout(this.getVaultCollection, 300);
-      })
-      .catch(error => {
-        console.log(error);
+  getFile(fullFile, {decrypt: true})
+   .then((fileContents) => {
+     if(JSON.parse(fileContents || '{}').sharedWith) {
+       this.setState({
+         file: JSON.parse(fileContents || "{}").file,
+         name: JSON.parse(fileContents || "{}").name,
+         lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
+         size: JSON.parse(fileContents || "{}").size,
+         link: JSON.parse(fileContents || "{}").link,
+         type: JSON.parse(fileContents || "{}").type,
+         id: JSON.parse(fileContents || "{}").id,
+         sharedWithSingle: JSON.parse(fileContents || "{}").sharedWith,
+         singleFileTags: JSON.parse(fileContents || "{}").tags || [],
+         uploaded: JSON.parse(fileContents || "{}").uploaded
       });
+    } else {
+      this.setState({
+        file: JSON.parse(fileContents || "{}").file,
+        name: JSON.parse(fileContents || "{}").name,
+        lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
+        size: JSON.parse(fileContents || "{}").size,
+        link: JSON.parse(fileContents || "{}").link,
+        id: JSON.parse(fileContents || "{}").id,
+        type: JSON.parse(fileContents || "{}").type,
+        sharedWithSingle: [],
+        singleFileTags: JSON.parse(fileContents || "{}").tags || [],
+        uploaded: JSON.parse(fileContents || "{}").uploaded
+     });
     }
+
+   })
+    .then(() => {
+      this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] }, () => {
+        this.getVaultCollection(contact, file);
+      });
+    })
+    .catch(error => {
+      console.log(error);
+    });
 }
 
-export function getVaultCollection() {
+export function getVaultCollection(contact, file) {
   getFile("uploads.json", {decrypt: true})
   .then((fileContents) => {
     console.log(JSON.parse(fileContents || '{}'))
@@ -190,9 +195,7 @@ export function getVaultCollection() {
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let files = this.state.files;
-    console.log("files man")
-    console.log(files);
-    const thisFile = files.find((file) => { return file.id.toString() === this.state.filesSelected[0]}); //this is comparing strings
+    const thisFile = files.find((a) => { return a.id.toString() === file.id.toString()}); //this is comparing strings
     let index = thisFile && thisFile.id;
     function findObjectIndex(file) {
         return file.id === index; //this is comparing numbers
@@ -200,18 +203,18 @@ export function getVaultCollection() {
     this.setState({index: files.findIndex(findObjectIndex) });
   })
     .then(() => {
-      this.vaultShare();
+      this.vaultShare(contact, file);
     })
     .catch(error => {
       console.log(error);
     });
 }
 
-export function vaultShare() {
+export function vaultShare(contact, file) {
   const object = {};
   object.name = this.state.name;
   object.file = this.state.file;
-  object.id = this.state.id;
+  object.id = file.id;
   object.lastModifiedDate = this.state.lastModifiedDate;
   object.sharedWith = this.state.sharedWithSingle;
   object.size = this.state.size;
@@ -221,30 +224,30 @@ export function vaultShare() {
   object.uploaded = this.state.uploaded;
   const index = this.state.index;
   const updatedFiles = update(this.state.files, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-  this.setState({files: updatedFiles, singleFile: object, sharedCollection: [...this.state.sharedCollection, object]});
-
-  setTimeout(this.saveSharedVaultFile, 300);
+  this.setState({files: updatedFiles, singleFile: object, sharedCollection: [...this.state.sharedCollection, object]}, () => {
+    this.saveSharedVaultFile(contact, file);
+  });
 }
 
-export function saveSharedVaultFile() {
-  const user = this.state.receiverID;
+export function saveSharedVaultFile(contact, file) {
+  const user = contact;
   const userShort = user.slice(0, -3);
-  const file = "sharedvault.json";
+  const fileName = "sharedvault.json";
 
-  putFile(userShort + file, JSON.stringify(this.state.sharedCollection), {encrypt: true})
+  putFile(userShort + fileName, JSON.stringify(this.state.sharedCollection), {encrypt: true})
     .then(() => {
       console.log("Shared Collection Saved");
-      this.saveSingleVaultFile();
+      this.saveSingleVaultFile(contact, file);
     })
 }
 
-export function saveSingleVaultFile() {
-  const file = this.state.filesSelected[0];
-  const fullFile = file + '.json'
+export function saveSingleVaultFile(contact, file) {
+  const fileID = file.id;
+  const fullFile = fileID + '.json'
   putFile(fullFile, JSON.stringify(this.state.singleFile), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      this.saveVaultCollection();
+      this.saveVaultCollection(contact, file);
     })
     .catch(e => {
       console.log("e");
@@ -252,11 +255,11 @@ export function saveSingleVaultFile() {
     });
 }
 
-export function saveVaultCollection() {
+export function saveVaultCollection(contact, file) {
     putFile("uploads.json", JSON.stringify(this.state.files), {encrypt: true})
       .then(() => {
         console.log("Saved Collection");
-        this.sendVaultFile();
+        this.sendVaultFile(contact, file);
       })
       .catch(e => {
         console.log("e");
@@ -264,30 +267,30 @@ export function saveVaultCollection() {
       });
   }
 
-export function sendVaultFile() {
-  const user = this.state.receiverID;
+export function sendVaultFile(contact, file) {
+  const user = contact;
   const userShort = user.slice(0, -3);
   const fileName = 'sharedvault.json'
-  const file = userShort + fileName;
+  const fileFull = userShort + fileName;
   const publicKey = this.state.pubKey;
   const data = this.state.sharedCollection;
   const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
-  const directory = '/shared/' + file;
+  const directory = '/shared/' + fileFull;
   putFile(directory, encryptedData, {encrypt: false})
     .then(() => {
       console.log("Shared encrypted file ");
-      window.Materialize.toast('File shared with ' + this.state.receiverID, 4000);
-      this.loadFilesCollection();
-      this.setState({shareModal: "hide", loadingTwo: "", contactDisplay: ""});
+      this.loadVault();
+      this.setState({ loading: false });
+
     })
     .catch(e => {
       console.log(e);
     });
 }
 
-export function loadSingleVaultTags() {
+export function loadSingleVaultTags(file) {
   this.setState({tagDownload: false});
-  const thisFile = this.state.filesSelected[0];
+  const thisFile = file.id
   const fullFile = thisFile + '.json';
   getFile(fullFile, {decrypt: true})
    .then((fileContents) => {
@@ -323,24 +326,24 @@ export function loadSingleVaultTags() {
     }
    })
    .then(() => {
-     setTimeout(this.getVaultCollectionTags, 300);
+     this.getVaultCollectionTags(file);
    })
     .catch(error => {
       console.log(error);
     });
 }
 
-export function getVaultCollectionTags() {
+export function getVaultCollectionTags(file) {
   getFile("uploads.json", {decrypt: true})
   .then((fileContents) => {
      this.setState({ files: JSON.parse(fileContents || '{}') })
      this.setState({ initialLoad: "hide" });
   }).then(() =>{
     let files = this.state.files;
-    const thisFile = files.find((file) => {return file.id.toString() === this.state.filesSelected[0]}); //this is comparing strings
+    const thisFile = files.find((a) => {return a.id.toString() === file.id.toString()}); //this is comparing strings
     let index = thisFile && thisFile.id;
-    function findObjectIndex(file) {
-        return file.id === index; //this is comparing numbers
+    function findObjectIndex(a) {
+        return a.id === index; //this is comparing numbers
     }
     this.setState({index: files.findIndex(findObjectIndex) });
   })
@@ -368,8 +371,8 @@ export function addVaultTagManual() {
     });
   }
 
-export function saveNewVaultTags() {
-    this.setState({ loadingTwo: ""});
+export function saveNewVaultTags(file) {
+    this.setState({ loading: true });
     const object = {};
     object.name = this.state.name;
     object.file = this.state.file;
@@ -392,15 +395,16 @@ export function saveNewVaultTags() {
     objectTwo.type = this.state.type;
     objectTwo.uploaded = this.state.uploaded;
     const updatedFile = update(this.state.files, {$splice: [[index, 1, objectTwo]]});
-    this.setState({files: updatedFile, filteredValue: updatedFile, singleFile: object });
-    setTimeout(this.saveFullVaultCollectionTags, 500);
+    this.setState({files: updatedFile, filteredValue: updatedFile, singleFile: object }, () => {
+      this.saveFullVaultCollectionTags(file);
+    });
   }
 
-export function  saveFullVaultCollectionTags() {
+export function  saveFullVaultCollectionTags(file) {
     putFile("uploads.json", JSON.stringify(this.state.files), {encrypt: true})
       .then(() => {
         console.log("Saved");
-        this.saveSingleVaultFileTags();
+        this.saveSingleVaultFileTags(file);
       })
       .catch(e => {
         console.log("e");
@@ -408,14 +412,13 @@ export function  saveFullVaultCollectionTags() {
       });
   }
 
-  export function saveSingleVaultFileTags() {
-      const thisFile = this.state.filesSelected[0];
+  export function saveSingleVaultFileTags(file) {
+      const thisFile = file.id;
       const fullFile = thisFile + '.json';
       putFile(fullFile, JSON.stringify(this.state.singleFile), {encrypt:true})
         .then(() => {
           console.log("Saved tags");
-          this.setState({ tagModal: "hide", loadingTwo: "hide" });
-          window.$('#tagModal').modal('close');
+          this.setState({ loading: false });
           this.loadFilesCollection();
         })
         .catch(e => {
@@ -432,24 +435,21 @@ export function applyVaultFilter() {
 export function filterVaultNow() {
     let files = this.state.files;
     if(this.state.selectedTag !== "") {
-      let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(this.state.selectedTag) : console.log("nada"));
+      let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(this.state.selectedTag) : null);
       // let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
       this.setState({ filteredVault: tagFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedDate !== "") {
       let definedDate = files.filter((val) => { return val.uploaded !==undefined });
+      console.log(definedDate);
       let dateFilter = definedDate.filter(x => x.uploaded.includes(this.state.selectedDate));
       this.setState({ filteredVault: dateFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
     } else if (this.state.selectedCollab !== "") {
-      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : console.log("nada"));
+      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : null);
       // let collaboratorFilter = files.filter(x => x.sharedWith.includes(this.state.selectedCollab));
       this.setState({ filteredVault: collaboratorFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
     } else if(this.state.selectedType) {
       let typeFilter = files.filter(x => x.type.includes(this.state.selectedType));
       this.setState({ filteredVault: typeFilter, appliedFilter: true});
-      window.$('.button-collapse').sideNav('hide');
     }
   }
 
@@ -471,19 +471,22 @@ export function deleteVaultTag(props) {
     });
   }
 
-  export function collabVaultFilter(props) {
-    this.setState({ selectedCollab: props });
-    setTimeout(this.filterVaultNow, 300);
+  export function collabVaultFilter(collab, type) {
+    this.setState({ selectedCollab: collab }, () => {
+      this.filterVaultNow(type);
+    });
   }
 
-  export function tagVaultFilter(props) {
-    this.setState({ selectedTag: props });
-    setTimeout(this.filterVaultNow, 300);
+  export function tagVaultFilter(tag, type) {
+    this.setState({ selectedTag: tag }, () => {
+      this.filterVaultNow(type);
+    });
   }
 
-  export function dateVaultFilter(props) {
-    this.setState({ selectedDate: props });
-    setTimeout(this.filterVaultNow, 300);
+  export function dateVaultFilter(date, type) {
+    this.setState({ selectedDate: date }, () => {
+      this.filterVaultNow(type);
+    });
   }
 
   export function typeVaultFilter(props) {

@@ -1,10 +1,13 @@
 import React, { Component } from "react";
-import {
-  isSignInPending,
-} from "blockstack";
+import { Link } from 'react-router-dom';
+import {CSVLink} from 'react-csv';
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import HotTable from "react-handsontable";
+import "video-react/dist/video-react.css";
+import { Pagination, Container, Image, Icon } from 'semantic-ui-react';
+import {Menu as MainMenu} from 'semantic-ui-react';
+import Loading from '../Loading';
 
 
 
@@ -15,51 +18,22 @@ export default class SingleSharedFile extends Component {
   }
 
 
+  handlePaginationChange = (e, { activePage }) => this.setState({ activePage }, () => {
+    this.props.handlePrevious(this.state.activePage)
+  })
+
   renderPagination(page, pages) {
-    let previousButton = (
-      <li className="previous" onClick={this.props.handlePrevious}>
-        <a>
-          <i className="fa fa-arrow-left" /> Previous
-        </a>
-      </li>
-    );
-    if (page === 1) {
-      previousButton = (
-        <li className="previous disabled">
-          <a>
-            <i className="fa fa-arrow-left" /> Previous
-          </a>
-        </li>
-      );
-    }
-    let nextButton = (
-      <li className="next" onClick={this.props.handleNext}>
-        <a>
-          Next <i className="fa fa-arrow-right" />
-        </a>
-      </li>
-    );
-    if (page === pages) {
-      nextButton = (
-        <li className="next disabled">
-          <a>
-            Next <i className="fa fa-arrow-right" />
-          </a>
-        </li>
-      );
-    }
-    return (
-      <nav>
-        <ul className="pager">
-          {previousButton}
-          {nextButton}
-        </ul>
-      </nav>
-    );
+    return(
+      <Pagination
+        style={{position: "fixed", bottom: "20px", left: "18%", marginTop: "25px"}}
+        defaultActivePage={page} totalPages={pages}
+        onPageChange={this.handlePaginationChange}
+      />
+    )
   }
 
   render() {
-    const { type, loading, show, pages, page, link, content, grid, name} = this.props;
+    const { type, loading, pages, page, link, content, grid, name} = this.props;
     var thisStyle = {
       display: "none"
     };
@@ -68,91 +42,69 @@ export default class SingleSharedFile extends Component {
       pagination = this.renderPagination(page, pages);
     }
 
-    return !isSignInPending() ? (
-      <div>
-        <div className="navbar-fixed toolbar">
-          <nav className="toolbar-nav">
-            <div className="nav-wrapper">
-              <a href="/shared-vault" className="brand-logo left">
-                <i className="material-icons small-brand">arrow_back</i>
+    if(!loading) {
+      return (
+        <div>
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+          <MainMenu.Item>
+            <Link style={{color: "#fff"}} to={'/shared-vault'}><Icon name='arrow left' /></Link>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            {name.length > 14 ? name.substring(0,17).toUpperCase() +"..." : name.toUpperCase()}
+          </MainMenu.Item>
+
+          {type.includes("image") ? (
+            <MainMenu.Item>
+              <a href={link} download={name}>
+                <i className="material-icons">cloud_download</i>
               </a>
-
-              <ul className="left toolbar-menu">
-                <li>
-                  <a className="small-menu">{name.length > 14 ? name.substring(0,17).toUpperCase() +"..." : name.toUpperCase()}</a>
-                </li>
-                {type.includes("image") ? (
-                  <li>
-                    <a href={link} download={name}>
-                      <i className="material-icons">cloud_download</i>
-                    </a>
-                  </li>
-                ) : type.includes("video") ? (
-                  <li>
-                    <a href={link} download={name}>
-                      <i className="material-icons">cloud_download</i>
-                    </a>
-                  </li>
-                ) : type.includes("application/pdf") ? (
-                  <li>
-                    <a
-                      onClick={this.props.downloadPDF}
-                      title={name}
-                    >
-                      <i className="material-icons">cloud_download</i>
-                    </a>
-                  </li>
-                ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
-                  <li>
-                    <a
-                      onClick={this.props.downloadPDF}
-                      title={name}
-                    >
-                      <i className="material-icons">cloud_download</i>
-                    </a>
-                  </li>
-                ) : type.includes("sheet")|| type.includes("csv") ? (
-                  <li>
-                    <a
-                      onClick={this.props.downloadPDF}
-                      title={name}
-                    >
-                      <i className="material-icons">cloud_download</i>
-                    </a>
-                  </li>
-                ) : (
-                  <li />
-                )}
-                <li>
-                  <a className="small-menu" onClick={this.props.handleAddToVault}>
-                    Add to Vault
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </nav>
-        </div>
-
-        <div className="container">
-          <div className={loading}>
-            <div className="file-loading progress">
-              <div className="indeterminate" />
-            </div>
-          </div>
-        </div>
-        <div className={show}>
-          <div className="file-view">
+            </MainMenu.Item>
+          ) : type.includes("video") ? (
+            <MainMenu.Item>
+              <a href={link} download={name}>
+                <i className="material-icons">cloud_download</i>
+              </a>
+            </MainMenu.Item>
+          ) : type.includes("application/pdf") ? (
+            <MainMenu.Item>
+              <a
+                onClick={this.props.downloadPDF}
+                title={name}
+              >
+                <i className="material-icons">cloud_download</i>
+              </a>
+            </MainMenu.Item>
+          ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
+            <MainMenu.Item>
+              <a
+                onClick={this.props.downloadPDF}
+                title={name}
+              >
+                <i className="material-icons">cloud_download</i>
+              </a>
+            </MainMenu.Item>
+          ) : type.includes("sheet")|| type.includes("csv") ? (
+            <MainMenu.Item>
+              <CSVLink data={grid} filename={name + '.csv'} ><i className="material-icons">cloud_download</i></CSVLink>
+            </MainMenu.Item>
+          ) : (
+            <MainMenu.Item />
+          )}
+          <MainMenu.Item>
+          <a style={{color: "#fff"}} onClick={this.props.handleAddToVault}>
+            Add to Vault
+          </a>
+          </MainMenu.Item>
+          </MainMenu>
+          <div style={{marginTop: "75px"}}>
             <div className="">
               <div>
                 {type.includes("image") ? (
-                  <div className="single-file-div center-align">
-                    <img
-                      className="z-depth-4 responsive-img"
-                      src={link}
-                      alt={name}
-                    />
+                  <div style={{maxWidth: "85%", margin: "auto"}}>
+                    <Image src={link} fluid />
                   </div>
                 ) : type.includes("pdf") ? (
+                  <Container>
                   <div className="center-align container">
                     <div className="single-file-div">
                       <PDF
@@ -161,35 +113,21 @@ export default class SingleSharedFile extends Component {
                         onDocumentComplete={this.props.onDocumentComplete}
                         onPageComplete={this.props.onPageComplete}
                         page={page}
+                        style={{marginBottom: "45px"}}
                       />
                       {pagination}
-                      <link
+                      <a
                         id="dwnldLnk"
                         download={name}
+                        className="hide"
                         style={thisStyle}
-                      />
+                      >download</a>
                     </div>
                   </div>
+                  </Container>
                 ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
                   <div className="">
-                    <div className={loading}>
-                      <div className="edit-button">
-                        <div className="preloader-wrapper small active">
-                          <div className="spinner-layer spinner-green-only">
-                            <div className="circle-clipper left">
-                              <div className="circle" />
-                            </div>
-                            <div className="gap-patch">
-                              <div className="circle" />
-                            </div>
-                            <div className="circle-clipper right">
-                              <div className="circle" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="container">
+                    <Container>
                       <div className="card single-file-doc">
                         <div
                           className="print-view no-edit"
@@ -198,22 +136,25 @@ export default class SingleSharedFile extends Component {
                           }}
                         />
                       </div>
-                      <link
+                      <a
                         id="dwnldLnk"
                         download={name}
                         style={thisStyle}
-                      />
-                    </div>
+                        className="hide"
+                      >Hide</a>
+                    </Container>
                   </div>
                 ) : type.includes("video") ? (
+                  <Container>
                   <div className="single-file-div">
                     <div className="center-align container">
                       <Player playsInline src={link} />
                     </div>
                   </div>
+                  </Container>
                 ) : type.includes("sheet") || type.includes("csv") ? (
                   <div>
-                    <div className="spreadsheet-table">
+                    <div className="spreadsheet-table1">
                       <HotTable
                         root="hot"
                         settings={{
@@ -251,11 +192,17 @@ export default class SingleSharedFile extends Component {
                 ) : (
                   <div />
                 )}
-              </div>
-            </div>
-          </div>
+                </div>
+                </div>
+                </div>
         </div>
-      </div>
-    ) : null;
+
+
+      );
+    } else {
+      return (
+        <Loading />
+      )
+    }
   }
 }

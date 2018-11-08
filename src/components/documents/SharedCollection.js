@@ -11,6 +11,8 @@ import {
   handlePendingSignIn,
 } from 'blockstack';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
+import {Menu as MainMenu, Icon, Container, Table} from 'semantic-ui-react';
+import Loading from '../Loading';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -33,8 +35,8 @@ export default class SharedCollection extends Component {
       filteredValue: [],
       tempDocId: "",
       redirect: false,
-      loading: "",
-      img: avatarFallbackImage
+      img: avatarFallbackImage,
+      loading: false
     }
 
 
@@ -49,7 +51,7 @@ export default class SharedCollection extends Component {
   }
 
   componentDidMount() {
-    this.setState({ user: this.props.match.params.id });
+    this.setState({ user: this.props.match.params.id, loading: true });
     getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
@@ -87,7 +89,9 @@ export default class SharedCollection extends Component {
      .then((fileContents) => {
        let privateKey = loadUserData().appPrivateKey;
        console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
-       this.setState({ docs: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
+       this.setState({ docs: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
+         this.setState({ loading: false });
+       })
        console.log("loaded");
        this.save();
      })
@@ -142,59 +146,53 @@ export default class SharedCollection extends Component {
   }
 
   renderView() {
-    let docs = this.state.docs;
-    if (docs.length > 0) {
+    const { loading, docs } = this.state;
+    if (docs.length > 0 && !loading) {
       return (
         <div>
-          <div className="navbar-fixed toolbar">
-            <nav className="toolbar-nav">
-              <div className="nav-wrapper">
-                <a href="/shared-docs" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
-
-
-                  <ul className="left toolbar-menu">
-                    <li><a>Documents shared by {this.state.user}</a></li>
-                  </ul>
-
-              </div>
-            </nav>
-          </div>
-          <div className="container docs">
-          <div className="container">
-
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+          <MainMenu.Item>
+            <Link style={{color: "#fff"}} to={'/shared-docs'}><Icon name='arrow left' /></Link>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            Documents shared by {this.state.user}
+          </MainMenu.Item>
+          </MainMenu>
+          <Container>
+          <div style={{marginTop: "65px", textAlign: "center"}}>
             <h3 className="center-align">Documents {this.state.user} shared with you</h3>
 
-            <table className="bordered">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Shared By</th>
-                  <th>Static File</th>
-                  <th>Date Shared</th>
-                </tr>
-              </thead>
-              <tbody>
-            {
-              docs.slice(0).reverse().map(doc => {
+            <Table unstackable style={{borderRadius: "0"}}>
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Shared By</Table.HeaderCell>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Static File</Table.HeaderCell>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date Shared</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
 
-              return(
-                <tr key={doc.id}>
-                  <td><Link to={'/documents/single/shared/'+ this.state.user + '/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></td>
-                  <td>{this.state.user}</td>
-                  <td>{doc.rtc === true ? "False" : "True"}</td>
-                  <td>{doc.shared}</td>
-                </tr>
-              );
-              })
-            }
-            </tbody>
-          </table>
+              <Table.Body>
+                  {
+                    docs.slice(0).reverse().map(doc => {
 
-          </div>
-          </div>
+                    return(
+                      <Table.Row key={doc.id} style={{ marginTop: "35px"}}>
+                        <Table.Cell><Link to={'/documents/single/shared/'+ this.state.user + '/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></Table.Cell>
+                        <Table.Cell>{this.state.user}</Table.Cell>
+                        <Table.Cell>{doc.rtc === true ? "False" : "True"}</Table.Cell>
+                        <Table.Cell>{doc.shared}</Table.Cell>
+                      </Table.Row>
+                    );
+                    })
+                  }
+              </Table.Body>
+            </Table>
+            </div>
+          </Container>
         </div>
       );
-    } else {
+    } else if(!loading && docs.length < 1) {
       return (
         <div>
         <div className="navbar-fixed toolbar">
@@ -215,12 +213,15 @@ export default class SharedCollection extends Component {
         </div>
         </div>
       );
+    } else {
+      return (
+        <Loading />
+      )
     }
   }
 
 
   render() {
-    console.log(this.state.docs);
     const link = '/documents/doc/' + this.state.tempDocId;
     if (this.state.redirect) {
       return <Redirect push to={link} />;
