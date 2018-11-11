@@ -19,6 +19,7 @@ export default class Header extends Component {
   	super(props);
 
   	this.state = {
+      loading: false,
   	  person: {
   	  	name() {
           return 'Anonymous';
@@ -50,7 +51,7 @@ export default class Header extends Component {
   }
 
   renderHeader() {
-    if (isUserSignedIn()) {
+    if (isUserSignedIn() ) {
       const userData = loadUserData();
       // console.log('userData', userData);
 
@@ -104,8 +105,6 @@ export default class Header extends Component {
           </Menu.Item>
         </Menu>
       );
-    } else {
-
     }
   }
 

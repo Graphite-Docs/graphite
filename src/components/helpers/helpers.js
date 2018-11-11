@@ -1,5 +1,5 @@
 import {
-  getFile,
+  getFile
 } from "blockstack";
 
 export function loadDocs() {
@@ -75,4 +75,12 @@ export function loadVault() {
       console.log(error);
       this.setState({ files: [], filteredVault: [] });
     });
+}
+
+export function signInRedirect() {
+  // this.setState({ loading: true });
+  // handlePendingSignIn().then((userData) => {
+  //   window.location = window.location.origin;
+  //   this.setState({ loading: false });
+  // });
 }

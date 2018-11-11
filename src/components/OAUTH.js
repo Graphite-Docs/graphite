@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import Header from './Header';
 import Loading from './Loading';
 import GDocs from './documents/GDocs';
+import { Container } from 'semantic-ui-react';
 
 // const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -26,7 +27,7 @@ export default class OAUTH extends Component {
     return (
       <div>
       <Header />
-        <div className="center-align container">
+        <Container>
           {
             filteredGDocs.length > 0 ?
             <GDocs
@@ -37,11 +38,11 @@ export default class OAUTH extends Component {
               importAllGDocs={this.props.importAllGDocs}
             /> :
             <div>
-              {window.location.href.includes('gdocs') ? <h3>Fetching Google Docs</h3> : <h3>Saving Integration...</h3>}
+              {window.location.href.includes('gdocs') ? <h3 style={{textAlign: "center", marginTop: "45px"}}>Fetching Google Docs</h3> : <h3 style={{textAlign: "center", marginTop: "45px"}}>Saving Integration...</h3>}
               <Loading />
             </div>
           }
-        </div>
+        </Container>
       </div>
     )
   }

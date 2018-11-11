@@ -790,7 +790,12 @@ handlePageChange = (props) => {
 
     const indexOfLastSheet = currentPage * sheetsPerPage;
     const indexOfFirstSheet = indexOfLastSheet - sheetsPerPage;
-    const currentSheets = sheets.slice(0).reverse();
+    let currentSheets;
+    if(sheets) {
+      currentSheets = sheets;
+    } else {
+      currentSheets = [];
+    }
 
     let shared = currentSheets.map(a => a.sharedWith);
     let newShared = shared.filter(function(n){ return n !== undefined });
@@ -817,7 +822,7 @@ handlePageChange = (props) => {
 
     // Logic for displaying page numbers
    const pageNumbers = [];
-   for (let i = 1; i <= Math.ceil(sheets.length / sheetsPerPage); i++) {
+   for (let i = 1; i <= Math.ceil(currentSheets.length / sheetsPerPage); i++) {
      pageNumbers.push(i);
    }
 
@@ -918,7 +923,7 @@ handlePageChange = (props) => {
             </Table.Header>
             <Table.Body>
           {
-            currentSheets.slice(indexOfFirstSheet, indexOfLastSheet).map(sheet => {
+            currentSheets.slice(indexOfFirstSheet, indexOfLastSheet).reverse().map(sheet => {
               let collabs;
               let uniqueCollaborators;
               if(sheet.sharedWith) {

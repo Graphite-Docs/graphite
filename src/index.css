@@ -91,6 +91,12 @@ h5, h6 {
   background: #eee!important;
   border-radius: 0!important;
   border: none!important;
+  padding: 10px!important;
+}
+
+.appPageIcon {
+  float: right;
+  font-size: 30px!important;
 }
 
 /* Doc Page */
@@ -558,4 +564,15 @@ polygon.ql-stroke {
   outline: 0;
   -webkit-tap-highlight-color: rgba(255,255,255,0);
   padding: inherit;
+}
+
+/* shared sheets */
+
+.shared-sheet-menu {
+  height: 50px!important;
+  padding: 0!important;
+}
+
+.spreadsheet-table1 {
+  margin-top: -20px!important;
 }

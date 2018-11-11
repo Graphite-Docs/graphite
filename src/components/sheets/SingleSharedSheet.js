@@ -1,9 +1,12 @@
 import React, { Component } from "react";
+import { Link } from 'react-router-dom';
 import {
   loadUserData,
   getFile,
   putFile
 } from 'blockstack';
+import Loading from '../Loading';
+import {Menu as MainMenu, Icon} from 'semantic-ui-react';
 import HotTable from 'react-handsontable';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 
@@ -24,7 +27,7 @@ export default class SingleSharedSheet extends Component {
       words: "",
       index: "",
       save: "",
-      loading: "hide",
+      loading: false,
       printPreview: false,
       autoSave: "Saved",
       receiverID: "",
@@ -43,6 +46,7 @@ export default class SingleSharedSheet extends Component {
   }
 
   componentDidMount() {
+    this.setState({ loading: true });
     getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
        console.log(JSON.parse(fileContents))
@@ -91,7 +95,7 @@ getOther() {
     function findObjectIndex(sheet) {
         return sheet.id === index; //this is comparing numbers
     }
-    this.setState({ grid: thisSheet && thisSheet.content, title: thisSheet && thisSheet.title, index: allSheets.findIndex(findObjectIndex) })
+    this.setState({ grid: thisSheet && thisSheet.content, title: thisSheet && thisSheet.title, index: allSheets.findIndex(findObjectIndex), loading: false })
   })
   .catch(error => {
     console.log(error);
@@ -171,50 +175,62 @@ getOther() {
   }
 
   renderView() {
+    const { title, loading } = this.state;
+    if(!loading) {
+      return(
+      <div>
+      <MainMenu className='shared-sheet-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff", height: "100px", paddingBottom: "30px" }}>
+        <MainMenu.Item onClick={this.props.handleBack}>
+          <Link style={{color: "#fff"}} to={'/shared-sheets'}><Icon name='arrow left' /></Link>
+        </MainMenu.Item>
+        <MainMenu.Item style={{color: "#fff"}}>
+        {
+          title
+          ?
+          (title.length > 15 ? title.substring(0,15)+"..." : title)
+          :
+          "Title here..."
+        }
+        </MainMenu.Item>
+        <MainMenu.Item>
+          <a style={{color: "#fff"}} onClick={this.handleaddItem}>Add to Sheets</a>
+        </MainMenu.Item>
+        </MainMenu>
+      <div className="">
 
-    return(
-    <div>
-    <div className="navbar-fixed toolbar">
-      <nav className="toolbar-nav">
-        <div className="nav-wrapper">
-          <a href="/shared-sheets" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
-          <ul className="left toolbar-menu">
+          <div className="spreadsheet-table1">
+          <HotTable root="hot" settings={{
+            data: this.state.grid,
+            stretchH: 'all',
+            manualRowResize: true,
+            manualColumnResize: true,
+            colHeaders: true,
+            rowHeaders: true,
+            colWidths: 100,
+            rowHeights: 30,
+            minCols: 26,
+            minRows: 100,
+            formulas: true,
+            columnSorting: true,
+            contextMenu: true,
+            autoRowSize: true,
+            manualColumnMove: true,
+            manualRowMove: true,
+            ref: "hot",
+            fixedRowsTop: 0,
+            minSpareRows: 1
+            }}
+           />
+           </div>
 
-            <li><a onClick={this.handleaddItem}>Add to Sheets</a></li>
-          </ul>
-        </div>
-      </nav>
-    </div>
-    <div className="">
-
-        <div className="spreadsheet-table1">
-        <HotTable root="hot" settings={{
-          data: this.state.grid,
-          stretchH: 'all',
-          manualRowResize: true,
-          manualColumnResize: true,
-          colHeaders: true,
-          rowHeaders: true,
-          colWidths: 100,
-          rowHeights: 30,
-          minCols: 26,
-          minRows: 100,
-          formulas: true,
-          columnSorting: true,
-          contextMenu: true,
-          autoRowSize: true,
-          manualColumnMove: true,
-          manualRowMove: true,
-          ref: "hot",
-          fixedRowsTop: 0,
-          minSpareRows: 1
-          }}
-         />
-         </div>
-
-        </div>
-        </div>
-      );
+          </div>
+          </div>
+        );
+    } else {
+      return (
+        <Loading />
+      )
+    }
   }
 
   render() {

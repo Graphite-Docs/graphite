@@ -47,7 +47,7 @@ export default class Integrations extends Component {
                   <p>Stealthy is a decentralized, end to end encrypted, p2p chat and video application built with security & privacy in mind. Secure decentralized communication. <a href="">Learn more.</a></p>
                   {stealthyConnected === true ?
                     <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectStealthy}>Disconnect</Button> :
-                    <Button className='integration-button' secondary style={{borderRadius: "0"}} onClick={this.props.connectStealthy} className="btn btn-small black">Connect</Button>
+                    <Button className='integration-button' secondary style={{borderRadius: "0"}} onClick={this.props.connectStealthy}>Connect</Button>
                   }
                 </Segment>
               </Grid.Column>
@@ -57,8 +57,8 @@ export default class Integrations extends Component {
                   <h3>Medium</h3>
                   <p>Medium taps into the brains of the world’s most insightful writers, thinkers, and storytellers to bring you the smartest takes on topics that matter. <a href="https://medium.com/about">Learn more.</a></p>
                   {mediumConnected ?
-                    <Button className='integration-button' secondary style={{borderRadius: "0"}} onClick={this.props.disconnectMedium} className="btn btn-small grey">Disconnect</Button> :
-                    <a href={'https://medium.com/m/oauth/authorize?client_id='+ keys.MEDIUM_CLIENT_ID_DEV + '&scope=basicProfile,publishPost&state=' + uuidv4() + '&response_type=code&redirect_uri=' + redirectUri}><Button className='integration-button' secondary style={{borderRadius: "0"}} className="btn btn-small black">Connect</Button></a>
+                    <Button className='integration-button' secondary style={{borderRadius: "0"}} onClick={this.props.disconnectMedium}>Disconnect</Button> :
+                    <a href={'https://medium.com/m/oauth/authorize?client_id='+ keys.MEDIUM_CLIENT_ID_DEV + '&scope=basicProfile,publishPost&state=' + uuidv4() + '&response_type=code&redirect_uri=' + redirectUri}><Button className='integration-button' secondary style={{borderRadius: "0"}}>Connect</Button></a>
                   }
                 </Segment>
               </Grid.Column>
@@ -67,7 +67,7 @@ export default class Integrations extends Component {
                   <Image style={{maxWidth: "45%", margin: "auto"}} src='https://assets.brandfolder.com/oh0k24-4ytb20-26iscq/view.png' />
                   <h3>Slack</h3>
                   <p>When your team needs to kick off a project, hire a new employee, deploy some code, plan your next office opening, and more, Slack has you covered. <a href="https://slack.com/about">Learn more.</a></p>
-                  {slackConnected === true ? <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectSlack} className="btn btn-small grey">Disconnect</Button> : <a href={'https://slack.com/oauth/authorize?client_id=' + keys.SLACK_CLIENT_ID_DEV + '&scope=incoming-webhook'}><Button className='integration-button' secondary style={{borderRadius: "0"}} className="btn btn-small black">Connect</Button></a>}
+                  {slackConnected === true ? <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectSlack}>Disconnect</Button> : <a href={'https://slack.com/oauth/authorize?client_id=' + keys.SLACK_CLIENT_ID_DEV + '&scope=incoming-webhook'}><Button className='integration-button' secondary style={{borderRadius: "0"}}>Connect</Button></a>}
                 </Segment>
               </Grid.Column>
               <Grid.Column>
@@ -75,7 +75,7 @@ export default class Integrations extends Component {
                   <Image style={{maxWidth: "45%", margin: "auto"}} src='https://cdn.worldvectorlogo.com/logos/webhooks.svg' />
                   <h3>Webhooks</h3>
                   <p>A webhook (also called a web callback or HTTP push API) is a way for an app to provide other applications with real-time information. <a href="https://sendgrid.com/blog/whats-webhook/">Learn more.</a></p>
-                  {webhookConnected === true ? <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectWebhooks} className="btn btn-small grey">Disconnect</Button> :
+                  {webhookConnected === true ? <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectWebhooks}>Disconnect</Button> :
                   <Modal trigger={<Button secondary style={{borderRadius: "0"}}>Connect</Button>} closeIcon>
                     <Modal.Header>Add Webhooks Integration</Modal.Header>
                     <Modal.Content>
@@ -101,13 +101,13 @@ export default class Integrations extends Component {
                   <Image style={{maxWidth: "45%", margin: "auto"}} src={gdocs} />
                   <h3>Google Docs</h3>
                   <p>Pull in all or any of your Google Docs. This integration will fetch a maximum of 1,000 documents and will give you full control over which files to import.</p>
-                  {gDocsConnected === true ? <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectGDocs} className="btn btn-small grey">Disconnect</Button> :
+                  {gDocsConnected === true ? <Button className='integration-button' style={{borderRadius: "0"}} onClick={this.props.disconnectGDocs}>Disconnect</Button> :
                   window.location.href.includes('local') ?
                     <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><Button className='integration-button' secondary style={{borderRadius: "0"}}>Fetch Docs</Button></a> :
                   window.location.href.includes('serene') ?
-                    <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fserene-hamilton-56e88e.netlify.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><Button className='integration-button' secondary style={{borderRadius: "0"}} className="btn btn-small black">Fetch Docs</Button></a> :
+                    <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fserene-hamilton-56e88e.netlify.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><Button className='integration-button' secondary style={{borderRadius: "0"}}>Fetch Docs</Button></a> :
                   window.location.href.includes('graphite') ?
-                    <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fapp.graphitedocs.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><Button className='integration-button' secondary style={{borderRadius: "0"}} className="btn btn-small black">Fetch Docs</Button></a> :
+                    <a href={"https://accounts.google.com/o/oauth2/v2/auth?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive&access_type=offline&include_granted_scopes=true&state=123456&redirect_uri=https%3A%2F%2Fapp.graphitedocs.com%2Fintegrations%2Fgdocs&response_type=code&client_id=" + keys.GOOGLE_CLIENT_ID} className="modal-trigger"><Button className='integration-button' secondary style={{borderRadius: "0"}}>Fetch Docs</Button></a> :
                   null}
                 </Segment>
               </Grid.Column>

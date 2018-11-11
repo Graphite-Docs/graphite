@@ -59,7 +59,8 @@ import {
   loadDocs,
   loadSheets,
   loadContacts,
-  loadVault
+  loadVault,
+  signInRedirect
 } from './helpers/helpers';
 import {
   loadCollection,
@@ -962,6 +963,8 @@ export default class App extends Component {
 
     //Shared
 
+    this.signInRedirect = signInRedirect.bind(this);
+
     this.handleTagChange = handleTagChange.bind(this);
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
@@ -1067,6 +1070,7 @@ export default class App extends Component {
               <Route exact path="/" render={(props) =>
                     <AppPage {...props}
                     postToLog={this.postToLog}
+                    signInRedirect={this.signInRedirect}
                     value={value}
                     sheets={sheets}
                     contacts={contacts}
@@ -1635,7 +1639,7 @@ export default class App extends Component {
               }/>
               <Route exact path="/oauth/verify" render={(location, match, props) =>
                 <SSO {...props}
-
+                  loading={loading}
                 />
               }/>
               <Route exact path="/export" render={(location, match, props) =>

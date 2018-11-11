@@ -7,6 +7,8 @@ import {
   lookupProfile,
   signUserOut,
 } from 'blockstack';
+import Loading from '../Loading';
+import {Menu as MainMenu, Icon, Container, Table} from 'semantic-ui-react';
 
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -29,7 +31,7 @@ export default class SharedSheetsCollection extends Component {
         filteredSheets: [],
         tempSheetId: "",
         redirect: false,
-        loading: "",
+        loading: false,
         user: "",
         filteredValue: [],
         img: avatarFallbackImage
@@ -39,7 +41,7 @@ export default class SharedSheetsCollection extends Component {
     }
 
     componentDidMount() {
-      this.setState({ user: this.props.match.params.id });
+      this.setState({ user: this.props.match.params.id, loading: true });
       getFile("sheetscollection.json", {decrypt: true})
        .then((fileContents) => {
          if(fileContents) {
@@ -77,7 +79,7 @@ export default class SharedSheetsCollection extends Component {
            .catch((error) => {
              console.log('could not resolve profile')
            })
-          this.setState({ shareFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
+          this.setState({ shareFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))), loading: false })
           console.log("loaded");
           this.save();
        })
@@ -103,74 +105,72 @@ export default class SharedSheetsCollection extends Component {
 
   renderView() {
     let sheets = this.state.shareFile;
-    if (sheets.length > 0) {
+    const { loading } = this.state;
+    if (sheets.length > 0 && !loading) {
       return (
         <div>
-          <div className="navbar-fixed toolbar">
-            <nav className="toolbar-nav">
-              <div className="nav-wrapper">
-                <a href="/shared-sheets" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
 
-
-                  <ul className="left toolbar-menu">
-                    <li><a>Sheets shared by {this.state.user}</a></li>
-                  </ul>
-
-              </div>
-            </nav>
-          </div>
-          <div className="container docs">
-          <div className="container">
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+          <MainMenu.Item>
+            <Link style={{color: "#fff"}} to={'/shared-sheets'}><Icon name='arrow left' /></Link>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            Sheets shared by {this.state.user}
+          </MainMenu.Item>
+          </MainMenu>
+          <Container>
+          <div style={{marginTop: "65px", textAlign: "center"}}>
             <h3 className="center-align">Sheets {this.state.user} shared with you</h3>
-            <table className="bordered">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Shared By</th>
-                  <th>Date Shared</th>
-                </tr>
-              </thead>
-              <tbody>
-            {
-              sheets.slice(0).reverse().map(sheet => {
 
-              return(
-                <tr key={sheet.id}>
-                  <td><Link to={'/sheets/single/shared/'+ window.location.href.split('shared/')[1] + '/' + sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></td>
-                  <td>{this.state.user}</td>
-                  <td>{sheet.shared}</td>
-                </tr>
-              );
-              })
-            }
-            </tbody>
-          </table>
+            <Table unstackable style={{borderRadius: "0"}}>
+              <Table.Header>
+                <Table.Row>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Shared By</Table.HeaderCell>
+                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date Shared</Table.HeaderCell>
+                </Table.Row>
+              </Table.Header>
 
-          </div>
-          </div>
+              <Table.Body>
+                  {
+                    sheets.slice(0).reverse().map(sheet => {
+
+                    return(
+                      <Table.Row key={sheet.id} style={{ marginTop: "35px"}}>
+                        <Table.Cell><Link to={'/sheets/single/shared/'+ window.location.href.split('shared/')[1] + '/' + sheet.id}>{sheet.title.length > 20 ? sheet.title.substring(0,20)+"..." :  sheet.title}</Link></Table.Cell>
+                        <Table.Cell>{this.state.user}</Table.Cell>
+                        <Table.Cell>{sheet.shared}</Table.Cell>
+                      </Table.Row>
+                    );
+                    })
+                  }
+              </Table.Body>
+            </Table>
+            </div>
+          </Container>
+
         </div>
       );
-    } else {
+    } else if(!loading) {
       return (
         <div>
-        <div className="navbar-fixed toolbar">
-          <nav className="toolbar-nav">
-            <div className="nav-wrapper">
-              <a href="/shared-sheets" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
-
-
-                <ul className="left toolbar-menu">
-                  <li><a>Sheets shared by {this.state.user}</a></li>
-                </ul>
-
-            </div>
-          </nav>
-        </div>
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+          <MainMenu.Item>
+            <Link style={{color: "#fff"}} to={'/shared-sheets'}><Icon name='arrow left' /></Link>
+          </MainMenu.Item>
+          <MainMenu.Item>
+            Back
+          </MainMenu.Item>
+          </MainMenu>
         <div className="container docs">
           <h3 className="center-align">Nothing shared by {this.state.user}</h3>
         </div>
         </div>
       );
+    } else {
+      return (
+        <Loading />
+      )
     }
   }
 

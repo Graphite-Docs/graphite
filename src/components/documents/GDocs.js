@@ -1,12 +1,13 @@
 import React, { Component } from "react";
 import Loading from '../Loading';
+import { Container, Button, Grid, Input, Table } from 'semantic-ui-react';
 
 export default class GDocs extends Component {
 
   render(){
     const { filteredGDocs, importAll } = this.props
     return(
-      <div className="gDocs">
+      <Container style={{marginTop: "45px"}}>
       {
         importAll ?
         <div>
@@ -14,36 +15,40 @@ export default class GDocs extends Component {
           <Loading />
         </div> :
         <div>
-        <div className="row">
-          <div className="col s12 m6">
-            <h5>Your Google Docs ({filteredGDocs.length})</h5>
-          </div>
-          <div className="col right s12 m6">
-            <form className="searchform">
-              <fieldset className=" form-group searchfield">
-                <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search Google Docs" onChange={this.props.filterGDocsList}/>
-              </fieldset>
-            </form>
-          </div>
-        </div>
+        <Grid stackable columns={2}>
+          <Grid.Column>
+            <h2>Your Google Docs ({filteredGDocs.length})</h2>
+          </Grid.Column>
+          <Grid.Column>
+            <Input onChange={this.props.filterGDocsList} icon='search' placeholder='Search...' />
+          </Grid.Column>
+        </Grid>
 
-          <button onClick={this.props.importAllGDocs} className="btn green">Import All</button>
+          <Button style={{borderRadius: "0", background: "green", color: "#fff", marginTop: "20px"}} onClick={this.props.importAllGDocs} className="btn green">Import All</Button>
+          <Table celled fixed singleLine>
+            <Table.Header>
+              <Table.Row>
+                <Table.HeaderCell>Tile</Table.HeaderCell>
+                <Table.HeaderCell></Table.HeaderCell>
+              </Table.Row>
+            </Table.Header>
 
-          <ul className="collection import-docs-collection">
+            <Table.Body>
             {
               filteredGDocs.map(doc => {
                 return(
-                  <li className="collection-item import-docs-item" key={doc.id}>
-                    <span>{doc.name}</span><br />
-                    <a className="btn-flat blue-text" onClick={() => this.props.singleGDoc(doc)}>Import Doc</a>
-                  </li>
+                <Table.Row key={doc.id}>
+                  <Table.Cell>{doc.name}</Table.Cell>
+                  <Table.Cell><Button onClick={() => this.props.singleGDoc(doc)} style={{borderRadius: "0", background: "blue", color: "#fff"}}>Import Doc</Button></Table.Cell>
+                </Table.Row>
                 )
               })
             }
-          </ul>
+            </Table.Body>
+          </Table>
           </div>
       }
-      </div>
+      </Container>
     )
   }
 }
