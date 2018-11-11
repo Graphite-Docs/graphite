@@ -6,11 +6,6 @@ import Pricing from './Pricing';
 
 export default class Onboarding extends Component {
 
-  componentDidMount() {
-    window.$('.tooltipped').tooltip({delay: 50});
-    window.$('.modal').modal();
-  }
-
   render(){
       return(
         <div>

@@ -85,6 +85,7 @@ export function updateIntegrations() {
         window.location.replace('/integrations');
       } else {
         this.loadIntegrations();
+        this.setState({loading: false})
       }
     })
     .catch(error => {

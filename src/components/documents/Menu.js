@@ -114,11 +114,11 @@ export default class Menu extends Component {
                                   {
                                     singleDocIsPublic === true ?
                                     <div>
-                                      <p>This document is already being shared publicly.</p>
-                                      <Button style={{ borderRadius: "0" }} onClick={this.props.sharePublicly} color='blue'>Show Link</Button>
+                                      <p style={{marginBottom: "15px"}}>This document is already being shared publicly.</p>
+
                                       <Button style={{ borderRadius: "0" }} onClick={this.props.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
                                       <Button style={{ borderRadius: "0" }} onClick={this.props.stopSharing} color="red">Stop Sharing Publicly</Button>
-                                      <p>
+                                      <p style={{marginTop: "15px", marginBottom: "15px"}}>
                                         {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
                                       </p>
                                     </div>

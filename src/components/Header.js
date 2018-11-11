@@ -82,8 +82,9 @@ export default class Header extends Component {
                   window.location.pathname === '/vault' ? <Dropdown.Item><Link to={'/shared-vault'}>Shared Vault</Link></Dropdown.Item> :
                   null
                 }
+                <Dropdown.Item><Link to={'/profile'}>Profile</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/integrations'}>Integrations</Link></Dropdown.Item>
-                <Dropdown.Item><Link to={'/settings'}>Settings</Link></Dropdown.Item>
+                <Dropdown.Item><Link to={'/settings'}>Team Management</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item><a onClick={this.handleSignOut}>Sign Out</a></Dropdown.Item>

@@ -336,10 +336,11 @@ export function loadOriginalConfig() {
 }
 
 export function saveAccount() {
-  this.setState({ newTeammateId: "", newTeammateName: "", newTeammateEmail: "", newTeammateRole: "" })
+  this.setState({ loading: false, newTeammateId: "", newTeammateName: "", newTeammateEmail: "", newTeammateRole: "" })
   let fileName = 'accountdetails.json';
   putFile(fileName, JSON.stringify(this.state.accountDetails), {encrypt: true})
     .then(() => {
+      this.setState({ loading: false });
       this.saveMainAccount();
     })
     .catch(error => {

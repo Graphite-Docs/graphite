@@ -4,6 +4,9 @@ import {
   loadUserData
 } from 'blockstack';
 import ReactJson from 'react-json-view'
+import { Link } from 'react-router-dom';
+import { Container, Icon } from 'semantic-ui-react';
+import {Menu as MainMenu} from 'semantic-ui-react';
 
 
 export default class SingleExplorerFile extends Component {
@@ -25,23 +28,19 @@ export default class SingleExplorerFile extends Component {
     const {file} = this.state;
     return(
       <div>
-      <div className="navbar-fixed toolbar">
-        <nav className="toolbar-nav">
-          <div className="nav-wrapper">
-            <a href="/explorer" className="left brand-logo"><i className="material-icons">arrow_back</i></a>
-            <ul className="left toolbar-menu">
 
-              <li><a href="/explorer">Back to Explorer</a></li>
-            </ul>
-          </div>
-        </nav>
-      </div>
-        <div className="docs container">
+      <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu.Item>
+          <Link style={{color: "#fff"}} to={'/explorer'}><Icon name='arrow left' />Back to Explorer</Link>
+        </MainMenu.Item>
+        </MainMenu>
+
+        <Container style={{marginTop: "65px"}}>
           <h5>Your file</h5>
           <p>See the file in your storage hub <a target="_blank" href={loadUserData().profile.apps[window.location.origin] + window.location.href.split('explorer/')[1]}>here</a></p>
 
           <ReactJson src={file} />
-        </div>
+        </Container>
       </div>
     )
   }

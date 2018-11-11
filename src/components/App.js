@@ -1250,6 +1250,7 @@ export default class App extends Component {
                     handleProfileEmail={this.handleProfileEmail}
                     saveProfile={this.saveProfile}
                     loadProfile={this.loadProfile}
+                    loading={loading}
                     emailOK={emailOK}
                     profileEmail={profileEmail}
                   />
@@ -1509,6 +1510,7 @@ export default class App extends Component {
                   handleWebhookUrl={this.handleWebhookUrl}
                   connectWebhook={this.connectWebhook}
                   disconnectWebhooks={this.disconnectWebhooks}
+                  loading={loading}
                   webhookConnected={webhookConnected}
                   webhookUrl={webhookUrl}
                   docs={docs}
@@ -1550,6 +1552,7 @@ export default class App extends Component {
                   testingDeleteAll={this.testingDeleteAll}
                   teammateToDelete={this.teammateToDelete}
                   updateTeammate={this.updateTeammate}
+                  loading={loading}
                   userRole={userRole}
                   team={team}
                   newTeammateName={newTeammateName}
@@ -1641,16 +1644,17 @@ export default class App extends Component {
                   value={value}
                   files={files}
                   contacts={contacts}
+                  loading={loading}
                 />
               }/>
               <Route exact path="/explorer" render={(location, match, props) =>
                 <Explorer {...props}
-
+                  loading={loading}
                 />
               }/>
               <Route path="/file-explorer" render={(location, match, props) =>
                 <SingleExplorerFile {...props}
-
+                  loading={loading}
                 />
               }/>
             </div>

@@ -1,5 +1,7 @@
 import React, { Component } from "react";
 import Header from './Header';
+import Loading from './Loading';
+import { Grid, Container, Button } from 'semantic-ui-react';
 import {
   getFile,
 } from 'blockstack';
@@ -130,38 +132,37 @@ export default class Export extends Component {
 
 
   render() {
-    return (
-      <div>
-        <Header />
-        <div className="container exports">
-        <div className="row">
-          <div className="center-align">
-            <h3>Download all your files as JSON</h3>
-            <h5>Easily import into other systems or keep a backup on your computer</h5>
-          </div>
-          <div className="col s6 center-align">
-            <a className="black-text" onClick={this.compileDocs}><div id="doccontainer" className="card export-card hoverable">
-              <h5>Download Documents</h5>
-            </div></a>
-          </div>
-          <div className="col s6 center-align">
-            <a className="black-text" onClick={this.compileSheets}><div id="sheetcontainer" className="card export-card hoverable">
-              <h5>Download Sheets</h5>
-            </div></a>
-          </div>
-          <div className="col s6 center-align">
-            <a className="black-text" onClick={this.compileFiles}><div id="sheetcontainer" className="card export-card hoverable">
-              <h5>Download Files</h5>
-            </div></a>
-          </div>
-          <div className="col s6 center-align">
-            <a className="black-text" onClick={this.compileContacts}><div id="sheetcontainer" className="card export-card hoverable">
-              <h5>Download Contacts</h5>
-            </div></a>
-          </div>
+    const { loading }= this.state;
+    if(!loading) {
+      return (
+        <div>
+          <Header />
+          <Container style={{textAlign: "center", marginTop: "65px"}}>
+          <h1 style={{marginBottom: "35px"}}>Decrypt and export your data in JSON</h1>
+          <Grid columns={2} stackable>
+            <Grid.Column>
+              <Button onClick={this.compileDocs} secondary style={{borderRadius: "0"}}>Download Documents</Button>
+            </Grid.Column>
+            <Grid.Column>
+              <Button onClick={this.compileSheets} secondary style={{borderRadius: "0"}}>Download Sheets</Button>
+            </Grid.Column>
+            <Grid.Column>
+              <Button onClick={this.compileFiles} secondary style={{borderRadius: "0"}}>Download Files</Button>
+            </Grid.Column>
+            <Grid.Column>
+              <Button onClick={this.compileContacts} secondary style={{borderRadius: "0"}}>Download Contacts</Button>
+            </Grid.Column>
+          </Grid>
+          <h1 style={{marginTop: "45px"}}>Explore All Your Files</h1>
+          <p>See your files, decrypted and in their JSON form AND see them encrypted safely in your storage hub.</p>
+          <a href="/explorer"><Button secondary style={{borderRadius: "0"}}>Explore Your Files</Button></a>
+          </Container>
         </div>
-        </div>
-      </div>
-    )
+      )
+    } else {
+      return (
+        <Loading />
+      )
+    }
   }
 }

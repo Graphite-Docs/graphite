@@ -269,7 +269,7 @@ export function handleWebhookUrl(e) {
 }
 
 export function connectWebhook() {
-  this.setState({ webhookConnected: true });
+  this.setState({ webhookConnected: true, loading: true });
   putFile('webhookURL.json', JSON.stringify(this.state.webhookUrl), {encrypt: true})
     .then(() => {
       this.saveIntegrations();

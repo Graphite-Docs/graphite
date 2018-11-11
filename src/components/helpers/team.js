@@ -30,6 +30,7 @@ export function clearNewTeammate() {
 }
 
 export function addTeammate() {
+  this.setState({loading: true})
   if(this.state.newTeammateName !== "" && this.state.newTeammateRole !== "" && this.state.newTeammateEmail !== "") {
     let re = /\S+@\S+\.\S+/;
     if(re.test(this.state.newTeammateEmail) === true) {
@@ -49,18 +50,18 @@ export function addTeammate() {
       object.authToken = this.state.adminToken;
       object.tokenRefreshDate = this.state.tokenRefreshDate;
       this.setState({ team: [...this.state.team, object], newTeammateId: object.id, action: "Added teammate: " + this.state.newTeammateName });
-      window.Materialize.toast('Teammate added', 4000);
+      // window.Materialize.toast('Teammate added', 4000);
       setTimeout(this.saveInvite, 300);
     } else {
-      window.Materialize.toast('Please enter a valid email address.', 4000);
+      // window.Materialize.toast('Please enter a valid email address.', 4000);
     }
   } else {
-    window.Materialize.toast('Please make sure you have entered the required information.', 4000);
+    // window.Materialize.toast('Please make sure you have entered the required information.', 4000);
   }
 }
 
 export function teammateToDelete(props) {
-    this.setState({ action: "Deleted teammate: " + props.name});
+    this.setState({ action: "Deleted teammate: " + props.name, loading: true});
     let team = this.state.team;
     let result = window.$.grep(team, function(e){
       return e.id !== props.id;
@@ -68,13 +69,13 @@ export function teammateToDelete(props) {
     this.setState({
       team: result,
     })
-    window.Materialize.toast('Teammate deleted', 4000);
     this.postToLog();
     setTimeout(this.saveAll, 800);
 
 }
 
 export function updateTeammate(props) {
+  this.setState({ loading: true });
     let team = this.state.team;
     const thisMate= team.find((mate) => { return mate.id === props.id});
     let index = thisMate && thisMate.id;
@@ -138,7 +139,7 @@ export function updateRole() {
     object.adminToken = this.state.adminToken;
     const updatedTeam = update(this.state.team, {$splice: [[index, 1, object]]});
     this.setState({ team: updatedTeam });
-    window.Materialize.toast('Teammate updated', 4000);
+    // window.Materialize.toast('Teammate updated', 4000);
     setTimeout(this.postToLog, 300);
 }
 
@@ -161,7 +162,7 @@ export function sendInvite() {
       });
       setTimeout(this.saveAll, 500);
   } else {
-    window.Materialize.toast('Since the teammate does not have an email, but sure to send the invite link.', 4000)
+    // window.Materialize.toast('Since the teammate does not have an email, but sure to send the invite link.', 4000)
     setTimeout(this.saveAll, 500);
   }
 }

@@ -1,5 +1,8 @@
 import React, { Component } from "react";
+import { Link } from 'react-router-dom';
 import Header from './Header';
+import Loading from './Loading';
+import { Grid, Container, Input, List, Icon } from 'semantic-ui-react';
 import {
   listFiles
 } from 'blockstack';
@@ -10,7 +13,8 @@ export default class Explorer extends Component {
     super(props);
     this.state = {
       allFiles: [],
-      filteredValue: []
+      filteredValue: [],
+      loading: false
     }
   }
 
@@ -36,45 +40,55 @@ export default class Explorer extends Component {
   }
 
   render(){
-
     const { filteredValue } = this.state;
+    const { loading } = this.props;
     let files;
     if(filteredValue) {
       files = filteredValue;
     } else {
       files = [];
     }
-    return(
-      <div>
-      <Header />
-      <div className="explorer container">
-        <div className="container docs">
-        <div className="row">
-          <div className="col s12 m6">
-            <h5>Graphite Explorer ({filteredValue.length})</h5>
+    if(!loading) {
+      return(
+        <div>
+        <Header />
+        <Container>
+          <div style={{marginTop: "65px"}}>
+          <Grid stackable columns={2} style={{marginBottom: "25px"}}>
+            <Grid.Column>
+              <h2>Graphite Explorer ({filteredValue.length})
+              </h2>
+            </Grid.Column>
+            <Grid.Column>
+              <Input placeholder="Search files" onChange={this.filterList}/>
+            </Grid.Column>
+          </Grid>
+            <p style={{marginBottom: "25px"}}>Below, you will find all of the files you have ever stored in Graphite. Go ahead, explore!</p>
+            <div>
+            <List divided verticalAlign='middle'>
+              {
+                files.map(file => {
+                  return(
+                    <List.Item key={file} style={{padding: "15px"}}>
+                      <Icon name='folder' />
+                      <List.Content>
+                        <List.Header><Link to={'/file-explorer/' + file}>{file}</Link></List.Header>
+                      </List.Content>
+                    </List.Item>
+                  )
+                })
+              }
+            </List>
+            </div>
           </div>
-          <div className="col right s12 m6">
-          <form className="searchform">
-          <fieldset className=" form-group searchfield">
-          <input type="text" className="form-control docform form-control-lg searchinput" placeholder="Search files" onChange={this.filterList}/>
-          </fieldset>
-          </form>
-          </div>
+        </Container>
         </div>
-          <div>
-            <ul className="collection">
-            {
-              files.map(file => {
-                return(
-                  <li key={file} className="collection-item"><a href={'/file-explorer/' + file}>{file}</a></li>
-                )
-              })
-            }
-            </ul>
-          </div>
-        </div>
-      </div>
-      </div>
-    )
+      )
+    } else {
+      return (
+        <Loading />
+      )
+    }
+
   }
 }

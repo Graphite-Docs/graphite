@@ -4,6 +4,8 @@ import Header from './Header';
 import Onboarding from './Onboarding';
 import Loading from './Loading';
 import RoleTable from './RoleTable';
+import { Table, Dropdown, Container, Icon, Grid, Modal, Button, Input } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 import Logs from './Logs';
 import {
   loadUserData
@@ -13,31 +15,43 @@ export default class Settings extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      mateInfo: ""
+      mateInfo: "",
+      modalOpen: false
     }
   }
 
-  componentDidMount() {
-    window.$('.modal').modal();
-    window.$('.tooltipped').tooltip();
-    // window.$('select').material_select();
+  handleOpen = () => this.setState({ modalOpen: true })
+
+  handleClose = (props) => this.setState({ modalOpen: false }, () => {
+    if(props === 'cancel') {
+      this.props.clearNewTeammate();
+    } else if(props === 'save') {
+      this.props.addTeammate();
+    }
+
+  })
+
+  copyLink = (link) => {
+    /* Get the text field */
+    var copyText = document.getElementById("inviteLink");
+
+    /* Select the text field */
+    copyText.select();
+
+    /* Copy the text inside the text field */
+    document.execCommand("copy");
+    alert(copyText.value);
+
   }
 
   render() {
-    this.state.mateInfo !=="" ? window.$('#modal4').modal('open') : window.$('#modal4').modal('close');
-    const { userRole, audits, team, newTeammateName, newTeammateRole, newTeammateEmail, settingsOnboarding, settingsMain, loadingBar } = this.props;
+    // this.state.mateInfo !=="" ? window.$('#modal4').modal('open') : window.$('#modal4').modal('close');
+    const { loading, userRole, audits, team, newTeammateName, newTeammateRole, newTeammateEmail, settingsOnboarding, settingsMain } = this.props;
     let teamList;
     team === undefined ? teamList = [] : teamList = team;
-      if(userRole !== "User") {
+      if(!loading) {
         return (
           <div>
-            <div className={loadingBar}>
-              <Header />
-              <div className="container account-settings">
-                <Loading />
-              </div>
-            </div>
-
             <div className={settingsOnboarding}>
               <Onboarding />
             </div>
@@ -46,148 +60,206 @@ export default class Settings extends Component {
           <Header
             handleSignOut={this.props.handleSignOut}
            />
-          <div className="container">
+          <Container style={{marginTop: "45px"}}>
             <div className="center-align">
               <div className="row account-settings">
-                <h3 className="center-align">Account Settings</h3>
+                <h1>Team Management</h1>
                 {
                   window.location.origin === "http://localhost:3000" ? <button className="btn red" onClick={this.props.testingDeleteAll}>Blow it away</button> : <div className="hide" />
                 }
+                <Grid stackable columns={2} style={{marginBottom: "15px"}}>
+                  <Grid.Column>
+                    <h2>Your Team
+                      <Modal
+                        closeIcon
+                        style={{borderRadius: "0"}}
+                        open={this.state.modalOpen}
+                        onClose={this.handleClose}
+                        trigger={<Button onClick={this.handleOpen} style={{borderRadius: "0", marginLeft: "10px"}} secondary>Add</Button>}
+                        >
+                        <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Add a Teammate</Modal.Header>
+                        <Modal.Content>
+                          <Modal.Description style={{maxWidth: "75%", margin: "auto"}}>
+                          <div style={{marginBottom: "10px"}}>
+                            <Input style={{marginRight: "15px"}} value={newTeammateName} onChange={this.props.handleTeammateName} placeholder="Johnny Cash" />
+                            <label className="active">Teammate Name<span className="red-text">*</span></label>
+                          </div>
+                          <div style={{marginBottom: "10px"}}>
+                            <Input style={{marginRight: "15px"}} value={newTeammateEmail} onChange={this.props.handleTeammateEmail} placeholder="johnny@cash.com" />
+                            <label className="active">Teammate Email<span className="red-text">*</span></label>
+                          </div>
+                          <div style={{marginBottom: "10px"}}>
+                            <select style={{marginRight: "15px"}} className='roleDrop' value={newTeammateRole} onChange={this.props.handleTeammateRole}>
+                              <option value="" disabled>Select Role</option>
+                              <option value="Admin">Administrator</option>
+                              <option value="Manager">Manager</option>
+                              <option value="User">User</option>
+                            </select>
+                            <label>Role<span className="red-text">*</span></label>
+                          </div>
+                          <Button secondary style={{borderRadius: "0"}} onClick={() => this.handleClose('save')}>Add Teammate</Button>
+                          <Button style={{borderRadius: "0"}} onClick={() => this.handleClose('cancel')}>Cancel</Button>
+                          </Modal.Description>
+                        </Modal.Content>
+                      </Modal>
+                    </h2>
+                  </Grid.Column>
+                </Grid>
                 <div className="col s12">
                 <div className="col s12 account-settings-section">
-                  <h5 className="left">Your Team {(1+1 === 2) ? <button className="btn-floating btn-small black modal-trigger" data-target="addTeammateModal"><i className="material-icons white-text">add</i></button> : <span className="note"><a className="note-link" onClick={() => window.Materialize.toast('Your main account admin can add teammates.', 4000)}>?</a></span>}</h5>
 
-                  <table className="bordered">
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>ID</th>
-                        <th>Role <span><a className="info modal-trigger" href="#roleInfoModal"><i className="material-icons">info_outline</i></a></span></th>
-                        {(1+1 === 2) ? <th></th> : <div />}
-                      </tr>
-                    </thead>
-                    <tbody>
-                        {teamList.slice(0).map(mate => {
-                            return (
-                              <tr key={mate.name}>
+                <Table unstackable style={{borderRadius: "0"}}>
+                  <Table.Header>
+                    <Table.Row>
+                      <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Name</Table.HeaderCell>
+                      <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>ID</Table.HeaderCell>
+                      <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Role
 
-                              <td id="shareLinkModal" className="modal">
-                                <div className="modal-content">
-                                  <h4>Share Invite Link</h4>
-                                  <input type="text" defaultValue={mate.inviteLink} id="copy" /><span><a onClick={this.props.copyLink}><i className="material-icons tiny">content_copy</i></a></span>
-                                </div>
-                              </td>
+                      <Modal closeIcon trigger={<a style={{cursor: "pointer", marginLeft: "5px"}}><Icon name='info' /></a>}>
+                        <Modal.Header>Roles and Access</Modal.Header>
+                        <Modal.Content>
+                          <Modal.Description>
+                            <RoleTable />
+                          </Modal.Description>
+                        </Modal.Content>
+                      </Modal>
+                      </Table.HeaderCell>
+                      <Table.HeaderCell style={{borderRadius: "0", border: "none"}}></Table.HeaderCell>
+                    </Table.Row>
+                  </Table.Header>
 
-                                {
-                                  mate.invitedAccepted === false ?
-                                  <td><a data-target="modal4" className="modal-trigger">{mate.name}</a><span><a data-target="shareLinkModal" className="modal-trigger"><i className="material-icons tiny link">link</i></a></span></td>
-                                  :
-                                  <td>{userRole !== "Manager" && mate.blockstackId !== loadUserData().username ? <a onClick={() => this.setState({ mateInfo: mate })}>{mate.name}</a> : <a>{mate.name}</a>}</td>
-                                }
-                                <td>{mate.blockstackId}</td>
-                                <td>{mate.role.charAt(0).toUpperCase() + mate.role.slice(1)}</td>
-                                {(mate.blockstackId !== loadUserData().username && mate.role !== "Owner" && userRole !== "Manager") ? <td><a onClick={() => this.props.teammateToDelete(mate)} ><i className="material-icons red-text">delete</i></a></td> : <td></td>}
-                              </tr>
-                            )
-                          })
+                  <Table.Body>
+                    {
+                      teamList.slice(0).map(mate => {
+                        let url;
+                        if(window.location.href.includes('localhost')) {
+                          url = 'http://localhost:3000';
+                        } else if(window.location.href.includes('serene')) {
+                          url = 'https://serene-hamilton-56e88e.netlify.com';
+                        } else {
+                          url = 'https://app.graphitedocs.com'
                         }
-                    </tbody>
-                  </table>
+                        let link = url + '/invites/?' + loadUserData().username + '?' + mate.id;
+                      return(
+                        <Table.Row key={mate.name} style={{ marginTop: "35px"}}>
+                          {
+                            mate.invitedAccepted === false ?
+                            <Table.Cell>
+                              <Modal closeIcon trigger={<a style={{cursor: "pointer"}}>{mate.name}</a>}>
+                                <Modal.Header>Update Role for {mate.name}</Modal.Header>
+                                <Modal.Content>
+                                  <Modal.Description>
+                                    <select defaultValue="select" className='roleDrop' onChange={this.props.handleTeammateRole}>
+                                      <option value="select" disabled>Select Role</option>
+                                      <option value="Admin">Administrator</option>
+                                      <option value="Manager">Manager</option>
+                                      <option value="User">User</option>
+                                    </select>
+                                    <label style={{marginRight: "15px"}}>Role</label>
+                                    <div>
+                                    <Button secondary style={{borderRadius: "0"}} onClick={() => this.props.updateTeammate(mate)}>Update</Button>
+                                    </div>
+                                  </Modal.Description>
+                                </Modal.Content>
+                              </Modal>
+                            </Table.Cell>
+                            :
+                            <Table.Cell>
+                              <Modal closeIcon trigger={userRole !== "Manager" && mate.blockstackId !== loadUserData().username ? <a style={{cursor: "pointer"}} onClick={() => this.setState({ mateInfo: mate })}>{mate.name}</a> : <a style={{cursor: "pointer"}}>{mate.name}</a>}>
+                                <Modal.Header>Update Role for {mate.name}</Modal.Header>
+                                <Modal.Content>
+                                  <Modal.Description>
+                                    <select defaultValue="select" className='roleDrop' onChange={this.props.handleTeammateRole}>
+                                      <option value="select" disabled>Select Role</option>
+                                      <option value="Admin">Administrator</option>
+                                      <option value="Manager">Manager</option>
+                                      <option value="User">User</option>
+                                    </select>
+                                    <label style={{marginRight: "15px"}}>Role</label>
+                                    <div>
+                                    <Button secondary style={{borderRadius: "0"}} onClick={() => this.props.updateTeammate(mate)}>Update</Button>
+                                    </div>
+                                  </Modal.Description>
+                                </Modal.Content>
+                              </Modal>
+                            </Table.Cell>
+                          }
+                          <Table.Cell>{mate.blockstackId}</Table.Cell>
+                          <Table.Cell>{mate.role.charAt(0).toUpperCase() + mate.role.slice(1)}</Table.Cell>
+                          <Table.Cell>
+                            <Dropdown icon='ellipsis vertical' className='actions'>
+                              <Dropdown.Menu>
+                                <Dropdown.Item>
+                                  <Modal closeIcon trigger={<Link to={'/settings'} style={{color: "#282828"}}><Icon name='linkify'/>Invite Link</Link>}>
+                                    <Modal.Header>Manage Tags</Modal.Header>
+                                    <Modal.Content>
+                                      <Modal.Description>
+                                        <h3><Input value={link} id='inviteLink' /> <a onClick={this.copyLink}><Icon name='copy outline' /></a></h3>
+                                      </Modal.Description>
+                                    </Modal.Content>
+                                  </Modal>
+                                </Dropdown.Item>
+                                <Dropdown.Divider />
+                                <Dropdown.Item>
+                                  <Modal open={this.state.open} trigger={
+                                    <a style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</a>
+                                  } basic size='small'>
+                                    <SemanticHeader icon='trash alternate outline' content={mate.name ? 'Delete ' + mate.name + '?' : 'Delete teammate?'} />
+                                    <Modal.Content>
+                                      <p>
+                                        Deleting a teammate removes access to your team account.
+                                      </p>
+                                    </Modal.Content>
+                                    <Modal.Actions>
+                                      <div>
+                                        {
+                                          this.state.loading ?
+                                          <Loading style={{bottom: "0"}} /> :
+                                          <div>
+                                            <Button onClick={() => this.setState({ open: false })} basic color='red' inverted>
+                                              <Icon name='remove' /> No
+                                            </Button>
+                                            <Button onClick={() => this.props.teammateToDelete(mate)} color='red' inverted>
+                                              <Icon name='checkmark' /> Delete
+                                            </Button>
+                                          </div>
+                                        }
+                                      </div>
+                                    </Modal.Actions>
+                                  </Modal>
+                                </Dropdown.Item>
+                              </Dropdown.Menu>
+                            </Dropdown>
+                          </Table.Cell>
+                        </Table.Row>
+                      );
+                      })
+                    }
+                  </Table.Body>
+                </Table>
                 </div>
 
-                    {/*Add Teammate*/}
-                    <div id="addTeammateModal" className="modal modal-fixed-footer">
-                      <div className="modal-content addteammate">
-                        <h4>Add Teammate</h4>
-                        <div className="input-field col s12 m6">
-                          <input value={newTeammateName} onChange={this.props.handleTeammateName} type="text" placeholder="Johnny Cash" />
-                          <label className="active">Teammate Name<span className="red-text">*</span></label>
-                        </div>
-                        <div className="input-field col s12 m6">
-                          <input value={newTeammateEmail} onChange={this.props.handleTeammateEmail} type="text" placeholder="johnny@cash.com" />
-                          <label className="active">Teammate Email<span className="red-text">*</span></label>
-                        </div>
-                        <div className="col s12">
-                          <select value={newTeammateRole} onChange={this.props.handleTeammateRole}>
-                            <option value="" disabled>Select Role</option>
-                            <option value="Admin">Administrator</option>
-                            <option value="Manager">Manager</option>
-                            <option value="User">User</option>
-                          </select>
-                          <label>Role<span className="red-text">*</span></label>
-                        </div>
-                      </div>
-                      <div className="modal-footer">
-                        <a onClick={this.props.clearNewTeammate} className="modal-close waves-effect waves-green btn-flat">Cancel</a>
-                        <a onClick={this.props.addTeammate} className="modal-close waves-effect waves-green btn black">Add Teammate</a>
-                      </div>
-                    </div>
-                    {/*End Add Teammate*/}
-
-                    {/*Update Teammate */}
-                    <div id="modal4" className="modal center-align modal-fixed-footer">
-                      <div className="modal-content">
-                        <h4>Update Role for {this.state.mateInfo.name}</h4>
-                        <div className="col s12">
-                          <select defaultValue="select" onChange={this.props.handleTeammateRole}>
-                            <option value="select" disabled>Select Role</option>
-                            <option value="Admin">Administrator</option>
-                            <option value="Manager">Manager</option>
-                            <option value="User">User</option>
-                          </select>
-                          <label>Role</label>
-                        </div>
-                      </div>
-                      <div className="modal-footer">
-                        <a className="modal-close waves-effect waves-green btn-flat">Cancel</a>
-                        <a onClick={() => this.props.updateTeammate(this.state.mateInfo)} className="modal-close waves-effect waves-green btn black">Update</a>
-                      </div>
-                    </div>
-                    {/*End Update Teammate */}
-
-                    {/*Role Info Modal */}
-                    <div id="roleInfoModal" className="modal">
-                      <div className="modal-content">
-                        <h4>Roles and Access</h4>
-                        <RoleTable />
-                      </div>
-                      <div className="modal-footer">
-                        <a href="#!" className="modal-close waves-effect waves-green btn-flat">Got it</a>
-                      </div>
-                    </div>
-                    {/*End Role Info Modal */}
-
-                    {/*<div className="col s12">
-                      <h3>Security Policy</h3>
-
-                    </div>*/}
 
                     {userRole !== "Manager" ?
-                    <div className="col s12">
-                      <h3>Audits</h3>
-                      <button data-target="logModal" className="btn black modal-trigger">Search Logs</button>
-
-                      <div id="logModal" className="modal">
-                        <Logs
-                          audits={audits}
-                        />
-                      </div>
+                    <div style={{textAlign: "center", marginTop: "35px"}}>
+                      <h1>Audits</h1>
+                      <Modal closeIcon trigger={<Button secondary style={{borderRadius: "0"}}>Search Logs</Button>}>
+                        <Modal.Header>Team Audits</Modal.Header>
+                        <Modal.Content>
+                          <Modal.Description>
+                          <Logs
+                            audits={audits}
+                          />
+                          </Modal.Description>
+                        </Modal.Content>
+                      </Modal>
                     </div> :
-                    <div className="hide" />
+                    null
                     }
-                    {
-                      userRole !=="User" ?
-                      <div className="col s12">
-                      <h3>Integrations</h3>
-                        <Link to={'/integrations'}><button className="btn black">Configure Integrations</button></Link>
-                      </div>:
-                      <div className="hide" />
-                    }
-
                 </div>
               </div>
             </div>
-          </div>
+          </Container>
           </div>
 
           </div>
@@ -195,26 +267,7 @@ export default class Settings extends Component {
       } else {
         return (
           <div>
-          <div className={loadingBar}>
-            <Header />
-            <div className="container account-settings">
-              <Loading />
-            </div>
-          </div>
-
-          <div className={settingsOnboarding}>
-            <Onboarding />
-          </div>
-
-        <div className={settingsMain}>
-        <Header
-          handleSignOut={this.props.handleSignOut}
-         />
-        <div className="container center-align">
-          <h3>You do not have access to this page.</h3>
-          <a href="/">Go back</a>
-        </div>
-          </div>
+            <Loading />
           </div>
         );
       }
