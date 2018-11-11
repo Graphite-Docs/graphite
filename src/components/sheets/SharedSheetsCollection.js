@@ -110,11 +110,11 @@ export default class SharedSheetsCollection extends Component {
       return (
         <div>
 
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
           <MainMenu.Item>
             <Link style={{color: "#fff"}} to={'/shared-sheets'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
-          <MainMenu.Item>
+          <MainMenu.Item style={{color: "#fff"}}>
             Sheets shared by {this.state.user}
           </MainMenu.Item>
           </MainMenu>
@@ -154,11 +154,11 @@ export default class SharedSheetsCollection extends Component {
     } else if(!loading) {
       return (
         <div>
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
           <MainMenu.Item>
             <Link style={{color: "#fff"}} to={'/shared-sheets'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
-          <MainMenu.Item>
+          <MainMenu.Item style={{color: "#fff"}}>
             Back
           </MainMenu.Item>
           </MainMenu>

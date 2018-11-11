@@ -198,23 +198,37 @@ export function handleAutoSave(e) {
 }
 
 export function sharePublicly() {
-  const object = {};
-  object.title = this.state.title;
-  object.content = this.state.content;
-  if(this.state.readOnly !== undefined) {
-    object.readOnly = this.state.readOnly;
+  if(this.state.readOnly === undefined) {
+    this.setState({ readOnly: true }, () => {
+      const object = {};
+      object.title = this.state.title;
+      object.content = this.state.content;
+      object.readOnly = true;
+      object.words = wordcount(this.state.content);
+      object.shared = getMonthDayYear();
+      object.singleDocIsPublic = true;
+      this.setState({
+        singlePublic: object,
+        singleDocIsPublic: true
+      }, () => {
+        this.savePublic();
+      })
+    })
   } else {
-    object.readOnly = true;
+    const object = {};
+    object.title = this.state.title;
+    object.content = this.state.content;
+    object.readOnly = this.state.readOnly;
+    object.words = wordcount(this.state.content);
+    object.shared = getMonthDayYear();
+    object.singleDocIsPublic = true;
+    this.setState({
+      singlePublic: object,
+      singleDocIsPublic: true
+    }, () => {
+      this.savePublic();
+    })
   }
-  object.words = wordcount(this.state.content);
-  object.shared = getMonthDayYear();
-  object.singleDocIsPublic = true;
-  this.setState({
-    singlePublic: object,
-    singleDocIsPublic: true
-  }, () => {
-    this.savePublic();
-  })
 }
 
 export function stopSharing() {
@@ -493,10 +507,9 @@ export function handleAutoAdd() {
   object.rtc = this.state.rtc;
   // object.author = loadUserData().username;
   object.words = wordcount(this.state.content) || "";
-  object.tags = this.state.tags || [];
+  object.singleDocTags = this.state.singleDocTags;
   object.fileType = "documents";
   object.spacing = this.state.spacing;
-  console.log(object)
   const objectTwo = {};
   objectTwo.title = this.state.title;
   this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
@@ -513,7 +526,7 @@ export function handleAutoAdd() {
   objectTwo.singleDocIsPublic = this.state.singleDocIsPublic; //true or false...
   objectTwo.readOnly = this.state.readOnly; //true or false...
   // objectTwo.author = loadUserData().username;
-  objectTwo.tags = this.state.tags;
+  objectTwo.singleDocTags = this.state.singleDocTags;
   objectTwo.fileType = "documents";
   const index = this.state.index;
   const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo

@@ -27,8 +27,12 @@ export function loadDocs() {
 export function loadSheets() {
   getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
-     if(JSON.parse(fileContents).sheets) {
-       this.setState({ sheets: JSON.parse(fileContents || '{}').sheets, filteredSheets: this.state.sheets });
+     if(fileContents) {
+       if(JSON.parse(fileContents).sheets) {
+         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets, filteredSheets: this.state.sheets });
+       } else {
+         this.setState({ sheets: [], filteredSheets: [] });
+       }
      } else {
        this.setState({ sheets: [], filteredSheets: [] });
      }

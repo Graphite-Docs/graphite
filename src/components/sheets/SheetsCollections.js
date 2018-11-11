@@ -409,24 +409,49 @@ migrationComplete() {
 
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
+       console.log(JSON.parse(fileContents))
        if(JSON.parse(fileContents || '{}').sharedWith) {
+         if(JSON.parse(fileContents).tags) {
+           this.setState({
+             title: JSON.parse(fileContents || '{}').title,
+             grid: JSON.parse(fileContents || '{}').content,
+             tags: JSON.parse(fileContents || '{}').tags,
+             updated: JSON.parse(fileContents || '{}').updated,
+             id: JSON.parse(fileContents || '{}').id,
+             sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
+          });
+        } else {
+          this.setState({
+            title: JSON.parse(fileContents || '{}').title,
+            grid: JSON.parse(fileContents || '{}').content,
+            tags: [],
+            updated: JSON.parse(fileContents || '{}').updated,
+            id: JSON.parse(fileContents || '{}').id,
+            sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
+         });
+        }
+
+      } else {
+        if(JSON.parse(fileContents).tags) {
+          this.setState({
+            title: JSON.parse(fileContents || '{}').title,
+            grid: JSON.parse(fileContents || '{}').content,
+            tags: JSON.parse(fileContents || '{}').tags,
+            updated: JSON.parse(fileContents || '{}').updated,
+            id: JSON.parse(fileContents || '{}').id,
+            sharedWithSingle: [],
+         });
+       } else {
          this.setState({
            title: JSON.parse(fileContents || '{}').title,
            grid: JSON.parse(fileContents || '{}').content,
-           tags: JSON.parse(fileContents || '{}').tags,
+           tags: [],
            updated: JSON.parse(fileContents || '{}').updated,
            id: JSON.parse(fileContents || '{}').id,
-           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
+           sharedWithSingle: [],
         });
-      } else {
-        this.setState({
-          title: JSON.parse(fileContents || '{}').title,
-          grid: JSON.parse(fileContents || '{}').content,
-          tags: JSON.parse(fileContents || '{}').tags,
-          updated: JSON.parse(fileContents || '{}').updated,
-          id: JSON.parse(fileContents || '{}').id,
-          sharedWithSingle: [],
-       });
+       }
+
       }
 
      })
@@ -667,6 +692,8 @@ migrationComplete() {
   }
 
   addTagManual(sheet) {
+    console.log(this.state.tag);
+    console.log(this.state.tags);
     this.setState({ tags: [...this.state.tags, this.state.tag]}, () => {
       let sheets = this.state.sheets;
       const thisSheet = sheets.find((a) => { return a.id.toString() === sheet.id.toString()});

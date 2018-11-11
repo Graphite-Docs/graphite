@@ -715,7 +715,7 @@ renderView() {
     return (
       <div>
       <div className="center-align sheets-loader">
-      <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+      <MainMenu className='sheetsMenu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
         <MainMenu.Item onClick={this.handleBack}>
           <Icon name='arrow left' />
         </MainMenu.Item>
@@ -870,6 +870,7 @@ renderView() {
 
               {
                 this.state.decryption !==true ?
+                <div className='spreadsheet'>
                 <HotTable id='table' root="hot" settings={{
                   data: this.state.grid,
                   renderer: 'html',
@@ -899,8 +900,8 @@ renderView() {
                   }},
 
                 }}
-                 /> :
-                 <HotTable data={this.state.grid} ref={this.hotTableComponent} id={this.id} settings={this.hotSettings} />
+                 /></div> :
+                 <div className='spreadsheet'><HotTable data={this.state.grid} ref={this.hotTableComponent} id={this.id} settings={this.hotSettings} /></div>
               }
         </div>
         </div>

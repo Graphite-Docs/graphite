@@ -123,7 +123,7 @@ export default class Menu extends Component {
                                       </p>
                                     </div>
                                     :
-                                    <Button style={{ borderRadius: "0" }} secondary onClick={this.props.sharePublicly}>Share publicly</Button>
+                                    <Button style={{ borderRadius: "0" }} secondary onClick={this.props.sharePublicly}>Share Publicly</Button>
                                   }
 
                                   {

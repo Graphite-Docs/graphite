@@ -118,11 +118,17 @@ export function downloadPDF() {
 }
 
 export function handleToDocs() {
+  this.setState({ loading: true });
   getFile("documentscollection.json", { decrypt: true })
     .then(fileContents => {
-      if (fileContents) {
-        this.setState({ value: JSON.parse(fileContents || "{}").value });
+      if(fileContents) {
+        if(JSON.parse(fileContents).value) {
+          this.setState({ value: JSON.parse(fileContents || "{}").value });
+        } else {
+          this.setState({ value: [] });
+        }
       } else {
+        this.setState({ value: []})
         console.log("No docs");
       }
     })
@@ -136,7 +142,7 @@ export function handleToDocs() {
 
 export function handleAddToDocsTwo() {
   this.setState({ show: "hide" });
-  this.setState({ hideButton: "hide", loading: "" });
+  this.setState({ hideButton: "hide"});
   const rando = Date.now();
   const object = {};
   object.title = this.state.name;
@@ -151,29 +157,34 @@ export function handleAddToDocsTwo() {
   objectTwo.content = object.content;
   objectTwo.fileType = "vault";
 
-  this.setState({ value: [...this.state.value, object], singleDoc: objectTwo });
-  this.setState({ loading: "" });
-  console.log(this.state.singleDoc)
-  setTimeout(this.saveToDocs, 500);
+  this.setState({ value: [...this.state.value, object], singleDoc: objectTwo }, () => {
+    this.saveToDocs();
+  });
 }
 
 export function handleaddSheet() {
+    this.setState({ loading: true });
     getFile("sheetscollection.json", { decrypt: true })
       .then(fileContents => {
-        this.setState({ sheets: JSON.parse(fileContents || "{}").sheets });
-        console.log("Sheets added");
+        if(JSON.parse(fileContents).sheets) {
+          this.setState({ sheets: JSON.parse(fileContents || "{}").sheets });
+        } else {
+          this.setState({ sheets: [] });
+        }
       })
       .then(() => {
         this.handleaddTwoSheet();
       })
       .catch(error => {
         console.log(error);
+        this.setState({ loading: false })
+        alert("Trouble adding sheet");
       });
   }
 
 export function handleaddTwoSheet() {
   this.setState({ show: "hide" });
-  this.setState({ hideButton: "hide", loading: "" });
+  this.setState({ hideButton: "hide"});
   this.analyticsRun('sheets');
   const rando = Date.now();
   const object = {};
@@ -194,8 +205,7 @@ export function handleaddTwoSheet() {
     sheets: [...this.state.sheets, objectTwo],
     filteredSheets: [...this.state.filteredSheets, objectTwo],
     tempSheetId: object.id,
-    singleSheet: object,
-    loading: ""
+    singleSheet: object
   }, () => {
     console.log("adding new sheet");
     this.saveToSheets();

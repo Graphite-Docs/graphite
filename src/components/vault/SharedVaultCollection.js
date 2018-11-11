@@ -16,11 +16,11 @@ export default class SharedVaultCollection extends Component {
     if(!loading) {
       return (
         <div>
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
           <MainMenu.Item>
             <Link style={{color: "#fff"}} to={'/shared-vault'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
-          <MainMenu.Item>
+          <MainMenu.Item style={{color: "#fff"}}>
             Files shared by {this.props.user}
           </MainMenu.Item>
           </MainMenu>

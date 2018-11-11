@@ -72,7 +72,7 @@ export function handleaddItem() {
   const object = {};
   const objectTwo = {}
   if(window.location.href.includes('vault')) {
-    this.setState({ loading: "", })
+    this.setState({ loading: true, })
     object.title = this.state.name;
     object.lastUpdate = Date.now();
     object.id = rando;
@@ -129,6 +129,8 @@ export function saveNewFile() {
     .catch(e => {
       console.log("e");
       console.log(e);
+      this.setState({ loading: false })
+      alert("Trouble saving");
     });
 }
 
@@ -142,9 +144,9 @@ export function saveNewSingleDoc() {
       } else if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/')) {
         this.setState({ redirect: true });
       } else if(window.location.href.includes('documents/doc/')) {
-        window.open(window.location.origin + '/documents/doc/' + this.state.tempDocId, '_blank');
+        window.location.replace(window.location.origin + '/documents/doc/' + this.state.tempDocId);
       } else {
-        window.Materialize.toast(this.state.title + " added!", 4000);
+        // window.Materialize.toast(this.state.title + " added!", 4000);
       }
       if(this.state.importAll) {
         this.setState({ count: this.state.count + 1 });
@@ -158,6 +160,8 @@ export function saveNewSingleDoc() {
     .catch(e => {
       console.log("e");
       console.log(e);
+      this.setState({ loading: false })
+      alert("Trouble saving")
     });
 }
 
@@ -259,7 +263,6 @@ export function loadSharedCollection (doc) {
 }
 
 export function loadSingle(doc) {
-    console.log(doc)
     const thisFile = doc.id;
     const fullFile = '/documents/' + thisFile + '.json';
 
@@ -291,8 +294,9 @@ export function loadSingle(doc) {
 
      })
       .then(() => {
-        this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] });
-        setTimeout(() => this.getCollection(doc), 300);
+        this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] }, () => {
+          this.getCollection(doc)
+        });
       })
       .catch(error => {
         console.log(error);

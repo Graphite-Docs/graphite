@@ -154,7 +154,7 @@ h5, h6 {
 .cm-e-menu {
   background-color: #282828;
   position: fixed;
-  top: 30px;
+  top: 55px;
   z-index: 1000;
   color: #fff;
   font-weight: 200;
@@ -237,12 +237,14 @@ h5, h6 {
   color: #fff!important;
   padding: 10px!important;
   font-family: 'Muli', sans-serif;
+  padding-bottom: 18px!important;
 }
 
 .item-menu {
   position: fixed;
   top: 0;
   width: 100%;
+  height: 100px;
 }
 
 /* Quill Editor */
@@ -250,7 +252,7 @@ h5, h6 {
 .ql-editor {
   max-width: 80%;
   margin: auto;
-  margin-top: 200px;
+  margin-top: 215px;
   line-height: 1;
 }
 
@@ -258,7 +260,7 @@ h5, h6 {
   .ql-editor {
     max-width: 85%;
     margin: auto;
-    margin-top: 200px;
+    margin-top: 215px;
   }
 }
 
@@ -266,7 +268,7 @@ h5, h6 {
   .ql-editor {
     max-width: 90%;
     margin: auto;
-    margin-top: 200px;
+    margin-top: 215px;
   }
 }
 
@@ -274,7 +276,7 @@ h5, h6 {
   .ql-editor {
     max-width: 95%;
     margin: auto;
-    margin-top: 200px;
+    margin-top: 245px;
   }
 }
 
@@ -282,7 +284,7 @@ h5, h6 {
   .ql-editor {
     max-width: 95%;
     margin: auto;
-    margin-top: 270px;
+    margin-top: 285px;
   }
 }
 
@@ -406,7 +408,7 @@ h5, h6 {
     background: #fff;
     height: auto;
     position: fixed;
-    top: 70px;
+    top: 95px;
     left: 0;
     padding-left: 20px;
     padding-bottom: 15px;
@@ -474,7 +476,7 @@ polygon.ql-stroke {
   .ql-editor {
     width: 90%;
     margin: auto;
-    margin-top: 45px;
+    margin-top: 60px;
   }
 
   .doc-card, .doc-margin {
@@ -536,6 +538,22 @@ polygon.ql-stroke {
   height: 15px!important;
   width: 15px!important;
   margin: 5px;
+}
+
+.sheetsMenu {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 999!important;
+}
+
+.sheetsMenu .item {
+  color: #fff!important;
+}
+
+.spreadsheet {
+  position: relative;
+  top: 135px!important
 }
 
 /* Vault */

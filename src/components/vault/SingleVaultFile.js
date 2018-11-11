@@ -49,11 +49,11 @@ export default class SingleVaultFile extends Component {
     if(!loading) {
       return (
         <div>
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
           <MainMenu.Item>
             <Link style={{color: "#fff"}} to={'/vault'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
-          <MainMenu.Item>
+          <MainMenu.Item style={{color: "#fff"}}>
             {name.length > 14 ? name.substring(0,17).toUpperCase() +"..." : name.toUpperCase()}
           </MainMenu.Item>
 
@@ -97,19 +97,19 @@ export default class SingleVaultFile extends Component {
 
           {type.includes("word") ? (
             <MainMenu.Item>
-              <a style={{color: "#fff"}} onClick={this.props.handleaddItem}>
+              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddItem}>
                 Edit in Documents
               </a>
             </MainMenu.Item>
           ) : type.includes("sheet") ? (
             <MainMenu.Item>
-              <a style={{color: "#fff"}} onClick={this.props.handleaddSheet}>
+              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddSheet}>
                 Edit in Sheets
               </a>
             </MainMenu.Item>
           ) : type.includes("csv") ? (
             <MainMenu.Item>
-              <a style={{color: "#fff"}} onClick={this.props.handleaddSheet}>
+              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddSheet}>
                 Edit in Sheets
               </a>
             </MainMenu.Item>

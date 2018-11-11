@@ -239,6 +239,10 @@ export function saveSharedVaultFile(contact, file) {
       console.log("Shared Collection Saved");
       this.saveSingleVaultFile(contact, file);
     })
+    .catch(error => {
+      console.log("Error")
+      this.setState({ loading: false });
+    })
 }
 
 export function saveSingleVaultFile(contact, file) {
@@ -433,6 +437,8 @@ export function applyVaultFilter() {
   }
 
 export function filterVaultNow() {
+    console.log(this.state.selectedCollab);
+    console.log(this.state.files);
     let files = this.state.files;
     if(this.state.selectedTag !== "") {
       let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(this.state.selectedTag) : null);

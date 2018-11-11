@@ -31,11 +31,11 @@ export default class PublicDoc extends Component {
     if(this.props.readOnly) {
       return (
         <div>
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
           <MainMenu.Item>
             <Image src={logoSquare} style={{ maxHeight: "50px" }} />
           </MainMenu.Item>
-          <MainMenu.Item>
+          <MainMenu.Item style={{color: "#fff"}}>
             Document is Read Only
           </MainMenu.Item>
           <MainMenu.Menu position='right'>

@@ -17,7 +17,8 @@ export default class Collections extends Component {
       contactToShareWith: "",
       teamView: false,
       open: false,
-      visible: false
+      visible: false,
+      doc: {}
     }
   }
 
@@ -49,6 +50,13 @@ export default class Collections extends Component {
   collabFilter = (props) => {
     this.setState({ visible: false}, () => {
       this.props.collabFilter(props)
+    })
+  }
+
+  handleDelete = () => {
+    console.log(this.state.doc)
+    this.setState({ open: false }, () => {
+      this.props.handleDeleteDoc(this.state.doc)
     })
   }
 
@@ -381,9 +389,9 @@ export default class Collections extends Component {
                             <Dropdown.Divider />
                             <Dropdown.Item>
                               <Modal open={this.state.open} trigger={
-                                <a onClick={() => this.setState({ open: true })} to={'/documents'} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</a>
+                                <a onClick={() => this.setState({ open: true, doc: doc })} to={'/documents'} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</a>
                               } basic size='small'>
-                                <SemanticHeader icon='trash alternate outline' content={doc.title ? 'Delete ' + doc.title + '?' : 'Delete document?'} />
+                                <SemanticHeader icon='trash alternate outline' content={this.state.doc.title ? 'Delete ' + this.state.doc.title + '?' : 'Delete document?'} />
                                 <Modal.Content>
                                   <p>
                                     The document cannot be restored.
@@ -398,7 +406,7 @@ export default class Collections extends Component {
                                         <Button onClick={() => this.setState({ open: false })} basic color='red' inverted>
                                           <Icon name='remove' /> No
                                         </Button>
-                                        <Button onClick={() => this.handleDeleteDoc(doc)} color='red' inverted>
+                                        <Button onClick={this.handleDelete} color='red' inverted>
                                           <Icon name='checkmark' /> Delete
                                         </Button>
                                       </div>
