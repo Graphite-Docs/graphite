@@ -65,7 +65,6 @@ export function connectMedium(props) {
 
 export function disconnectMedium() {
   this.setState({ mediumConnected: {} })
-  window.Materialize.toast('Medium disconnected', 4000);
   setTimeout(this.saveIntegrations, 300);
 }
 
@@ -130,7 +129,7 @@ export function createMediumPost() {
       .then((res) => {
         console.log(res.data);
         if(res.data === "Posted!") {
-          window.Materialize.toast('Posted as draft to Medium', 4000);
+
         }
       })
       .catch(error => {
@@ -141,7 +140,7 @@ export function createMediumPost() {
       .then((res) => {
         console.log(res.data);
         if(res.data === "Posted!") {
-          window.Materialize.toast('Posted as draft to Medium', 4000);
+
         }
       })
       .catch(error => {
@@ -152,7 +151,7 @@ export function createMediumPost() {
       .then((res) => {
         console.log(res.data);
         if(res.data === "Posted!") {
-          window.Materialize.toast('Posted as draft to Medium', 4000);
+
         }
       })
       .catch(error => {
@@ -170,7 +169,7 @@ export function connectSlack(props) {
           console.log(JSON.parse(res.data).incoming_webhook.url);
           putFile('slackWebhookUrl.json', JSON.stringify(JSON.parse(res.data).incoming_webhook.url), {encrypt: true})
             .then(() => {
-              window.Materialize.toast('Slack connected', 4000);
+
               this.setState({ slackConnected: true });
               setTimeout(this.saveIntegrations, 300);
             })
@@ -190,7 +189,7 @@ export function connectSlack(props) {
           console.log(JSON.parse(res.data).incoming_webhook.url);
           putFile('slackWebhookUrl.json', JSON.stringify(JSON.parse(res.data).incoming_webhook.url), {encrypt: true})
             .then(() => {
-              window.Materialize.toast('Slack connected', 4000);
+
               this.setState({ slackConnected: true });
               setTimeout(this.saveIntegrations, 300);
             })
@@ -210,7 +209,7 @@ export function connectSlack(props) {
         console.log(JSON.parse(res.data).incoming_webhook.url);
         putFile('slackWebhookUrl.json', JSON.stringify(JSON.parse(res.data).incoming_webhook.url), {encrypt: true})
           .then(() => {
-            window.Materialize.toast('Slack connected', 4000);
+
             this.setState({ slackConnected: true });
             setTimeout(this.saveIntegrations, 300);
           })
@@ -228,7 +227,7 @@ export function connectSlack(props) {
 
 export function disconnectSlack() {
   this.setState({ handleSlackWebhookUrl: "", slackConnected: false })
-  window.Materialize.toast('Slack disconnected', 4000);
+
   setTimeout(this.saveIntegrations, 300);
 }
 
@@ -411,15 +410,16 @@ export function fetchGDocs() {
 }
 
 export function singleGDoc(props) {
+  this.setState({ loading: true });
   const object = {};
   object.token = this.state.token;
   object.docId = props.id;
   // if(window.location.href.includes('local')) {
     if(this.state.importAll) {
       var count = this.state.count + 1;
-      window.Materialize.toast('Adding doc ' + count + ' of ' + this.state.gDocs.length, 4000);
+      // window.Materialize.toast('Adding doc ' + count + ' of ' + this.state.gDocs.length, 4000);
     } else {
-      window.Materialize.toast('Adding ' + props.name, 4000);
+      // window.Materialize.toast('Adding ' + props.name, 4000);
     }
 
     axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGDocContentDev', object)
@@ -436,6 +436,7 @@ export function singleGDoc(props) {
       })
       .catch(error => {
         console.log(error);
+        this.setState({ loading: false })
       })
   // } else if(window.location.href.includes('serene')) {
   //   axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGoogleAuthDev', object)
@@ -490,7 +491,7 @@ export function importAllGDocs() {
     this.singleGDoc(this.state.gDocs[this.state.count]);
   } else {
     this.setState({ importAll: false });
-    window.Materialize.toast('All documents imported', 4000);
+
   }
 
 }
