@@ -38,7 +38,6 @@ import Settings from './Settings';
 import PaymentSuccess from './PaymentSuccess';
 import Invites from './Invites';
 import Acceptances from './Acceptances';
-import NoUsername from './NoUsername';
 import OAUTH from './OAUTH';
 import Calendar from './Calendar';
 import Forms from './forms/Forms';
@@ -1050,11 +1049,7 @@ export default class App extends Component {
     } = this.state;
     return (
       <div>
-      { isUserSignedIn() && loadUserData().username === null ?
-        <NoUsername
-          handleSignIn={this.handleSignIn}
-        />
-        :
+      {
         !isUserSignedIn() && !window.location.pathname.indexOf("shared") ?
         <Signin handleSignIn={ this.handleSignIn } />
         :

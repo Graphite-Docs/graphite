@@ -29,9 +29,9 @@ export default class AppPage extends Component {
     getFile('appPageOnboarding.json', {decrypt: true})
       .then((fileContents) => {
         if(fileContents) {
-          this.setState({ onboardingComplete: JSON.parse(fileContents)})
+          this.setState({ onboarding: JSON.parse(fileContents)})
         } else {
-          this.setState({ onboardingComplete: false });
+          this.setState({ onboarding: false });
         }
       })
       .then(() => {
