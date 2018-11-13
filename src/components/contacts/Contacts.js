@@ -43,8 +43,8 @@ export default class Contacts extends Component {
   }
 
   checkFiles = () => {
-    if(this.props.value < 1) {
-      if(!this.state.onboardingComplete) {
+    if(this.props.contacts < 1) {
+      if(!this.state.onboarding) {
         this.setState({ run: true, onboardingComplete: true }, () => {
           putFile('contactsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
         });

@@ -188,9 +188,9 @@ loadCollection() {
       getFile('sheetsPageOnboarding.json', {decrypt: true})
         .then((fileContents) => {
           if(fileContents) {
-            this.setState({ onboardingComplete: JSON.parse(fileContents)})
+            this.setState({ onboarding: JSON.parse(fileContents)})
           } else {
-            this.setState({ onboardingComplete: false });
+            this.setState({ onboarding: false });
           }
         })
         .then(() => {
@@ -204,14 +204,14 @@ loadCollection() {
 
 checkFiles = () => {
   if(this.props.sheets < 1) {
-    if(!this.state.onboardingComplete) {
-      this.setState({ run: true, onboardingComplete: true }, () => {
-        putFile('sheetsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+    if(!this.state.onboarding) {
+      this.setState({ run: true, onboarding: true }, () => {
+        putFile('sheetsPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
       });
     }
   } else {
-    this.setState({ onboardingComplete: true }, () => {
-      putFile('sheetsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+    this.setState({ onboarding: true }, () => {
+      putFile('sheetsPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
     });
   }
 }

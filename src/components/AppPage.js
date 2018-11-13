@@ -16,7 +16,7 @@ import Joyride from "react-joyride";
 export default class AppPage extends Component {
 
   state = {
-    run: false
+    run: false, onboarding: false
   }
 
   static propTypes = {
@@ -41,14 +41,14 @@ export default class AppPage extends Component {
 
   checkFiles = () => {
     if(this.props.value < 1 && this.props.sheets < 1 && this.props.files <1 && this.props.contacts < 1) {
-      if(!this.state.onboardingComplete) {
-        this.setState({ run: true, onboardingComplete: true }, () => {
-          putFile('appPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+      if(!this.state.onboarding) {
+        this.setState({ run: true, onboarding: true }, () => {
+          putFile('appPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
         });
       }
     } else {
-      this.setState({ onboardingComplete: true }, () => {
-        putFile('appPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+      this.setState({ onboarding: true }, () => {
+        putFile('appPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
       });
     }
   }

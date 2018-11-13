@@ -39,9 +39,9 @@ export default class Collections extends Component {
     getFile('docPageOnboarding.json', {decrypt: true})
       .then((fileContents) => {
         if(fileContents) {
-          this.setState({ onboardingComplete: JSON.parse(fileContents)})
+          this.setState({ onboarding: JSON.parse(fileContents)})
         } else {
-          this.setState({ onboardingComplete: false });
+          this.setState({ onboarding: false });
         }
       })
       .then(() => {
@@ -51,14 +51,14 @@ export default class Collections extends Component {
 
   checkFiles = () => {
     if(this.props.value < 1) {
-      if(!this.state.onboardingComplete) {
-        this.setState({ run: true, onboardingComplete: true }, () => {
-          putFile('docPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+      if(!this.state.onboarding) {
+        this.setState({ run: true, onboarding: true }, () => {
+          putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
         });
       }
     } else {
       this.setState({ onboardingComplete: true }, () => {
-        putFile('docPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+        putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
       });
     }
   }
