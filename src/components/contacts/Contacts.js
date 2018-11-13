@@ -7,6 +7,11 @@ import Loading from '../Loading';
 import { Image, Card, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import Header from '../Header';
+import Joyride from "react-joyride";
+import {
+  getFile,
+  putFile
+} from 'blockstack'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Contacts extends Component {
@@ -16,12 +21,39 @@ export default class Contacts extends Component {
     this.state = {
       visible: false,
       open: false,
-      contact: {}
+      contact: {},
+      run: false,
+      onboarding: false
     }
   }
 
   componentDidMount() {
     this.props.loadContactsCollection();
+    getFile('contactsPageOnboarding.json', {decrypt: true})
+      .then((fileContents) => {
+        if(fileContents) {
+          this.setState({ onboardingComplete: JSON.parse(fileContents)})
+        } else {
+          this.setState({ onboardingComplete: false });
+        }
+      })
+      .then(() => {
+        this.checkFiles();
+      })
+  }
+
+  checkFiles = () => {
+    if(this.props.value < 1) {
+      if(!this.state.onboardingComplete) {
+        this.setState({ run: true, onboardingComplete: true }, () => {
+          putFile('contactsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+        });
+      }
+    } else {
+      this.setState({ onboardingComplete: true }, () => {
+        putFile('contactsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+      });
+    }
   }
 
   componentDidUpdate() {
@@ -53,6 +85,80 @@ export default class Contacts extends Component {
   }
 
   render(){
+    const steps = [
+      {
+        content: <div><h2>This is where you will add and manage your contacts.</h2><p>You will be able to add any user that has an existing Blockstack username.</p></div>,
+        placement: "center",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "body"
+      },
+      {
+        content: <p>This is the contacts grid. Your existing contacts will be displayed here and can be accessed by clicking the contact ID.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "table.table"
+      },
+      {
+        content: <p>By clicking new, you will be prompted to search for a new contact. Search by the person'{/*'*/}s name or Blockstack username.</p>,
+        placement: "top",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".column button.secondary"
+      },
+      {
+        content: <p>You can filter by the date added or by the contact type you may have applied to your contacts.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".filter a"
+      },
+      {
+        content: <p>The search box lets you search across all your contacts. Just start typing the contact ID you are looking for.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".input input"
+      }
+    ]
+
+
     this.props.applyFilter === true ? this.props.applyContactsFilter() : loadUserData();
     const { loading, filteredContacts, appliedFilter, deleteState, currentPage, contactsPerPage} = this.props;
     const { visible } = this.state;
@@ -107,6 +213,15 @@ export default class Contacts extends Component {
         <Header />
         <div className="docs">
         <Container style={{marginTop:"65px"}}>
+        <Joyride
+          continuous
+          scrollToFirstStep
+          showProgress
+          showSkipButton
+          run={this.state.run}
+          steps={steps}
+          callback={this.handleJoyrideCallback}
+        />
         <Grid stackable columns={2}>
           <Grid.Column>
             <h2>Contacts ({currentContacts.length})

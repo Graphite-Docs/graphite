@@ -5,15 +5,55 @@ import Header from "./Header";
 import {
   isUserSignedIn,
   redirectToSignIn,
-  signUserOut
+  signUserOut,
+  getFile,
+  putFile
 } from "blockstack";
-import { Grid, Icon, Container, Card, Table } from 'semantic-ui-react'
+import { Grid, Icon, Container, Card, Table } from 'semantic-ui-react';
+import PropTypes from "prop-types";
+import Joyride from "react-joyride";
 
 export default class AppPage extends Component {
 
-  componentDidMount() {
-
+  state = {
+    run: false
   }
+
+  static propTypes = {
+    joyride: PropTypes.shape({
+      callback: PropTypes.func
+    })
+  };
+
+  componentDidMount() {
+    getFile('appPageOnboarding.json', {decrypt: true})
+      .then((fileContents) => {
+        if(fileContents) {
+          this.setState({ onboardingComplete: JSON.parse(fileContents)})
+        } else {
+          this.setState({ onboardingComplete: false });
+        }
+      })
+      .then(() => {
+        this.checkFiles();
+      })
+  }
+
+  checkFiles = () => {
+    if(this.props.value < 1 && this.props.sheets < 1 && this.props.files <1 && this.props.contacts < 1) {
+      if(!this.state.onboardingComplete) {
+        this.setState({ run: true, onboardingComplete: true }, () => {
+          putFile('appPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+        });
+      }
+    } else {
+      this.setState({ onboardingComplete: true }, () => {
+        putFile('appPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+      });
+    }
+  }
+
+
 
   handleSignIn(e) {
     e.preventDefault();
@@ -29,7 +69,94 @@ export default class AppPage extends Component {
     signUserOut(window.location.origin);
   }
 
+  handleJoyrideCallback = data => {
+    // const { joyride } = this.props;
+    // const { type } = data;
+
+    // if(joyride.callback) {
+    //   if (typeof joyride.callback === "function") {
+    //     joyride.callback(data);
+    //   } else {
+    //     console.group(type);
+    //     console.log(data); //eslint-disable-line no-console
+    //     console.groupEnd();
+    //   }
+    // }
+  };
+
   render() {
+    const steps = [
+      {
+        content: <h2>Welcome to Graphite! Let'{/*'*/}s take a quick tour.</h2>,
+        placement: "center",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "body"
+      },
+      {
+        content: <p>This is your dashboard. It will show you useful information about your files. Just click any of the cards to access those files or create new ones.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".cards"
+      },
+      {
+        content: <p>You will see your 14 most recet files listed here. Click the name of a file for easy access.</p>,
+        placement: "top",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "table.table"
+      },
+      {
+        content: <p>This icon is the quick switcher between Graphite components. Use it to access Documents, Sheets, Vault, and Contacts.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".app-switcher"
+      },
+      {
+        content: <p>Clicking your avatar will reveal a dropdown menu with additional options.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".avatar"
+      }
+    ]
     const { value, sheets, files, contacts, graphitePro } = this.props;
     let merged = sheets.reverse().concat(value.reverse());
     let recentWithDate = merged.filter(x => x.lastUpdate && x.updated);
@@ -80,6 +207,7 @@ export default class AppPage extends Component {
         <Header
           graphitePro={graphitePro}
         />
+
         <div className="site-wrapper">
           <div className="site-wrapper-inner">
             {!isUserSignedIn() ? (
@@ -88,6 +216,15 @@ export default class AppPage extends Component {
               />
             ) : (
             <Container>
+            <Joyride
+              continuous
+              scrollToFirstStep
+              showProgress
+              showSkipButton
+              run={this.state.run}
+              steps={steps}
+              callback={this.handleJoyrideCallback}
+            />
             <Grid style={{ marginTop: "65px" , marginBottom: "35px"}} stackable columns={4}>
               <Grid.Row>
               <Card.Group centered>

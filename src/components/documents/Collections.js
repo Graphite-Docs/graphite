@@ -6,9 +6,12 @@ import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, 
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {
   isSignInPending,
-  handlePendingSignIn
+  handlePendingSignIn,
+  putFile,
+  getFile
 } from 'blockstack';
 import Header from '../Header';
+import Joyride from "react-joyride";
 
 export default class Collections extends Component {
   constructor(props) {
@@ -18,7 +21,9 @@ export default class Collections extends Component {
       teamView: false,
       open: false,
       visible: false,
-      doc: {}
+      doc: {},
+      run: false,
+      onboarding: false
     }
   }
 
@@ -26,6 +31,34 @@ export default class Collections extends Component {
     if (isSignInPending()) {
       handlePendingSignIn().then(userData => {
         window.location = window.location.origin;
+      });
+    }
+  }
+
+  componentDidMount() {
+    getFile('docPageOnboarding.json', {decrypt: true})
+      .then((fileContents) => {
+        if(fileContents) {
+          this.setState({ onboardingComplete: JSON.parse(fileContents)})
+        } else {
+          this.setState({ onboardingComplete: false });
+        }
+      })
+      .then(() => {
+        this.checkFiles();
+      })
+  }
+
+  checkFiles = () => {
+    if(this.props.value < 1) {
+      if(!this.state.onboardingComplete) {
+        this.setState({ run: true, onboardingComplete: true }, () => {
+          putFile('docPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+        });
+      }
+    } else {
+      this.setState({ onboardingComplete: true }, () => {
+        putFile('docPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
       });
     }
   }
@@ -61,6 +94,79 @@ export default class Collections extends Component {
   }
 
   render() {
+    const steps = [
+      {
+        content: <h2>This is where you will create and manage your documents.</h2>,
+        placement: "center",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "body"
+      },
+      {
+        content: <p>This is the document grid. Your existing documents will be displayed here and can be accessed by clicking the document title.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "table.table"
+      },
+      {
+        content: <p>By clicking new, you will create a new document and be redirected into that document.</p>,
+        placement: "top",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".column button.secondary"
+      },
+      {
+        content: <p>You can filter by the creation date of your documents, tags you have applied to your documents, or the people you have shared with.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".filter a"
+      },
+      {
+        content: <p>The search box lets you search across all your documents. Just start typing the title you are looking for.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".input input"
+      }
+    ]
+
     const { displayMessage, results, docs, graphitePro, filteredValue, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading } = this.props;
     const teamView = this.state.teamView;
     const {visible} = this.state;
@@ -199,6 +305,15 @@ export default class Collections extends Component {
             graphitePro={graphitePro}
           />
           <Container style={{marginTop:"65px"}}>
+          <Joyride
+            continuous
+            scrollToFirstStep
+            showProgress
+            showSkipButton
+            run={this.state.run}
+            steps={steps}
+            callback={this.handleJoyrideCallback}
+          />
             <Grid stackable columns={2}>
               <Grid.Column>
                 <h2>Documents ({filteredValue.length})

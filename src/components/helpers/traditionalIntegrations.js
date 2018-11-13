@@ -416,7 +416,7 @@ export function singleGDoc(props) {
   object.docId = props.id;
   // if(window.location.href.includes('local')) {
     if(this.state.importAll) {
-      var count = this.state.count + 1;
+      // var count = this.state.count + 1;
       // window.Materialize.toast('Adding doc ' + count + ' of ' + this.state.gDocs.length, 4000);
     } else {
       // window.Materialize.toast('Adding ' + props.name, 4000);

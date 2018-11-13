@@ -18,6 +18,7 @@ import {
 import Header from '../Header';
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
+import Joyride from "react-joyride";
 
 const { encryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
@@ -88,7 +89,9 @@ export default class SheetsCollections extends Component {
       selectedDate: "",
       tagIndex: "",
       visible: false,
-      displayMessage: false
+      displayMessage: false,
+      onboarding: false,
+      run: false
     }
     this.handleaddItem = this.handleaddItem.bind(this);
     this.saveNewFile = this.saveNewFile.bind(this);
@@ -179,10 +182,38 @@ loadCollection() {
    })
    .then(() => {
      this.setState({ loading: false });
+
    })
+    .then(() => {
+      getFile('sheetsPageOnboarding.json', {decrypt: true})
+        .then((fileContents) => {
+          if(fileContents) {
+            this.setState({ onboardingComplete: JSON.parse(fileContents)})
+          } else {
+            this.setState({ onboardingComplete: false });
+          }
+        })
+        .then(() => {
+          this.checkFiles();
+        })
+    })
     .catch(error => {
       console.log(error);
     });
+}
+
+checkFiles = () => {
+  if(this.props.sheets < 1) {
+    if(!this.state.onboardingComplete) {
+      this.setState({ run: true, onboardingComplete: true }, () => {
+        putFile('sheetsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+      });
+    }
+  } else {
+    this.setState({ onboardingComplete: true }, () => {
+      putFile('sheetsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
+    });
+  }
 }
 
 migrateSheets() {
@@ -796,6 +827,80 @@ handlePageChange = (props) => {
 
 
   render() {
+    const steps = [
+      {
+        content: <h2>This is where you will create and manage your sheets.</h2>,
+        placement: "center",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "body"
+      },
+      {
+        content: <p>This is the sheets grid. Your existing sheets will be displayed here and can be accessed by clicking the sheet title.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: "table.table"
+      },
+      {
+        content: <p>By clicking new, you will create a new sheet and be redirected into that sheet.</p>,
+        placement: "top",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".column button.secondary"
+      },
+      {
+        content: <p>You can filter by the creation date of your sheets, tags you have applied to your sheets, or the people you have shared with.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".filter a"
+      },
+      {
+        content: <p>The search box lets you search across all your sheets. Just start typing the title you are looking for.</p>,
+        placement: "bottom",
+        disableBeacon: true,
+        styles: {
+          options: {
+            zIndex: 100000
+          }
+        },
+        locale: {
+          skip: "Skip tour"
+        },
+        target: ".input input"
+      }
+    ]
+
+
     this.state.deleteState === true ? this.deleteTag() : loadUserData();
     this.state.applyFilter === true ? this.applyFilter() : loadUserData();
     let sheets;
@@ -864,6 +969,15 @@ handlePageChange = (props) => {
         <div>
           <Header />
           <Container style={{marginTop:"65px"}}>
+          <Joyride
+            continuous
+            scrollToFirstStep
+            showProgress
+            showSkipButton
+            run={this.state.run}
+            steps={steps}
+            callback={this.handleJoyrideCallback}
+          />
           <Grid stackable style={{marginBottom: "25px"}} columns={2}>
             <Grid.Column>
               <h2>Sheets ({currentSheets.length})
