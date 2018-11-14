@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Modal, Input, Button, Item } from 'semantic-ui-react';
+import { loadUserData } from 'blockstack';
 
 export default class Menu extends Component {
 
@@ -19,6 +20,11 @@ export default class Menu extends Component {
       console.log('copy')
       window.document.execCommand('copy')
     }
+  }
+
+  handleShare = (props) => {
+    this.props.sharedInfoSingleDocRTC(props);
+    this.setState({modalOpen: false})
   }
 
   render() {
@@ -174,7 +180,15 @@ export default class Menu extends Component {
                             this.props.teamDoc && this.props.userRole === "User" ?
                             <li className="hide">Share</li> :
                             <li>
-                            <Modal closeIcon style={{borderRadius: "0"}} trigger={<a>Share with contact</a>}>
+                            <Modal
+                              closeIcon
+                              style={{borderRadius: "0"}}
+                              trigger={<a onClick={() => this.setState({ modalOpen: true})}>Share with contact</a>}
+                              open={this.state.modalOpen}
+                              closeOnEscape={true}
+                              closeOnDimmerClick={true}
+                              onClose={() => this.setState({ modalOpen: false})}
+                              >
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Document</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
@@ -198,7 +212,31 @@ export default class Menu extends Component {
                                       return (
                                           <Item className="contact-search" key={result.username}>
                                           <Item.Image size='tiny' src={imageLink} />
-                                          <Item.Content verticalAlign='middle'>{result.username} <br/> <Button onClick={() => this.props.sharedInfoSingleDocRTC(result.fullyQualifiedName) } color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => this.props.sharedInfoSingleDocStatic(result.fullyQualifiedName) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
+                                          <Item.Content verticalAlign='middle'>{result.username} <br/>
+                                            <Modal closeIcon style={{borderRadius: "0"}}
+                                              trigger={<Button onClick={() => this.handleShare(result.fullyQualifiedName) } color='green' style={{borderRadius: "0"}}>Share</Button>}>
+                                              <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
+                                              <Modal.Content>
+                                                <Modal.Description>
+                                                  <h3>Shared!</h3>
+                                                  <p>Here is the link you can provide with the person you shared with for quick access: </p>
+                                                  <p style={{wordWrap: "break-word"}}>{window.location.origin + '/documents//single/shared/' + loadUserData().username + window.location.href.split('doc/')[1]}</p>
+                                                </Modal.Description>
+                                              </Modal.Content>
+                                            </Modal>
+                                            <Modal closeIcon style={{borderRadius: "0"}}
+                                              trigger={<Button onClick={() => this.props.sharedInfoSingleDocStatic(result.fullyQualifiedName) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button>}>
+                                              <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
+                                              <Modal.Content>
+                                                <Modal.Description>
+                                                  <h3>Shared!</h3>
+                                                  <p>Here is the link you can provide with the person you shared with for quick access: </p>
+                                                  <p style={{wordWrap: "break-word"}}>{window.location.origin + '/documents//single/shared/' + loadUserData().username + window.location.href.split('doc/')[1]}</p>
+                                                </Modal.Description>
+                                              </Modal.Content>
+                                            </Modal>
+
+                                          </Item.Content>
                                           </Item>
                                           )
                                         }

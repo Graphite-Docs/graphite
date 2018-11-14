@@ -12,18 +12,19 @@ import {
   html2pdf
 } from 'html2pdf';
 import update from 'immutability-helper';
+import TurtleDB from 'turtledb';
 const FileSaver = require('file-saver');
 const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const wordcount = require("wordcount");
+const mydb = new TurtleDB('graphite-docs');
 // const { getPublicKeyFromPrivate } = require('blockstack');
 
 export function initialDocLoad() {
   this.setState({ loading: true})
   const thisFile = window.location.href.split('doc/')[1];
   const fullFile = '/documents/' + thisFile + '.json';
-
   getFile("contact.json", {decrypt: true})
   .then((fileContents) => {
     let file = JSON.parse(fileContents || '{}');
@@ -70,51 +71,61 @@ export function initialDocLoad() {
 
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
-    console.log(JSON.parse(fileContents));
-    // if(JSON.parse(fileContents).compressed === true) {
-    //   this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content)})
-    // } else {
-    //   this.setState({ content: JSON.parse(fileContents).content});
-    // }
-    this.setState({
-      title: JSON.parse(fileContents || '{}').title,
-      content: lzjs.decompress(JSON.parse(fileContents).content),
-      tags: JSON.parse(fileContents || '{}').tags,
-      idToLoad: JSON.parse(fileContents || '{}').id,
-      singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-      docLoaded: true,
-      readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-      rtc: JSON.parse(fileContents || '{}').rtc || false,
-      sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-      teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-      compressed: JSON.parse(fileContents || '{}').compressed || false,
-      spacing: JSON.parse(fileContents || '{}').spacing
-    })
-  //   if(JSON.parse(fileContents).rtc) {
-  //     this.setState({
-  //       title: JSON.parse(fileContents || '{}').title,
-  //       tags: JSON.parse(fileContents || '{}').tags,
-  //       idToLoad: JSON.parse(fileContents || '{}').id,
-  //       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-  //       docLoaded: true,
-  //       readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-  //       rtc: JSON.parse(fileContents || '{}').rtc || false,
-  //       sharedWith: JSON.parse(fileContents || '{}').sharedWith
-  //     })
-  //     // setTimeout(this.noCollaboration, 1000);
-  //   } else {
-  //     this.setState({
-  //       title: JSON.parse(fileContents || '{}').title,
-  //       content: JSON.parse(fileContents || '{}').content,
-  //       tags: JSON.parse(fileContents || '{}').tags,
-  //       idToLoad: JSON.parse(fileContents || '{}').id,
-  //       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-  //       docLoaded: true,
-  //       readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-  //       rtc: JSON.parse(fileContents || '{}').rtc || false,
-  //       sharedWith: JSON.parse(fileContents || '{}').sharedWith
-  //     })
-  //   }
+    if(mydb.read(thisFile)) {
+      mydb.read(thisFile)
+        .then((doc) => {
+          if(JSON.parse(doc.file).lastUpdate > JSON.parse(fileContents).lastUpdate) {
+            this.setState({
+              title: JSON.parse(doc.file).title,
+              content: lzjs.decompress(JSON.parse(doc.file).content),
+              tags: JSON.parse(doc.file).tags,
+              idToLoad: JSON.parse(doc.file).id,
+              singleDocIsPublic: JSON.parse(doc.file).singleDocIsPublic, //adding this...
+              docLoaded: true,
+              readOnly: JSON.parse(doc.file).readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+              rtc: JSON.parse(doc.file).rtc || false,
+              sharedWith: JSON.parse(doc.file).sharedWith,
+              teamDoc: JSON.parse(doc.file).teamDoc,
+              compressed: JSON.parse(doc.file).compressed || false,
+              spacing: JSON.parse(doc.file).spacing
+            })
+          } else {
+            this.setState({
+              title: JSON.parse(fileContents || '{}').title,
+              content: lzjs.decompress(JSON.parse(fileContents).content),
+              tags: JSON.parse(fileContents || '{}').tags,
+              idToLoad: JSON.parse(fileContents || '{}').id,
+              singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+              docLoaded: true,
+              readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+              rtc: JSON.parse(fileContents || '{}').rtc || false,
+              sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+              teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+              compressed: JSON.parse(fileContents || '{}').compressed || false,
+              spacing: JSON.parse(fileContents || '{}').spacing
+            })
+          }
+        });
+
+
+    } else {
+      mydb.create({ _id: thisFile, file: fileContents });
+      this.setState({
+        title: JSON.parse(fileContents || '{}').title,
+        content: lzjs.decompress(JSON.parse(fileContents).content),
+        tags: JSON.parse(fileContents || '{}').tags,
+        idToLoad: JSON.parse(fileContents || '{}').id,
+        singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+        docLoaded: true,
+        readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+        rtc: JSON.parse(fileContents || '{}').rtc || false,
+        sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+        teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+        compressed: JSON.parse(fileContents || '{}').compressed || false,
+        spacing: JSON.parse(fileContents || '{}').spacing
+      })
+    }
+
   })
   .then(() => {
     this.setState({ loading: false}, () => {
@@ -161,7 +172,7 @@ export function noCollaboration() {
 export function loadAvatars() {
   if (this.state.sharedWith.length > 0) {
     this.state.sharedWith.forEach((name) => {
-      console.log(this.state.avatars);
+
       lookupProfile(name, "https://core.blockstack.org/v1/names")
         .then((profile) => {
           this.setState({ avatars: [...this.state.avatars, profile]});
@@ -276,14 +287,14 @@ export function copyLink() {
   }
 
 export function sharedInfoSingleDocRTC(props){
-  this.setState({ receiverID: props, rtc: true, loading: true });
+  this.setState({ receiverID: props, rtc: true });
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
   getFile('key.json', options)
     .then((file) => {
       this.setState({ pubKey: JSON.parse(file)})
-      console.log("Step One: PubKey Loaded");
+      // console.log("Step One: PubKey Loaded");
     })
     .then(() => {
       getFile('graphiteprofile.json', options)
@@ -302,7 +313,7 @@ export function sharedInfoSingleDocRTC(props){
                 .then((res) => {
                   console.log(res);
                 })
-              console.log(object);
+
             }
           } else {
             console.log("you can't email this person")
@@ -327,7 +338,7 @@ export function sharedInfoSingleDocStatic(props){
   getFile('key.json', options)
     .then((file) => {
       this.setState({ pubKey: JSON.parse(file)})
-      console.log("Step One: PubKey Loaded");
+      // console.log("Step One: PubKey Loaded");
     })
       .then(() => {
         getFile('graphiteprofile.json', options)
@@ -346,7 +357,7 @@ export function sharedInfoSingleDocStatic(props){
                   .then((res) => {
                     console.log(res);
                   })
-                console.log(object);
+
               }
             } else {
               console.log("you can't email this person")
@@ -424,7 +435,7 @@ export function shareDoc() {
   const directory = 'shared/' + pubKey + fileName;
   putFile(directory, encryptedData, {encrypt: false})
   .then(() => {
-    this.setState({ loading: false, displayMessageSuccess: true, results: [] }, () => {
+    this.setState({ loading: false, displayMessageSuccess: true }, () => {
       console.log("Success")
     });
   })
@@ -463,6 +474,8 @@ export function handleTitleChange(e) {
   this.setState({ title: e.target.value });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  clearTimeout(this.longerTimeout);
+  this.longerTimeout = setTimeout(this.fullSave, 5000);
 }
 
 export function handleChange(value) {
@@ -472,6 +485,8 @@ export function handleChange(value) {
   if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
     this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
   }
+  clearTimeout(this.longerTimeout);
+  this.longerTimeout = setTimeout(this.fullSave, 5000);
 }
 
 export function handleIDChange(e) {
@@ -482,11 +497,14 @@ export function handleBack() {
   if(this.state.autoSave === "Saving") {
     setTimeout(this.handleBack, 500);
   } else {
-    window.location.replace("/documents");
+    console.log("heyo")
+
+    this.fullSave('back');
   }
 }
 
-export function handleAutoAdd() {
+export function handleAutoAdd(props) {
+  this.setState({ autoSave: "Saving..."})
   this.analyticsRun('documents');
   const object = {};
   object.title = this.state.title;
@@ -510,6 +528,7 @@ export function handleAutoAdd() {
   object.singleDocTags = this.state.singleDocTags;
   object.fileType = "documents";
   object.spacing = this.state.spacing;
+  object.lastUpdate = Date.now();
   const objectTwo = {};
   objectTwo.title = this.state.title;
   this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
@@ -530,26 +549,50 @@ export function handleAutoAdd() {
   objectTwo.fileType = "documents";
   const index = this.state.index;
   const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo
-  this.setState({value: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+  this.setState({value: updatedDoc, singleDoc: object }, () => {
     this.autoSave();
-  });
+  })
 }
 
 export function autoSave() {
   const file = window.location.href.split('doc/')[1] || this.state.tempDocId;
-  const fullFile = '/documents/' + file + '.json';
-  putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
+  // const fullFile = '/documents/' + file + '.json';
+  mydb.update(file, { file: JSON.stringify(this.state.singleDoc) }).then(() => { console.log("Saved to local storage") })
   .then(() => {
-    this.saveSingleDocCollection();
-  })
-  .catch(e => {
-    console.log(e);
+    this.setState({ autoSave: "Saved"})
   });
+  // putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
+  // .then(() => {
+  //   this.saveSingleDocCollection();
+  // })
+  // .catch(e => {
+  //   console.log(e);
+  // });
 }
 
-export function saveSingleDocCollection() {
+export function fullSave(props) {
+  if(navigator.onLine) {
+    this.setState({ autoSave: "Saving..."})
+    const file = window.location.href.split('doc/')[1] || this.state.tempDocId;
+    const fullFile = '/documents/' + file + '.json';
+    putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
+    .then(() => {
+      this.saveSingleDocCollection();
+    })
+    .catch(e => {
+      console.log(e);
+    });
+  } else {
+    console.log("No internet, saving to local storage");
+    this.autoSave();
+  }
+
+}
+
+export function saveSingleDocCollection(props) {
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
+      console.log("Saved to Gaia");
       this.setState({autoSave: "Saved"});
       if(this.state.stealthyConnected) {
         setTimeout(this.connectStealthy, 300);
@@ -557,6 +600,12 @@ export function saveSingleDocCollection() {
         setTimeout(this.connectTravelstack, 300);
       } else if (this.state.coinsConnected) {
         setTimeout(this.connectCoins, 300);
+      }
+
+      if(props) {
+        if(props === 'back') {
+          window.location.replace('/documents');
+        }
       }
 
       // this.saveDocsStealthy();
@@ -592,7 +641,7 @@ export function componentDidMountData(props) {
       let value = this.state.value;
       const thisDoc = value.find((doc) => { return doc.id.toString() === props}); //comparing strings
       let index = thisDoc && thisDoc.id;
-      console.log(index);
+
       function findObjectIndex(doc) {
           return doc.id === index; //comparing numbers
       }
@@ -604,7 +653,7 @@ export function componentDidMountData(props) {
 
 getFile(fullFile, {decrypt: true})
  .then((fileContents) => {
-   console.log(JSON.parse(fileContents || '{}').id);
+
     this.setState({
       title: JSON.parse(fileContents || '{}').title,
       content: JSON.parse(fileContents || '{}').content,

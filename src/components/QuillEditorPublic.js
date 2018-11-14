@@ -11,7 +11,7 @@ export default class QuillEditorPublic extends React.Component {
   render() {
     // console.log('QuillEditorPublic: ' + this.props.value);
     if (this.props.docLoaded) {
-      console.log('0. QuillEditorPublic - render...')
+      
       // console.log('0. QuillEditorPublic - this.props: ', this.props)
     }
     return (

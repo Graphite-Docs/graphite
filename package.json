@@ -106,6 +106,7 @@
     "supports-color": "^5.4.0",
     "sw-precache-webpack-plugin": "0.11.4",
     "timezone": "^1.0.13",
+    "turtledb": "^1.0.2",
     "url-loader": "0.6.2",
     "video-react": "^0.9.4",
     "webpack": "3.8.1",

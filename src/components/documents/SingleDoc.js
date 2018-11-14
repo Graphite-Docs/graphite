@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import { Link } from 'react-router-dom';
 import { Image, Icon, Modal, Input, Button, Message } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import Loading from '../Loading';
@@ -77,8 +78,8 @@ export default class SingleDoc extends Component {
         <div>
 
         <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
-          <MainMenu.Item onClick={this.props.handleBack}>
-            <Icon name='arrow left' />
+          <MainMenu.Item>
+            <Link onClick={this.props.handleBack} style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
           <MainMenu.Item>
           {

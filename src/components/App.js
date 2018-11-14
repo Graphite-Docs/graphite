@@ -122,7 +122,8 @@ import {
   loadAvatars,
   noCollaboration,
   downloadDoc,
-  formatSpacing
+  formatSpacing,
+  fullSave
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -714,6 +715,7 @@ export default class App extends Component {
     this.loadAvatars = loadAvatars.bind(this);
     this.noCollaboration = noCollaboration.bind(this);
     this.formatSpacing = formatSpacing.bind(this);
+    this.fullSave = fullSave.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);

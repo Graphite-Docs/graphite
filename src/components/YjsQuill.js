@@ -169,7 +169,7 @@ export default class YjsQuill extends React.Component {
   }
 
   render() {
-    console.log('0. YjsQuill - render - this.props is: ', this.props)
+    
 
     return (
       null

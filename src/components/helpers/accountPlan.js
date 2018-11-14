@@ -148,8 +148,8 @@ export function loadMainAccount() {
   const options = { username: this.state.accountOwner, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
     getFile('accountdetailsMain.json', options)
      .then((fileContents) => {
-       console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))))
-       console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team.map(a => a.blockstackId).includes(loadUserData().username))
+       // console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))))
+       // console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team.map(a => a.blockstackId).includes(loadUserData().username))
        if(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))).team.map(a => a.blockstackId).includes(loadUserData().username) === false) {
          this.setState({ graphitePro: false });
        } else {

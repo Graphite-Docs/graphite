@@ -39,7 +39,7 @@ export default class SSO extends Component {
     payload.gaiaConfig = localStorage.getItem('blockstack-gaia-hub-config');
     const encryptedPayload = encryptECIES(pubKey, JSON.stringify(payload));
     const unsecuredToken = createUnsecuredToken(encryptedPayload)
-    redirect = 'http://' + decodeURIComponent(window.location.href.split('?')[2]);
+    redirect = decodeURIComponent(window.location.href.split('?')[2]);
     window.location.replace(redirect + '?response=' + unsecuredToken);
   }
 

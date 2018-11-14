@@ -44,7 +44,7 @@ export default class PublicDoc extends Component {
           </MainMenu.Item>
           </MainMenu.Menu>
           </MainMenu>
-          <div className="test-docs">
+          <div style={{marginBottom: "45px"}} className="test-docs">
             <div className="test-doc-card">
               <div className="double-space doc-margin">
 
@@ -93,7 +93,7 @@ export default class PublicDoc extends Component {
             </MainMenu.Item>
           </MainMenu.Menu>
           </MainMenu>
-          <div className="test-docs">
+          <div style={{marginBottom: "45px"}} className="test-docs">
             <div className="test-doc-card">
               <div className="double-space doc-margin">
 
