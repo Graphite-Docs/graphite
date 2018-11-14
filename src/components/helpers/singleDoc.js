@@ -74,22 +74,40 @@ export function initialDocLoad() {
     if(mydb.read(thisFile)) {
       mydb.read(thisFile)
         .then((doc) => {
-          if(JSON.parse(doc.file).lastUpdate > JSON.parse(fileContents).lastUpdate) {
-            this.setState({
-              title: JSON.parse(doc.file).title,
-              content: lzjs.decompress(JSON.parse(doc.file).content),
-              tags: JSON.parse(doc.file).tags,
-              idToLoad: JSON.parse(doc.file).id,
-              singleDocIsPublic: JSON.parse(doc.file).singleDocIsPublic, //adding this...
-              docLoaded: true,
-              readOnly: JSON.parse(doc.file).readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-              rtc: JSON.parse(doc.file).rtc || false,
-              sharedWith: JSON.parse(doc.file).sharedWith,
-              teamDoc: JSON.parse(doc.file).teamDoc,
-              compressed: JSON.parse(doc.file).compressed || false,
-              spacing: JSON.parse(doc.file).spacing
-            })
+          if(doc) {
+            if(JSON.parse(doc.file).lastUpdate > JSON.parse(fileContents).lastUpdate) {
+              this.setState({
+                title: JSON.parse(doc.file).title,
+                content: lzjs.decompress(JSON.parse(doc.file).content),
+                tags: JSON.parse(doc.file).tags,
+                idToLoad: JSON.parse(doc.file).id,
+                singleDocIsPublic: JSON.parse(doc.file).singleDocIsPublic, //adding this...
+                docLoaded: true,
+                readOnly: JSON.parse(doc.file).readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+                rtc: JSON.parse(doc.file).rtc || false,
+                sharedWith: JSON.parse(doc.file).sharedWith,
+                teamDoc: JSON.parse(doc.file).teamDoc,
+                compressed: JSON.parse(doc.file).compressed || false,
+                spacing: JSON.parse(doc.file).spacing
+              })
+            } else {
+              this.setState({
+                title: JSON.parse(fileContents || '{}').title,
+                content: lzjs.decompress(JSON.parse(fileContents).content),
+                tags: JSON.parse(fileContents || '{}').tags,
+                idToLoad: JSON.parse(fileContents || '{}').id,
+                singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+                docLoaded: true,
+                readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+                rtc: JSON.parse(fileContents || '{}').rtc || false,
+                sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+                teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+                compressed: JSON.parse(fileContents || '{}').compressed || false,
+                spacing: JSON.parse(fileContents || '{}').spacing
+              })
+            }
           } else {
+            mydb.create({ _id: thisFile, file: fileContents });
             this.setState({
               title: JSON.parse(fileContents || '{}').title,
               content: lzjs.decompress(JSON.parse(fileContents).content),
@@ -497,8 +515,6 @@ export function handleBack() {
   if(this.state.autoSave === "Saving") {
     setTimeout(this.handleBack, 500);
   } else {
-    console.log("heyo")
-
     this.fullSave('back');
   }
 }

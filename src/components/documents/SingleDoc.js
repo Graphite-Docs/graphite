@@ -78,8 +78,8 @@ export default class SingleDoc extends Component {
         <div>
 
         <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
-          <MainMenu.Item>
-            <Link onClick={this.props.handleBack} style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
+          <MainMenu.Item as='button' style={{border: "none"}} onClick={this.props.handleBack} >
+            <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
           <MainMenu.Item>
           {
