@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import Loading from '../Loading';
+import { storeFile, loadFile } from '../gaiaFunctions/storage';
 import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {
@@ -25,6 +26,8 @@ export default class Collections extends Component {
       run: false,
       onboarding: false
     }
+    this.storeFile = storeFile.bind(this);
+    this.loadFile = loadFile.bind(this);
   }
 
   componentWillMount() {
@@ -234,6 +237,7 @@ export default class Collections extends Component {
             graphitePro={graphitePro}
           />
           <Container style={{marginTop:"65px"}}>
+
             <Grid stackable columns={2}>
               <Grid.Column>
                 <h2>Team Documents ({teamDocs.length})</h2>

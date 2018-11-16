@@ -90,7 +90,8 @@ import {
   clearFilter,
   setDocsPerPage,
   sharedInfoStatic,
-  loadTeamDocs
+  loadTeamDocs,
+  handleRestore
 } from './helpers/documents';
 import {
   handleChange,
@@ -959,6 +960,7 @@ export default class App extends Component {
     this.handleProfileEmail = handleProfileEmail.bind(this);
     this.saveProfile = saveProfile.bind(this);
     this.loadProfile = loadProfile.bind(this);
+    this.handleRestore = handleRestore.bind(this);
 
     //Shared
 
@@ -1654,6 +1656,7 @@ export default class App extends Component {
               <Route path="/file-explorer" render={(location, match, props) =>
                 <SingleExplorerFile {...props}
                   loading={loading}
+                  handleRestore={this.handleRestore}
                 />
               }/>
             </div>
