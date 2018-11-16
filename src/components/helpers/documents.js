@@ -141,12 +141,12 @@ export function saveNewSingleDoc() {
     .then(() => {
       if(window.location.href.includes('vault')) {
         window.location.replace('/documents');
-      } else if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/')) {
+      } else if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/') && !window.location.href.includes('file-explorer')) {
         this.setState({ redirect: true });
       } else if(window.location.href.includes('documents/doc/')) {
         window.location.replace(window.location.origin + '/documents/doc/' + this.state.tempDocId);
-      } else {
-        // window.Materialize.toast(this.state.title + " added!", 4000);
+      } else if(window.location.href.includes('file-explorer')) {
+        window.location.replace('/documents');
       }
       if(this.state.importAll) {
         this.setState({ count: this.state.count + 1 });
@@ -612,7 +612,7 @@ export function setDocsPerPage(e) {
 }
 
 export function loadTeamDocs() {
-
+  console.log("Loading team docs...")
   const { team, count } = this.state;
   if(team.length > count) {
     let publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
@@ -638,7 +638,33 @@ export function loadTeamDocs() {
         this.loadTeamDocs();
       });
   } else {
-    
+    console.log("No more files")
     this.setState({ count: 0, loadingIndicator: false });
   }
+}
+
+export function handleRestore(file) {
+  console.log(file);
+  this.setState({loading: true})
+  const rando = Date.now();
+  const object = {};
+  const objectTwo = {}
+  this.setState({ loading: true, })
+  object.title = file.title;
+  object.lastUpdate = Date.now();
+  object.id = rando;
+  object.updated = getMonthDayYear();
+  object.singleDocTags = file.singleDocTags || [];
+  object.sharedWith = file.sharedWith || [];
+  object.fileType = 'documents';
+  objectTwo.title = object.title;
+  objectTwo.id = object.id;
+  objectTwo.updated = object.created;
+  objectTwo.content = file.content;
+  objectTwo.singleDocTags = object.singleDocTags;
+  objectTwo.sharedWith = object.sharedWith;
+
+  this.setState({ value: [...this.state.value, object], filteredValue: [...this.state.filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
+    this.saveNewFile();
+  });
 }

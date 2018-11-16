@@ -90,7 +90,8 @@ import {
   clearFilter,
   setDocsPerPage,
   sharedInfoStatic,
-  loadTeamDocs
+  loadTeamDocs,
+  handleRestore
 } from './helpers/documents';
 import {
   handleChange,
@@ -122,8 +123,7 @@ import {
   loadAvatars,
   noCollaboration,
   downloadDoc,
-  formatSpacing,
-  fullSave
+  formatSpacing
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -715,7 +715,6 @@ export default class App extends Component {
     this.loadAvatars = loadAvatars.bind(this);
     this.noCollaboration = noCollaboration.bind(this);
     this.formatSpacing = formatSpacing.bind(this);
-    this.fullSave = fullSave.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -961,6 +960,7 @@ export default class App extends Component {
     this.handleProfileEmail = handleProfileEmail.bind(this);
     this.saveProfile = saveProfile.bind(this);
     this.loadProfile = loadProfile.bind(this);
+    this.handleRestore = handleRestore.bind(this);
 
     //Shared
 
@@ -1656,6 +1656,7 @@ export default class App extends Component {
               <Route path="/file-explorer" render={(location, match, props) =>
                 <SingleExplorerFile {...props}
                   loading={loading}
+                  handleRestore={this.handleRestore}
                 />
               }/>
             </div>
