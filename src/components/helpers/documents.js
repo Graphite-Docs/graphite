@@ -612,7 +612,7 @@ export function setDocsPerPage(e) {
 }
 
 export function loadTeamDocs() {
-
+  console.log("Loading team docs...")
   const { team, count } = this.state;
   if(team.length > count) {
     let publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
@@ -638,7 +638,7 @@ export function loadTeamDocs() {
         this.loadTeamDocs();
       });
   } else {
-    
+    console.log("No more files")
     this.setState({ count: 0, loadingIndicator: false });
   }
 }
