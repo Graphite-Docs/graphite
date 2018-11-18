@@ -42,12 +42,9 @@ export function loadIntegrations() {
       }
     })
     .then(() => {
-      putFile('graphiteConfig.json', JSON.stringify(this.state), {encrypt: true})
-        .then(() => {
-          this.setState({ loading: false}, () => {
-            this.loadAccountPlan()
-          })
-        })
+      this.setState({ loading: false}, () => {
+        this.loadAccountPlan()
+      })
     })
     .then(() => {
       if(window.location.href.includes("medium")) {

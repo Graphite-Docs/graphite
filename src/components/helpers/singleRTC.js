@@ -144,7 +144,7 @@ export function handleAddStatic() {
   objectTwo.singleDocTags = [];
   objectTwo.sharedWith = [];
 
-  this.setState({ value: [...this.state.value, object] });
+  this.setState({ value: [...this.state.value, object], filteredValue: [...this.state.value, object] });
   this.setState({ singleDoc: objectTwo });
   this.setState({ tempDocId: object.id });
   setTimeout(this.saveNewSharedFile, 500);
