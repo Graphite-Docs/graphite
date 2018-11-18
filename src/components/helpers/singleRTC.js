@@ -20,16 +20,17 @@ export function loadSharedRTC() {
     getFile(directory, options)
      .then((fileContents) => {
        console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))))
-        this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
-        let docs = this.state.sharedFile;
-        const thisDoc = docs.find((doc) => { return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]}); //comparing strings
-        // let index = thisDoc && thisDoc.id;
-        // console.log(thisDoc);
-        // function findObjectIndex(doc) {
-        //     return doc.id === index; //comparing numbers
-        // }
-        // console.log(docs.findIndex(findObjectIndex))
-        this.setState({ content: thisDoc && lzjs.decompress(thisDoc.content), title: thisDoc && thisDoc.title, newSharedDoc: true, rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
+        this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
+          let docs = this.state.sharedFile;
+          const thisDoc = docs.find((doc) => { return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]}); //comparing strings
+          // let index = thisDoc && thisDoc.id;
+          // console.log(thisDoc);
+          // function findObjectIndex(doc) {
+          //     return doc.id === index; //comparing numbers
+          // }
+          // console.log(docs.findIndex(findObjectIndex))
+          this.setState({ content: thisDoc && lzjs.decompress(thisDoc.content), title: thisDoc && thisDoc.title, newSharedDoc: true, rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
+        })
      })
      .then(() => {
        if(this.state.rtc) {
@@ -142,7 +143,7 @@ export function handleAddStatic() {
   objectTwo.content = this.state.content;
   objectTwo.singleDocTags = [];
   objectTwo.sharedWith = [];
-  
+
   this.setState({ value: [...this.state.value, object] });
   this.setState({ singleDoc: objectTwo });
   this.setState({ tempDocId: object.id });
