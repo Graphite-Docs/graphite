@@ -19,23 +19,44 @@ export default class SingleRTCDoc extends Component {
     const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave } = this.props;
     return(
     <div>
-    <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff", height: "100px", paddingBottom: "30px" }}>
-      <MainMenu.Item onClick={this.props.handleBack}>
-        <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
-      </MainMenu.Item>
-      <MainMenu.Item>
-      {
-        title
-        ?
-        (title.length > 15 ? title.substring(0,15)+"..." : title)
-        :
-        "Title here..."
-      }
-      </MainMenu.Item>
-      <MainMenu.Item>
-        {autoSave}
-      </MainMenu.Item>
-      </MainMenu>
+    {
+      rtc ?
+      <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff", height: "100px", paddingBottom: "30px" }}>
+        <MainMenu.Item onClick={this.props.handleBack}>
+          <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
+        </MainMenu.Item>
+        <MainMenu.Item>
+        {
+          title
+          ?
+          (title.length > 15 ? title.substring(0,15)+"..." : title)
+          :
+          "Title here..."
+        }
+        </MainMenu.Item>
+        <MainMenu.Item>
+          {autoSave}
+        </MainMenu.Item>
+        </MainMenu> :
+
+        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+          <MainMenu.Item onClick={this.props.handleBack}>
+            <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
+          </MainMenu.Item>
+          <MainMenu.Item style={{color: "#fff"}}>
+          {
+            title
+            ?
+            (title.length > 15 ? title.substring(0,15)+"..." : title)
+            :
+            "Title here..."
+          }
+          </MainMenu.Item>
+          <MainMenu.Item>
+            <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleAddStatic}>Add to Collection</a>
+          </MainMenu.Item>
+          </MainMenu>
+    }
     <div className="test-docs">
       <div className="test-doc-card">
         <div className="double-space doc-margin">
@@ -61,10 +82,7 @@ export default class SingleRTCDoc extends Component {
               }
             </div>
             :
-            <div>
-              <p className="doc-title center-align print-view">
-              {title}
-              </p>
+            <div style={{maxWidth: "85%", margin: "auto", marginTop: "100px", marginBottom: "45px"}}>
               <div
                 className="print-view no-edit"
                 dangerouslySetInnerHTML={{ __html: content }}

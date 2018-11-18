@@ -394,6 +394,8 @@ import {
   deleteTag
 } from './helpers/shared';
 import work from 'webworkify-webpack';
+// const IPFS = require("ipfs");
+// const node = new IPFS();
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -407,7 +409,6 @@ export default class App extends Component {
       files: [],
       pubKey: "",
       team: [],
-      clients: [],
       person: {
   	  	name() {
           return 'Anonymous';
@@ -435,8 +436,6 @@ export default class App extends Component {
       docsPerPage: 10,
       docsSelected: [],
       activeIndicator: false,
-      shareModal: "hide",
-      tagModal: "hide",
       receiverID: "",
       confirmAdd: false,
       title: "",
@@ -444,20 +443,14 @@ export default class App extends Component {
       id: "",
       words: "",
       updated: "",
-      tags: "",
       index: "",
-      contactDisplay: "",
-      loadingTwo: "hide",
       singleDocTags: [],
       tag: "",
       selectedTagId: "",
       deleteState: false,
       sharedCollection: [],
       sharedWithSingle: [],
-      collaboratorsModal: "hide",
       tagDownload: false,
-      tagList: "hide",
-      dateList: "hide",
       selectedDate: "",
       selectedCollab: "",
       selectedTag: "",
@@ -471,37 +464,15 @@ export default class App extends Component {
       save: "",
       printPreview: false,
       autoSave: "Saved",
-      show: "",
       singlePublic: {},
-      publicShare: "hide",
       gaiaLink: "",
       hideStealthy: true,
-      hideContact: "",
-      revealModule: "innerStealthy",
-      to: "",
-      blogPost: {},
-      blogIndex: [],
-      blogModal: "hide",
       docFlex: "test-doc-card",
-      remoteStorage: false,
-      remoteTitle: "",
-      remoteContent: "",
-      remoteWords: "",
-      remoteId: "",
-      remoteUpdated: "",
-      highlightedText: "",
-      selection: "",
-      showCommentModal: "hide",
-      comments: [],
-      commentInput: "",
       notificationCount: 0,
-      listComments: "hide",
-      reviewSelection: "",
       commentId: "",
       deleteIndex: "",
       send: false,
       integrations: [],
-      // integrations: {},
       userRole: "",
       accountSettings: "",
       teamCount: 0,
@@ -633,7 +604,8 @@ export default class App extends Component {
       profileEmail: "",
       countFilesDone: false,
       displayMessage: false,
-      visible: false
+      visible: false,
+      newSharedDoc: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -974,6 +946,11 @@ export default class App extends Component {
   }
 
   componentDidMount() {
+    // node.on('ready', async () => {
+    //   const version = await node.version()
+    //
+    //   console.log('Version:', version.version)
+    // })
     const isIos = () => {
       const userAgent = window.navigator.userAgent.toLowerCase();
       return /iphone|ipad|ipod/.test( userAgent );
@@ -1068,6 +1045,7 @@ export default class App extends Component {
                     <AppPage {...props}
                     postToLog={this.postToLog}
                     signInRedirect={this.signInRedirect}
+                    loading={loading}
                     value={value}
                     sheets={sheets}
                     contacts={contacts}

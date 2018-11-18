@@ -4,24 +4,23 @@ import {
 
 export function loadDocs() {
   this.setState({ loading: true });
-  getFile("documentscollection.json", {decrypt: true})
-   .then((fileContents) => {
-     if(JSON.parse(fileContents || '{}').value) {
-       this.setState({ value: JSON.parse(fileContents || '{}').value, countFilesDone: JSON.parse(fileContents || '{}').countFilesDone, filteredValue: JSON.parse(fileContents || '{}').value });
-     }
-
-     if(JSON.parse(fileContents || '{}').countFilesDone) {
-      this.setState({ countFilesDone: true });
-    }  else {
-      this.setState({ countFilesDone: false });
-    }
-   })
-    .then(() => {
-      this.loadSheets();
-    })
-    .catch(error => {
-      console.log(error);
-    });
+    getFile("documentscollection.json", {decrypt: true})
+     .then((fileContents) => {
+       if(JSON.parse(fileContents).value) {
+         this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
+       }
+       if(JSON.parse(fileContents).countFilesDone) {
+        this.setState({ countFilesDone: true });
+      }  else {
+        this.setState({ countFilesDone: false });
+      }
+     })
+      .then(() => {
+        this.loadSheets();
+      })
+      .catch(error => {
+        console.log(error);
+      });
 }
 
 export function loadSheets() {

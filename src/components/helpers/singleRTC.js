@@ -23,12 +23,13 @@ export function loadSharedRTC() {
         this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) })
         let docs = this.state.sharedFile;
         const thisDoc = docs.find((doc) => { return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]}); //comparing strings
-        let index = thisDoc && thisDoc.id;
-        console.log(thisDoc);
-        function findObjectIndex(doc) {
-            return doc.id === index; //comparing numbers
-        }
-        this.setState({ content: thisDoc && lzjs.decompress(thisDoc.content), title: thisDoc && thisDoc.title, index: docs.findIndex(findObjectIndex), rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
+        // let index = thisDoc && thisDoc.id;
+        // console.log(thisDoc);
+        // function findObjectIndex(doc) {
+        //     return doc.id === index; //comparing numbers
+        // }
+        // console.log(docs.findIndex(findObjectIndex))
+        this.setState({ content: thisDoc && lzjs.decompress(thisDoc.content), title: thisDoc && thisDoc.title, newSharedDoc: true, rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
      })
      .then(() => {
        if(this.state.rtc) {
@@ -43,27 +44,25 @@ export function loadSharedRTC() {
 export function findDoc() {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
-    console.log()
-    this.setState({ value: JSON.parse(fileContents || '{}').value })
+    // this.setState({ value: JSON.parse(fileContents || '{}').value })
     let value = this.state.value;
     const thisDoc = value.find((doc) => {
-      if(!isNaN(parseFloat(doc.id)) && isFinite(doc.id)) {
-        return doc.id === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
-      } else {
-        return doc.id === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
-      }
-
+      // if(!isNaN(parseFloat(doc.id)) && isFinite(doc.id)) {
+      //   return doc.id === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
+      // } else {
+      //   return doc.id === window.location.href.split('shared/')[1].split('/')[1] //this is comparing a string to a string
+      // }
+      return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
     });
     if(thisDoc) {
-      console.log("found it")
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
         return doc.id === index; //this is comparing a number to a number
       }
-      this.setState({index: value.findIndex(findObjectIndex)})
-      setTimeout(this.loadSingleRTC, 300)
+      this.setState({index: value.findIndex(findObjectIndex)}, () => {
+        this.loadSingleRTC();
+      })
     } else {
-      console.log("Nope")
       this.loadSharedRTC();
     }
   })
@@ -128,16 +127,22 @@ export function handleAddRTC() {
 }
 
 export function handleAddStatic() {
-  const rando = Date.now();
   const object = {};
-  object.title = this.state.title;
-  object.id = rando;
-  object.created = getMonthDayYear();
   const objectTwo = {}
+  object.title = this.state.title;
+  object.lastUpdate = Date.now();
+  object.id = window.location.href.split('shared/')[1].split('/')[1];
+  object.updated = getMonthDayYear();
+  object.singleDocTags = [];
+  object.sharedWith = [];
+  object.fileType = 'documents';
   objectTwo.title = object.title;
   objectTwo.id = object.id;
-  objectTwo.created = object.created;
+  objectTwo.updated = object.created;
   objectTwo.content = this.state.content;
+  objectTwo.singleDocTags = [];
+  objectTwo.sharedWith = [];
+  
   this.setState({ value: [...this.state.value, object] });
   this.setState({ singleDoc: objectTwo });
   this.setState({ tempDocId: object.id });

@@ -51,7 +51,7 @@ export default class SharedCollection extends Component {
   }
 
   componentDidMount() {
-    this.setState({ user: this.props.match.params.id, loading: true });
+    this.setState({ user: window.location.href.split('shared/')[1], loading: true });
     getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
@@ -70,9 +70,9 @@ export default class SharedCollection extends Component {
     let fileString = 'shareddocs.json'
     let file = publicKey + fileString;
     const directory = 'shared/' + file;
-    const user = this.props.match.params.id;
+    const user = window.location.href.split('shared/')[1];
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    lookupProfile(this.state.user, "https://core.blockstack.org/v1/names")
+    lookupProfile(user, "https://core.blockstack.org/v1/names")
       .then((profile) => {
         let image = profile.image;
         console.log(profile);
@@ -178,7 +178,7 @@ export default class SharedCollection extends Component {
 
                     return(
                       <Table.Row key={doc.id} style={{ marginTop: "35px"}}>
-                        <Table.Cell><Link to={'/documents/single/shared/'+ this.state.user + '/' + doc.id}>{doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title}</Link></Table.Cell>
+                        <Table.Cell><Link to={'/documents/single/shared/'+ this.state.user + '/' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"}</Link></Table.Cell>
                         <Table.Cell>{this.state.user}</Table.Cell>
                         <Table.Cell>{doc.rtc === true ? "False" : "True"}</Table.Cell>
                         <Table.Cell>{doc.shared}</Table.Cell>

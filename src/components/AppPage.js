@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import Signin from "./Signin";
 import Header from "./Header";
+import Loading from "./Loading";
 import {
   isUserSignedIn,
   redirectToSignIn,
@@ -157,7 +158,7 @@ export default class AppPage extends Component {
         target: ".avatar"
       }
     ]
-    const { value, sheets, files, contacts, graphitePro } = this.props;
+    const { value, sheets, files, contacts, graphitePro, loading } = this.props;
     let merged = sheets.reverse().concat(value.reverse());
     let recentWithDate = merged.filter(x => x.lastUpdate && x.updated);
     let recentFiles = recentWithDate.sort(function(a, b){return a.lastUpdate - b.lastUpdate}).slice(0,15);
@@ -201,225 +202,230 @@ export default class AppPage extends Component {
     let newContactsTypes = contactsTypes.filter(function(n){ return n !== undefined });
     let mergedContactsTypes = [].concat.apply([], newContactsTypes).length;
 
+    if(!loading) {
+      return (
+        <div>
+          <Header
+            graphitePro={graphitePro}
+          />
 
-    return (
-      <div>
-        <Header
-          graphitePro={graphitePro}
-        />
-
-        <div className="site-wrapper">
-          <div className="site-wrapper-inner">
-            {!isUserSignedIn() ? (
-              <Signin
-                handleSignIn={this.handleSignIn}
+          <div className="site-wrapper">
+            <div className="site-wrapper-inner">
+              {!isUserSignedIn() ? (
+                <Signin
+                  handleSignIn={this.handleSignIn}
+                />
+              ) : (
+              <Container>
+              <Joyride
+                continuous
+                scrollToFirstStep
+                showProgress
+                showSkipButton
+                run={this.state.run}
+                steps={steps}
+                callback={this.handleJoyrideCallback}
               />
-            ) : (
-            <Container>
-            <Joyride
-              continuous
-              scrollToFirstStep
-              showProgress
-              showSkipButton
-              run={this.state.run}
-              steps={steps}
-              callback={this.handleJoyrideCallback}
-            />
-            <Grid style={{ marginTop: "65px" , marginBottom: "35px"}} stackable columns={4}>
-              <Grid.Row>
-              <Card.Group centered>
-              <Grid.Column>
-                <Link to={'/documents'} style={{color:"#282828"}}>
-                <Card className='appPageCard'>
-                  <Card.Content>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <h2>Documents <br/>({value.length})</h2>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <Icon name='file alternate outline' className="appPageIcon" size='large' />
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <p>Tags</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <p>Collaborators</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedDocTags}
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedDocCollabs}
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                  </Card.Content>
-                </Card>
-                </Link>
-                </Grid.Column>
+              <Grid style={{ marginTop: "65px" , marginBottom: "35px"}} stackable columns={4}>
+                <Grid.Row>
+                <Card.Group centered>
                 <Grid.Column>
-                <Link to={'/sheets'} style={{color:"#282828"}}>
-                <Card className='appPageCard'>
-                  <Card.Content>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <h2>Sheets <br/>({sheets.length})</h2>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <Icon name='table' size='large' className="appPageIcon" />
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <p>Tags</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <p>Collaborators</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedSheetsTags}
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedSheetsCollabs}
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                  </Card.Content>
-                </Card>
-                </Link>
-                </Grid.Column>
-                <Grid.Column>
-                <Link to={'/vault'} style={{color:"#282828"}}>
-                <Card className='appPageCard'>
-                  <Card.Content>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <h2>Vault <br/>({files.length})</h2>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <Icon name='shield alternate' size='large' className="appPageIcon" />
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <p>Tags</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <p>Collaborators</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedFilesTags}
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedFilesCollabs}
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                  </Card.Content>
-                </Card>
-                </Link>
-                </Grid.Column>
-                <Grid.Column>
-                <Link to={'/contacts'} style={{color:"#282828"}}>
-                <Card className='appPageCard'>
-                  <Card.Content>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <h2>Contacts <br/>({contacts.length})</h2>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <Icon name='address book outline' size='large' className="appPageIcon" />
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                    <Grid columns={2}>
-                      <Grid.Row>
-                        <Grid.Column>
-                          <p>Types</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          <p>Notes</p>
-                        </Grid.Column>
-                        <Grid.Column>
-                          {mergedContactsTypes}
-                        </Grid.Column>
-                        <Grid.Column>
-                          0
-                        </Grid.Column>
-                      </Grid.Row>
-                    </Grid>
-                  </Card.Content>
-                </Card>
-                </Link>
-                </Grid.Column>
-              </Card.Group>
-              </Grid.Row>
-            </Grid>
+                  <Link to={'/documents'} style={{color:"#282828"}}>
+                  <Card className='appPageCard'>
+                    <Card.Content>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <h2>Documents <br/>({value.length})</h2>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <Icon name='file alternate outline' className="appPageIcon" size='large' />
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <p>Tags</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <p>Collaborators</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedDocTags}
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedDocCollabs}
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                    </Card.Content>
+                  </Card>
+                  </Link>
+                  </Grid.Column>
+                  <Grid.Column>
+                  <Link to={'/sheets'} style={{color:"#282828"}}>
+                  <Card className='appPageCard'>
+                    <Card.Content>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <h2>Sheets <br/>({sheets.length})</h2>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <Icon name='table' size='large' className="appPageIcon" />
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <p>Tags</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <p>Collaborators</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedSheetsTags}
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedSheetsCollabs}
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                    </Card.Content>
+                  </Card>
+                  </Link>
+                  </Grid.Column>
+                  <Grid.Column>
+                  <Link to={'/vault'} style={{color:"#282828"}}>
+                  <Card className='appPageCard'>
+                    <Card.Content>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <h2>Vault <br/>({files.length})</h2>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <Icon name='shield alternate' size='large' className="appPageIcon" />
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <p>Tags</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <p>Collaborators</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedFilesTags}
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedFilesCollabs}
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                    </Card.Content>
+                  </Card>
+                  </Link>
+                  </Grid.Column>
+                  <Grid.Column>
+                  <Link to={'/contacts'} style={{color:"#282828"}}>
+                  <Card className='appPageCard'>
+                    <Card.Content>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <h2>Contacts <br/>({contacts.length})</h2>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <Icon name='address book outline' size='large' className="appPageIcon" />
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                      <Grid columns={2}>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <p>Types</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <p>Notes</p>
+                          </Grid.Column>
+                          <Grid.Column>
+                            {mergedContactsTypes}
+                          </Grid.Column>
+                          <Grid.Column>
+                            0
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                    </Card.Content>
+                  </Card>
+                  </Link>
+                  </Grid.Column>
+                </Card.Group>
+                </Grid.Row>
+              </Grid>
 
-            <h4 style={{fontFamily: 'Muli, san-serif', fontWeight: "200"}}>Opened Recently ({recentFiles.length})</h4>
-            <Table unstackable style={{borderRadius: "0", marginBottom: "45px"}}>
-              <Table.Header>
-                <Table.Row>
-                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Name</Table.HeaderCell>
-                  <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date</Table.HeaderCell>
-                </Table.Row>
-              </Table.Header>
+              <h4 style={{fontFamily: 'Muli, san-serif', fontWeight: "200"}}>Opened Recently ({recentFiles.length})</h4>
+              <Table unstackable style={{borderRadius: "0", marginBottom: "45px"}}>
+                <Table.Header>
+                  <Table.Row>
+                    <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Name</Table.HeaderCell>
+                    <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date</Table.HeaderCell>
+                  </Table.Row>
+                </Table.Header>
 
-              <Table.Body>
-              {
-                recentFiles.map(merge => {
-                    var link;
-                    var name;
-                    var date;
-                    if(merge.title) {
-                      name = merge.title;
-                    } else {
-                      name = merge.name;
-                    }
-                    if(merge.updated) {
-                      date = merge.updated;
-                    } else {
-                      date = merge.uploaded;
-                    }
-                    if(merge.fileType === "documents") {
-                      link = '/documents/doc/' + merge.id;
-                    } else if(merge.fileType === "sheets") {
-                      link = '/sheets/sheet/' + merge.id;
-                    } else if(merge.fileType === "vault") {
-                      link = '/vault/' + merge.id;
-                    } else if(merge.fileType === undefined || merge.fileType === null) {
-                      link = '/';
-                    } else {
-                      link = '/';
-                    }
-                  return(
-                    <Table.Row key={merge.id}>
-                      <Table.Cell><Link to={link}>{name}</Link></Table.Cell>
-                      <Table.Cell>{date}</Table.Cell>
-                    </Table.Row>
-                  );
-                  })
-              }
+                <Table.Body>
+                {
+                  recentFiles.map(merge => {
+                      var link;
+                      var name;
+                      var date;
+                      if(merge.title) {
+                        name = merge.title;
+                      } else {
+                        name = merge.name;
+                      }
+                      if(merge.updated) {
+                        date = merge.updated;
+                      } else {
+                        date = merge.uploaded;
+                      }
+                      if(merge.fileType === "documents") {
+                        link = '/documents/doc/' + merge.id;
+                      } else if(merge.fileType === "sheets") {
+                        link = '/sheets/sheet/' + merge.id;
+                      } else if(merge.fileType === "vault") {
+                        link = '/vault/' + merge.id;
+                      } else if(merge.fileType === undefined || merge.fileType === null) {
+                        link = '/';
+                      } else {
+                        link = '/';
+                      }
+                    return(
+                      <Table.Row key={merge.id}>
+                        <Table.Cell><Link to={link}>{name}</Link></Table.Cell>
+                        <Table.Cell>{date}</Table.Cell>
+                      </Table.Row>
+                    );
+                    })
+                }
 
-              </Table.Body>
-            </Table>
-            </Container>
-            )}
+                </Table.Body>
+              </Table>
+              </Container>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <Loading />
+      )
+    }
   }
 }

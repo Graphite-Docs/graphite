@@ -529,10 +529,19 @@ export function handleAutoAdd() {
   objectTwo.singleDocTags = this.state.singleDocTags;
   objectTwo.fileType = "documents";
   const index = this.state.index;
-  const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo
-  this.setState({value: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
-    this.autoSave();
-  });
+  console.log('damn index: ' + index);
+  console.log(this.state.value)
+  if(this.state.newSharedDoc) {
+    this.setState({ value: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
+      this.autoSave();
+      console.log(this.state.value);
+    })
+  } else {
+    const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo
+    this.setState({value: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+      this.autoSave();
+    });
+  }
 }
 
 export function autoSave() {
