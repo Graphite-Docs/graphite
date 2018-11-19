@@ -93,7 +93,7 @@ export default class SharedCollection extends Component {
          this.setState({ loading: false });
        })
        console.log("loaded");
-       this.save();
+       // this.save();
      })
       .catch(error => {
         console.log(error);
