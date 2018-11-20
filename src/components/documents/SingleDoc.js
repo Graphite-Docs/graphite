@@ -192,6 +192,7 @@ export default class SingleDoc extends Component {
             stopSharing={this.props.stopSharing}
             changeEditor={this.props.changeEditor}
             markdown={markdown}
+            rtc={rtc}
             singleDocIsPublic={singleDocIsPublic}
             readOnly={readOnly}
             gaiaLink={gaiaLink}

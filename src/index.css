@@ -273,6 +273,36 @@ h5, h6 {
   height: 100px;
 }
 
+.markdown-editor {
+  min-height: 200px!important;
+}
+
+.markdown-editor__preview-container {
+  display: none!important;
+}
+
+.markdown-editor__textarea, .markdown-editor__preview, .markdown-editor__textarea:focus, .markdown-editor__preview:focus, .markdown-editor__textarea:active, .markdown-editor__preview:active {
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+}
+
+.markdown-editor__editor-container, .markdown-editor__preview-container {
+  max-width: 90%!important;
+}
+
+div.markdown-editor__editor-container h2 {
+  display: none;
+}
+
+#md-help-button {
+  position: fixed;
+  bottom: 25px;
+  float: left;
+  left: 15px;
+}
+
 /* Quill Editor */
 
 .ql-editor {
@@ -282,36 +312,8 @@ h5, h6 {
   line-height: 1;
 }
 
-@media screen and (max-width: 800px) {
-  .ql-editor {
-    max-width: 85%;
-    margin: auto;
-    margin-top: 215px;
-  }
-}
-
-@media screen and (max-width: 600px) {
-  .ql-editor {
-    max-width: 90%;
-    margin: auto;
-    margin-top: 215px;
-  }
-}
-
-@media screen and (max-width: 400px) {
-  .ql-editor {
-    max-width: 95%;
-    margin: auto;
-    margin-top: 245px;
-  }
-}
-
-@media screen and (max-width: 350px) {
-  .ql-editor {
-    max-width: 95%;
-    margin: auto;
-    margin-top: 285px;
-  }
+.md-editor {
+  margin-top: 135px;
 }
 
 .ql-snow .ql-picker.ql-font {
@@ -473,6 +475,43 @@ polygon.ql-stroke {
 
 .ql-formats {
   margin-top: 5px;
+}
+
+@media screen and (max-width: 800px) {
+  .ql-editor {
+    max-width: 85%;
+    margin: auto;
+    margin-top: 215px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .ql-editor {
+    max-width: 90%;
+    margin: auto;
+    margin-top: 215px;
+  }
+}
+
+@media screen and (max-width: 414px) {
+  .ql-editor {
+    max-width: 95%;
+    margin: auto;
+    margin-top: 245px;
+  }
+
+  .ql-toolbar.ql-snow {
+    position: fixed;
+    top: 112px;
+  }
+}
+
+@media screen and (max-width: 350px) {
+  .ql-editor {
+    max-width: 95%;
+    margin: auto;
+    margin-top: 285px;
+  }
 }
 
 /* Print Layout */

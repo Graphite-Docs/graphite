@@ -477,7 +477,9 @@ export function handleTitleChange(e) {
 }
 
 export function handleChange(value) {
-  this.setState({ content: value });
+  this.setState({ content: value }, () => {
+    this.setState({ markdownContent: turndownService.turndown(this.state.content)})
+  });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 1500)
   if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
