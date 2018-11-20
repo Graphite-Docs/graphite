@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
+import MDEditor from '../MDEditor';
 
 export default class SingleRTCDoc extends Component {
 
@@ -16,7 +17,7 @@ export default class SingleRTCDoc extends Component {
       toolbar[0].style.top = "63px";
     }
 
-    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave } = this.props;
+    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave, markdown } = this.props;
     return(
     <div>
     {
@@ -60,33 +61,43 @@ export default class SingleRTCDoc extends Component {
     <div className="test-docs">
       <div className="test-doc-card">
         <div className="double-space doc-margin">
-
           {
-            (rtc === true) ?
+            markdown ?
             <div>
-              {
-                (docLoaded === true) ?
-                <QuillEditorPublic
-                  roomId={idToLoad.toString()} //this needs to be a string!
-                  docLoaded={docLoaded} //this is set by getFile
-                  value={content}
-                  onChange={this.props.handleChange}
-                  getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
-                  yjsConnected={yjsConnected} //true or false, for TextEdit
-                  rtc={rtc}
-                />
-                :
-                <div className="progress">
-                  <div className="indeterminate"></div>
-                </div>
-              }
-            </div>
-            :
-            <div style={{maxWidth: "85%", margin: "auto", marginTop: "100px", marginBottom: "45px"}}>
-              <div
-                className="print-view no-edit"
-                dangerouslySetInnerHTML={{ __html: content }}
+              <MDEditor
+                markdownContent={this.props.markdownContent}
+                handleMDChange={this.props.handleMDChange}
               />
+            </div> :
+            <div>
+            {
+              (rtc === true) ?
+              <div>
+                {
+                  (docLoaded === true) ?
+                  <QuillEditorPublic
+                    roomId={idToLoad.toString()} //this needs to be a string!
+                    docLoaded={docLoaded} //this is set by getFile
+                    value={content}
+                    onChange={this.props.handleChange}
+                    getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
+                    yjsConnected={yjsConnected} //true or false, for TextEdit
+                    rtc={rtc}
+                  />
+                  :
+                  <div className="progress">
+                    <div className="indeterminate"></div>
+                  </div>
+                }
+              </div>
+              :
+              <div style={{maxWidth: "85%", margin: "auto", marginTop: "100px", marginBottom: "45px"}}>
+                <div
+                  className="print-view no-edit"
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              </div>
+            }
             </div>
           }
 

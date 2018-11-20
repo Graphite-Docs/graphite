@@ -6,13 +6,17 @@ export function loadDocs() {
   this.setState({ loading: true });
     getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
-       if(JSON.parse(fileContents).value) {
-         this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
-       }
-       if(JSON.parse(fileContents).countFilesDone) {
-        this.setState({ countFilesDone: true });
-      }  else {
-        this.setState({ countFilesDone: false });
+       if(fileContents) {
+         if(JSON.parse(fileContents).value) {
+           this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
+         }
+         if(JSON.parse(fileContents).countFilesDone) {
+          this.setState({ countFilesDone: true });
+        }  else {
+          this.setState({ countFilesDone: false });
+        }
+      } else {
+        this.setState({ value: [], filteredValue: [], countFilesDone: true });
       }
      })
       .then(() => {
@@ -72,6 +76,7 @@ export function loadVault() {
      }
    })
     .then(() => {
+      this.setState({ loading: false });
       this.loadIntegrations();
     })
     .catch(error => {

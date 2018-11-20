@@ -10,6 +10,7 @@ import {
   putFile,
   getFile
 } from 'blockstack';
+// import { storeFile, loadFile } from '../gaiaFunctions/storage';
 import Header from '../Header';
 import Joyride from "react-joyride";
 
@@ -93,6 +94,30 @@ export default class Collections extends Component {
       this.props.handleDeleteDoc(this.state.doc)
     })
   }
+
+  // loadIt = () => {
+  //   const options = {};
+  //   options.filename = 'testfile1.json';
+  //   options.decrypt = true;
+  //   options.ipfs = false;
+  //   options.gaia = false;
+  //   options.local = true;
+  //   loadFile(options).then((data) => {
+  //     console.log(data);
+  //   })
+  // }
+  //
+  // postIt = () => {
+  //   const options = {};
+  //   options.filename = 'testfile1.json';
+  //   options.encrypt = true;
+  //   options.data = "Rage, against the dying of the light";
+  //   options.ipfs = false;
+  //   options.sync = true;
+  //   storeFile(options).then((data) => {
+  //     console.log(data)
+  //   })
+  // }
 
   render() {
     const steps = [
@@ -307,6 +332,7 @@ export default class Collections extends Component {
             graphitePro={graphitePro}
           />
           <Container style={{marginTop:"65px"}}>
+          
           <Joyride
             continuous
             scrollToFirstStep

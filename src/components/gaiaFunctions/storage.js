@@ -1,9 +1,9 @@
 import TurtleDB from "turtledb";
-import { putFile, encryptContent } from "blockstack";
+import { putFile, getFile, encryptContent, decryptContent } from "blockstack";
 const IPFS = require("ipfs");
 const node = new IPFS();
 
-export async function newFile(options) {
+export async function storeFile(options) {
   const mydb = new TurtleDB("graphite-docs");
   let storedData;
   //if encrypt = true, encrypt data
@@ -23,7 +23,12 @@ export async function newFile(options) {
   //Since we are focusing on offline-first, we always post to indexeddb using turtledb
   mydb.create({ _id: options.filename, data: JSON.stringify(storedData) }).then(() => {
     mydb.read(options.filename).then((doc) => console.log(doc));
+  }).catch(error => {
+    mydb.update(options.filename, {data: JSON.stringify(storedData) }).then(() => {
+      mydb.read(options.filename).then((doc) => console.log(doc));
+    })
   })
+
 
   //To prevent too many http request, the sync boolean controls if and when we sync to gaia/ipfs
   if(options.sync) {
@@ -44,17 +49,41 @@ export async function newFile(options) {
 }
 
 export async function loadFile(options) {
-  if(options.ipfs) {
-
-  } else {
-
-  }
-}
-
-export async function updateFile(options) {
-  if(options.ipfs) {
-
-  } else {
-
+  const mydb = new TurtleDB("graphite-docs");
+  if(options.local) {
+    return mydb.read(options.filename).then((doc) => {
+      if(options.decrypt) {
+        if(options.key) {
+          return decryptContent(JSON.parse(doc.data), {privateKey: options.key});
+        } else {
+          return decryptContent(JSON.parse(doc.data));
+        }
+      } else {
+        return JSON.parse(doc.data);
+      }
+    });
+  } else if(options.ipfs) {
+    const fileBuffer = await node.files.cat(options.hash)
+    if(options.decrypt) {
+      if(options.key) {
+        decryptContent(JSON.parse(fileBuffer), { privateKey: options.key });
+      } else {
+        decryptContent(JSON.parse(fileBuffer))
+      }
+    } else {
+      return JSON.parse(fileBuffer);
+    }
+  } else if(options.gaia) {
+    return getFile(options.filename, {decrypt: false}).then((data) => {
+      if(options.decrypt) {
+        if(options.key) {
+          return decryptContent(JSON.parse(data), { privateKey: options.key });
+        } else {
+          return decryptContent(JSON.parse(data));
+        }
+      } else {
+        return JSON.parse(data);
+      }
+    })
   }
 }

@@ -1,10 +1,11 @@
 import React, { Component } from "react";
-import { Image, Icon, Modal, Input, Button, Message } from 'semantic-ui-react';
+import { Image, Icon, Modal, Input, Button, Message, List } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import Loading from '../Loading';
 import Menu from './Menu';
 import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
 import QuillEditorPrivate from '../QuillEditorPrivate.js';
+import MDEditor from '../MDEditor';
 const wordcount = require("wordcount");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -23,7 +24,22 @@ export default class SingleDoc extends Component {
 
 
   render() {
-    const { displayMessage, userRole, teamDoc, avatars, yjsConnected, docLoaded, rtc, idToLoad, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
+    const { markdown, displayMessage, userRole, teamDoc, avatars, yjsConnected, docLoaded, rtc, idToLoad, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
+    document.addEventListener('click', function (event) {
+
+    	// If the clicked element doesn't have the right selector, bail
+    	if (!event.target.matches('#ava-length')) {
+        event.preventDefault();
+        document.getElementById('ava-modal').style.display = 'none';
+      } else {
+        // Don't follow the link
+      	event.preventDefault();
+
+      	// Log the clicked element in the console
+      	document.getElementById('ava-modal').style.display = 'block';
+      }
+
+    }, false);
     let teamList;
     if(team) {
       teamList = team;
@@ -134,7 +150,7 @@ export default class SingleDoc extends Component {
             <MainMenu.Item>
             <ul className="avatar-ul">
               {
-                uniqueAva ? uniqueAva.map(img => {
+                uniqueAva ? uniqueAva.length < 4 ? uniqueAva.map(img => {
                   let image;
                   if(img.image) {
                     image = img.image[0].contentUrl;
@@ -146,7 +162,11 @@ export default class SingleDoc extends Component {
                       <Image src={image} avatar className='shared-avatar circle' /></li>
                   )
                 })
-                 : <li className="hide" />
+                 :
+                 <li id="ava-length">
+                  {uniqueAva.length}
+                 </li> :
+                 <li className='hide' />
               }
               </ul>
             </MainMenu.Item>
@@ -170,6 +190,8 @@ export default class SingleDoc extends Component {
             sharePublicly={this.props.sharePublicly}
             toggleReadOnly={this.props.toggleReadOnly}
             stopSharing={this.props.stopSharing}
+            changeEditor={this.props.changeEditor}
+            markdown={markdown}
             singleDocIsPublic={singleDocIsPublic}
             readOnly={readOnly}
             gaiaLink={gaiaLink}
@@ -181,6 +203,29 @@ export default class SingleDoc extends Component {
             userRole={userRole}
             mediumConnected={mediumConnected}
           />
+
+          <div id='ava-modal'>
+            <List>
+            {
+              uniqueAva.map(img => {
+                let image;
+                if(img.image) {
+                  image = img.image[0].contentUrl;
+                } else {
+                  image = avatarFallbackImage
+                }
+                return(
+                  <List.Item key={img.name}>
+                    <Image avatar src={image} />
+                    <List.Content>
+                      <List.Header>{img.name}</List.Header>
+                    </List.Content>
+                  </List.Item>
+                )
+              })
+            }
+            </List>
+          </div>
 
           {displayMessage ?
             <Message
@@ -205,43 +250,54 @@ export default class SingleDoc extends Component {
                   }
                 </p>
 
+              <div>
               {
-                (singleDocIsPublic === true || rtc === true) ?
+                markdown ?
+                <MDEditor
+                  markdownContent={this.props.markdownContent}
+                  handleMDChange={this.props.handleMDChange}
+                /> :
                 <div>
-                  {
-                    (docLoaded === true) ?
-                    <QuillEditorPublic
-                      roomId={typeof idToLoad === 'string' || idToLoad instanceof String ? idToLoad : idToLoad.toString()} //this needs to be a string!
-                      docLoaded={docLoaded} //this is set by getFile
-                      value={content}
-                      onChange={this.props.handleChange}
-                      getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
-                      yjsConnected={yjsConnected} //true or false, for TextEdit
-                      singleDocIsPublic={singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
-                    />
-                    :
-                    <div className="progress">
-                      <div className="indeterminate"></div>
-                    </div>
-                  }
-                </div>
-                :
-                <div>
-                  {
-                    (docLoaded === true) ?
-                    <QuillEditorPrivate
-                      roomId={idToLoad} //this needs to be a string!
-                      docLoaded={docLoaded} //this is set by getFile
-                      value={content}
-                      onChange={this.props.handleChange}
-                    />
-                    :
-                    <div className="progress">
-                      <div className="indeterminate"></div>
-                    </div>
-                  }
+                {
+                  (singleDocIsPublic === true || rtc === true) ?
+                  <div>
+                    {
+                      (docLoaded === true && !markdown) ?
+                      <QuillEditorPublic
+                        roomId={typeof idToLoad === 'string' || idToLoad instanceof String ? idToLoad : idToLoad.toString()} //this needs to be a string!
+                        docLoaded={docLoaded} //this is set by getFile
+                        value={content}
+                        onChange={this.props.handleChange}
+                        getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
+                        yjsConnected={yjsConnected} //true or false, for TextEdit
+                        singleDocIsPublic={singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
+                      />
+                      :
+                      <div className="progress">
+                        <div className="indeterminate"></div>
+                      </div>
+                    }
+                  </div>
+                  :
+                  <div>
+                    {
+                      (docLoaded === true && !markdown) ?
+                      <QuillEditorPrivate
+                        roomId={idToLoad} //this needs to be a string!
+                        docLoaded={docLoaded} //this is set by getFile
+                        value={content}
+                        onChange={this.props.handleChange}
+                      />
+                      :
+                      <div className="progress">
+                        <div className="indeterminate"></div>
+                      </div>
+                    }
+                  </div>
+                }
                 </div>
               }
+              </div>
 
               <div style={{ float: "right", margin: "40px"}} className="right-align wordcounter">
                 <p className="wordcount">

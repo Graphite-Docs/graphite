@@ -118,38 +118,64 @@ h5, h6 {
 .avatar-ul {
   list-style-type: none;
   padding: 0;
-  margin-left: -50px;
 }
 
 .avatar-li {
   margin-top: 5px;
   width: 35px;
   height: 35px;
+  float: right;
+  margin-left: -26px;
 }
 
 .hidden-span {
   display: none;
 }
 
-.avatar-li:nth-child(2) { margin-left: -40px; }
-.avatar-li:nth-child(3) { margin-left: -50px; }
-.avatar-li:nth-child(4) { margin-left: -60px; }
-.avatar-li:nth-child(5) { margin-left: -70px; }
-
-.avatar-ul:hover .avatar-li:nth-child(2) {margin-left: -60px;}
-.avatar-ul:hover .avatar-li:nth-child(3) {margin-left: -80px;}
-.avatar-ul:hover .avatar-li:nth-child(4) {margin-left: -100px;}
-.avatar-ul:hover .avatar-li:nth-child(5) {margin-left: -120px;}
-
-.avatar-li:hover .hidden-span {display: block; position:fixed; top: 80px; padding-left: 5px; padding-right: 5px; background: #282828; color: #fff; border: 1px solid #282828; border-radius: 2px;}
-
-
-@media screen and (max-width: 800px) {
-  .avatar-ul:hover .avatar-li:nth-child(2) {margin-top: 25px; margin-left: -35px;}
-  .avatar-ul:hover .avatar-li:nth-child(3) {margin-top: 45px; margin-left: -35px;}
-  .avatar-ul:hover .avatar-li:nth-child(4) {margin-top: 65px; margin-left: -35px;}
-  .avatar-ul:hover .avatar-li:nth-child(5) {margin-top: 85px; margin-left: -35px;}
+.avatar-li:hover {
+  margin-left: -10px;
 }
+
+#ava-length {
+  height: 35px!important;
+  width: 35px!important;
+  background: #eee!important;
+  color: #282828!important;
+  border-radius: 50%!important;
+  text-align:center!important;
+  padding-top: 10px!important;
+}
+
+
+.avatar-li:hover .hidden-span {z-index: 999; display: block; position:fixed; top: 80px; padding-left: 5px; padding-right: 5px; background: #282828; color: #fff; border: 1px solid #282828; border-radius: 2px;}
+
+
+@media screen and (max-width: 760px) {
+  .avatar-ul {
+    display: none;
+  }
+}
+
+
+#ava-length:hover ~ #ava-modal {
+  display: block;
+}
+
+#ava-modal {
+  display: none;
+  background: #fff;
+  z-index: 1000;
+  position: fixed;
+  width: 250px;
+  top: 80px;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  float: right;
+  right: 10px;
+}
+
+
 
 .cm-e-menu {
   background-color: #282828;

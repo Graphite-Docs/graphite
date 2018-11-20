@@ -277,6 +277,7 @@ export default class Menu extends Component {
                           <ul className="submenu">
                               <li><a onClick={() => this.props.formatSpacing('single')}>Single Space</a></li>
                               <li onClick={() => this.props.formatSpacing('double')}><a>Double Space</a></li>
+                              {/*this.props.markdown ? <li onClick={this.props.changeEditor}><a>WYSIWYG Editor</a></li> : <li onClick={this.props.changeEditor}><a>Markdown Editor</a></li>*/}
                           </ul>
                       </li>
                   </ul>

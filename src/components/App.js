@@ -123,7 +123,9 @@ import {
   loadAvatars,
   noCollaboration,
   downloadDoc,
-  formatSpacing
+  formatSpacing,
+  changeEditor,
+  handleMDChange
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -605,7 +607,9 @@ export default class App extends Component {
       countFilesDone: false,
       displayMessage: false,
       visible: false,
-      newSharedDoc: false
+      newSharedDoc: false,
+      markdown: false,
+      markdownContent: ""
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -687,6 +691,8 @@ export default class App extends Component {
     this.loadAvatars = loadAvatars.bind(this);
     this.noCollaboration = noCollaboration.bind(this);
     this.formatSpacing = formatSpacing.bind(this);
+    this.changeEditor = changeEditor.bind(this);
+    this.handleMDChange = handleMDChange.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -1024,7 +1030,8 @@ export default class App extends Component {
       manualResults, typesList, typeDownload, typeModal, contactsPerPage, add, filteredContacts, results, newContact,
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
-      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible
+      optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
+      markdownContent
     } = this.state;
     return (
       <div>
@@ -1145,6 +1152,10 @@ export default class App extends Component {
                   handleaddItem={this.handleaddItem}
                   formatSpacing={this.formatSpacing}
                   handleNewContact={this.handleNewContact}
+                  changeEditor={this.changeEditor}
+                  handleMDChange={this.handleMDChange}
+                  markdown={markdown}
+                  markdownContent={markdownContent}
                   results={results}
                   displayMessage={displayMessage}
                   spacing={spacing}
@@ -1182,6 +1193,9 @@ export default class App extends Component {
                   readOnly={readOnly}
                   idToLoad={idToLoad}
                   singleDocIsPublic={singleDocIsPublic}
+                  markdown={markdown}
+                  markdownContent={markdownContent}
+                  handleMDChange={this.handleMDChange}
                   loadInitial={this.loadInitial}
                   fetchData={this.fetchData}
                   loadDoc={this.loadDoc}

@@ -12,11 +12,14 @@ import {
   html2pdf
 } from 'html2pdf';
 import update from 'immutability-helper';
+import TurndownService from 'turndown';
 const FileSaver = require('file-saver');
 const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const wordcount = require("wordcount");
+const showdown  = require('showdown');
+const turndownService = new TurndownService()
 // const { getPublicKeyFromPrivate } = require('blockstack');
 
 export function initialDocLoad() {
@@ -71,14 +74,19 @@ export function initialDocLoad() {
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
     console.log(JSON.parse(fileContents));
-    // if(JSON.parse(fileContents).compressed === true) {
-    //   this.setState({ content: lzjs.decompress(JSON.parse(fileContents).content)})
-    // } else {
-    //   this.setState({ content: JSON.parse(fileContents).content});
-    // }
+    if(JSON.parse(fileContents).compressed === true) {
+      this.setState({
+        content: lzjs.decompress(JSON.parse(fileContents).content),
+        markdownContent: turndownService.turndown(lzjs.decompress(JSON.parse(fileContents).content))
+      })
+    } else {
+      this.setState({
+        content: JSON.parse(fileContents).content,
+        markdownContent: turndownService.turndown(JSON.parse(fileContents).content)
+      })
+    }
     this.setState({
       title: JSON.parse(fileContents || '{}').title,
-      content: lzjs.decompress(JSON.parse(fileContents).content),
       tags: JSON.parse(fileContents || '{}').tags,
       idToLoad: JSON.parse(fileContents || '{}').id,
       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
@@ -159,20 +167,23 @@ export function noCollaboration() {
 }
 
 export function loadAvatars() {
-  if (this.state.sharedWith.length > 0) {
-    this.state.sharedWith.forEach((name) => {
-      console.log(this.state.avatars);
-      lookupProfile(name, "https://core.blockstack.org/v1/names")
-        .then((profile) => {
-          this.setState({ avatars: [...this.state.avatars, profile]});
-        })
-        .catch((error) => {
-          console.log('could not resolve profile')
-        })
-    })
-  } else {
-    setTimeout(this.loadAvatars, 300);
+  if(this.state.sharedWith) {
+    if (this.state.sharedWith.length > 0) {
+      this.state.sharedWith.forEach((name) => {
+        console.log(this.state.avatars);
+        lookupProfile(name, "https://core.blockstack.org/v1/names")
+          .then((profile) => {
+            this.setState({ avatars: [...this.state.avatars, profile]});
+          })
+          .catch((error) => {
+            console.log('could not resolve profile')
+          })
+      })
+    } else {
+      setTimeout(this.loadAvatars, 300);
+    }
   }
+
 
 }
 
@@ -474,6 +485,23 @@ export function handleChange(value) {
   }
 }
 
+export function handleMDChange(event) {
+  var converter = new showdown.Converter();
+  this.setState({ markdownContent: event.target.value }, () => {
+    this.setState({ content: converter.makeHtml(this.state.markdownContent)})
+  });
+  clearTimeout(this.timeout);
+  this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  }
+  // if(this.state.rtc && this.state.markdown) {
+  //   var editor = document.getElementsByClassName('ql-editor')
+  //   editor[0].innerHTML = this.state.content;
+  //   this.setState({ markdown: true })
+  // }
+}
+
 export function handleIDChange(e) {
   this.setState({ receiverID: e.target.value })
 }
@@ -529,8 +557,6 @@ export function handleAutoAdd() {
   objectTwo.singleDocTags = this.state.singleDocTags;
   objectTwo.fileType = "documents";
   const index = this.state.index;
-  console.log('damn index: ' + index);
-  console.log(this.state.value)
   if(this.state.newSharedDoc) {
     this.setState({ value: [...this.state.value, objectTwo], filteredValue: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
       this.autoSave();
@@ -722,4 +748,8 @@ export function formatSpacing(props) {
     })
   }
 
+}
+
+export function changeEditor() {
+  this.setState({ markdown: !this.state.markdown})
 }
