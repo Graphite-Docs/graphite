@@ -497,11 +497,6 @@ export function handleMDChange(event) {
   if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
     this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
   }
-  // if(this.state.rtc && this.state.markdown) {
-  //   var editor = document.getElementsByClassName('ql-editor')
-  //   editor[0].innerHTML = this.state.content;
-  //   this.setState({ markdown: true })
-  // }
 }
 
 export function handleIDChange(e) {

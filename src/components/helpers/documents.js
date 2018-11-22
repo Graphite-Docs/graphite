@@ -278,7 +278,8 @@ export function loadSingle(doc) {
            words: JSON.parse(fileContents || '{}').words,
            id: JSON.parse(fileContents || '{}').id,
            lastUpdate: JSON.parse(fileContents).lastUpdate,
-           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith
+           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith,
+           compressed: JSON.parse(fileContents).compressed
         });
       } else {
         this.setState({
@@ -288,7 +289,8 @@ export function loadSingle(doc) {
           updated: JSON.parse(fileContents || '{}').updated,
           words: JSON.parse(fileContents || '{}').words,
           id: JSON.parse(fileContents || '{}').id,
-          sharedWithSingle: []
+          sharedWithSingle: [],
+          compressed: JSON.parse(fileContents).compressed
        });
       }
 
@@ -336,6 +338,7 @@ export function share(doc) {
   object.singleDocTags = this.state.singleDocTags;
   object.words = this.state.words;
   object.rtc = this.state.rtc;
+  object.compressed = true;
   const index = this.state.index;
   const updatedDocs = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
   this.setState({value: updatedDocs, singleDoc: object, sharedCollection: [...this.state.sharedCollection, object]});
@@ -445,7 +448,8 @@ export function loadSingleTags(doc) {
            updated: JSON.parse(fileContents || '{}').updated,
            sharedWith: JSON.parse(fileContents || '{}').sharedWith,
            content: JSON.parse(fileContents || '{}').content,
-           lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
+           lastUpdate: JSON.parse(fileContents || '{}').lastUpdate,
+           compressed: JSON.parse(fileContents).compressed
         }, () => {
           if(this.state.tag !=="") {
             this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
@@ -462,7 +466,8 @@ export function loadSingleTags(doc) {
           updated: JSON.parse(fileContents || '{}').updated,
           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
           content: JSON.parse(fileContents || '{}').content,
-          lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
+          lastUpdate: JSON.parse(fileContents || '{}').lastUpdate,
+          compressed: JSON.parse(fileContents).compressed
        }, () => {
          if(this.state.tag !=="") {
            this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
@@ -522,6 +527,7 @@ export function saveNewTags(doc) {
   object.content = this.state.content;
   object.sharedWith = this.state.sharedWith;
   object.lastUpdate = Date.now();
+  object.compressed = true;
   const objectTwo = {};
   objectTwo.title = this.state.title;
   objectTwo.id = doc.id;
