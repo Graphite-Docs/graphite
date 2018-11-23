@@ -173,6 +173,7 @@ export function loadStealthyKeyDisconnect() {
     })
   })
   .then(() => {
+    console.log(this.state.stealthyKey);
     this.setState({ docs: [], stealthyConnected: false });
     setTimeout(this.saveStealthyIntegration, 300)
   })
@@ -317,19 +318,24 @@ export function connectKanstack() {
 }
 
 export function loadKey() {
-  axios.get(url + 'pk.txt')
-  .then((response) => {
-    this.setState({
-      stealthyKey: response.data,
-      stealthyConnected: true
+  if(url) {
+    axios.get(url + 'pk.txt')
+    .then((response) => {
+      this.setState({
+        stealthyKey: response.data,
+        stealthyConnected: true
+      })
     })
-  })
-  .then(() => {
-    this.loadSharedDocs();
-  })
-  .catch((error) => {
-    console.log('error:', error);
-  });
+    .then(() => {
+      this.loadSharedDocs();
+    })
+    .catch((error) => {
+      console.log('error:', error);
+    });
+  } else {
+    console.log("Stealthy app not previously used");
+  }
+
 }
 
 export function loadBlockusignKey() {
@@ -421,20 +427,18 @@ export function loadSharedDocs() {
   export function saveStealthyIntegration() {
     console.log("saving stealthy")
     const data = this.state.docs;
-    console.log(data);
-    console.log(this.state.stealthyKey);
     const publicKey = this.state.stealthyKey;
     const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
     const fileName = 'stealthyIndex.json';
     putFile(fileName, encryptedData, {encrypt: false})
     .then(() => {
       if(window.location.pathname === "/integrations") {
-        window.Materialize.toast('Stealthy integration updated', 4000);
         this.saveIntegrations();
       }
     })
     .catch(e => {
       console.log(e);
+      this.saveIntegrations();
     });
   }
 
@@ -446,7 +450,6 @@ export function saveBlockusignIntegration() {
   putFile(fileName, encryptedData, {encrypt: false})
   .then(() => {
     if(window.location.pathname === "/integrations") {
-      window.Materialize.toast('Blockusign integration updated', 4000);
       this.saveIntegrations();
     }
   })
@@ -480,7 +483,7 @@ export function saveNoteRiotIntegration() {
   putFile(fileName, encryptedData, {encrypt: false})
   .then(() => {
     if(window.location.pathname === "/integrations") {
-      window.Materialize.toast('Note Riote integration updated', 4000);
+
       this.saveIntegrations();
     }
   })
@@ -497,7 +500,7 @@ export function saveKanstackIntegration() {
   putFile(fileName, encryptedData, {encrypt: false})
   .then(() => {
     if(window.location.pathname === "/integrations") {
-      window.Materialize.toast('Kanstack integration updated', 4000);
+
       this.saveIntegrations();
     }
   })
