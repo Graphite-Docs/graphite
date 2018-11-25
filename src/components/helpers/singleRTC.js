@@ -1,3 +1,4 @@
+import React from 'react';
 import {
   loadUserData,
   getFile,
@@ -6,9 +7,84 @@ import {
 import {
   getMonthDayYear
 } from './getMonthDayYear';
+// import Plain from 'slate-plain-serializer';
+import Html from 'slate-html-serializer';
 const { decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const lzjs = require('lzjs');
+const BLOCK_TAGS = {
+  blockquote: 'quote',
+  p: 'paragraph',
+  pre: 'code',
+}
+// Add a dictionary of mark tags.
+const MARK_TAGS = {
+  em: 'italic',
+  strong: 'bold',
+  u: 'underline',
+}
+const rules = [
+  {
+    deserialize(el, next) {
+      const type = BLOCK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'block',
+          type: type,
+          data: {
+            className: el.getAttribute('class'),
+          },
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'block') {
+        switch (obj.type) {
+          case 'code':
+            return (
+              <pre>
+                <code>{children}</code>
+              </pre>
+            )
+          case 'paragraph':
+            return <p className={obj.data.get('className')}>{children}</p>
+          case 'quote':
+            return <blockquote>{children}</blockquote>
+          default: return ""
+        }
+      }
+    },
+  },
+  // Add a new rule that handles marks...
+  {
+    deserialize(el, next) {
+      const type = MARK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'mark',
+          type: type,
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'mark') {
+        switch (obj.type) {
+          case 'bold':
+            return <strong>{children}</strong>
+          case 'italic':
+            return <em>{children}</em>
+          case 'underline':
+            return <u>{children}</u>
+          default: return ""
+        }
+      }
+    },
+  },
+]
+
+const html = new Html({ rules })
 
 export function loadSharedRTC() {
   let userToLoadFrom = window.location.href.split('shared/')[1].split('/')[0];
@@ -29,7 +105,7 @@ export function loadSharedRTC() {
           //     return doc.id === index; //comparing numbers
           // }
           // console.log(docs.findIndex(findObjectIndex))
-          this.setState({ content: thisDoc && lzjs.decompress(thisDoc.content), title: thisDoc && thisDoc.title, newSharedDoc: true, rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
+          this.setState({ content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)), title: thisDoc && thisDoc.title, newSharedDoc: true, rtc: thisDoc && thisDoc.rtc, docLoaded: true, idToLoad: window.location.href.split('shared/')[1].split('/')[1], tempDocId: window.location.href.split('shared/')[1].split('/')[1], teamDoc: thisDoc && thisDoc.teamDoc })
         })
      })
      .then(() => {
@@ -193,4 +269,33 @@ export function loadAllDocs() {
     .catch(error => {
       console.log(error);
     });
+}
+
+export function send(content) {
+  // this.uniqueID = Math.round(Math.random() * 1000000000000);
+  //
+  // this.socket = socketIOClient(process.env.REACT_APP_SERVER);
+  //
+  // this.socket.on('update content', data => {
+  //   const content = JSON.parse(data)
+  //   const { uniqueID, content: ops } = content;
+  //   if (ops !== null && this.uniqueID !== uniqueID) {
+  //     setTimeout(() => {
+  //       this.applyOperations(ops);
+  //     });
+  //   }
+  // });
+  // const data = JSON.stringify({ content, uniqueID: Math.round(Math.random() * 1000000000000) });
+  // this.socket.emit('update content', data);
+}
+
+export function onRTCChange(change) {
+  // console.log("rtc change boy!")
+  // const ops = change.operations
+  //   .filter(o => o.type !== 'set_selection' && o.type !== 'set_value')
+  //   .toJS();
+  //
+  // if (ops.length > 0) {
+  //   this.send(ops);
+  // }
 }

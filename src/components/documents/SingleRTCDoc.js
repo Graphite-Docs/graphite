@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import { Icon } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
-import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
+import SlateEditor from './editor/SlateEditor';
 import MDEditor from '../MDEditor';
 
 export default class SingleRTCDoc extends Component {
@@ -17,7 +17,7 @@ export default class SingleRTCDoc extends Component {
       toolbar[0].style.top = "63px";
     }
 
-    const { title, content, rtc, docLoaded, idToLoad, yjsConnected, autoSave, markdown } = this.props;
+    const { title, content, rtc, docLoaded, autoSave, markdown } = this.props;
     return(
     <div>
     {
@@ -75,13 +75,16 @@ export default class SingleRTCDoc extends Component {
               <div>
                 {
                   (docLoaded === true) ?
-                  <QuillEditorPublic
-                    roomId={idToLoad.toString()} //this needs to be a string!
-                    docLoaded={docLoaded} //this is set by getFile
-                    value={content}
+
+                  <SlateEditor
+                    content={content}
+                    handleChange={this.props.handleChange}
                     onChange={this.props.handleChange}
-                    getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
-                    yjsConnected={yjsConnected} //true or false, for TextEdit
+                    onRTCChange={this.props.onRTCChange}
+                    applyOperations={this.props.applyOperations}
+                    hasMark={this.props.hasMark}
+                    onKeyDown={this.props.onKeyDown}
+                    onClickMark={this.props.onClickMark}
                     rtc={rtc}
                   />
                   :

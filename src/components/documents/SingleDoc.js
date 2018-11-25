@@ -3,11 +3,85 @@ import { Image, Icon, Modal, Input, Button, Message, List } from 'semantic-ui-re
 import {Menu as MainMenu} from 'semantic-ui-react';
 import Loading from '../Loading';
 import Menu from './Menu';
-import QuillEditorPublic from '../QuillEditorPublic.js'; //this will render Yjs...
-import QuillEditorPrivate from '../QuillEditorPrivate.js';
+import SlateEditor from './editor/SlateEditor';
 import MDEditor from '../MDEditor';
+import Html from 'slate-html-serializer';
 const wordcount = require("wordcount");
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+
+const BLOCK_TAGS = {
+  blockquote: 'quote',
+  p: 'paragraph',
+  pre: 'code',
+}
+// Add a dictionary of mark tags.
+const MARK_TAGS = {
+  em: 'italic',
+  strong: 'bold',
+  u: 'underline',
+}
+const rules = [
+  {
+    deserialize(el, next) {
+      const type = BLOCK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'block',
+          type: type,
+          data: {
+            className: el.getAttribute('class'),
+          },
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'block') {
+        switch (obj.type) {
+          case 'code':
+            return (
+              <pre>
+                <code>{children}</code>
+              </pre>
+            )
+          case 'paragraph':
+            return <p className={obj.data.get('className')}>{children}</p>
+          case 'quote':
+            return <blockquote>{children}</blockquote>
+          default: return ""
+        }
+      }
+    },
+  },
+  // Add a new rule that handles marks...
+  {
+    deserialize(el, next) {
+      const type = MARK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'mark',
+          type: type,
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'mark') {
+        switch (obj.type) {
+          case 'bold':
+            return <strong>{children}</strong>
+          case 'italic':
+            return <em>{children}</em>
+          case 'underline':
+            return <u>{children}</u>
+          default: return ""
+        }
+      }
+    },
+  },
+]
+
+const html = new Html({ rules })
 
 export default class SingleDoc extends Component {
   constructor(props) {
@@ -24,22 +98,22 @@ export default class SingleDoc extends Component {
 
 
   render() {
-    const { markdown, displayMessage, userRole, teamDoc, avatars, yjsConnected, docLoaded, rtc, idToLoad, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
-    document.addEventListener('click', function (event) {
-
-    	// If the clicked element doesn't have the right selector, bail
-    	if (!event.target.matches('#ava-length')) {
-        event.preventDefault();
-        document.getElementById('ava-modal').style.display = 'none';
-      } else {
-        // Don't follow the link
-      	event.preventDefault();
-
-      	// Log the clicked element in the console
-      	document.getElementById('ava-modal').style.display = 'block';
-      }
-
-    }, false);
+    const { markdown, displayMessage, userRole, teamDoc, avatars, rtc, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
+    // document.addEventListener('click', function (event) {
+    //
+    // 	// If the clicked element doesn't have the right selector, bail
+    // 	if (!event.target.matches('#ava-length')) {
+    //     event.preventDefault();
+    //     document.getElementById('ava-modal').style.display = 'none';
+    //   } else {
+    //     // Don't follow the link
+    //   	event.preventDefault();
+    //
+    //   	// Log the clicked element in the console
+    //   	document.getElementById('ava-modal').style.display = 'block';
+    //   }
+    //
+    // }, false);
     let teamList;
     if(team) {
       teamList = team;
@@ -47,39 +121,13 @@ export default class SingleDoc extends Component {
       teamList = []
     }
     let uniqueAva = avatars.filter((thing, index, self) => self.findIndex(t => t.name === thing.name) === index)
-    let words;
+    let words ;
     if(content) {
-      words = wordcount(content.replace(/<(?:.|\n)*?>/gm, ''));
+      words = wordcount(html.serialize(content).replace(/<(?:.|\n)*?>/gm, ''));
     } else {
       words = 0;
     }
     // const stealthy = (hideStealthy) ? "hide" : "";
-
-    const {length} = contacts
-    // let users = '&length=' + length
-    // let k = 0
-    // for (const i of contacts) {
-    //   users += '&id' + k + "=" + i.contact
-    //   k += 1
-    // }
-
-    //
-    // const stealthyUrlStub = (process.env.NODE_ENV !== 'production') ?
-    // 'http://localhost:3030/?app=gd04012018' :
-    // 'https://www.stealthy.im/?app=gd04012018';
-    // const stealthyUrl = stealthyUrlStub + users;
-    //
-    //
-    // const stealthyModule =  (
-    //   <div className={stealthy}>
-    //     <div id='stealthyCol' className='card'>
-    //       <div className={revealModule}>
-    //         <iframe title="Stealthy" src={stealthyUrl} id='stealthyFrame' />
-    //       </div>
-    //     </div>
-    //   </div>
-    // )
-    // ) : null
 
     let docFlex;
     if(hideStealthy === true) {
@@ -100,7 +148,7 @@ export default class SingleDoc extends Component {
           {
             title
             ?
-            (length > 15 ? title.substring(0,15)+"..." : title)
+            (title.length > 15 ? title.substring(0,15)+"..." : title)
             :
             "Title here..."
           }
@@ -259,43 +307,17 @@ export default class SingleDoc extends Component {
                   handleMDChange={this.props.handleMDChange}
                 /> :
                 <div>
-                {
-                  (singleDocIsPublic === true || rtc === true) ?
                   <div>
-                    {
-                      (docLoaded === true && !markdown) ?
-                      <QuillEditorPublic
-                        roomId={typeof idToLoad === 'string' || idToLoad instanceof String ? idToLoad : idToLoad.toString()} //this needs to be a string!
-                        docLoaded={docLoaded} //this is set by getFile
-                        value={content}
-                        onChange={this.props.handleChange}
-                        getYjsConnectionStatus={this.props.getYjsConnectionStatus} //passing this through TextEdit to Yjs
-                        yjsConnected={yjsConnected} //true or false, for TextEdit
-                        singleDocIsPublic={singleDocIsPublic} //only calling on Yjs if singleDocIsPublic equals true
+                      <SlateEditor
+                        content={this.props.content}
+                        value={this.props.content}
+                        applyOperations={this.props.applyOperations}
+                        hasMark={this.props.hasMark}
+                        onKeyDown={this.props.onKeyDown}
+                        onClickMark={this.props.onClickMark}
+                        handleChange={this.props.handleChange}
                       />
-                      :
-                      <div className="progress">
-                        <div className="indeterminate"></div>
-                      </div>
-                    }
                   </div>
-                  :
-                  <div>
-                    {
-                      (docLoaded === true && !markdown) ?
-                      <QuillEditorPrivate
-                        roomId={idToLoad} //this needs to be a string!
-                        docLoaded={docLoaded} //this is set by getFile
-                        value={content}
-                        onChange={this.props.handleChange}
-                      />
-                      :
-                      <div className="progress">
-                        <div className="indeterminate"></div>
-                      </div>
-                    }
-                  </div>
-                }
                 </div>
               }
               </div>

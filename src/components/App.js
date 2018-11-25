@@ -6,6 +6,7 @@ import Signin from './Signin';
 import SSO from './SSO';
 import Collections from './documents/Collections';
 import SingleDoc from './documents/SingleDoc';
+import TestDoc from './documents/TestDoc';
 import SingleRTCDoc from './documents/SingleRTCDoc';
 import DeleteDoc from './documents/DeleteDoc';
 import SharedCollection from './documents/SharedCollection';
@@ -125,7 +126,11 @@ import {
   downloadDoc,
   formatSpacing,
   changeEditor,
-  handleMDChange
+  handleMDChange,
+  applyOperations,
+  hasMark,
+  onKeyDown,
+  onClickMark
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -353,7 +358,9 @@ import {
   loadSingleRTC,
   handleAddStatic,
   saveNewSharedFile,
-  saveNewSingleSharedDoc
+  saveNewSingleSharedDoc,
+  onRTCChange,
+  send
 } from './helpers/singleRTC';
 import {
   handleAddForm,
@@ -693,6 +700,12 @@ export default class App extends Component {
     this.formatSpacing = formatSpacing.bind(this);
     this.changeEditor = changeEditor.bind(this);
     this.handleMDChange = handleMDChange.bind(this);
+    this.applyOperations = applyOperations.bind(this);
+    this.hasMark = hasMark.bind(this);
+    this.onKeyDown = onKeyDown.bind(this);
+    this.onClickMark = onClickMark.bind(this);
+    this.onRTCChange = onRTCChange.bind(this);
+    this.send = send.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -1099,6 +1112,8 @@ export default class App extends Component {
                       handleDeleteDoc={this.handleDeleteDoc}
                       handleNewContact={this.handleNewContact}
                       handleTagChange={this.handleTagChange}
+                      onRTCChange={this.onRTCChange}
+                      send={this.send}
                       displayMessage={displayMessage}
                       results={results}
                       docs={docs}
@@ -1154,6 +1169,10 @@ export default class App extends Component {
                   handleNewContact={this.handleNewContact}
                   changeEditor={this.changeEditor}
                   handleMDChange={this.handleMDChange}
+                  applyOperations={this.applyOperations}
+                  hasMark={this.hasMark}
+                  onKeyDown={this.onKeyDown}
+                  onClickMark={this.onClickMark}
                   markdown={markdown}
                   markdownContent={markdownContent}
                   results={results}
@@ -1195,6 +1214,11 @@ export default class App extends Component {
                   singleDocIsPublic={singleDocIsPublic}
                   markdown={markdown}
                   markdownContent={markdownContent}
+                  onRTCChange={this.onRTCChange}
+                  applyOperations={this.applyOperations}
+                  hasMark={this.hasMark}
+                  onKeyDown={this.onKeyDown}
+                  onClickMark={this.onClickMark}
                   handleMDChange={this.handleMDChange}
                   loadInitial={this.loadInitial}
                   fetchData={this.fetchData}
@@ -1215,6 +1239,14 @@ export default class App extends Component {
                   save={save}
                 />
               }/>
+
+
+              <Route exact path="/documents/test" render={(location, match, props) =>
+                <TestDoc
+                />
+              }/>
+
+
               <Route exact path="/documents/single/shared/:id/:id" render={(props) =>
               <SingleRTCDoc {...props}
                   loadSharedRTC={this.loadSharedRTC}
@@ -1223,6 +1255,11 @@ export default class App extends Component {
                   handleIDChange={this.handleIDChange}
                   findDoc={this.findDoc}
                   handleAddStatic={this.handleAddStatic}
+                  onRTCChange={this.onRTCChange}
+                  applyOperations={this.applyOperations}
+                  hasMark={this.hasMark}
+                  onKeyDown={this.onKeyDown}
+                  onClickMark={this.onClickMark}
                   title={title}
                   rtc={rtc}
                   content={content}

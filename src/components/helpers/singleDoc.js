@@ -1,3 +1,4 @@
+import React from 'react'
 import {
   getFile,
   putFile,
@@ -12,15 +13,94 @@ import {
   html2pdf
 } from 'html2pdf';
 import update from 'immutability-helper';
-import TurndownService from 'turndown';
+// import TurndownService from 'turndown';
+import { isKeyHotkey } from 'is-hotkey';
+import Html from 'slate-html-serializer';
 const FileSaver = require('file-saver');
 const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const wordcount = require("wordcount");
 const showdown  = require('showdown');
-const turndownService = new TurndownService()
-// const { getPublicKeyFromPrivate } = require('blockstack');
+// const turndownService = new TurndownService()
+const isBoldHotkey = isKeyHotkey('mod+b')
+const isItalicHotkey = isKeyHotkey('mod+i')
+const isUnderlinedHotkey = isKeyHotkey('mod+u')
+const isCodeHotkey = isKeyHotkey('mod+`')
+
+const BLOCK_TAGS = {
+  blockquote: 'quote',
+  p: 'paragraph',
+  pre: 'code',
+}
+// Add a dictionary of mark tags.
+const MARK_TAGS = {
+  em: 'italic',
+  strong: 'bold',
+  u: 'underline',
+}
+const rules = [
+  {
+    deserialize(el, next) {
+      const type = BLOCK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'block',
+          type: type,
+          data: {
+            className: el.getAttribute('class'),
+          },
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'block') {
+        switch (obj.type) {
+          case 'code':
+            return (
+              <pre>
+                <code>{children}</code>
+              </pre>
+            )
+          case 'paragraph':
+            return <p className={obj.data.get('className')}>{children}</p>
+          case 'quote':
+            return <blockquote>{children}</blockquote>
+          default: return ""
+        }
+      }
+    },
+  },
+  // Add a new rule that handles marks...
+  {
+    deserialize(el, next) {
+      const type = MARK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'mark',
+          type: type,
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'mark') {
+        switch (obj.type) {
+          case 'bold':
+            return <strong>{children}</strong>
+          case 'italic':
+            return <em>{children}</em>
+          case 'underline':
+            return <u>{children}</u>
+          default: return ""
+        }
+      }
+    },
+  },
+]
+
+const html = new Html({ rules })
 
 export function initialDocLoad() {
   this.setState({ loading: true})
@@ -76,13 +156,11 @@ export function initialDocLoad() {
     console.log(JSON.parse(fileContents));
     if(JSON.parse(fileContents).compressed === true) {
       this.setState({
-        content: lzjs.decompress(JSON.parse(fileContents).content),
-        markdownContent: turndownService.turndown(lzjs.decompress(JSON.parse(fileContents).content))
+        content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content))
       })
     } else {
       this.setState({
-        content: JSON.parse(fileContents).content,
-        markdownContent: turndownService.turndown(JSON.parse(fileContents).content)
+        content: html.deserialize(JSON.parse(fileContents).content)
       })
     }
     this.setState({
@@ -213,9 +291,9 @@ export function sharePublicly() {
     this.setState({ readOnly: true }, () => {
       const object = {};
       object.title = this.state.title;
-      object.content = this.state.content;
+      object.content = html.serialize(this.state.content);
       object.readOnly = true;
-      object.words = wordcount(this.state.content);
+      object.words = wordcount(html.serialize(this.state.content));
       object.shared = getMonthDayYear();
       object.singleDocIsPublic = true;
       this.setState({
@@ -228,9 +306,9 @@ export function sharePublicly() {
   } else {
     const object = {};
     object.title = this.state.title;
-    object.content = this.state.content;
+    object.content = html.serialize(this.state.content);
     object.readOnly = this.state.readOnly;
-    object.words = wordcount(this.state.content);
+    object.words = wordcount(html.serialize(this.state.content));
     object.shared = getMonthDayYear();
     object.singleDocIsPublic = true;
     this.setState({
@@ -388,11 +466,11 @@ export function loadMyFile() {
     const object = {};
     object.title = this.state.title;
     object.compressed = true;
-    object.content = lzjs.compress(this.state.content);
+    object.content = lzjs.compress(html.serialize(this.state.content));
     this.state.teamShare ? object.teamDoc = true : object.teamDoc = false;
     object.id = window.location.href.split('doc/')[1];
     object.receiverID = this.state.receiverID;
-    object.words = wordcount(this.state.content);
+    object.words = wordcount(html.serialize(this.state.content));
     object.sharedWith = this.state.sharedWith;
     object.shared = getMonthDayYear();
     object.rtc = this.state.rtc;
@@ -406,13 +484,13 @@ export function loadMyFile() {
 
     const object = {};
     object.title = this.state.title;
-    object.content = this.state.content;
+    object.content = lzjs.compress(html.serialize(this.state.content));
     if(this.state.teamShare === true) {
       object.teamDoc = true;
     }
     object.id = Date.now();
     object.receiverID = this.state.receiverID;
-    object.words = wordcount(this.state.content);
+    object.words = wordcount(html.serialize(this.state.content));
     object.shared = getMonthDayYear();
     object.rtc = this.state.rtc;
     this.setState({ shareFile: [...this.state.shareFile, object] });
@@ -476,15 +554,28 @@ export function handleTitleChange(e) {
   this.timeout = setTimeout(this.handleAutoAdd, 1500)
 }
 
-export function handleChange(value) {
-  this.setState({ content: value }, () => {
-    this.setState({ markdownContent: turndownService.turndown(this.state.content)})
-  });
+export function handleChange(change, options = {}) {
+  this.setState({ content: change.value });
+
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 1500)
   if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
     this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
   }
+
+  // if (!options.remote) {
+  //   this.onRTCChange(change)
+  // }
+
+
+  // this.setState({ content: value }, () => {
+  //   this.setState({ markdownContent: turndownService.turndown(this.state.content)})
+  // });
+  // clearTimeout(this.timeout);
+  // this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  // }
 }
 
 export function handleMDChange(event) {
@@ -515,7 +606,7 @@ export function handleAutoAdd() {
   this.analyticsRun('documents');
   const object = {};
   object.title = this.state.title;
-  object.content = lzjs.compress(this.state.content);
+  object.content = lzjs.compress(html.serialize(this.state.content));
   object.compressed = true;
   this.state.teamDoc ? object.teamDoc = true : object.teamDoc = false;
   if(window.location.href.split('doc/')[1] !==undefined) {
@@ -531,7 +622,7 @@ export function handleAutoAdd() {
   object.readOnly = this.state.readOnly; //true or false...
   object.rtc = this.state.rtc;
   // object.author = loadUserData().username;
-  object.words = wordcount(this.state.content) || "";
+  object.words = wordcount(html.serialize(this.state.content)) || "";
   object.singleDocTags = this.state.singleDocTags;
   object.fileType = "documents";
   object.spacing = this.state.spacing;
@@ -544,7 +635,7 @@ export function handleAutoAdd() {
     objectTwo.id = parseInt(window.location.href.split('shared/')[1].split('/')[1], 10);
   }
   objectTwo.updated = getMonthDayYear();
-  objectTwo.words = wordcount(this.state.content);
+  objectTwo.words = wordcount(html.serialize(this.state.content));
   objectTwo.lastUpdate = Date.now();
   objectTwo.sharedWith = this.state.sharedWith;
   objectTwo.rtc = this.state.rtc;
@@ -686,8 +777,8 @@ export function shareToTeam() {
     if(this.state.webhookConnected) {
       const object = {};
       object.title = this.state.title;
-      object.content = this.state.content;
-      object.words = wordcount(this.state.content);;
+      object.content = html.serialize(this.state.content);
+      object.words = wordcount(html.serialize(this.state.content));;
       object.sharedWith = this.state.sharedWith;
       this.postToWebhook(object);
     }
@@ -749,4 +840,42 @@ export function formatSpacing(props) {
 
 export function changeEditor() {
   this.setState({ markdown: !this.state.markdown})
+}
+
+export function applyOperations(operations) {
+  const { content } = this.state
+  const change = content.change().applyOperations(operations)
+  this.handleChange(change, { remote: true })
+}
+
+export function hasMark(type) {
+  const { content } = this.state
+  return content.activeMarks.some(mark => mark.type === type)
+}
+
+export function onKeyDown(event, change) {
+  let mark
+
+  if (isBoldHotkey(event)) {
+    mark = 'bold'
+  } else if (isItalicHotkey(event)) {
+    mark = 'italic'
+  } else if (isUnderlinedHotkey(event)) {
+    mark = 'underlined'
+  } else if (isCodeHotkey(event)) {
+    mark = 'code'
+  } else {
+    return
+  }
+
+  event.preventDefault()
+  change.toggleMark(mark)
+  return true
+}
+
+export function onClickMark(event, type) {
+  event.preventDefault()
+  const { content } = this.state
+  const change = content.change().toggleMark(type)
+  this.handleChange(change)
 }
