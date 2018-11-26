@@ -616,7 +616,8 @@ export default class App extends Component {
       visible: false,
       newSharedDoc: false,
       markdown: false,
-      markdownContent: ""
+      markdownContent: "",
+      wordCount: 0
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1044,7 +1045,7 @@ export default class App extends Component {
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
       optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
-      markdownContent
+      markdownContent, wordCount
     } = this.state;
     return (
       <div>
@@ -1114,6 +1115,7 @@ export default class App extends Component {
                       handleTagChange={this.handleTagChange}
                       onRTCChange={this.onRTCChange}
                       send={this.send}
+                      wordCount={wordCount}
                       displayMessage={displayMessage}
                       results={results}
                       docs={docs}

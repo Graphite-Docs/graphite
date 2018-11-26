@@ -16,11 +16,11 @@ import update from 'immutability-helper';
 // import TurndownService from 'turndown';
 import { isKeyHotkey } from 'is-hotkey';
 import Html from 'slate-html-serializer';
+const wordcount = require("wordcount");
 const FileSaver = require('file-saver');
 const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
-const wordcount = require("wordcount");
 const showdown  = require('showdown');
 // const turndownService = new TurndownService()
 const isBoldHotkey = isKeyHotkey('mod+b')
@@ -29,15 +29,20 @@ const isUnderlinedHotkey = isKeyHotkey('mod+u')
 const isCodeHotkey = isKeyHotkey('mod+`')
 
 const BLOCK_TAGS = {
-  blockquote: 'quote',
+  blockquote: 'block-quote',
   p: 'paragraph',
   pre: 'code',
+  ul: 'list',
+  ol: 'ordered',
+  li: 'list-item'
 }
 // Add a dictionary of mark tags.
 const MARK_TAGS = {
   em: 'italic',
   strong: 'bold',
   u: 'underline',
+  pre: 'code',
+  strike: 'strikethrough'
 }
 const rules = [
   {
@@ -65,9 +70,33 @@ const rules = [
             )
           case 'paragraph':
             return <p className={obj.data.get('className')}>{children}</p>
-          case 'quote':
+          case 'block-quote':
             return <blockquote>{children}</blockquote>
-          default: return ""
+          case 'list':
+            return <ul>{children}</ul>
+          case 'heading-one':
+            return <h1>{children}</h1>
+          case 'heading-two':
+            return <h2>{children}</h2>
+          case 'heading-three':
+            return <h3>{children}</h3>
+          case 'heading-four':
+            return <h4>{children}</h4>
+          case 'heading-five':
+            return <h5>{children}</h5>
+          case 'heading-six':
+            return <h6>{children}</h6>
+          case 'list-item':
+            return <li>{children}</li>
+          case 'ordered':
+            return <ol>{children}</ol>
+          case 'table':
+            return <table>{children}</table>
+          case 'table_row':
+            return <tr>{children}</tr>
+          case 'table_cell':
+            return <td>{children}</td>
+          default: return ''
         }
       }
     },
@@ -93,7 +122,11 @@ const rules = [
             return <em>{children}</em>
           case 'underline':
             return <u>{children}</u>
-          default: return ""
+          case 'strikethrough':
+            return <strike>{children}</strike>
+          case 'code':
+            return <pre><code>{children}</code></pre>
+          default: return ''
         }
       }
     },
@@ -555,13 +588,13 @@ export function handleTitleChange(e) {
 }
 
 export function handleChange(change, options = {}) {
-  this.setState({ content: change.value });
+  this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
 
-  clearTimeout(this.timeout);
-  this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  }
+  // clearTimeout(this.timeout);
+  // this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  // }
 
   // if (!options.remote) {
   //   this.onRTCChange(change)

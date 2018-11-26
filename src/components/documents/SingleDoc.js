@@ -5,83 +5,8 @@ import Loading from '../Loading';
 import Menu from './Menu';
 import SlateEditor from './editor/SlateEditor';
 import MDEditor from '../MDEditor';
-import Html from 'slate-html-serializer';
-const wordcount = require("wordcount");
+// import Html from 'slate-html-serializer';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-
-const BLOCK_TAGS = {
-  blockquote: 'quote',
-  p: 'paragraph',
-  pre: 'code',
-}
-// Add a dictionary of mark tags.
-const MARK_TAGS = {
-  em: 'italic',
-  strong: 'bold',
-  u: 'underline',
-}
-const rules = [
-  {
-    deserialize(el, next) {
-      const type = BLOCK_TAGS[el.tagName.toLowerCase()]
-      if (type) {
-        return {
-          object: 'block',
-          type: type,
-          data: {
-            className: el.getAttribute('class'),
-          },
-          nodes: next(el.childNodes),
-        }
-      }
-    },
-    serialize(obj, children) {
-      if (obj.object === 'block') {
-        switch (obj.type) {
-          case 'code':
-            return (
-              <pre>
-                <code>{children}</code>
-              </pre>
-            )
-          case 'paragraph':
-            return <p className={obj.data.get('className')}>{children}</p>
-          case 'quote':
-            return <blockquote>{children}</blockquote>
-          default: return ""
-        }
-      }
-    },
-  },
-  // Add a new rule that handles marks...
-  {
-    deserialize(el, next) {
-      const type = MARK_TAGS[el.tagName.toLowerCase()]
-      if (type) {
-        return {
-          object: 'mark',
-          type: type,
-          nodes: next(el.childNodes),
-        }
-      }
-    },
-    serialize(obj, children) {
-      if (obj.object === 'mark') {
-        switch (obj.type) {
-          case 'bold':
-            return <strong>{children}</strong>
-          case 'italic':
-            return <em>{children}</em>
-          case 'underline':
-            return <u>{children}</u>
-          default: return ""
-        }
-      }
-    },
-  },
-]
-
-const html = new Html({ rules })
 
 export default class SingleDoc extends Component {
   constructor(props) {
@@ -98,22 +23,8 @@ export default class SingleDoc extends Component {
 
 
   render() {
-    const { markdown, displayMessage, userRole, teamDoc, avatars, rtc, content, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
-    // document.addEventListener('click', function (event) {
-    //
-    // 	// If the clicked element doesn't have the right selector, bail
-    // 	if (!event.target.matches('#ava-length')) {
-    //     event.preventDefault();
-    //     document.getElementById('ava-modal').style.display = 'none';
-    //   } else {
-    //     // Don't follow the link
-    //   	event.preventDefault();
-    //
-    //   	// Log the clicked element in the console
-    //   	document.getElementById('ava-modal').style.display = 'block';
-    //   }
-    //
-    // }, false);
+    const { markdown, displayMessage, userRole, teamDoc, avatars, rtc, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
+
     let teamList;
     if(team) {
       teamList = team;
@@ -121,12 +32,12 @@ export default class SingleDoc extends Component {
       teamList = []
     }
     let uniqueAva = avatars.filter((thing, index, self) => self.findIndex(t => t.name === thing.name) === index)
-    let words ;
-    if(content) {
-      words = wordcount(html.serialize(content).replace(/<(?:.|\n)*?>/gm, ''));
-    } else {
-      words = 0;
-    }
+    // let words ;
+    // if(content) {
+    //   words = wordcount(html.serialize(content).replace(/<(?:.|\n)*?>/gm, ''));
+    // } else {
+    //   words = 0;
+    // }
     // const stealthy = (hideStealthy) ? "hide" : "";
 
     let docFlex;
@@ -324,7 +235,7 @@ export default class SingleDoc extends Component {
 
               <div style={{ float: "right", margin: "40px"}} className="right-align wordcounter">
                 <p className="wordcount">
-                  {words} words
+                  {this.props.wordCount} words
                 </p>
               </div>
               <div className={save}></div>
