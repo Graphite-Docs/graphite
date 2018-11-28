@@ -87,6 +87,7 @@
     "quill-image-resize-module": "^3.0.0",
     "quill-image-resize-module-react": "^3.0.0",
     "raf": "3.4.0",
+    "rc-color-picker": "^1.2.6",
     "react": "^16.6.3",
     "react-chartjs-2": "^2.7.4",
     "react-csv": "^1.0.12",

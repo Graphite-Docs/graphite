@@ -42,7 +42,8 @@ const MARK_TAGS = {
   strong: 'bold',
   u: 'underline',
   pre: 'code',
-  strike: 'strikethrough'
+  strike: 'strikethrough',
+  span: 'color'
 }
 const rules = [
   {
@@ -99,7 +100,7 @@ const rules = [
           default: return ''
         }
       }
-    },
+    }
   },
   // Add a new rule that handles marks...
   {
@@ -126,6 +127,8 @@ const rules = [
             return <strike>{children}</strike>
           case 'code':
             return <pre><code>{children}</code></pre>
+          case 'color':
+            return <span style={obj.data.get('color')}>{children}</span>
           default: return ''
         }
       }
@@ -589,6 +592,7 @@ export function handleTitleChange(e) {
 
 export function handleChange(change, options = {}) {
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
+  // this.setState({ content: change.value });
 
   // clearTimeout(this.timeout);
   // this.timeout = setTimeout(this.handleAutoAdd, 1500)
