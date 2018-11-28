@@ -338,6 +338,8 @@ div.markdown-editor__editor-container h2 {
   border-right: 1px solid rgba(34,36,38,.1)!important;
 }
 
+
+
 /* Slate Toolbar */
 
 .slate-toolbar {
@@ -358,6 +360,16 @@ div.markdown-editor__editor-container h2 {
 
 .slate-toolbar-vertical div div {
   margin-bottom: 8px!important;
+}
+
+.link-modal div {
+  width: 85%!important;
+}
+
+.colorPicker {
+  position: fixed;
+  top: 140px;
+  left: 40%;
 }
 
 /* Quill Editor */

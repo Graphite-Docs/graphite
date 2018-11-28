@@ -15,13 +15,47 @@ const isCodeHotkey = isKeyHotkey('mod+`')
 const isStrikeHotKey = isKeyHotkey('mod+shift+s')
 
 const plugins = [
-  PluginDeepTable()
+  PluginDeepTable(),
 ];
+
+//TODO: Move these into their own plugin modules
+
+//Links
+
+function wrapLink(editor, href) {
+  editor.wrapInline({
+    type: 'link',
+    data: { href },
+  })
+
+  editor.moveToEnd()
+}
+
+function unwrapLink(editor) {
+  editor.unwrapInline('link')
+}
+
+//Font color
+
+function wrapColor(editor, style) {
+  editor.wrapInline({
+    type: 'color',
+    data: { style },
+  })
+
+  editor.moveToEnd()
+}
+
+function unwrapColor(editor) {
+  editor.unwrapInline('color')
+}
 
 class SlateEditor extends React.Component {
   constructor (props) {
     super(props);
-    this.state = {};
+    this.state = {
+      modalOpen: false
+    };
     this.editor = null;
 }
 
@@ -49,6 +83,16 @@ getType = chars => {
       return null
   }
 }
+
+  hasLinks = () => {
+    const { content } = this.props;
+    return content.inlines.some(inline => inline.type === 'link')
+  }
+
+  hasColor = () => {
+    const { content } = this.props;
+    return content.inlines.some(inline => inline.type === 'color')
+  }
 
   hasMark = type => {
     const { content } = this.props;
@@ -169,6 +213,73 @@ onBackspace = (event, editor, next) => {
   }
 }
 
+  onClickLink = (event, url) => {
+
+    event.preventDefault()
+    const { editor } = this
+    const { value } = editor
+    const hasLinks = this.hasLinks()
+
+    if (hasLinks) {
+      editor.command(unwrapLink)
+    } else if (value.selection.isExpanded) {
+      const href = url
+      if (href === null) {
+        return
+      }
+
+      editor.command(wrapLink, href)
+    } else {
+      const href = url
+
+      if (href === null) {
+        return
+      }
+
+      const text = window.prompt('Enter the text for the link:')
+
+      if (text === null) {
+        return
+      }
+
+      editor
+        .insertText(text)
+        .moveFocusBackward(text.length)
+        .command(wrapLink, href)
+    }
+  }
+
+
+  onClickColor = (color) => {
+    const { editor } = this
+    const { value } = this.editor
+    const hasColor = this.hasColor()
+
+    if (hasColor) {
+      editor.command(unwrapColor)
+    } else if (value.selection.isExpanded) {
+      const style = {
+        color: color.hex
+      }
+
+      if (style === null) {
+        return
+      }
+
+      editor.command(wrapColor, style)
+    } else {
+      const style = {
+        color: color.hex
+      }
+
+      if (style === null) {
+        return
+      }
+
+      editor.command(wrapColor, style)
+    }
+  }
+
   onClickMark = (event, type) => {
     event.preventDefault()
     this.editor.toggleMark(type)
@@ -176,7 +287,6 @@ onBackspace = (event, editor, next) => {
 
   onClickBlock = (event, type) => {
     event.preventDefault()
-
     const { editor } = this
     const { value } = editor
     const { document } = value
@@ -216,11 +326,6 @@ onBackspace = (event, editor, next) => {
         editor.setBlocks('list-item').wrapBlock(type)
       }
     }
-  }
-
-  onFontColorClick = (color) => {
-   // event.preventDefault()
-   this.editor.addMark('color')
   }
 
 
@@ -263,6 +368,10 @@ onBackspace = (event, editor, next) => {
     );
   }
 
+  modalController = (props) => {
+    this.setState({ modalOpen: props });
+  }
+
 
 
   render() {
@@ -287,6 +396,10 @@ onBackspace = (event, editor, next) => {
           onRemoveCol={this.onRemoveCol}
           onRemoveRow={this.onRemoveRow}
           onRemoveTable={this.onRemoveTable}
+          onClickLink={this.onClickLink}
+          onClickColor={this.onClickColor}
+          modalOpen={this.state.modalOpen}
+          modalController={this.modalController}
           isTable={isTable}
         />
         <Editor
@@ -330,6 +443,24 @@ onBackspace = (event, editor, next) => {
         return <li {...attributes}>{children}</li>
       case 'ordered':
         return <ol {...attributes}>{children}</ol>
+      case 'link': {
+          const { data } = node
+          const href = data.get('href')
+          return (
+            <a {...attributes} href={href}>
+              {children}
+            </a>
+          )
+        }
+      case 'color': {
+          const { data } = node
+          const color = data.get('style')
+          return (
+            <span {...attributes} style={color}>
+              {children}
+            </span>
+          )
+        }
       default:
         return next()
     }

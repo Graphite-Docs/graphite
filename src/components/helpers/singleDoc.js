@@ -42,7 +42,11 @@ const MARK_TAGS = {
   strong: 'bold',
   u: 'underline',
   pre: 'code',
-  strike: 'strikethrough',
+  strike: 'strikethrough'
+}
+
+const INLINE_TAGS = {
+  a: 'link',
   span: 'color'
 }
 const rules = [
@@ -127,12 +131,38 @@ const rules = [
             return <strike>{children}</strike>
           case 'code':
             return <pre><code>{children}</code></pre>
-          case 'color':
-            return <span style={obj.data.get('color')}>{children}</span>
           default: return ''
         }
       }
-    },
+    }
+  },
+    {
+      deserialize(el, next) {
+        const type = INLINE_TAGS[el.tagName.toLowerCase()]
+        if (type) {
+          // return console.log(JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'))
+          return {
+            object: 'inline',
+            type: type,
+            data: {
+              href: el.getAttribute('href'),
+              style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}')
+            },
+            nodes: next(el.childNodes),
+          }
+        }
+      },
+      serialize(obj, children) {
+        if (obj.object === 'inline') {
+          switch (obj.type) {
+            case 'link':
+              return <a href={obj.data.get('href')}>{children}</a>
+            case 'color':
+              return <span style={ obj.data.get('style') }>{children}</span>
+            default: return ''
+          }
+        }
+      },
   },
 ]
 
