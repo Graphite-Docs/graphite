@@ -34,7 +34,8 @@ const BLOCK_TAGS = {
   pre: 'code',
   ul: 'list',
   ol: 'ordered',
-  li: 'list-item'
+  li: 'list-item',
+  div: 'check-list-item'
 }
 // Add a dictionary of mark tags.
 const MARK_TAGS = {
@@ -58,7 +59,8 @@ const rules = [
           object: 'block',
           type: type,
           data: {
-            className: el.getAttribute('class'),
+            className: el.getAttribute('class')
+            // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}')
           },
           nodes: next(el.childNodes),
         }
@@ -101,6 +103,12 @@ const rules = [
             return <tr>{children}</tr>
           case 'table_cell':
             return <td>{children}</td>
+          case 'check-list-item':
+            return (
+            <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
+              <span style={{marginRight: "0.75em"}}><input /></span><span style={{ flex: "1"}}></span>
+            </div>
+          )
           default: return ''
         }
       }
@@ -140,13 +148,14 @@ const rules = [
       deserialize(el, next) {
         const type = INLINE_TAGS[el.tagName.toLowerCase()]
         if (type) {
-          // return console.log(JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'))
+          // return console.log(el.style)
           return {
             object: 'inline',
             type: type,
             data: {
               href: el.getAttribute('href'),
-              style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}')
+              style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
+              // class: el.getAttribute('class')
             },
             nodes: next(el.childNodes),
           }
@@ -159,6 +168,8 @@ const rules = [
               return <a href={obj.data.get('href')}>{children}</a>
             case 'color':
               return <span style={ obj.data.get('style') }>{children}</span>
+            case 'align':
+              return <span className={ obj.data.get('class') }>{children}</span>
             default: return ''
           }
         }

@@ -1175,6 +1175,7 @@ export default class App extends Component {
                   hasMark={this.hasMark}
                   onKeyDown={this.onKeyDown}
                   onClickMark={this.onClickMark}
+                  wordCount={wordCount}
                   markdown={markdown}
                   markdownContent={markdownContent}
                   results={results}

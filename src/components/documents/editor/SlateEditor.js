@@ -2,6 +2,8 @@ import { Editor } from 'slate-react'
 import React from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import Toolbar from './Toolbar';
+import styled from 'react-emotion'
+
 // import DeepTable from 'slate-deep-table'
 const PluginDeepTable = require('slate-deep-table/dist')
 
@@ -15,8 +17,32 @@ const isCodeHotkey = isKeyHotkey('mod+`')
 const isStrikeHotKey = isKeyHotkey('mod+shift+s')
 
 const plugins = [
-  PluginDeepTable(),
+  PluginDeepTable()
 ];
+
+const ItemWrapper = styled('div')`
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  & + & {
+    margin-top: 0;
+  }
+`
+
+const CheckboxWrapper = styled('span')`
+  margin-right: 0.75em;
+`
+
+const ContentWrapper = styled('span')`
+  flex: 1;
+  opacity: ${props => (props.checked ? 0.666 : 1)};
+  text-decoration: ${props => (props.checked ? 'none' : 'line-through')};
+  &:focus {
+    outline: none;
+  }
+`
+
+let thisMark;
 
 //TODO: Move these into their own plugin modules
 
@@ -50,6 +76,47 @@ function unwrapColor(editor) {
   editor.unwrapInline('color')
 }
 
+function wrapAlign(editor, style) {
+  editor.wrapInline({
+    type: 'align',
+    data: { style },
+  })
+
+  editor.moveToEnd()
+}
+
+// function unwrapAlign(editor) {
+//   editor.unwrapInline('align')
+// }
+
+class CheckListItem extends React.Component {
+  onChange = event => {
+      const checked = event.target.checked
+      const { editor, node } = this.props
+      editor.setNodeByKey(node.key, { data: { checked } })
+    }
+
+    render() {
+        const { attributes, children, node, readOnly } = this.props
+        const checked = node.data.get('checked')
+        return (
+          <ItemWrapper {...attributes}>
+            <CheckboxWrapper contentEditable={false}>
+              <input type="checkbox" checked={checked} onChange={this.onChange} />
+            </CheckboxWrapper>
+            <ContentWrapper
+              checked={checked}
+              contentEditable={!readOnly}
+              suppressContentEditableWarning
+            >
+              {children}
+            </ContentWrapper>
+          </ItemWrapper>
+        )
+      }
+    }
+
+
 class SlateEditor extends React.Component {
   constructor (props) {
     super(props);
@@ -79,6 +146,10 @@ getType = chars => {
       return 'heading-five'
     case '######':
       return 'heading-six'
+   case '_':
+    return 'italic'
+   case '**':
+    return 'bold'
     default:
       return null
   }
@@ -92,6 +163,11 @@ getType = chars => {
   hasColor = () => {
     const { content } = this.props;
     return content.inlines.some(inline => inline.type === 'color')
+  }
+
+  hasAlignment = type => {
+    const { content } = this.props
+    return content.inlines.some(inline => inline.type === 'align')
   }
 
   hasMark = type => {
@@ -114,9 +190,21 @@ getType = chars => {
 
 
   onKeyDown = (event, editor, next) => {
+    const { value } = editor
     let mark
 
-    if (isBoldHotkey(event)) {
+    if (event.key === 'Enter' && value.startBlock.type === 'check-list-item') {
+      editor.splitBlock().setBlocks({ data: { checked: false } })
+      return
+    } else if (
+      event.key === 'Backspace' &&
+      value.isCollapsed &&
+      value.startBlock.type === 'check-list-item' &&
+      value.selection.startOffset === 0
+    ) {
+      editor.setBlocks('paragraph')
+      return
+    } else if (isBoldHotkey(event)) {
       mark = 'bold'
       event.preventDefault()
       editor.toggleMark(mark)
@@ -157,8 +245,10 @@ getType = chars => {
     if (start.offset === 0 && startBlock.text.length === 0)
       return this.onBackspace(event, editor, next)
     if (end.offset !== startBlock.text.length) return next()
-
-    if (
+    if(thisMark) {
+      event.preventDefault()
+      editor.toggleMark(thisMark);
+    } else if (
       startBlock.type !== 'heading-one' &&
       startBlock.type !== 'heading-two' &&
       startBlock.type !== 'heading-three' &&
@@ -184,16 +274,27 @@ onSpace = (event, editor, next) => {
   const chars = startBlock.text.slice(0, start.offset).replace(/\s*/g, '')
   const type = this.getType(chars)
   if (!type) return next()
-  if (type === 'list-item' && startBlock.type === 'list-item') return next()
-  event.preventDefault()
-
-  editor.setBlocks(type)
+  if (type === 'list-item' && startBlock.type === 'list-item') {
+    return next()
+  } else if(type === 'italic') {
+    event.preventDefault()
+    thisMark = 'italic';
+  } else {
+    event.preventDefault()
+    editor.setBlocks(type)
+  }
 
   if (type === 'list-item') {
+    event.preventDefault()
     editor.wrapBlock('list')
   }
 
-  editor.moveFocusToStartOfNode(startBlock).delete()
+  if(thisMark) {
+    editor.moveFocusToStartOfNode(startBlock).delete().toggleMark(thisMark)
+  } else {
+    editor.moveFocusToStartOfNode(startBlock).delete()
+  }
+
 }
 
 onBackspace = (event, editor, next) => {
@@ -210,6 +311,37 @@ onBackspace = (event, editor, next) => {
 
   if (startBlock.type === 'list-item') {
     editor.unwrapBlock('list')
+  }
+}
+
+onClickAlign = (event, align) => {
+  event.preventDefault()
+  const { editor } = this
+  const { value } = editor
+  const hasAlign = this.hasAlignment()
+
+  if (hasAlign) {
+    console.log("bingo")
+    // editor.command(unwrapAlign)
+    // const style = {
+    //   textAlign: align
+    // }
+    const name = align;
+    editor.command(wrapAlign, name)
+  } else if (value.selection.isExpanded) {
+    console.log(align)
+    const name = align;
+    if (name === null) {
+      return
+    }
+
+    editor.command(wrapAlign, name)
+  } else {
+    const name = align;
+
+    if (name === null) {
+      return
+    }
   }
 }
 
@@ -295,8 +427,10 @@ onBackspace = (event, editor, next) => {
     if (type !== 'list' && type !== 'ordered') {
       const isActive = this.hasBlock(type)
       const isList = this.hasBlock('list-item')
-
-      if (isList) {
+      if(type === 'check-list-item') {
+        // editor.splitBlock().setBlocks({ data: { checked: false } })
+        editor.wrapBlock(type)
+      } else if (isList) {
         editor
           .setBlocks(isActive ? DEFAULT_NODE : type)
           .unwrapBlock('list')
@@ -400,6 +534,8 @@ onBackspace = (event, editor, next) => {
           onClickColor={this.onClickColor}
           modalOpen={this.state.modalOpen}
           modalController={this.modalController}
+          hasLinks={this.hasLinks}
+          onClickAlign={this.onClickAlign}
           isTable={isTable}
         />
         <Editor
@@ -461,6 +597,17 @@ onBackspace = (event, editor, next) => {
             </span>
           )
         }
+      case 'align': {
+          const { data } = node
+          const alignment = data.get('class')
+          return (
+            <span {...attributes} className={alignment}>
+              {children}
+            </span>
+          )
+        }
+      case 'check-list-item':
+        return <CheckListItem {...props} />
       default:
         return next()
     }
@@ -479,8 +626,6 @@ onBackspace = (event, editor, next) => {
         return <u {...attributes}>{children}</u>
       case 'strikethrough':
         return <strike {...attributes}>{children}</strike>
-      case 'color':
-        return <span {...attributes}>{children}</span>
       default:
         return next()
     }

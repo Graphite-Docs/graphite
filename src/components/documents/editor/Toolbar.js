@@ -125,6 +125,7 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='code' />} content='Code (ctrl + `)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}}>
           {
@@ -144,23 +145,31 @@ export default class Toolbar extends Component {
             <Icon name='eye dropper' />
             } content='Color' />
           </Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}}>
-          <Modal trigger={
-            <Icon onClick={() => this.props.modalController(true)}  name='linkify' />
+          {
+            this.props.hasLinks() ?
+            <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
+            <Menu.Item style={{cursor: "pointer"}}>
+            <Modal trigger={
+              <Icon onClick={() => this.props.modalController(true)}  name='linkify' />
+            }
+              open={this.props.modalOpen}
+              onClose={() => this.props.modalController(false)}
+              size='small'
+              closeOnEscape={true}
+              closeOnDimmerClick={true}
+            >
+              <Modal.Content>
+                <Modal.Description className='link-modal'>
+                  <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
+                </Modal.Description>
+              </Modal.Content>
+            </Modal>
+            </Menu.Item>
           }
-            open={this.props.modalOpen}
-            onClose={() => this.props.modalController(false)}
-            size='small'
-            closeOnEscape={true}
-            closeOnDimmerClick={true}
-          >
-            <Modal.Content>
-              <Modal.Description className='link-modal'>
-                <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
-              </Modal.Description>
-            </Modal.Content>
-          </Modal>
-          </Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Menu.Item>
         </Menu>
         <div className={colorPicker}>
           <CompactPicker

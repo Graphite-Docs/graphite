@@ -37,6 +37,22 @@ blockquote:first-child {
   padding-left: 10px!important;
 }
 
+.left {
+  text-align: left!important;
+}
+
+.center {
+  text-align: center!important;
+}
+
+.right {
+  text-align: right!important;
+}
+
+.justify {
+  text-align: justify!important;
+}
+
 .hide {
   display: none;
 }
