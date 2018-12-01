@@ -88,7 +88,7 @@ export default class Menu extends Component {
                                       {/*<li><a onClick={() => this.props.downloadDoc('odt')}>OpenDocument (.odt)</a></li>
                                       <li><a onClick={() => this.props.downloadDoc('rtf')}>Rich Text (.rtf)</a></li>*/}
                                       <li><a onClick={() => this.props.downloadDoc('txt')}>Plain Text (.txt)</a></li>
-                                      <li><a onClick={this.props.print}>PDF (.pdf)</a></li>
+                                      <li><a onClick={() => this.props.downloadDoc('pdf')}>PDF (.pdf)</a></li>
 
                                   </ul>
                               </li>

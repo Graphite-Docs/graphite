@@ -21,7 +21,6 @@ export default class SingleDoc extends Component {
     this.props.initialDocLoad();
   } //end of componentDidMount
 
-
   render() {
     const { markdown, displayMessage, userRole, teamDoc, avatars, rtc, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
 

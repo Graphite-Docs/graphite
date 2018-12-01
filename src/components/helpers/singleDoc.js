@@ -9,9 +9,6 @@ import axios from 'axios';
 import {
   getMonthDayYear
 } from './getMonthDayYear';
-import {
-  html2pdf
-} from 'html2pdf';
 import update from 'immutability-helper';
 // import TurndownService from 'turndown';
 import { isKeyHotkey } from 'is-hotkey';
@@ -22,11 +19,13 @@ const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
 const showdown  = require('showdown');
+const html2pdf = require('html2pdf.js')
 // const turndownService = new TurndownService()
 const isBoldHotkey = isKeyHotkey('mod+b')
 const isItalicHotkey = isKeyHotkey('mod+i')
 const isUnderlinedHotkey = isKeyHotkey('mod+u')
 const isCodeHotkey = isKeyHotkey('mod+`')
+// const canvas = require('html2canvas')
 
 const BLOCK_TAGS = {
   blockquote: 'block-quote',
@@ -805,7 +804,6 @@ export function componentDidMountData(props) {
 
 getFile(fullFile, {decrypt: true})
  .then((fileContents) => {
-   console.log(JSON.parse(fileContents || '{}').id);
     this.setState({
       title: JSON.parse(fileContents || '{}').title,
       content: JSON.parse(fileContents || '{}').content,
@@ -880,8 +878,17 @@ export function downloadDoc(props) {
   } else if(props === "rtf") {
     console.log("rtf")
   } else if(props === 'pdf') {
-    console.log('pdf')
-    html2pdf(this.state.content);
+    var opt = {
+      margin:       1,
+      filename:     'mypdf.pdf',
+      html2canvas:  { scale: 2 },
+      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
+      pagebreak: { mode: ['css'] }
+    }
+
+
+    html2pdf('<div class="pdf" style="margin:45px;margin-bottom:20px;"}>' + html.serialize(this.state.content) + '</div>')
+    .set(opt)
   } else if(props === 'txt') {
     window.open("data:application/txt," + encodeURIComponent(this.state.content.replace(/<[^>]+>/g, '')), "_self");
   }
@@ -956,4 +963,8 @@ export function onClickMark(event, type) {
   const { content } = this.state
   const change = content.change().toggleMark(type)
   this.handleChange(change)
+}
+
+export function doPDF() {
+
 }

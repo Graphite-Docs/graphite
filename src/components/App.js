@@ -130,7 +130,8 @@ import {
   applyOperations,
   hasMark,
   onKeyDown,
-  onClickMark
+  onClickMark,
+  doPDF
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -707,6 +708,7 @@ export default class App extends Component {
     this.onClickMark = onClickMark.bind(this);
     this.onRTCChange = onRTCChange.bind(this);
     this.send = send.bind(this);
+    this.doPDF = doPDF.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -1175,6 +1177,7 @@ export default class App extends Component {
                   hasMark={this.hasMark}
                   onKeyDown={this.onKeyDown}
                   onClickMark={this.onClickMark}
+                  doPDF={this.doPDF}
                   wordCount={wordCount}
                   markdown={markdown}
                   markdownContent={markdownContent}
