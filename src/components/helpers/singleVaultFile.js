@@ -1,6 +1,8 @@
 import {
   getFile,
-  putFile
+  putFile,
+  loadUserData,
+  encryptContent
 } from 'blockstack';
 import {
   getMonthDayYear
@@ -18,7 +20,7 @@ export function loadSingleVaultFile() {
   getFile(window.location.href.split('vault/')[1]+ ".json", { decrypt: true })
     .then(file => {
       this.setState({
-        file: JSON.parse(file || "{}").name,
+        file: JSON.parse(file || "{}"),
         name: JSON.parse(file || "{}").name,
         lastModifiedDate: JSON.parse(file || "{}").lastModifiedDate,
         size: JSON.parse(file || "{}").size,
@@ -404,4 +406,23 @@ export function shareFile() {
       .catch(e => {
         console.log(e);
       });
+}
+
+export function signWithBlockusign(fileId) {
+  this.setState({ loading: true });
+  const options = { username: loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: 'https://blockusign.co'}
+  getFile('key.json', options)
+    .then((file) => {
+      console.log(file)
+      const data = JSON.stringify(this.state.file);
+      console.log(data)
+      const encryptedData = encryptContent(data, {publicKey: file})
+      putFile('blockusign/' + fileId, encryptedData, {encrypt: false})
+        .then(() => {
+          let id = 'blockusign/' + fileId;
+          window.location.replace('https://blockusign.co/#/graphite?username=' + loadUserData().username + '?fileId=' + id + '?appUrl=' + window.location.origin)
+        }).catch(error => {
+          console.log(error)
+        })
+    })
 }

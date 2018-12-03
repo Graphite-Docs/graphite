@@ -34,7 +34,8 @@ const BLOCK_TAGS = {
   ul: 'list',
   ol: 'ordered',
   li: 'list-item',
-  div: 'check-list-item'
+  div: 'check-list-item',
+  p: 'align'
 }
 // Add a dictionary of mark tags.
 const MARK_TAGS = {
@@ -42,7 +43,8 @@ const MARK_TAGS = {
   strong: 'bold',
   u: 'underline',
   pre: 'code',
-  strike: 'strikethrough'
+  strike: 'strikethrough',
+  pre: 'code-block'
 }
 
 const INLINE_TAGS = {
@@ -58,8 +60,7 @@ const rules = [
           object: 'block',
           type: type,
           data: {
-            className: el.getAttribute('class')
-            // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}')
+            className: el.getAttribute('class'),
           },
           nodes: next(el.childNodes),
         }
@@ -108,6 +109,10 @@ const rules = [
               <span style={{marginRight: "0.75em"}}><input /></span><span style={{ flex: "1"}}></span>
             </div>
           )
+          case 'align':
+            return <p className={obj.data.get('className')}>{children}</p>
+          case 'code-block':
+            return <code>{children}</code>
           default: return ''
         }
       }
@@ -138,6 +143,8 @@ const rules = [
             return <strike>{children}</strike>
           case 'code':
             return <pre><code>{children}</code></pre>
+          case 'code-block':
+            return <pre className={obj.data.get('className')}><code>{children}</code></pre>
           default: return ''
         }
       }

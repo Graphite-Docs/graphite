@@ -1,6 +1,8 @@
 import { Editor } from 'slate-react'
 import React from 'react'
 import { isKeyHotkey } from 'is-hotkey'
+import { List, Checkbox } from 'semantic-ui-react';
+// import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 import styled from 'react-emotion'
 
@@ -18,29 +20,8 @@ const isStrikeHotKey = isKeyHotkey('mod+shift+s')
 
 const plugins = [
   PluginDeepTable()
+  // EditCode()
 ];
-
-const ItemWrapper = styled('div')`
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  & + & {
-    margin-top: 0;
-  }
-`
-
-const CheckboxWrapper = styled('span')`
-  margin-right: 0.75em;
-`
-
-const ContentWrapper = styled('span')`
-  flex: 1;
-  opacity: ${props => (props.checked ? 0.666 : 1)};
-  text-decoration: ${props => (props.checked ? 'none' : 'line-through')};
-  &:focus {
-    outline: none;
-  }
-`
 
 let thisMark;
 
@@ -76,46 +57,18 @@ function unwrapColor(editor) {
   editor.unwrapInline('color')
 }
 
-function wrapAlign(editor, style) {
-  editor.wrapInline({
+function wrapAlign(editor, className) {
+  editor.wrapBlock({
     type: 'align',
-    data: { style },
+    data: { className },
   })
 
   editor.moveToEnd()
 }
 
-// function unwrapAlign(editor) {
-//   editor.unwrapInline('align')
-// }
-
-class CheckListItem extends React.Component {
-  onChange = event => {
-      const checked = event.target.checked
-      const { editor, node } = this.props
-      editor.setNodeByKey(node.key, { data: { checked } })
-    }
-
-    render() {
-        const { attributes, children, node, readOnly } = this.props
-        const checked = node.data.get('checked')
-        return (
-          <ItemWrapper {...attributes}>
-            <CheckboxWrapper contentEditable={false}>
-              <input type="checkbox" checked={checked} onChange={this.onChange} />
-            </CheckboxWrapper>
-            <ContentWrapper
-              checked={checked}
-              contentEditable={!readOnly}
-              suppressContentEditableWarning
-            >
-              {children}
-            </ContentWrapper>
-          </ItemWrapper>
-        )
-      }
-    }
-
+function unwrapAlign(editor) {
+  editor.unwrapInline('align')
+}
 
 class SlateEditor extends React.Component {
   constructor (props) {
@@ -150,6 +103,10 @@ getType = chars => {
     return 'italic'
    case '**':
     return 'bold'
+   case '`':
+    return 'code'
+   case '```':
+    return 'code-block'
     default:
       return null
   }
@@ -188,23 +145,17 @@ getType = chars => {
     this.props.handleChange(change, options={})
   }
 
+  onCheckboxChange = (event) => {
+    const checked = event.target.checked;
+    console.log(this.editor);
+  }
+
 
   onKeyDown = (event, editor, next) => {
     const { value } = editor
     let mark
 
-    if (event.key === 'Enter' && value.startBlock.type === 'check-list-item') {
-      editor.splitBlock().setBlocks({ data: { checked: false } })
-      return
-    } else if (
-      event.key === 'Backspace' &&
-      value.isCollapsed &&
-      value.startBlock.type === 'check-list-item' &&
-      value.selection.startOffset === 0
-    ) {
-      editor.setBlocks('paragraph')
-      return
-    } else if (isBoldHotkey(event)) {
+    if (isBoldHotkey(event)) {
       mark = 'bold'
       event.preventDefault()
       editor.toggleMark(mark)
@@ -236,6 +187,7 @@ getType = chars => {
   }
 
   onEnter = (event, editor, next) => {
+    console.log(thisMark)
     const { value } = editor
     const { selection } = value
     const { start, end, isExpanded } = selection
@@ -244,10 +196,15 @@ getType = chars => {
     const { startBlock } = value
     if (start.offset === 0 && startBlock.text.length === 0)
       return this.onBackspace(event, editor, next)
-    if (end.offset !== startBlock.text.length) return next()
+    if (end.offset !== startBlock.text.length) {
+      console.log("a")
+      return next()
+    }
     if(thisMark) {
-      event.preventDefault()
-      editor.toggleMark(thisMark);
+      if(thisMark !== 'code-block') {
+        event.preventDefault()
+        editor.toggleMark(thisMark);
+      }
     } else if (
       startBlock.type !== 'heading-one' &&
       startBlock.type !== 'heading-two' &&
@@ -255,13 +212,22 @@ getType = chars => {
       startBlock.type !== 'heading-four' &&
       startBlock.type !== 'heading-five' &&
       startBlock.type !== 'heading-six' &&
-      startBlock.type !== 'block-quote'
+      startBlock.type !== 'block-quote' &&
+      thisMark !== 'code-block'
     ) {
+      console.log("b")
       return next()
+    } else if(thisMark === 'code-block') {
+      console.log("doing it")
+      event.preventDefault()
+      editor.splitBlock()
+    } else {
+      console.log("c")
+      event.preventDefault()
+      editor.splitBlock().setBlocks('paragraph')
     }
 
-    event.preventDefault()
-    editor.splitBlock().setBlocks('paragraph')
+
   }
 
 onSpace = (event, editor, next) => {
@@ -279,6 +245,12 @@ onSpace = (event, editor, next) => {
   } else if(type === 'italic') {
     event.preventDefault()
     thisMark = 'italic';
+  } else if(type === 'code') {
+    event.preventDefault()
+    thisMark = 'code';
+  } else if(type==='code-block') {
+    event.preventDefault()
+    thisMark = 'code-block';
   } else {
     event.preventDefault()
     editor.setBlocks(type)
@@ -321,25 +293,19 @@ onClickAlign = (event, align) => {
   const hasAlign = this.hasAlignment()
 
   if (hasAlign) {
-    console.log("bingo")
-    // editor.command(unwrapAlign)
-    // const style = {
-    //   textAlign: align
-    // }
-    const name = align;
-    editor.command(wrapAlign, name)
+    const className = align
+    editor.command(wrapAlign, className)
   } else if (value.selection.isExpanded) {
-    console.log(align)
-    const name = align;
-    if (name === null) {
+    const className = align
+    if (className === null) {
       return
     }
 
-    editor.command(wrapAlign, name)
+    editor.command(wrapAlign, className)
   } else {
-    const name = align;
+    const className = align
 
-    if (name === null) {
+    if (className === null) {
       return
     }
   }
@@ -424,41 +390,59 @@ onClickAlign = (event, align) => {
     const { document } = value
 
     // Handle everything but list buttons.
-    if (type !== 'list' && type !== 'ordered') {
+    if (type !== 'list' && type !== 'ordered' && type !== 'check-list') {
       const isActive = this.hasBlock(type)
       const isList = this.hasBlock('list-item')
-      if(type === 'check-list-item') {
-        // editor.splitBlock().setBlocks({ data: { checked: false } })
-        editor.wrapBlock(type)
-      } else if (isList) {
+      if (isList) {
         editor
           .setBlocks(isActive ? DEFAULT_NODE : type)
           .unwrapBlock('list')
           .unwrapBlock('ordered')
+          .unwrapBlock('check-list')
       } else {
         editor.setBlocks(isActive ? DEFAULT_NODE : type)
       }
     } else {
       // Handle the extra wrapping required for list buttons.
-      const isList = this.hasBlock('list-item')
-      const isType = value.blocks.some(block => {
-        return !!document.getClosest(block.key, parent => parent.type === type)
-      })
-
-      if (isList && isType) {
-        editor
-          .setBlocks(DEFAULT_NODE)
-          .unwrapBlock('list')
-          .unwrapBlock('ordered')
-      } else if (isList) {
-        editor
-          .unwrapBlock(
-            type === 'list' ? 'ordered' : 'list'
-          )
+      if(type === 'check-list') {
+        const isCheckList = this.hasBLock('check-list-item')
+        const isType = value.blocks.some(block => {
+          return !!document.getClosest(block.key, parent => parent.type === type)
+        })
+        if(isCheckList && isType) {
+          editor
+            .setBlocks(DEFAULT_NODE)
+            .unwrapBlock('check-list')
+        } else if (isCheckList) {
+          editor
+          .unwrapBlock('check-list')
           .wrapBlock(type)
+        }
       } else {
-        editor.setBlocks('list-item').wrapBlock(type)
+        const isList = this.hasBlock('list-item');
+        const isType = value.blocks.some(block => {
+          return !!document.getClosest(block.key, parent => parent.type === type)
+        })
+        if (isList && isType) {
+          editor
+            .setBlocks(DEFAULT_NODE)
+            .unwrapBlock('list')
+            .unwrapBlock('ordered')
+        } else if (isList) {
+          editor
+            .unwrapBlock(
+              type === 'list' ? 'ordered' : 'list'
+            )
+            .wrapBlock(type)
+        }
       }
+
+        if(type === 'check-list') {
+          editor.setBlocks('check-list-item', { data: { checked: false } }).wrapBlock(type)
+        } else {
+          editor.setBlocks('list-item').wrapBlock(type)
+        }
+
     }
   }
 
@@ -538,8 +522,9 @@ onClickAlign = (event, align) => {
           onClickAlign={this.onClickAlign}
           isTable={isTable}
         />
+        <div className="ql-editor">
         <Editor
-          className='editor ql-editor'
+          className='editor'
           spellCheck
           autoFocus
           plugins={plugins}
@@ -551,6 +536,7 @@ onClickAlign = (event, align) => {
           renderNode={this.renderNode}
           renderMark={this.renderMark}
         />
+        </div>
       </div>
     )
   }
@@ -577,6 +563,9 @@ onClickAlign = (event, align) => {
         return <h6 {...attributes}>{children}</h6>
       case 'list-item':
         return <li {...attributes}>{children}</li>
+      case 'check-list-item':
+        const checked = node.data.get('checked')
+        return <List.Item {...attributes}><input type='checkbox' checked={checked} onChange={this.onCheckboxChange} style={{paddingTop: "3px"}} /><span style={{ marginLeft: "5px"}}>{children}</span></List.Item>
       case 'ordered':
         return <ol {...attributes}>{children}</ol>
       case 'link': {
@@ -599,15 +588,15 @@ onClickAlign = (event, align) => {
         }
       case 'align': {
           const { data } = node
-          const alignment = data.get('class')
+          const className = data.get('class')
           return (
-            <span {...attributes} className={alignment}>
+            <p {...attributes} className={className}>
               {children}
-            </span>
+            </p>
           )
         }
-      case 'check-list-item':
-        return <CheckListItem {...props} />
+      case 'check-list':
+        return <List className='check-list' {...props}>{children}</List>
       default:
         return next()
     }
@@ -626,6 +615,8 @@ onClickAlign = (event, align) => {
         return <u {...attributes}>{children}</u>
       case 'strikethrough':
         return <strike {...attributes}>{children}</strike>
+      case 'code-block':
+        return <pre className='code-block'><code {...attributes}>{children}</code></pre>
       default:
         return next()
     }
