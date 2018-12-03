@@ -34,8 +34,7 @@ const BLOCK_TAGS = {
   ul: 'list',
   ol: 'ordered',
   li: 'list-item',
-  div: 'check-list-item',
-  p: 'align'
+  div: 'check-list-item'
 }
 // Add a dictionary of mark tags.
 const MARK_TAGS = {
@@ -48,8 +47,7 @@ const MARK_TAGS = {
 }
 
 const INLINE_TAGS = {
-  a: 'link',
-  span: 'color'
+  a: 'link'
 }
 const rules = [
   {
@@ -161,7 +159,6 @@ const rules = [
             data: {
               href: el.getAttribute('href'),
               style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
-              // class: el.getAttribute('class')
             },
             nodes: next(el.childNodes),
           }
@@ -174,8 +171,6 @@ const rules = [
               return <a href={obj.data.get('href')}>{children}</a>
             case 'color':
               return <span style={ obj.data.get('style') }>{children}</span>
-            case 'align':
-              return <span className={ obj.data.get('class') }>{children}</span>
             default: return ''
           }
         }

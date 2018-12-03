@@ -105,8 +105,6 @@ getType = chars => {
     return 'bold'
    case '`':
     return 'code'
-   case '```':
-    return 'code-block'
     default:
       return null
   }
@@ -200,29 +198,17 @@ getType = chars => {
       console.log("a")
       return next()
     }
-    if(thisMark) {
-      if(thisMark !== 'code-block') {
-        event.preventDefault()
-        editor.toggleMark(thisMark);
-      }
-    } else if (
+    if (
       startBlock.type !== 'heading-one' &&
       startBlock.type !== 'heading-two' &&
       startBlock.type !== 'heading-three' &&
       startBlock.type !== 'heading-four' &&
       startBlock.type !== 'heading-five' &&
       startBlock.type !== 'heading-six' &&
-      startBlock.type !== 'block-quote' &&
-      thisMark !== 'code-block'
+      startBlock.type !== 'block-quote'
     ) {
-      console.log("b")
       return next()
-    } else if(thisMark === 'code-block') {
-      console.log("doing it")
-      event.preventDefault()
-      editor.splitBlock()
     } else {
-      console.log("c")
       event.preventDefault()
       editor.splitBlock().setBlocks('paragraph')
     }
@@ -248,9 +234,6 @@ onSpace = (event, editor, next) => {
   } else if(type === 'code') {
     event.preventDefault()
     thisMark = 'code';
-  } else if(type==='code-block') {
-    event.preventDefault()
-    thisMark = 'code-block';
   } else {
     event.preventDefault()
     editor.setBlocks(type)
@@ -291,24 +274,31 @@ onClickAlign = (event, align) => {
   const { editor } = this
   const { value } = editor
   const hasAlign = this.hasAlignment()
-
-  if (hasAlign) {
-    const className = align
-    editor.command(wrapAlign, className)
-  } else if (value.selection.isExpanded) {
-    const className = align
-    if (className === null) {
-      return
-    }
-
-    editor.command(wrapAlign, className)
-  } else {
-    const className = align
-
-    if (className === null) {
-      return
-    }
-  }
+  editor.wrapBlock({
+    type: 'align',
+    data: {
+      style: {
+        textAlign: 'center'
+      },
+    },
+  })
+  // if (hasAlign) {
+  //   const className = align
+  //   editor.command(wrapAlign, className)
+  // } else if (value.selection.isExpanded) {
+  //   const className = align
+  //   if (className === null) {
+  //     return
+  //   }
+  //
+  //   editor.command(wrapAlign, className)
+  // } else {
+  //   const className = align
+  //
+  //   if (className === null) {
+  //     return
+  //   }
+  // }
 }
 
   onClickLink = (event, url) => {
@@ -590,9 +580,9 @@ onClickAlign = (event, align) => {
           const { data } = node
           const className = data.get('class')
           return (
-            <p {...attributes} className={className}>
+            <span {...attributes} className={className}>
               {children}
-            </p>
+            </span>
           )
         }
       case 'check-list':
@@ -615,8 +605,6 @@ onClickAlign = (event, align) => {
         return <u {...attributes}>{children}</u>
       case 'strikethrough':
         return <strike {...attributes}>{children}</strike>
-      case 'code-block':
-        return <pre className='code-block'><code {...attributes}>{children}</code></pre>
       default:
         return next()
     }
