@@ -1,6 +1,8 @@
 import {
   getFile,
-  putFile
+  putFile,
+  loadUserData,
+  encryptContent
 } from 'blockstack';
 import {
   getMonthDayYear
@@ -404,4 +406,24 @@ export function shareFile() {
       .catch(e => {
         console.log(e);
       });
+}
+
+export function signWithBlockusign(fileId) {
+  this.setState({ loading: true });
+  const appOrigin = 'https://blockusign.co'; //'http://localhost:8100';
+  const options = { username: loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: appOrigin}
+  getFile('key.json', options)
+    .then((file) => {
+      console.log(file)
+      const data = JSON.stringify(this.state.file);
+      console.log(data)
+      const encryptedData = encryptContent(data, {publicKey: file})
+      putFile('blockusign/' + fileId, encryptedData, {encrypt: false})
+        .then(() => {
+          let id = 'blockusign/' + fileId;
+          window.location.replace(appOrigin + '/#/graphite?user=' + loadUserData().username + '&file=' + id + '&app=' + encodeURIComponent(window.location.host) + '&decrypt=true' );
+        }).catch(error => {
+          console.log(error)
+        })
+    })
 }

@@ -308,7 +308,8 @@ import {
   saveToDocs,
   saveToDocsTwo,
   saveToSheets,
-  saveToSheetsTwo
+  saveToSheetsTwo,
+  signWithBlockusign
 } from './helpers/singleVaultFile';
 import {
   handleIDChangeVault,
@@ -866,6 +867,7 @@ export default class App extends Component {
     this.handleAddToVault = handleAddToVault.bind(this);
     this.handleAddToVaultTwo = handleAddToVaultTwo.bind(this);
     this.saveNewVaultTwo = saveNewVaultTwo.bind(this);
+    this.signWithBlockusign = signWithBlockusign.bind(this);
 
     //Contacts
     this.profileLoad = profileLoad.bind(this);
@@ -1418,6 +1420,7 @@ export default class App extends Component {
                   handleToDocs={this.handleToDocs}
                   handleaddSheet={this.handleaddSheet}
                   handleaddItem={this.handleaddItem}
+                  signWithBlockusign={this.signWithBlockusign}
                   page={page}
                   type={type}
                   loading={loading}

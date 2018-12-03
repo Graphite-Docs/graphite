@@ -71,12 +71,15 @@ export default class SingleVaultFile extends Component {
             </MainMenu.Item>
           ) : type.includes("application/pdf") ? (
             <MainMenu.Item>
-              <a
-                onClick={this.props.downloadPDF}
-                title={name}
-              >
-                <i className="material-icons">cloud_download</i>
-              </a>
+            <a style={{cursor: 'pointer'}}
+              onClick={this.props.downloadPDF}
+              title={name}
+            >
+              <i className="material-icons">cloud_download</i>
+            </a>
+            <a onClick={() => this.props.signWithBlockusign(window.location.href.split('vault/')[1])} style={{marginLeft: "20px", cursor: "pointer"}}>
+              <img style={{height: "30px"}} src='https://blockusign.co/assets/imgs/blockusignLogoSvg.svg' alt='blockusign' /><span style={{marginLeft: "5px", color: "#fff", position: "relative", top: "-7px"}}>Sign with Blockusign</span>
+            </a>
             </MainMenu.Item>
           ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
             <MainMenu.Item>
