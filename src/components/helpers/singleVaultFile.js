@@ -410,7 +410,8 @@ export function shareFile() {
 
 export function signWithBlockusign(fileId) {
   this.setState({ loading: true });
-  const options = { username: loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: 'https://blockusign.co'}
+  const appOrigin = 'https://blockusign.co'; //'http://localhost:8100';
+  const options = { username: loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: appOrigin}
   getFile('key.json', options)
     .then((file) => {
       console.log(file)
@@ -420,7 +421,7 @@ export function signWithBlockusign(fileId) {
       putFile('blockusign/' + fileId, encryptedData, {encrypt: false})
         .then(() => {
           let id = 'blockusign/' + fileId;
-          window.location.replace('https://blockusign.co/#/graphite?username=' + loadUserData().username + '?fileId=' + id + '?appUrl=' + window.location.origin)
+          window.location.replace(appOrigin + '/#/graphite?user=' + loadUserData().username + '&file=' + id + '&app=' + encodeURIComponent(window.location.host) + '&decrypt=true' );
         }).catch(error => {
           console.log(error)
         })
