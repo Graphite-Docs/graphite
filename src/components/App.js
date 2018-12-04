@@ -610,7 +610,8 @@ export default class App extends Component {
       visible: false,
       newSharedDoc: false,
       markdown: false,
-      markdownContent: ""
+      markdownContent: "",
+      publicDocs: []
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor

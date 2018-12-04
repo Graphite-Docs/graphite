@@ -125,6 +125,17 @@ export function initialDocLoad() {
   //   }
   })
   .then(() => {
+    getFile('publicDocs.json', {decrypt: false})
+      .then((file) => {
+        if(file) {
+          this.setState({ publicDocs: JSON.parse(file)})
+        } else {
+          this.setState({ publicDocs: []})
+        }
+
+      })
+  })
+  .then(() => {
     this.setState({ loading: false}, () => {
       // document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
       this.loadAvatars();
@@ -212,30 +223,42 @@ export function sharePublicly() {
   if(this.state.readOnly === undefined) {
     this.setState({ readOnly: true }, () => {
       const object = {};
+      const objectTwo = {};
       object.title = this.state.title;
       object.content = this.state.content;
       object.readOnly = true;
       object.words = wordcount(this.state.content);
       object.shared = getMonthDayYear();
       object.singleDocIsPublic = true;
+      objectTwo.title = object.title;
+      objectTwo.date = object.shared;
+      objectTwo.tags = this.state.singleDocTags;
+      objectTwo.id = window.location.href.split('doc/')[1];
       this.setState({
         singlePublic: object,
-        singleDocIsPublic: true
+        singleDocIsPublic: true,
+        publicDocs: [...this.state.publicDocs, objectTwo]
       }, () => {
         this.savePublic();
       })
     })
   } else {
     const object = {};
+    const objectTwo = {};
     object.title = this.state.title;
     object.content = this.state.content;
     object.readOnly = this.state.readOnly;
     object.words = wordcount(this.state.content);
     object.shared = getMonthDayYear();
     object.singleDocIsPublic = true;
+    objectTwo.title = object.title;
+    objectTwo.date = object.shared;
+    objectTwo.tags = this.state.singleDocTags;
+    objectTwo.id = this.state.id;
     this.setState({
       singlePublic: object,
-      singleDocIsPublic: true
+      singleDocIsPublic: true,
+      publicDocs: [...this.state.publicDocs, objectTwo]
     }, () => {
       this.savePublic();
     })
@@ -272,7 +295,14 @@ export function savePublic() {
   putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
   .then(() => {
     this.setState({gaiaLink: link, publicShare: "", shareModal: "hide"});
-    this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
+    putFile('publicDocs.json', JSON.stringify(this.state.publicDocs), {encrypt: false})
+      .then(() => {
+        this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
+      })
+      .catch(error => {
+        console.log(error)
+        this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
+      })
   })
   .catch(e => {
     console.log(e);
