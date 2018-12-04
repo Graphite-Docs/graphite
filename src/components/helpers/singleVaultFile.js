@@ -20,7 +20,7 @@ export function loadSingleVaultFile() {
   getFile(window.location.href.split('vault/')[1]+ ".json", { decrypt: true })
     .then(file => {
       this.setState({
-        file: JSON.parse(file || "{}").name,
+        file: JSON.parse(file || "{}"),
         name: JSON.parse(file || "{}").name,
         lastModifiedDate: JSON.parse(file || "{}").lastModifiedDate,
         size: JSON.parse(file || "{}").size,
