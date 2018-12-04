@@ -43,11 +43,13 @@ const MARK_TAGS = {
   u: 'underline',
   pre: 'code',
   strike: 'strikethrough',
-  pre: 'code-block'
+  pre: 'code-block',
+  span: 'color'
 }
 
 const INLINE_TAGS = {
-  a: 'link'
+  a: 'link',
+  span: 'color'
 }
 const rules = [
   {
@@ -56,10 +58,13 @@ const rules = [
 
       if (type) {
         if(type === 'align') {
+          // console.log(el.getAttribute('class'))
           return {
             object: 'block',
             type: type,
-            data: el.getAttribute('class'),
+            data: {
+              class: el.getAttribute('class'),
+            },
             nodes: next(el.childNodes),
           }
         } else {
@@ -110,7 +115,7 @@ const rules = [
           case 'table_cell':
             return <td>{children}</td>
           case 'align':
-            return <div className={`align_${obj.data.get('align')}`}>{children}</div>
+            return <div className={obj.data.get('class')}>{children}</div>
           case 'code-block':
             return <code>{children}</code>
           default: return ''
@@ -141,6 +146,8 @@ const rules = [
             return <u>{children}</u>
           case 'strikethrough':
             return <strike>{children}</strike>
+          case 'color':
+            return <span>{children}</span>
           case 'code':
             return <pre><code>{children}</code></pre>
           case 'code-block':
@@ -638,11 +645,11 @@ export function handleChange(change, options = {}) {
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
   // this.setState({ content: change.value });
 
-  clearTimeout(this.timeout);
-  this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  }
+  // clearTimeout(this.timeout);
+  // this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  // }
 
   // if (!options.remote) {
   //   this.onRTCChange(change)

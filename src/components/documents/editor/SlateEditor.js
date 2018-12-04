@@ -113,7 +113,7 @@ getType = chars => {
 
   hasColor = () => {
     const { content } = this.props;
-    return content.inlines.some(inline => inline.type === 'color')
+    return content.marks.some(mark => mark.type === 'color')
   }
 
   hasAlign = (foundAlign) => {
@@ -270,12 +270,12 @@ onClickAlign = (event, align) => {
   if (hasAlign) {
     editor.setBlocks({
       type: 'align',
-      data: { align: null },
+      data: { class: null },
     }).focus()
   } else {
     editor.setBlocks({
       type: 'align',
-      data: { align },
+      data: { class: `align_${align}` },
     }).focus()
   }
 }
@@ -322,29 +322,39 @@ onClickAlign = (event, align) => {
     const { value } = this.editor
     const hasColor = this.hasColor()
 
-    if (hasColor) {
-      editor.command(unwrapColor)
-    } else if (value.selection.isExpanded) {
-      const style = {
-        color: color.hex
+    if(hasColor) {
+      if(value.selection.isExpanded) {
+        value.marks.filter(mark => mark.type === 'color').forEach(mark => {
+        editor.removeMark(mark)
+      })
       }
-
-      if (style === null) {
-        return
-      }
-
-      editor.command(wrapColor, style)
     } else {
-      const style = {
-        color: color.hex
-      }
-
-      if (style === null) {
-        return
-      }
-
-      editor.command(wrapColor, style)
+      editor.addMark({ type: 'color', data: { class: color } }).focus()
     }
+
+    // if (hasColor) {
+    //   editor.command(unwrapColor)
+    // } else if (value.selection.isExpanded) {
+    //   const style = {
+    //     color: color.hex
+    //   }
+    //
+    //   if (style === null) {
+    //     return
+    //   }
+    //
+    //   editor.command(wrapColor, style)
+    // } else {
+    //   const style = {
+    //     color: color.hex
+    //   }
+    //
+    //   if (style === null) {
+    //     return
+    //   }
+    //
+    //   editor.command(wrapColor, style)
+    // }
   }
 
   onClickMark = (event, type) => {
@@ -545,18 +555,9 @@ onClickAlign = (event, align) => {
             </a>
           )
         }
-      case 'color': {
-          const { data } = node
-          const color = data.get('style')
-          return (
-            <span {...attributes} style={color}>
-              {children}
-            </span>
-          )
-        }
       case 'align':
-        const align = node.data.get('align')
-        return <div {...attributes} className={`align_${align}`}>{children}</div>
+        const align = node.data.get('class')
+        return <div {...attributes} className={align}>{children}</div>
       case 'check-list':
         return <List className='check-list' {...props}>{children}</List>
       default:
@@ -577,6 +578,9 @@ onClickAlign = (event, align) => {
         return <u {...attributes}>{children}</u>
       case 'strikethrough':
         return <strike {...attributes}>{children}</strike>
+      case 'color':
+        const color = mark.data.get('class');
+        return <span className={color} {...attributes}>{children}</span>
       default:
         return next()
     }
