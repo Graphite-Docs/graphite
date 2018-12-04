@@ -43,20 +43,32 @@ code {
   border-radius: 3px;
 }
 
-.left {
+.align_left {
   text-align: left!important;
+  margin: 0 0 1em!important;
+  line-height: 1.4285em!important;
+  font-size: 1.25rem!important;
 }
 
-.center {
+.align_center {
   text-align: center!important;
+  margin: 0 0 1em!important;
+  line-height: 1.4285em!important;
+  font-size: 1.25rem!important;
 }
 
-.right {
+.align_right {
   text-align: right!important;
+  margin: 0 0 1em!important;
+  line-height: 1.4285em!important;
+  font-size: 1.25rem!important;
 }
 
-.justify {
+.align_justify {
   text-align: justify!important;
+  margin: 0 0 1em!important;
+  line-height: 1.4285em!important;
+  font-size: 1.25rem!important;
 }
 
 .hide {

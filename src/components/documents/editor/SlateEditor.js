@@ -18,9 +18,9 @@ const isUnderlinedHotkey = isKeyHotkey('mod+u')
 const isCodeHotkey = isKeyHotkey('mod+`')
 const isStrikeHotKey = isKeyHotkey('mod+shift+s')
 
+
 const plugins = [
   PluginDeepTable()
-  // EditCode()
 ];
 
 let thisMark;
@@ -64,10 +64,6 @@ function wrapAlign(editor, className) {
   })
 
   editor.moveToEnd()
-}
-
-function unwrapAlign(editor) {
-  editor.unwrapInline('align')
 }
 
 class SlateEditor extends React.Component {
@@ -120,9 +116,9 @@ getType = chars => {
     return content.inlines.some(inline => inline.type === 'color')
   }
 
-  hasAlignment = type => {
-    const { content } = this.props
-    return content.inlines.some(inline => inline.type === 'align')
+  hasAlign = (foundAlign) => {
+    const {content} = this.props
+    return content.blocks.some(node => node.data.get('align') === foundAlign)
   }
 
   hasMark = type => {
@@ -145,7 +141,6 @@ getType = chars => {
 
   onCheckboxChange = (event) => {
     const checked = event.target.checked;
-    console.log(this.editor);
   }
 
 
@@ -185,7 +180,6 @@ getType = chars => {
   }
 
   onEnter = (event, editor, next) => {
-    console.log(thisMark)
     const { value } = editor
     const { selection } = value
     const { start, end, isExpanded } = selection
@@ -195,7 +189,6 @@ getType = chars => {
     if (start.offset === 0 && startBlock.text.length === 0)
       return this.onBackspace(event, editor, next)
     if (end.offset !== startBlock.text.length) {
-      console.log("a")
       return next()
     }
     if (
@@ -273,32 +266,18 @@ onClickAlign = (event, align) => {
   event.preventDefault()
   const { editor } = this
   const { value } = editor
-  const hasAlign = this.hasAlignment()
-  editor.wrapBlock({
-    type: 'align',
-    data: {
-      style: {
-        textAlign: 'center'
-      },
-    },
-  })
-  // if (hasAlign) {
-  //   const className = align
-  //   editor.command(wrapAlign, className)
-  // } else if (value.selection.isExpanded) {
-  //   const className = align
-  //   if (className === null) {
-  //     return
-  //   }
-  //
-  //   editor.command(wrapAlign, className)
-  // } else {
-  //   const className = align
-  //
-  //   if (className === null) {
-  //     return
-  //   }
-  // }
+  const hasAlign = this.hasAlign(align)
+  if (hasAlign) {
+    editor.setBlocks({
+      type: 'align',
+      data: { align: null },
+    }).focus()
+  } else {
+    editor.setBlocks({
+      type: 'align',
+      data: { align },
+    }).focus()
+  }
 }
 
   onClickLink = (event, url) => {
@@ -533,7 +512,6 @@ onClickAlign = (event, align) => {
 
   renderNode = (props, editor, next) => {
     const { attributes, children, node } = props
-
     switch (node.type) {
       case 'block-quote':
         return <blockquote {...attributes}>{children}</blockquote>
@@ -576,15 +554,9 @@ onClickAlign = (event, align) => {
             </span>
           )
         }
-      case 'align': {
-          const { data } = node
-          const className = data.get('class')
-          return (
-            <span {...attributes} className={className}>
-              {children}
-            </span>
-          )
-        }
+      case 'align':
+        const align = node.data.get('align')
+        return <div {...attributes} className={`align_${align}`}>{children}</div>
       case 'check-list':
         return <List className='check-list' {...props}>{children}</List>
       default:

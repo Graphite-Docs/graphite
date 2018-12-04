@@ -34,7 +34,7 @@ const BLOCK_TAGS = {
   ul: 'list',
   ol: 'ordered',
   li: 'list-item',
-  div: 'check-list-item'
+  div: 'align'
 }
 // Add a dictionary of mark tags.
 const MARK_TAGS = {
@@ -53,15 +53,23 @@ const rules = [
   {
     deserialize(el, next) {
       const type = BLOCK_TAGS[el.tagName.toLowerCase()]
+
       if (type) {
-        return {
-          object: 'block',
-          type: type,
-          data: {
-            className: el.getAttribute('class'),
-          },
-          nodes: next(el.childNodes),
+        if(type === 'align') {
+          return {
+            object: 'block',
+            type: type,
+            data: el.getAttribute('class'),
+            nodes: next(el.childNodes),
+          }
+        } else {
+          return {
+            object: 'block',
+            type: type,
+            nodes: next(el.childNodes),
+          }
         }
+
       }
     },
     serialize(obj, children) {
@@ -101,14 +109,8 @@ const rules = [
             return <tr>{children}</tr>
           case 'table_cell':
             return <td>{children}</td>
-          case 'check-list-item':
-            return (
-            <div style={{display: "flex", flexDirection: "row", alignItems: "center"}}>
-              <span style={{marginRight: "0.75em"}}><input /></span><span style={{ flex: "1"}}></span>
-            </div>
-          )
           case 'align':
-            return <p className={obj.data.get('className')}>{children}</p>
+            return <div className={`align_${obj.data.get('align')}`}>{children}</div>
           case 'code-block':
             return <code>{children}</code>
           default: return ''
@@ -636,11 +638,11 @@ export function handleChange(change, options = {}) {
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
   // this.setState({ content: change.value });
 
-  // clearTimeout(this.timeout);
-  // this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  // }
+  clearTimeout(this.timeout);
+  this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  }
 
   // if (!options.remote) {
   //   this.onRTCChange(change)
