@@ -2,6 +2,17 @@
 
 /* Apply to all */
 
+.notie-textbox {
+  z-index: 999!important;
+  position: fixed;
+  top: 60px!important;
+  width: 100%!important;
+  background: #ffce65!important;
+  color: #282828!important;
+  padding: 25px!important;
+  text-align: center!important;
+}
+
 body {
   margin: 0;
   padding: 0;

@@ -2,8 +2,12 @@ import {
   getFile,
   putFile,
   loadUserData,
-  encryptContent
+  encryptContent,
+  lookupProfile
 } from 'blockstack';
+import notie from 'notie'
+import { alert } from 'notie'
+
 import {
   getMonthDayYear
 } from './getMonthDayYear';
@@ -411,21 +415,63 @@ export function shareFile() {
 export function signWithBlockusign(fileId) {
   this.setState({ loading: true });
   const appOrigin = 'https://blockusign.co';
-  const gaiaUrl = loadUserData().profile.apps[window.location.origin];
-  const options = { username: loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: appOrigin}
-  getFile('key.json', options)
-    .then((file) => {
-      console.log(file)
-      const data = JSON.stringify(this.state.file);
-      console.log(data)
-      const encryptedData = encryptContent(data, {publicKey: file})
-      putFile('blockusign/' + fileId, encryptedData, {encrypt: false})
-        .then(() => {
-          let id = 'blockusign/' + fileId;
-          let file = gaiaUrl + id;
-          window.location.replace(appOrigin + '/#/graphite?file=' + file+ '&decrypt=true' );
-        }).catch(error => {
-          console.log(error)
+  lookupProfile(loadUserData().username, "https://core.blockstack.org/v1/names")
+    .then((profile) => {
+      if(profile.apps) {
+        if(profile.apps[appOrigin]) {
+          const gaiaUrl = loadUserData().profile.apps[window.location.origin];
+          const options = { username: loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: appOrigin}
+          getFile('key.json', options)
+            .then((file) => {
+              if(file) {
+                console.log(file)
+                const data = JSON.stringify(this.state.file);
+                console.log(data)
+                const encryptedData = encryptContent(data, {publicKey: file})
+                putFile('blockusign/' + fileId, encryptedData, {encrypt: false})
+                  .then(() => {
+                    let id = 'blockusign/' + fileId;
+                    let file = gaiaUrl + id;
+                    window.location.replace(appOrigin + '/#/graphite?file=' + file+ '&decrypt=true' );
+                  }).catch(error => {
+                    console.log(error)
+                  })
+              } else {
+                this.setState({ loading: false }, () => {
+                  notie.alert({
+                    type: 'warning', // optional, default = 4, enum: [1, 2, 3, 4, 5, 'success', 'warning', 'error', 'info', 'neutral']
+                    text: "You have to sign into <a href='https://blockusign.co' target='_blank'>Blockusign</a> at least once to use this feature",
+                    stay: false, // optional, default = false
+                    time: 5, // optional, default = 3, minimum = 1,
+                    position: 'top' // optional, default = 'top', enum: ['top', 'bottom']
+                  })
+                })
+
+              }
+
+            })
+        } else {
+          this.setState({ loading: false }, () => {
+            notie.alert({
+              type: 'warning', // optional, default = 4, enum: [1, 2, 3, 4, 5, 'success', 'warning', 'error', 'info', 'neutral']
+              text: "You have to sign into <a href='https://blockusign.co' target='_blank'>Blockusign</a> at least once to use this feature",
+              stay: false, // optional, default = false
+              time: 5, // optional, default = 3, minimum = 1,
+              position: 'top' // optional, default = 'top', enum: ['top', 'bottom']
+            })
+          })
+        }
+      } else {
+        this.setState({ loading: false }, () => {
+          notie.alert({
+            type: 'warning', // optional, default = 4, enum: [1, 2, 3, 4, 5, 'success', 'warning', 'error', 'info', 'neutral']
+            text: "You have to sign into <a href='https://blockusign.co' target='_blank'>Blockusign</a> at least once to use this feature",
+            stay: false, // optional, default = false
+            time: 5, // optional, default = 3, minimum = 1,
+            position: 'top' // optional, default = 'top', enum: ['top', 'bottom']
+          })
         })
+      }
     })
+
   }
