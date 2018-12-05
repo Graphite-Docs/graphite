@@ -572,13 +572,13 @@ div.markdown-editor__editor-container h2 {
   margin-top: 135px;
 }
 
-@media screen and (max-width: 675px) {
+/* @media screen and (max-width: 675px) {
   .ql-editor {
     padding-left: 50px;
     padding-right: 0;
     margin-right: 0!important;
   }
-}
+} */
 
 @media screen and (max-width: 800px) {
   .ql-editor {

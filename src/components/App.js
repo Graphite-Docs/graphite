@@ -404,6 +404,10 @@ import {
   addTagManual,
   deleteTag
 } from './helpers/shared';
+import {
+  storeLocal,
+  loadLocal
+} from './helpers/decentralizedDB';
 import work from 'webworkify-webpack';
 // const IPFS = require("ipfs");
 // const node = new IPFS();
@@ -625,6 +629,9 @@ export default class App extends Component {
   } //constructor
 
   componentWillMount() {
+
+    this.storeLocal = storeLocal.bind(this);
+    this.loadLocal = loadLocal.bind(this);
 
     //Collections Component Functions
     this.loadDocs = loadDocs.bind(this);

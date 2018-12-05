@@ -262,7 +262,8 @@ export function initialDocLoad() {
       sharedWith: JSON.parse(fileContents || '{}').sharedWith,
       teamDoc: JSON.parse(fileContents || '{}').teamDoc,
       compressed: JSON.parse(fileContents || '{}').compressed || false,
-      spacing: JSON.parse(fileContents || '{}').spacing
+      spacing: JSON.parse(fileContents || '{}').spacing,
+      lastUpdate: JSON.parse(fileContents).lastUpdate
     })
   //   if(JSON.parse(fileContents).rtc) {
   //     this.setState({
@@ -289,6 +290,9 @@ export function initialDocLoad() {
   //       sharedWith: JSON.parse(fileContents || '{}').sharedWith
   //     })
   //   }
+  })
+  .then(() => {
+    this.loadLocal();
   })
   .then(() => {
     this.setState({ loading: false}, () => {
@@ -646,11 +650,13 @@ export function handleChange(change, options = {}) {
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
   // this.setState({ content: change.value });
 
-  // clearTimeout(this.timeout);
-  // this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  // }
+  clearTimeout(this.timeout);
+  this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  clearTimeout(this.longTimeout);
+  this.longTimeout = setTimeout(this.autoSave, 5000)
+  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  }
 
   // if (!options.remote) {
   //   this.onRTCChange(change)
@@ -692,7 +698,7 @@ export function handleBack() {
 }
 
 export function handleAutoAdd() {
-  this.analyticsRun('documents');
+  // this.analyticsRun('documents');
   const object = {};
   object.title = this.state.title;
   object.content = lzjs.compress(html.serialize(this.state.content));
@@ -715,6 +721,7 @@ export function handleAutoAdd() {
   object.singleDocTags = this.state.singleDocTags;
   object.fileType = "documents";
   object.spacing = this.state.spacing;
+  object.lastUpdate = Date.now();
   const objectTwo = {};
   objectTwo.title = this.state.title;
   this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
@@ -736,13 +743,15 @@ export function handleAutoAdd() {
   const index = this.state.index;
   if(this.state.newSharedDoc) {
     this.setState({ value: [...this.state.value, objectTwo], filteredValue: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
-      this.autoSave();
+      // this.autoSave();
+      this.storeLocal();
       console.log(this.state.value);
     })
   } else {
     const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo
     this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
-      this.autoSave();
+      // this.autoSave();
+      this.storeLocal();
     });
   }
 }

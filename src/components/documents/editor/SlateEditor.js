@@ -300,7 +300,9 @@ onClickAlign = (event, align) => {
     if(hasColor) {
       if(value.selection.isExpanded) {
         value.marks.filter(mark => mark.type === 'color').forEach(mark => {
-        editor.removeMark(mark)
+        editor
+        .removeMark(mark).focus()
+        .addMark({ type: 'color', data: { class: 'color_' + color.hex.split('#')[1] } }).focus()
       })
       }
     } else {
