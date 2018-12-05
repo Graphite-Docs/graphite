@@ -1,10 +1,9 @@
 import { Editor } from 'slate-react'
 import React from 'react'
 import { isKeyHotkey } from 'is-hotkey'
-import { List, Checkbox } from 'semantic-ui-react';
+import { List } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
-import styled from 'react-emotion'
 
 // import DeepTable from 'slate-deep-table'
 const PluginDeepTable = require('slate-deep-table/dist')
@@ -40,30 +39,6 @@ function wrapLink(editor, href) {
 
 function unwrapLink(editor) {
   editor.unwrapInline('link')
-}
-
-//Font color
-
-function wrapColor(editor, style) {
-  editor.wrapInline({
-    type: 'color',
-    data: { style },
-  })
-
-  editor.moveToEnd()
-}
-
-function unwrapColor(editor) {
-  editor.unwrapInline('color')
-}
-
-function wrapAlign(editor, className) {
-  editor.wrapBlock({
-    type: 'align',
-    data: { className },
-  })
-
-  editor.moveToEnd()
 }
 
 class SlateEditor extends React.Component {
@@ -139,13 +114,13 @@ getType = chars => {
     this.props.handleChange(change, options={})
   }
 
-  onCheckboxChange = (event) => {
-    const checked = event.target.checked;
-  }
+  // onCheckboxChange = (event) => {
+  //   const checked = event.target.checked;
+  // }
 
 
   onKeyDown = (event, editor, next) => {
-    const { value } = editor
+    // const { value } = editor
     let mark
 
     if (isBoldHotkey(event)) {
@@ -265,7 +240,7 @@ onBackspace = (event, editor, next) => {
 onClickAlign = (event, align) => {
   event.preventDefault()
   const { editor } = this
-  const { value } = editor
+  // const { value } = editor
   const hasAlign = this.hasAlign(align)
   if (hasAlign) {
     editor.setBlocks({
@@ -329,7 +304,7 @@ onClickAlign = (event, align) => {
       })
       }
     } else {
-      editor.addMark({ type: 'color', data: { class: color } }).focus()
+      editor.addMark({ type: 'color', data: { class: 'color_' + color.hex.split('#')[1] } }).focus()
     }
 
     // if (hasColor) {

@@ -43,13 +43,11 @@ const MARK_TAGS = {
   u: 'underline',
   pre: 'code',
   strike: 'strikethrough',
-  pre: 'code-block',
   span: 'color'
 }
 
 const INLINE_TAGS = {
-  a: 'link',
-  span: 'color'
+  a: 'link'
 }
 const rules = [
   {
@@ -131,6 +129,9 @@ const rules = [
         return {
           object: 'mark',
           type: type,
+          data: {
+            class: el.getAttribute('class'),
+          },
           nodes: next(el.childNodes),
         }
       }
@@ -147,7 +148,7 @@ const rules = [
           case 'strikethrough':
             return <strike>{children}</strike>
           case 'color':
-            return <span>{children}</span>
+            return <span className={obj.data.get('class')}>{children}</span>
           case 'code':
             return <pre><code>{children}</code></pre>
           case 'code-block':
