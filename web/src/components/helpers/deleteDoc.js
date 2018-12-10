@@ -37,7 +37,7 @@ export function loadDocToDelete() {
 
 export function handleDeleteDoc(props) {
   let value = this.state.value;
-  const thisDoc = value.find((doc) => { return doc.id.toString() === props.id.toString()});
+  const thisDoc = value.find((doc) => { return doc.id === props.id});
   let index = thisDoc && thisDoc.id;
   function findObjectIndex(doc) {
       return doc.id === index; //comparing numbers

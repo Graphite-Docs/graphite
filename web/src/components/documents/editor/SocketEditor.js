@@ -8,6 +8,7 @@ class SocketEditor extends Component {
 
     this.state = {
       endpoint: process.env.REACT_APP_SERVER
+      // endpoint: 'http://localhost:5000'
     }
 
     this.uniqueID = Math.round(Math.random() * 1000000000000);
@@ -17,7 +18,6 @@ class SocketEditor extends Component {
     this.socket.on('update content', data => {
       const content = JSON.parse(data)
       const { uniqueID, content: ops } = content;
-      console.log(ops)
       if (ops !== null && this.uniqueID !== uniqueID) {
         setTimeout(() => {
           try {
@@ -34,6 +34,8 @@ class SocketEditor extends Component {
     let room;
     if(window.location.href.includes('shared')) {
       room = window.location.href.split('shared/')[1].split('/')[1]
+    } else if(window.location.href.includes('docs')) {
+      room = window.location.href.split('docs/')[1]
     } else {
       room = window.location.href.split('doc/')[1]
     }
@@ -74,6 +76,7 @@ class SocketEditor extends Component {
         handleChange={this.props.handleChange}
         docLoaded={this.props.docLoaded}
         idToLoad={this.props.idToLoad}
+        createRTC={this.props.createRTC}
       />
     );
   }

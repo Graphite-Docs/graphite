@@ -475,38 +475,58 @@ onClickAlign = (event, align) => {
     if(this.props.content) {
       return (
         <div>
-          <Toolbar
-            onClickMark={this.onClickMark}
-            onClickBlock={this.onClickBlock}
-            onFontColorClick={this.onFontColorClick}
-            onInsertTable={this.onInsertTable}
-            onInsertCol={this.onInsertCol}
-            onInsertRow={this.onInsertRow}
-            onRemoveCol={this.onRemoveCol}
-            onRemoveRow={this.onRemoveRow}
-            onRemoveTable={this.onRemoveTable}
-            onClickLink={this.onClickLink}
-            onClickColor={this.onClickColor}
-            modalOpen={this.state.modalOpen}
-            modalController={this.modalController}
-            hasLinks={this.hasLinks}
-            onClickAlign={this.onClickAlign}
-            isTable={isTable}
-          />
+          {this.props.readOnly ?
+            <div className='hide' /> :
+            <Toolbar
+              onClickMark={this.onClickMark}
+              onClickBlock={this.onClickBlock}
+              onFontColorClick={this.onFontColorClick}
+              onInsertTable={this.onInsertTable}
+              onInsertCol={this.onInsertCol}
+              onInsertRow={this.onInsertRow}
+              onRemoveCol={this.onRemoveCol}
+              onRemoveRow={this.onRemoveRow}
+              onRemoveTable={this.onRemoveTable}
+              onClickLink={this.onClickLink}
+              onClickColor={this.onClickColor}
+              modalOpen={this.state.modalOpen}
+              modalController={this.modalController}
+              hasLinks={this.hasLinks}
+              onClickAlign={this.onClickAlign}
+              isTable={isTable}
+            />
+          }
           <div className="ql-editor">
-          <Editor
-            className='editor'
-            spellCheck
-            autoFocus
-            plugins={plugins}
-            placeholder="Write something great..."
-            ref={this.ref}
-            value={this.props.content}
-            onChange={this.onChange}
-            onKeyDown={this.onKeyDown}
-            renderNode={this.renderNode}
-            renderMark={this.renderMark}
-          />
+          {this.props.readOnly ?
+            <Editor
+              className='editor'
+              spellCheck
+              autoFocus
+              plugins={plugins}
+              placeholder="Write something great..."
+              ref={this.ref}
+              value={this.props.content}
+              onChange={this.onChange}
+              onKeyDown={this.onKeyDown}
+              renderNode={this.renderNode}
+              renderMark={this.renderMark}
+              readOnly
+            /> :
+            <Editor
+              className='editor'
+              spellCheck
+              autoFocus
+              plugins={plugins}
+              placeholder="Write something great..."
+              ref={this.ref}
+              value={this.props.content}
+              onChange={this.onChange}
+              onKeyDown={this.onKeyDown}
+              renderNode={this.renderNode}
+              renderMark={this.renderMark}
+            />
+          }
+
           </div>
         </div>
       )

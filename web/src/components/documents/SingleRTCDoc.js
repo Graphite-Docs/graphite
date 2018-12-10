@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import { Icon } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
-import SlateEditor from './editor/SlateEditor';
+import SocketEditor from './editor/SocketEditor';
 import MDEditor from '../MDEditor';
 
 export default class SingleRTCDoc extends Component {
@@ -76,16 +76,16 @@ export default class SingleRTCDoc extends Component {
                 {
                   (docLoaded === true) ?
 
-                  <SlateEditor
+                  <SocketEditor
                     content={content}
                     handleChange={this.props.handleChange}
-                    onChange={this.props.handleChange}
                     onRTCChange={this.props.onRTCChange}
                     applyOperations={this.props.applyOperations}
                     hasMark={this.props.hasMark}
                     onKeyDown={this.props.onKeyDown}
                     onClickMark={this.props.onClickMark}
                     docLoaded={this.props.docLoaded}
+                    createRTC={this.props.createRTC}
                     rtc={rtc}
                   />
                   :

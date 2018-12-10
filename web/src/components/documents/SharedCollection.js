@@ -75,7 +75,6 @@ export default class SharedCollection extends Component {
     lookupProfile(user, "https://core.blockstack.org/v1/names")
       .then((profile) => {
         let image = profile.image;
-        console.log(profile);
         if(profile.image){
           this.setState({img: image[0].contentUrl})
         } else {

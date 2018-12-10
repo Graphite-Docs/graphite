@@ -621,7 +621,8 @@ export default class App extends Component {
       newSharedDoc: false,
       markdown: false,
       markdownContent: "",
-      wordCount: 0
+      wordCount: 0,
+      createRTC: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1053,7 +1054,7 @@ export default class App extends Component {
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
       optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
-      markdownContent, wordCount
+      markdownContent, wordCount, createRTC
     } = this.state;
     return (
       <div>
@@ -1270,6 +1271,7 @@ export default class App extends Component {
                   hasMark={this.hasMark}
                   onKeyDown={this.onKeyDown}
                   onClickMark={this.onClickMark}
+                  createRTC={createRTC}
                   title={title}
                   rtc={rtc}
                   content={content}
