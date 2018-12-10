@@ -1,0 +1,12 @@
+build
+node_modules
+yarn.lock
+npm-debug.log
+.netlify
+src/projects
+dist
+src/components/helpers/dev.js
+src/components/helpers/prod.js
+.env
+
+REACT_APP_YJS_HEROKU_URL="https://graphite-websockets.herokuapp.com/"
