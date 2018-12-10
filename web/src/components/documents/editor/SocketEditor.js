@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import socketIOClient from 'socket.io-client';
-
 import SlateEditor from './SlateEditor';
 
 class SocketEditor extends Component {
@@ -29,6 +28,18 @@ class SocketEditor extends Component {
         });
       }
     });
+  }
+
+  componentDidMount() {
+    let room;
+    if(window.location.href.includes('shared')) {
+      room = window.location.href.split('shared/')[1].split('/')[1]
+    } else {
+      room = window.location.href.split('doc/')[1]
+    }
+    this.socket.on('connect', () => {
+      this.socket.emit('room', room)
+    })
   }
 
   send = content => {
