@@ -1,6 +1,7 @@
 import { Editor } from 'slate-react'
 import React from 'react'
 import { isKeyHotkey } from 'is-hotkey'
+import Loading from '../../Loading';
 import { List } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
@@ -471,44 +472,49 @@ onClickAlign = (event, align) => {
     }
 
     const isTable = this.editor && this.editor.isSelectionInTable(this.props.content);
-
-    return (
-      <div>
-        <Toolbar
-          onClickMark={this.onClickMark}
-          onClickBlock={this.onClickBlock}
-          onFontColorClick={this.onFontColorClick}
-          onInsertTable={this.onInsertTable}
-          onInsertCol={this.onInsertCol}
-          onInsertRow={this.onInsertRow}
-          onRemoveCol={this.onRemoveCol}
-          onRemoveRow={this.onRemoveRow}
-          onRemoveTable={this.onRemoveTable}
-          onClickLink={this.onClickLink}
-          onClickColor={this.onClickColor}
-          modalOpen={this.state.modalOpen}
-          modalController={this.modalController}
-          hasLinks={this.hasLinks}
-          onClickAlign={this.onClickAlign}
-          isTable={isTable}
-        />
-        <div className="ql-editor">
-        <Editor
-          className='editor'
-          spellCheck
-          autoFocus
-          plugins={plugins}
-          placeholder="Write something great..."
-          ref={this.ref}
-          value={this.props.content}
-          onChange={this.onChange}
-          onKeyDown={this.onKeyDown}
-          renderNode={this.renderNode}
-          renderMark={this.renderMark}
-        />
+    if(this.props.content) {
+      return (
+        <div>
+          <Toolbar
+            onClickMark={this.onClickMark}
+            onClickBlock={this.onClickBlock}
+            onFontColorClick={this.onFontColorClick}
+            onInsertTable={this.onInsertTable}
+            onInsertCol={this.onInsertCol}
+            onInsertRow={this.onInsertRow}
+            onRemoveCol={this.onRemoveCol}
+            onRemoveRow={this.onRemoveRow}
+            onRemoveTable={this.onRemoveTable}
+            onClickLink={this.onClickLink}
+            onClickColor={this.onClickColor}
+            modalOpen={this.state.modalOpen}
+            modalController={this.modalController}
+            hasLinks={this.hasLinks}
+            onClickAlign={this.onClickAlign}
+            isTable={isTable}
+          />
+          <div className="ql-editor">
+          <Editor
+            className='editor'
+            spellCheck
+            autoFocus
+            plugins={plugins}
+            placeholder="Write something great..."
+            ref={this.ref}
+            value={this.props.content}
+            onChange={this.onChange}
+            onKeyDown={this.onKeyDown}
+            renderNode={this.renderNode}
+            renderMark={this.renderMark}
+          />
+          </div>
         </div>
-      </div>
-    )
+      )
+    } else {
+      return (
+        <Loading />
+      )
+    }
   }
 
   renderNode = (props, editor, next) => {

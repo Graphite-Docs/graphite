@@ -7,7 +7,7 @@ class SocketEditor extends Component {
     super(props);
 
     this.state = {
-      endpoint: 'http://localhost:4001'
+      endpoint: process.env.REACT_APP_SERVER
     }
 
     this.uniqueID = Math.round(Math.random() * 1000000000000);
