@@ -8,8 +8,8 @@ import logoSquare from '../assets/images/gIcon.png';
 export default class PublicDoc extends Component {
 
   componentDidMount() {
-    this.props.loadInitial(window.location.pathname.split('/shared/docs/')[1]);
-    setTimeout(this.props.loadDoc, 700);
+    this.props.fetchData();
+    setTimeout(this.props.loadDoc, 5000);
     this.interval = setInterval(() => this.props.loadDoc(), 3000);
   }
 
@@ -18,7 +18,7 @@ export default class PublicDoc extends Component {
   }
 
   render() {
-
+    console.log(this.props.content)
     // let toolbar = window.document.getElementsByClassName('ql-toolbar')[0];
     // if(toolbar[0]) {
     //   if(this.props.readOnly) {
@@ -39,7 +39,7 @@ export default class PublicDoc extends Component {
             Document is Read Only
           </MainMenu.Item>
           <MainMenu.Menu position='right'>
-          <MainMenu.Item right>
+          <MainMenu.Item>
             <a style={{color: "#fff"}} href="http://graphitedocs.com" target="_blank" rel="noopener noreferrer">About Graphite</a>
           </MainMenu.Item>
           </MainMenu.Menu>
@@ -49,7 +49,7 @@ export default class PublicDoc extends Component {
               <div className="double-space doc-margin">
 
                 {
-                  this.props.docLoaded === true ?
+                  this.props.docLoaded === true && this.props.content ?
                   <div>
                   {
                     this.props.singleDocIsPublic === true ?
@@ -85,10 +85,10 @@ export default class PublicDoc extends Component {
             {this.props.title}
           </MainMenu.Item>
           <MainMenu.Item>
-            Document is Read Only
+            Document is Editable
           </MainMenu.Item>
           <MainMenu.Menu position='right'>
-            <MainMenu.Item right>
+            <MainMenu.Item>
               <a style={{color: "#fff"}} href="http://graphitedocs.com" target="_blank" rel="noopener noreferrer">About Graphite</a>
             </MainMenu.Item>
           </MainMenu.Menu>
@@ -98,10 +98,10 @@ export default class PublicDoc extends Component {
               <div className="double-space doc-margin">
 
                 {
-                  this.props.docLoaded === true ?
+                  this.props.docLoaded === true && this.props.content ?
                   <div>
                   {
-                    this.props.singleDocIsPublic === true ?
+                    this.props.singleDocIsPublic === true && !this.props.readOnly ?
                     <div>
 
 
@@ -109,11 +109,11 @@ export default class PublicDoc extends Component {
                       {/* <div style={(this.state.readOnly === true) ? {border: "5px solid red"} : null}> */}
                       <div>
                         <SocketEditor
-                          key={this.props.readOnly === true ? "true!" : "false..."} //NOTE: when this.state.readOnly changes in PublicDoc, it will change this key, which will remount QuillEditorPublic, which will remount YjsQuill, so readOnly changes in SingleDoc update PublicDoc text editor...
                           roomId={this.props.idToLoad} //this is a string!
                           docLoaded={this.props.docLoaded} //this is set by loadDoc
                           content={this.props.content}
                           readOnly={this.props.readOnly}
+                          handlePubChange={this.props.handlePubChange}
                         />
                       </div>
                     </div>

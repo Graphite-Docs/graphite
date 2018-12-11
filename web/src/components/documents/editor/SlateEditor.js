@@ -114,7 +114,12 @@ getType = chars => {
   }
 
   onChange = (change, options={}) => {
-    this.props.handleChange(change)
+    if(window.location.href.includes('shared/docs')) {
+      this.props.handlePubChange(change)
+    } else {
+      this.props.handleChange(change)
+    }
+
     if (!this.remote) {
       this.props.onChange(change)
     } else {

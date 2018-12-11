@@ -622,7 +622,8 @@ export default class App extends Component {
       markdown: false,
       markdownContent: "",
       wordCount: 0,
-      createRTC: false
+      createRTC: false,
+      wholeFile: {}
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1234,6 +1235,7 @@ export default class App extends Component {
                   loadInitial={this.loadInitial}
                   fetchData={this.fetchData}
                   loadDoc={this.loadDoc}
+                  handlePubChange={this.handlePubChange}
                   handlePubTitleChange={this.handlePubTitleChange}
                   docLoaded={docLoaded}
                   readOnlyStateFromSingleDoc={this.state.readOnlyStateFromSingleDoc}

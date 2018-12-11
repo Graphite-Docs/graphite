@@ -32,10 +32,10 @@ class SocketEditor extends Component {
 
   componentDidMount() {
     let room;
-    if(window.location.href.includes('shared')) {
+    if(window.location.href.includes('shared/docs')) {
+      room = window.location.href.split('docs/')[1].split('-')[1]
+    } else if(window.location.href.includes('shared')) {
       room = window.location.href.split('shared/')[1].split('/')[1]
-    } else if(window.location.href.includes('docs')) {
-      room = window.location.href.split('docs/')[1]
     } else {
       room = window.location.href.split('doc/')[1]
     }
@@ -74,6 +74,7 @@ class SocketEditor extends Component {
         content={this.props.content}
         value={this.props.content}
         handleChange={this.props.handleChange}
+        handlePubChange={this.props.handlePubChange}
         docLoaded={this.props.docLoaded}
         idToLoad={this.props.idToLoad}
         createRTC={this.props.createRTC}

@@ -431,6 +431,7 @@ export function saveStop() {
 }
 
 export function savePublic() {
+  console.log("it's here")
   const user = loadUserData().username;
   const id = window.location.href.split('doc/')[1];
   const link = window.location.origin + '/shared/docs/' + user + '-' + id;
@@ -439,7 +440,7 @@ export function savePublic() {
   putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
   .then(() => {
     this.setState({gaiaLink: link, publicShare: "", shareModal: "hide"});
-    this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
+    // this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
   })
   .catch(e => {
     console.log(e);
@@ -644,15 +645,13 @@ export function handleTitleChange(e) {
 }
 
 export function handleChange(change, options = {}) {
+  console.log("change")
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 3000)
 
   // clearTimeout(this.longTimeout);
   // this.longTimeout = setTimeout(this.autoSave, 5000)
-  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  }
 
   // if (!options.remote) {
   //   this.onRTCChange(change)
@@ -670,15 +669,15 @@ export function handleChange(change, options = {}) {
 }
 
 export function handleMDChange(event) {
-  var converter = new showdown.Converter();
-  this.setState({ markdownContent: event.target.value }, () => {
-    this.setState({ content: converter.makeHtml(this.state.markdownContent)})
-  });
-  clearTimeout(this.timeout);
-  this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-    this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  }
+  // var converter = new showdown.Converter();
+  // this.setState({ markdownContent: event.target.value }, () => {
+  //   this.setState({ content: converter.makeHtml(this.state.markdownContent)})
+  // });
+  // clearTimeout(this.timeout);
+  // this.timeout = setTimeout(this.handleAutoAdd, 3000)
+  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+  // }
 }
 
 export function handleIDChange(e) {
@@ -737,10 +736,16 @@ export function handleAutoAdd() {
   if(this.state.newSharedDoc) {
     this.setState({value: [...this.state.value, object], filteredValue: this.state.value, singleDoc: object, autoSave: "Saving..." }, () => {
       this.autoSave();
+      if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+        this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+      }
     });
   } else {
     this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
       this.autoSave();
+      if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+        this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+      }
     });
   }
 
