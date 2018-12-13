@@ -1,0 +1,171 @@
+$notie-box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.5) !default;
+$notie-breakpoint-mobile: 400px !default;
+$notie-breakpoint-tablet: 750px !default;
+$notie-breakpoint-desktop: 900px !default;
+$notie-breakpoint-widescreen: 1050px !default;
+$notie-font-size-mobile: 1rem !default;
+$notie-font-size-tablet: 1.2rem !default;
+$notie-font-size-desktop: 1.4rem !default;
+$notie-font-size-widescreen: 1.6rem !default;
+$notie-color-text: #FFFFFF !default;
+$notie-color-success: #57BF57 !default;
+$notie-color-warning: #D6A14D !default;
+$notie-color-error: #E1715B !default;
+$notie-color-info: #4D82D6 !default;
+$notie-color-neutral: #A0A0A0 !default;
+$notie-color-white: #FFFFFF !default;
+$notie-color-overlay: #FFFFFF !default;
+$notie-content-width: 900px !default;
+$notie-z-index: 2147483647 !default;
+
+@mixin box-shadow($box-shadow) {
+  -o-box-shadow: $box-shadow;
+  -ms-box-shadow: $box-shadow;
+  -moz-box-shadow: $box-shadow;
+  -webkit-box-shadow: $box-shadow;
+  box-shadow: $box-shadow;
+}
+
+@mixin cursor-pointer() {
+  cursor: pointer;
+}
+
+@mixin border-box-box-sizing() {
+  box-sizing: border-box;
+}
+
+@mixin contained() {
+  margin: 0 auto;
+  max-width: $notie-content-width;
+}
+
+@mixin unselectable() {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.notie-container {
+  font-size: $notie-font-size-widescreen;
+  height: auto;
+  left: 0;
+  position: fixed;
+  text-align: center;
+  width: 100%;
+  z-index: $notie-z-index;
+
+  @include border-box-box-sizing();
+  @include box-shadow($notie-box-shadow);
+
+  @media screen and (max-width: $notie-breakpoint-desktop) {
+    font-size: $notie-font-size-desktop;
+  }
+  @media screen and (max-width: $notie-breakpoint-tablet) {
+    font-size: $notie-font-size-tablet;
+  }
+  @media screen and (max-width: $notie-breakpoint-mobile) {
+    font-size: $notie-font-size-mobile;
+  }
+}
+
+.notie-background-success {
+  background-color: $notie-color-success;
+}
+.notie-background-warning {
+  background-color: $notie-color-warning;
+}
+.notie-background-error {
+  background-color: $notie-color-error;
+}
+.notie-background-info {
+  background-color: $notie-color-info;
+}
+.notie-background-neutral {
+  background-color: $notie-color-neutral;
+}
+.notie-background-overlay {
+  background-color: $notie-color-overlay;
+}
+
+.notie-textbox {
+  color: $notie-color-text;
+  padding: 20px;
+}
+
+.notie-textbox-inner {
+  @include contained();
+}
+
+.notie-overlay {
+  height: 100%;
+  left: 0;
+  opacity: 0;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: $notie-z-index - 1;
+}
+
+.notie-button {
+  color: $notie-color-text;
+  padding: 10px;
+
+  @include cursor-pointer();
+}
+
+.notie-element {
+  color: $notie-color-text;
+  padding: 10px;
+}
+
+.notie-element-half {
+  display: inline-block;
+  width: 50%;
+
+  @include border-box-box-sizing();
+}
+
+.notie-element-third {
+  display: inline-block;
+  width: 33.3333%;
+
+  @include border-box-box-sizing();
+}
+
+.notie-alert {
+  @include cursor-pointer();
+}
+
+.notie-input-field {
+  background-color: $notie-color-white;
+  border: 0;
+  font-family: inherit;
+  font-size: inherit;
+  outline: 0;
+  padding: 10px;
+  text-align: center;
+  width: 100%;
+
+  @include border-box-box-sizing();
+}
+
+.notie-select-choice-repeated {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+
+  @include border-box-box-sizing();
+}
+
+.notie-date-selector-inner {
+  @include contained();
+  @include unselectable();
+
+  [contenteditable], [contenteditable]:focus {
+    outline: 0px solid transparent;
+  }
+}
+
+.notie-date-selector-up {
+  transform: rotate(180deg)
+}

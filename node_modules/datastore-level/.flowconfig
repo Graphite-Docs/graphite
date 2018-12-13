@@ -1,0 +1,12 @@
+[ignore]
+.*/radium/.*
+.*/standard-changelog/.*
+.*/conventional-changelog-core/.*
+.*/node_modules/.*
+
+[include]
+
+[libs]
+flow-typed/.*
+
+[options]

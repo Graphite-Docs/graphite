@@ -1,0 +1,18 @@
+root = true
+
+# Project wide settings
+[**]
+end_of_line = lf
+insert_final_newline = false
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+# Markdown nonsense
+[**.md]
+indent_size = 2
+
+# Go with how NPM indents package.json
+[package.json]
+indent_size = 2

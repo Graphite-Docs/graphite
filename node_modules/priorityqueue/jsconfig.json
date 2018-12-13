@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"target": "ES6",
+		"module": "commonjs"
+	},
+	"files": [
+		"src/AbstructHeap.js",
+		"src/BinaryHeap.js",
+		"src/SkewHeap.js",
+		"src/PairingHeap.js",
+		"test/priorityqueue.test.js",
+		"test/util.js",
+		"src/index.js"
+	]
+}

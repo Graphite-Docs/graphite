@@ -1,0 +1,27 @@
+/*!
+ * numbro.js language configuration
+ * language : Farsi
+ * locale: Iran
+ * author : neo13 : https://github.com/neo13
+ */
+
+module.exports = {
+    languageTag: "fa-IR",
+    delimiters: {
+        thousands: "،",
+        decimal: "."
+    },
+    abbreviations: {
+        thousand: "هزار",
+        million: "میلیون",
+        billion: "میلیارد",
+        trillion: "تریلیون"
+    },
+    ordinal: function() {
+        return "ام";
+    },
+    currency: {
+        symbol: "﷼",
+        code: "IRR"
+    }
+};

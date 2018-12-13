@@ -1,0 +1,7 @@
+{
+  "node": true,
+  "esnext": true,
+  "asi": true,
+  "-W016": true,
+  "unused": true
+}

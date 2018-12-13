@@ -1,0 +1,4 @@
+-o codo
+--extensions coffee|iced
+--
+src

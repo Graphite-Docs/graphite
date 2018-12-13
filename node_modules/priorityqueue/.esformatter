@@ -1,0 +1,13 @@
+{
+  "indent": {
+    "FunctionExpression": 1,
+    "ArrayExpression": 1,
+    "ObjectExpression": 1,
+    "ForOfStatement": 1
+  },
+  "lineBreak": {
+    "before":{
+      "VariableDeclaration": -1
+    }
+  }
+}

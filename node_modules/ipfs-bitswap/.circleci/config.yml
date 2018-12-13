@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/js-ipfs-bitswap
+    docker:
+      - image: circleci/node:6-browsers
+        environment:
+          CHROME_BIN: "/usr/bin/google-chrome"
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: install-deps
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: lint
+          command: npm run lint
+      - run:
+          name: test:node
+          command: npm run test:node
+      - run:
+          name: test:browser
+          command: npm run test:browser
+      - run:
+          name: coverage
+          command: npm run coverage

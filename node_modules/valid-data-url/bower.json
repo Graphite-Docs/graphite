@@ -1,0 +1,32 @@
+{
+  "name": "valid-data-url",
+  "version": "0.1.5",
+  "description": "Detect if a string is a data URL",
+  "main": "index.js",
+  "authors": [
+    {
+      "name": "Alexey Kucherenko",
+      "homepage": "https://github.com/killmenot"
+    }
+  ],
+  "license": "MIT",
+  "keywords": [
+    "valid",
+    "data-uri",
+    "data-url",
+    "data",
+    "uri",
+    "url",
+    "datauri",
+    "dataurl"
+  ],
+  "homepage": "https://github.com/killmenot/valid-data-url",
+  "ignore": [
+    "**/.*",
+    "*.sublime-project",
+    "*.sublime-workspace",
+    "node_modules",
+    "Gruntfile.js",
+    "test.js"
+  ]
+}

@@ -1,0 +1,12 @@
+* run tests!
+* build minified code
+  - gulp
+* version bumps
+  - src/webfinger.js
+  - package.json
+  - bower.json
+* commit changes
+* tag release
+* push code & tags
+* go to github page and make release from tag
+* publish to npm ... (bower uses repo tag)

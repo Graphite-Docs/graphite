@@ -1,0 +1,40 @@
+#!/usr/bin/env node
+'use strict'
+
+const cbor = require('../src/cbor')
+const utils = require('../src/utils')
+const pkg = require('../package.json')
+
+const opts = require('commander')
+  .version(pkg.version)
+  .usage('[options] <file ...>')
+  .option('-x, --hex', 'Hex string output')
+  .parse(process.argv)
+
+const argv = opts.args
+if (argv.length === 0) {
+  argv.push('-')
+}
+
+utils.streamFiles(argv, function () {
+  const Parser = require('json-text-sequence').parser
+  const p = new Parser()
+  const d = new cbor.Encoder()
+  p.pipe(d)
+  p.on('truncated', function (b) {
+    try {
+      d.write(JSON.parse(b))
+    } catch (e) {
+      e.message += ' for input ' + b.inspect()
+      throw e
+    }
+  })
+  let o = d
+  if (opts.hex) {
+    o = new utils.HexStream()
+    d.pipe(o)
+    o.on('end', function () { process.stdout.write('\n') })
+  }
+  o.pipe(process.stdout)
+  return p
+})

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="rtcpeerconnection.bundle.js"></script>
+        <script src="filetransfer.bundle.js"></script>
+        <style>
+#downloadFile {
+  display: none;
+}
+progress {
+  width: 100%;
+}
+        </style>
+    </head>
+    <body>
+        <input type="file" id="files" name="files" />
+        <p>
+          Send progress:
+          <br/>
+          <progress id="sendProgress" value="0" max="0"></progress>
+        </p>
+        <p>
+          Receive progress:
+          <br/>
+          <progress id="receiveProgress" value="0" max="0"></progress>
+          <br/>
+          <a id="downloadFile"></a>
+        </p>
+        <script>
+// file select
+function handleFileSelect(evt) {
+    var file = evt.target.files[0];
+    console.log('file', file.name, file.size, file.type, file.lastModifiedDate);
+    var jingledata = {
+        date: file.lastModifiedDate,
+        desc: '...',
+        name: file.name,
+        range: null,
+        size: file.size
+    }
+    console.log('XEP-0234 data', jingledata);
+    console.log(JSON.stringify(jingledata));
+
+    filesize = file.size;
+    document.getElementById('sendProgress').max = filesize;
+    document.getElementById('receiveProgress').max = filesize;
+
+    receiver.metadata = {
+        name: file.name,
+        size: file.size,
+        type: file.type
+    };
+
+    sender.send(file, sendChannel)
+}
+document.getElementById('files').addEventListener('change', handleFileSelect, false);
+
+var sender = new FileTransfer.Sender();
+sender.on('progress', function (sent, size) {
+    document.getElementById('sendProgress').value = sent;
+});
+sender.on('sentFile', function (info) {
+    console.log('sent file', info);
+    
+});
+
+var receiver = new FileTransfer.Receiver();
+receiver.on('receivedFile', function (file, metadata) {
+    console.log('received file', metadata.name,  'hash', metadata.actualhash);
+    var href = document.getElementById('downloadFile');
+    href.href = URL.createObjectURL(file);
+    href.download = file.name;
+    var text = 'Click to download \'' + metadata.name + '\' (' + metadata.size + ' bytes)';
+    href.appendChild(document.createTextNode(text));
+    href.style.display = 'block';
+});
+receiver.on('progress', function (received, size) {
+    document.getElementById('receiveProgress').value = received;
+});
+        </script>
+        <script>
+var pc1, pc2, sendChannel, receiveChannel;
+
+var servers = null;
+pc1 = new PeerConnection({useJingle: true});
+pc2 = new PeerConnection({useJingle: true});
+
+pc1.on('ice', function (candidate) {
+    pc2.processIce(candidate);
+});
+pc2.on('ice', function (candidate) {
+    pc1.processIce(candidate);
+});
+
+sendChannel = pc1.createDataChannel('filetransfer');
+pc2.on('addChannel', function(channel) {
+    receiveChannel = channel;
+    receiver.receive({}, channel);
+});
+
+var constraints = { mandatory: {
+    OfferToReceiveAudio: false,
+    OfferToReceiveVideo: false
+}};
+pc1.offer(constraints, function (err, offer) {
+    if (err) {
+        console.log('failed to create offer');
+        return;
+    }
+    pc2.handleOffer(offer, function (err) {
+        if (err) {
+            // handle error
+            console.log('error handling offer');
+            return;
+        }
+        pc2.answer(constraints, function (err, answer) {
+            if (err) {
+                console.log('error handling answer');
+                return;
+            }
+            pc1.handleAnswer(answer, function (err) {
+                if (err) {
+                    console.log('failed to handle answer');
+                    return;
+                }
+                // FIXME: enable button
+                console.log('ready');
+            });
+        });
+    });
+});
+        </script>
+    </body>
+</html>

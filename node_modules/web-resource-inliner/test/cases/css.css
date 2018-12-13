@@ -1,0 +1,7 @@
+body {
+	background: url(assets/other.png);
+	background: url(assets/icon.png);/*data-inline*/  
+	background: url('assets/icon.png'); /* data-inline */
+	background: url( "assets/icon.png" ); /* data-inline */
+	background: url("data:image/png;base64,SKIP"); /* data-inline */
+}

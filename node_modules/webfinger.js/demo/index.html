@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>webfinger.js demo</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+
+    <style>
+      body { text-align: center; }
+      header { with: 100%; background-color: #A6A6A6; color: #FDFEDE;
+           padding: 1px; display: block; }
+      header .title { display: inline-block; }
+      header .project-details { margin: 0 0 0 80px; display: inline-block; }
+      header a { color: white; }
+      header a:visited { color: white; }
+      header a:hover { color: black; }
+      form { margin: 15px; }
+      #results { margin: 20px auto 0 auto; padding: 0px; }
+      .result { margin: 0; margin-bottom: 50px; }
+      #error { height: 18px; }
+      p.error { background-color: #FFDEDE; }
+    </style>
+  </head>
+
+  <body>
+    <!--[if lt IE 7]>
+      <p class="chromeframe">You are using an outdated browser. <a href="http://browsehappy.com/">Upgrade your browser today</a>!</p>
+    <![endif]-->
+
+    <header><div class="title"><h1>webfinger.js demo</h1></div><div class="project-details"><a href="https://github.com/silverbucket/webfinger.js">github repository</a></div></header>
+
+    <article>
+
+      <!-- form -->
+      <div>
+        <form name="webfinger">
+          <div class="label_container"><label for="email_address">enter an email address</label></div>
+          <input name="email_address" class="required" value="" size="55"/>
+        </form>
+        <div id="error"></div>
+      </div>
+
+      <!-- display results -->
+      <div id="results">
+
+      </div>
+
+    </article>
+
+    <script src="../src/webfinger.js"></script>
+
+    <script>
+      //document.webfinger.email_address.focus(); it's actually kind of annoying in this case to steal focus
+      document.webfinger.onkeydown = function (evt) {
+        var keyCode = evt ? (evt.which ? evt.which : evt.keyCode) : event.keyCode;
+        if (keyCode == 13) {
+          // enter.
+          var email_address = document.webfinger.email_address.value;
+          queryWebfinger(email_address);
+          return false;
+        } else if (keyCode == 27) {
+          // escape.
+          document.webfinger.email_address.value = '';
+        } else {
+          document.getElementById('error').innerHTML = '';
+          return true;
+        }
+      };
+
+    </script>
+    <script>
+      var wf = new WebFinger({
+        debug: true,
+        webfist_fallback: true,
+        uri_fallback: true
+      });
+
+      function queryWebfinger(emailAddress) {
+        wf.lookup(emailAddress, function (err, p) {
+          console.log('webfinger.js result for ' + emailAddress + ': ', err, p);
+
+          if (err) {
+            console.log('error getting webfinger data for ' + emailAddress + ': ' + err.message);
+            console.log(document.getElementById('error'));
+            document.getElementById('error').innerHTML = '<p class="error">' + err.message + ' for ' + emailAddress + '</p>';
+
+          } else if (p) {
+
+            // build entry html
+            var entry = '<div class="result"><h2>';
+            if (typeof p.idx.properties.name !== 'undefined') {  // add name if it's found
+              entry = entry + p.idx.properties.name + '<br />';
+            }
+            entry = entry + emailAddress + '</h2>';
+
+            if (typeof p.idx.links.avatar[0] === 'object') {
+              entry += '<p><img height="200px" src="' + p.idx.links.avatar[0].href + '"></p>';
+            }
+            p.idx.links.avatar = [];
+
+            Object.keys(p.idx.links).map(function (key, i) {
+              if ((typeof p.idx.links[key] !== 'object') || (typeof p.idx.links[key].length !== 'number')) {
+                return;
+              }
+
+              p.idx.links[key].map(function (record, j) {
+                entry += '<p>' + key + ': <a target="_blank" href="' + record.href + '">' + record.href + '</a></p>';
+              });
+            });
+            entry += '</div>';
+
+            var results = document.getElementById("results");
+            results.insertAdjacentHTML("afterbegin", entry);
+          } else {
+            document.getElementById('error').innerHTML = '<p class="error">unable to get record for ' + emailAddress + '</p>';
+          }
+        });
+      }
+
+      queryWebfinger('nick@silverbucket.net');
+      queryWebfinger('paulej@packetizer.com');
+      queryWebfinger('bradfitz@gmail.com');
+    </script>
+  </body>
+</html>

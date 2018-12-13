@@ -1,0 +1,5 @@
+/** PROMISIFY-ES6
+* @license: MIT
+**/
+
+var createCallback=function(method,context){return function(){var args=Array.prototype.slice.call(arguments);var lastIndex=args.length-1;var lastArg=args&&args.length>0?args[lastIndex]:null;var cb=typeof lastArg==="function"?lastArg:null;if(cb){return method.apply(context,args)}return new Promise(function(resolve,reject){args.push(function(err,val){if(err)return reject(err);resolve(val)});method.apply(context,args)})}};if(typeof module==="undefined")module={};module.exports=function(methods,options){options=options||{};var type=Object.prototype.toString.call(methods);if(type==="[object Object]"||type==="[object Array]"){var obj=options.replace?methods:{};for(var key in methods){if(methods.hasOwnProperty(key))obj[key]=createCallback(methods[key])}return obj}return createCallback(methods,options.context||methods)};if(typeof exports==="undefined"){this["promisify"]=module.exports}

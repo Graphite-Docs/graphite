@@ -1,0 +1,25 @@
+---
+version: "2"
+engines:
+  eslint:
+    enabled: true
+    channel: "eslint-4"
+  duplication:
+    enabled: true
+    config:
+      languages:
+        - javascript
+checks:
+  file-lines:
+    enabled: false
+ratings:
+  paths:
+    - src/**
+exclude_paths:
+  - doc/
+  - node_modules/
+  - release/
+  - scripts/
+  - test/
+  - index.js
+  - webpack.config.js

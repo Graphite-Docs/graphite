@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signalling Server</title>
+  <link rel="shortcut icon" href="https://libp2p.io/img/favicon.png" type="image/png">
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+
+    tt {
+      background: #AFAFAF;
+      padding: 4px;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <center>
+    <br>
+    <img src="https://github.com/libp2p/libp2p/raw/master/logo/alternates/libp2p-logo-alt-4.png" alt="Libp2p Logo" width="128" />
+    <h2>This is a libp2p-webrtc-star signalling-server</h2>
+    <p>Signaling Servers are used in libp2p to allow browsers and clients with restricted port-forwarding<br>to communicate with other peers in the libp2p network</p>
+    <div id="addr"></div>
+    <a href="https://github.com/libp2p/js-libp2p-webrtc-star#readme"> » Learn more</a>
+  </center>
+</body>
+
+<script>
+  var ipv4Regex = /^(\d{1,3}\.){3,3}\d{1,3}$/;
+  var ipv6Regex =
+    /^(::)?(((\d{1,3}\.){3}(\d{1,3}){1})?([0-9a-f]){0,4}:{0,2}){1,8}(::)?$/i;
+  var addr = ''
+  var f = window.location
+  if (f.hostname.startsWith('[') && f.hostname.endsWith(']')) f.h = f.hostname.match(/\[(.+)\]/)[1]
+  else f.h = f.hostname
+  f.protoport = f.port ? f.port : f.protocol == 'https:' ? 443 : 80
+  if (f.port && ipv4Regex.test()) {
+    addr += '/ip4/' + f.h + '/tcp/' + f.port + '/'
+  } else if (f.port && ipv6Regex.test(f.h)) {
+    addr += '/ip6/' + f.h + '/tcp/' + f.port + '/'
+  } else if (f.port) {
+    addr += '/dns/' + f.h + '/tcp/' + f.port + '/'
+  } else if (ipv4Regex.test(f.h)) {
+    addr += '/ip4/' + f.h + '/tcp/' + f.protoport + '/'
+  } else if (ipv6Regex.test(f.h)) {
+    addr += '/ip6/' + f.h + '/tcp/' + f.protoport + '/'
+  } else {
+    addr += '/dns/' + f.h + '/'
+  }
+  if (f.protocol == 'https:') addr += 'wss/'
+  else addr += 'ws/'
+
+  addr += 'p2p-webrtc-star/'
+
+  if (f.protocol == 'file:') addr = '/-.-/'
+
+  document.getElementById('addr').innerHTML = 'You can add this signaling-server with the address <tt>' + addr + '</tt>'
+</script>
+
+</html>

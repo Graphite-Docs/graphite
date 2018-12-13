@@ -1,0 +1,12 @@
+{
+  "source": {
+    "include": ["lib", "index.js"],
+    "exclude": ["./lib/route/compiled-grammar.js"]
+  },
+  "opts": {
+    "destination": "./docs/",
+    "recurse": true,
+    "private": true
+  }
+}
+

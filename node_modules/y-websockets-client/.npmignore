@@ -1,0 +1,11 @@
+node_modules
+bower_components
+build
+build_test
+.directory
+.codio
+.settings
+.jshintignore
+.jshintrc
+.validate.json
+.vscode

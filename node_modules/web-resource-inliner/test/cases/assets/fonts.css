@@ -1,0 +1,17 @@
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('open-sans-v13-latin-regular.eot');
+  src: url('open-sans-v13-latin-regular.eot?#iefix') format('embedded-opentype'),
+       url(open-sans-v13-latin-regular.woff2) format('woff2'),
+       url("open-sans-v13-latin-regular.woff") format('woff'),
+       url('open-sans-v13-latin-regular.svg#OpenSans') format('svg');
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('open-sans-v13-latin-regular.eot');
+  src: url('open-sans-v13-latin-regular.eot?#iefix') format('embedded-opentype'), url(open-sans-v13-latin-regular.woff2) format('woff2'), url("open-sans-v13-latin-regular.woff") format('woff'), url('open-sans-v13-latin-regular.svg#OpenSans') format('svg');
+}

@@ -1,0 +1,9 @@
+# npm
+node_modules/
+npm-debug.log
+
+# Mocha
+test/mocha.opts
+
+# Coverage
+coverage/

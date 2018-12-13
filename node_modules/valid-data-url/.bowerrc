@@ -1,0 +1,5 @@
+{
+  "resolvers": [
+    "fury-bower-resolver"
+  ]
+}

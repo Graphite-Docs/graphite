@@ -1,0 +1,7 @@
+body {
+	background: url(assets/other.png);
+	background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAHklEQVQoz2NgAIP/YMBAPBjVMNAa/pMISNcwEoMVAH0ls03D44ABAAAAAElFTkSuQmCC");/*data-inline*/  
+	background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAHklEQVQoz2NgAIP/YMBAPBjVMNAa/pMISNcwEoMVAH0ls03D44ABAAAAAElFTkSuQmCC"); /* data-inline */
+	background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAACQkWg2AAAAHklEQVQoz2NgAIP/YMBAPBjVMNAa/pMISNcwEoMVAH0ls03D44ABAAAAAElFTkSuQmCC"); /* data-inline */
+	background: url("data:image/png;base64,SKIP"); /* data-inline */
+}

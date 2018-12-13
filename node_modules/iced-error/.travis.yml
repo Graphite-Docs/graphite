@@ -1,0 +1,15 @@
+language: node_js
+node_js:
+    - "node"
+    - "10"
+    - "9"
+    - "8"
+    - "7"
+    - "6"
+    - "6.7"
+    - "5"
+    - "4"
+script:
+  - make test
+notifications:
+  email: false

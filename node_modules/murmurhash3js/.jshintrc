@@ -1,0 +1,10 @@
+{
+	"undef":true,
+	"unused":true,
+    "node": true,
+    "browser": true,
+	"curly":true,
+	"indent":4,
+	"devel":true,
+	"globals":{}
+}

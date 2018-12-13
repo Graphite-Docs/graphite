@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test</title>
+        <script src="rtcpeerconnection.bundle.js"></script>
+    </head>
+    <video id="localVideo" autoplay muted></video>
+    <video id="remoteVideo" autoplay="autoplay"></video>
+
+    <script>
+var localStream;
+var remoteStream;
+var pc1 = new PeerConnection({useJingle: true}, {
+    optional:[
+        //{ andyetBatchIce: 200}
+    ]
+});
+var pc2 = new PeerConnection({useJingle: true}, {
+    optional:[
+        //{ andyetBatchIce: 200}
+    ]
+});
+pc1.on('ice', function (candidate) {
+    console.log('1 -> 2 candidate', candidate);
+    pc2.processIce(candidate);
+});
+pc2.on('ice', function (candidate) {
+    console.log('2 -> 1 candidate', candidate);
+    pc1.processIce(candidate);
+});
+
+pc1.on('iceConnectionStateChange', function () {
+    console.log('pc1 iceConnectionStateChange', pc1.iceConnectionState);
+});
+pc2.on('iceConnectionStateChange', function () {
+    console.log('pc2 iceConnectionStateChange', pc2.iceConnectionState);
+    if (pc2.iceConnectionState === 'connected' ||
+      pc1.iceConnectionState === 'completed') {
+    }
+});
+
+pc2.on('addStream', function (event) {
+    console.log('addStream', event.stream);
+    remoteStream = event.stream;
+    document.getElementById('remoteVideo').mozSrcObject = event.stream;
+});
+
+navigator.mediaDevices.getUserMedia({audio: true, video: true})
+.then(function (stream) {
+    localStream = stream;
+    document.getElementById('localVideo').mozSrcObject = stream;
+    pc1.addStream(stream);
+    pc1.offer(function (err, offer) {
+        if (err) {
+            console.error('failed to create offer');
+            return;
+        }
+        console.log('created offer');
+        console.log(offer);
+        pc2.handleOffer(offer, function (err) {
+            if (err) {
+                // handle error
+                console.error('error handling offer');
+                return;
+            }
+            console.log('handled offer');
+
+            pc2.answer(function (err, answer) {
+                if (err) {
+                    console.error('error handling answer');
+                    return;
+                }
+                console.log('created answer');
+                pc1.handleAnswer(answer, function (err) {
+                    if (err) {
+                        console.error('failed to handle answer');
+                        return;
+                    }
+                    console.log('handled answer');
+                });
+            });
+        });
+    });
+});
+    </script>
+</html>

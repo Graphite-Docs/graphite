@@ -1,0 +1,9 @@
+sudo: false
+language: node_js
+node_js:
+  - 4.2
+  - 5.4
+
+notifications:
+  email:
+    - damon.oehlman@gmail.com

@@ -1,0 +1,16 @@
+language: node_js
+sudo: false
+node_js:
+- '4'
+- '5'
+- 'node'
+install:
+- npm install
+cache:
+  directories:
+    - node_modules
+script:
+- npm run-script ci
+env:
+  global:
+    secure: Gcu1MUELw51BZEmK/B42NGAZT1s+dVR1wjturGymPiKn/RXXP6cskeiFZpU2/5LHJtl4ebKydNXbExDg6acui1MaiHVKQZDNpE1GLlMo/cMkcW5VBDTynmFeURGs4HcfLWCQsZlFWAUB5SJEXox9/8f5GrGxo1EVIBS+lAyFwtM=

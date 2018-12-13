@@ -1,0 +1,11 @@
+language: node_js
+node_js:
+- node
+deploy:
+  provider: npm
+  email: infrastructure@concreteplatform.com
+  api_key:
+    secure: qJAJUEkiNyIhAvpgz0h+4pkBr2m6nwcnPStImW2bBVvMmZ7ls4Duk7TX28vSaAMEkocsU4tBzAKfPHcfuVaWFC1CsmCZO8FZqoufMLP/ZLhV7C8u1K1rzg6zpA2Y8QXot2fk3O39UkybU9dgcyqrHtOKYImexbhPjGOORqBuPV22SFr68tleLW+1YnedPfYoiqPox1wPscqPhF/9ciIVrcLyRt4jDHJFm9FxOaMxD75O437ltZlRtst1d4u+xb0XUYLUsCY2VRvjNcyhwW1XGTDsZFBcUQmhwLZPI1MhIvYNaI/69QkCnJYex1CCw3aWDbLhNoyuceJ2SABEn4kbAKeql02bjEKKO/wR7jovklrzM7LHBGEKNdZn9YgtQ+Vor8fCb2jdvK1kaRpJkWAHDi3V0Hz3E/LSlQ0xjquFKAmmIAvjH58SxLJ/RXC1lRzZWKyRWgYB7eiWWDTot2IIS7fWVuNSKOB9PUMa0oX8JzkK3InaIlIyPEaWgHjn2iDPHD0tM4CYOl6WLfYnFeSQfKeCTt85DlaxYHvSkB1YAoG/YDJMD2nnmYjc3vFZfDlNjsQLEM6p7ZFDF2OkuAAExYxMiJ86x08Y5fGW3vQ9c0i2y+1vSQ5JQWE/0WPbvzs8GZrofZBV9fWeQZdS89oZ7vHAnf0NyawFJTwnQwAChwg=
+  on:
+    tags: true
+    repo: concrete-cc/quill-image-resize-module-react

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>attachMediaStream</title>
+    </head>
+    <body>
+        <p>muted</p>
+        <video id="muted" width="300" height="200"></video>
+        
+        <p>not auto played</p>
+        <video id="noautoplay" width="300" height="200"></video>
+        
+        <p>mirrored</p>
+        <video id="mirrored" width="300" height="200"></video>
+        
+        <p>generated</p>
+        <div id="vidContainer"></div>
+
+        <script src="getusermedia.bundle.js"></script>
+        <script src="attachmediastream.bundle.js"></script>
+        <script>
+            getUserMedia(function (err, stream) {
+                console.log('err', err, stream);
+                var muted = document.getElementById('muted');
+                var noautoplay = document.getElementById('noautoplay');
+                var mirrored = document.getElementById('mirrored');
+
+                attachMediaStream(stream, muted, {muted: true});
+                attachMediaStream(stream, noautoplay, {autoplay: false});
+                attachMediaStream(stream, mirrored, {mirror: true});
+                document.getElementById('vidContainer').appendChild(attachMediaStream(stream));
+            });
+        </script>
+    </body>
+</html>

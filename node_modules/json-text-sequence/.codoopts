@@ -1,0 +1,5 @@
+--name "json-text-sequence"
+--title "json-text-sequence API Documentation"
+--readme README.md
+./src
+LICENSE.md

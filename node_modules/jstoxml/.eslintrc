@@ -1,0 +1,31 @@
+{
+  "extends": "airbnb",
+  "ecmaFeatures": {
+    "experimentalObjectRestSpread": true
+  },
+  "env": {
+    "browser": true,
+    "mocha": true
+  },
+  "globals": {
+    "CONFIG": true,
+    "NODE_ENV": true,
+    "define": true,
+    "require": true
+  },
+  "settings": {
+
+  },
+  "rules": {
+    "indent": ["error", 2],
+    "comma-dangle": ["error", "never"],
+    "no-underscore-dangle": 0,
+    "max-len": ["error", {
+      "code": 100,
+      "comments": 100,
+      "ignoreUrls": true
+    }],
+    "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+    "import/no-extraneous-dependencies": [error, { devDependencies: true }]
+  }
+}

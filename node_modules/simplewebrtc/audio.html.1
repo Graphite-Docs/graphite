@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SimpleWebRTC Audio Demo</title>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="WebRTC, SimpleWebRTC, Talky, Talky.io, library, JavaScript, Node.js">
+
+        <link rel="stylesheet" type="text/css" href="//cloud.typography.com/7773252/764742/css/fonts.css" />
+        <link rel="stylesheet" href="css/style.min.css">
+        <link rel="icon" type="image/png" href="img/favicon.png">
+        <style>
+li span {
+    margin-right: 1em;
+}
+
+progress {
+    margin-right: 1em;
+    width: 50%;
+}
+
+li .filename {
+    display: inline-block;
+    width: 50%;
+}
+
+.peerContainer {
+    margin-bottom: 1em;
+}
+
+.p2pChecking {
+    background-color: #ffeed7;
+}
+.p2pConnected, .p2pCompleted {
+    background-color: #e8f7ef;
+}
+.p2pFailed {
+    background-color: #ffe3eb
+}
+.p2pDisconnected {
+    background-color: #ffeed7;
+}
+.p2pClosed {
+    background-color: #f5f7f8;
+}
+        </style>
+    </head>
+    <body>
+        <h1 class="logo"><span>simple</span><span>WebRTC</span></h1>
+        <h2>You can build cool stuff with WebRTC in five minutes.</h2>
+
+        <h3 id="nickname">How do you want to be called?</h3>
+        <form id="setNick">
+            <input id="nickInput"/>
+            <button type="submit">That's my name!</button>
+        </form>
+
+        <h3 id="title">Start a room</h3>
+        <form id="createRoom">
+            <input id="sessionInput" disabled/>
+            <button disabled type="submit">Create it!</button>
+        </form>
+        <p id="subTitle"></p>
+
+
+        <hr>
+        <div className='peerContainer local'>
+            <div id="mynick" class="nick">Nick: </div>
+            <audio id="localAudio" controls oncontextmenu="return false;" disabled></audio>
+        </div>
+        <div id="remotes"></div>
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+        <script src="simplewebrtc.bundle.js"></script>
+        <script>
+// grab the room from the URL
+var room = location.search && location.search.split('?')[1];
+
+var nick;
+
+var webrtc;
+// create our webrtc connection
+function createSimpleWebRTC(nick) {
+    webrtc = new SimpleWebRTC({
+        // we don't do video
+        localVideoEl: '',
+        remoteVideosEl: '',
+        autoRequestMedia: true,
+        enableDataChannels: false,
+        nick: nick,
+        media: {
+            audio: true,
+            video: false
+        },
+        receiveMedia: { // FIXME: remove old chrome <= 37 constraints format
+            mandatory: {
+                OfferToReceiveAudio: true,
+                OfferToReceiveVideo: false
+            }
+        },
+    });
+
+    webrtc.on('localStream', function(stream) {
+        document.getElementById('localAudio').disabled = false;
+        document.getElementById('localAudio').srcObject = stream; 
+    });
+
+    webrtc.on('readyToCall', function () {
+        // you can name it anything
+        if (room) webrtc.joinRoom(room);
+    });
+
+    // called when a peer is created
+    webrtc.on('createdPeer', function (peer) {
+        console.log('createdPeer', peer);
+        var remotes = document.getElementById('remotes');
+        if (!remotes) return;
+        var container = document.createElement('div');
+        container.className = 'peerContainer';
+        container.id = 'container_' + webrtc.getDomId(peer);
+
+        // show the peer id
+        var peername = document.createElement('div');
+        peername.className = 'peerName';
+        peername.appendChild(document.createTextNode('Peer: ' + peer.id));
+        container.appendChild(peername);
+
+        // show the peer nickname
+        var nickname = document.createElement('div');
+        nickname.className = 'nick';
+        container.appendChild(nickname);
+
+        // show the ice connection state
+        if (peer && peer.pc) {
+            var connstate = document.createElement('div');
+            connstate.className = 'connectionstate';
+            container.appendChild(connstate);
+            peer.pc.on('iceConnectionStateChange', function (event) {
+                var state = peer.pc.iceConnectionState;
+                console.log('state', state);
+                container.className = 'peerContainer p2p' + state.substr(0, 1).toUpperCase()
+                    + state.substr(1);
+                switch (state) {
+                case 'checking': 
+                    nickname.appendChild(document.createTextNode('Nick: ' + peer.nick));
+                    connstate.innerText = 'Connecting to peer...';
+                    break;
+                case 'connected':
+                case 'completed': // on caller side
+                    connstate.innerText = 'Connection established.';
+                    audio.srcObject = peer.stream;
+                    break;
+                case 'disconnected':
+                    connstate.innerText = 'Disconnected.';
+                    break;
+                case 'failed':
+                    // not handled here
+                    break;
+                case 'closed':
+                    connstate.innerText = 'Connection closed.';
+                    container.remove();
+                    break;
+                }
+            });
+        }
+        var audio = document.createElement('audio');
+        audio.controls = true;
+        container.appendChild(audio);
+
+        remotes.appendChild(container);
+    });
+
+    // local p2p/ice failure
+    webrtc.on('iceFailed', function (peer) {
+        var connstate = document.querySelector('#container_' + webrtc.getDomId(peer) + ' .connectionstate');
+        console.log('local fail', connstate);
+        if (connstate) {
+            connstate.innerText = 'Connection failed.';
+        }
+    });
+
+    // remote p2p/ice failure
+    webrtc.on('connectivityError', function (peer) {
+        var connstate = document.querySelector('#container_' + webrtc.getDomId(peer) + ' .connectionstate');
+        console.log('remote fail', connstate);
+        if (connstate) {
+            connstate.innerText = 'Connection failed.';
+        }
+    });
+
+    // override because of problem with gatherer
+    webrtc.on('stunservers', function (args) {
+        webrtc.webrtc.config.peerConnectionConfig.iceServers = [];
+    });
+}
+
+function setRoom(name) {
+    document.querySelector('form#createRoom').remove();
+    document.getElementById('title').innerText = 'Room: ' + name;
+    document.getElementById('subTitle').innerText =  'Link to join: ' + location.href;
+    $('body').addClass('active');
+}
+
+function maybeCreateRoom(room, nick) {
+    if (room && nick && !webrtc) {
+        createSimpleWebRTC(nick);
+    }
+}
+
+if (room) {
+    setRoom(room);
+}
+
+$('form#setNick').submit(function () {
+    nick = $('#nickInput').val().toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
+    if (!nick) return true;
+    createSimpleWebRTC(nick);
+    document.querySelector('form#setNick').remove();
+    document.querySelector('h3#nickname').remove();
+    document.getElementById('mynick').innerText = 'Nick: ' + nick;
+    if (!room) {
+        $('#sessionInput').attr('disabled', null);
+        $('form#createRoom>button').attr('disabled', null);
+        $('form#createRoom').submit(function () {
+            var room = $('#sessionInput').val().toLowerCase().replace(/\s/g, '-').replace(/[^A-Za-z0-9_\-]/g, '');
+            webrtc.createRoom(room, function (err, name) {
+                console.log('create room cb', arguments);
+            
+                var newUrl = location.pathname + '?' + name;
+                if (!err) {
+                    history.replaceState({foo: 'bar'}, null, newUrl);
+                    setRoom(name);
+                } else {
+                    console.log(err);
+                }
+            });
+            return false; 
+        });
+    }
+    return false;
+});
+        </script>
+    </body>
+</html>

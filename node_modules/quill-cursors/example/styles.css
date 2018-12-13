@@ -1,0 +1,17 @@
+html, body {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+h1 {
+  text-align: center;
+}
+
+.container {
+  display: flex;
+}
+
+.editor {
+  margin: 10px;
+  flex-grow: 1;
+  width: 40%;
+}

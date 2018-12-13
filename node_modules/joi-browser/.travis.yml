@@ -1,0 +1,13 @@
+language: node_js
+node_js:
+  - "6"
+  - "7"
+  - "8"
+  - "10"
+  - node
+branches:
+  except:
+    - experimental
+sudo: required
+addons:
+  chrome: stable

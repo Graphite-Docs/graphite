@@ -1,0 +1,133 @@
+/********
+ * VARS *
+ ********/
+
+$spacing-xs: 5px;
+$spacing-sm: 9px;
+
+$border-width-base: 2px;
+$border-width-lg:   3px;
+
+$transition-func: cubic-bezier(0.250, 0.460, 0.450, 0.940);
+
+
+/**********
+ * MIXINS *
+ **********/
+
+
+@mixin whenScreen   { @media screen { @content; } }
+
+//
+@function buildTransition($properties, $speed, $delay) {
+  $transitions: ();
+
+  @each $property in $properties {
+    $transitions: append($transitions
+      , $property $speed $transition-func $delay, comma);
+  }
+
+  @return $transitions;
+}
+
+//
+@mixin transition($properties, $speed: 0ms, $delay: 0ms) {
+  @include whenScreen {
+    transition: buildTransition($properties, $speed, $delay);
+  }
+}
+
+
+/***********
+ * CURSORS *
+ ***********/
+
+
+// Core Editor
+.ql-container {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.ql-editor {
+  position: relative;
+  position: relative;
+  flex: 1;
+  outline: none;
+  tab-size: 4;
+  white-space: pre-wrap;
+}
+
+.ql-cursor {
+
+  &.hidden {
+    display: none;
+  }
+
+  .ql-cursor-caret-container,
+  .ql-cursor-flag {
+    position: absolute;
+  }
+
+  .ql-cursor-flag {
+    z-index: 1;
+    transform: translate3d(-$border-width-base / 2, -100%, 0);
+    opacity: 0;
+    visibility: hidden;
+    color: white;
+    padding-bottom: 2px;
+
+    @include transition((
+      opacity,
+      visibility
+    ));
+
+    .ql-cursor-name {
+      margin-left: $spacing-xs;
+      margin-right: $spacing-xs / 2;
+      display: inline-block;
+      margin-top: -2px;
+    }
+
+    .ql-cursor-flag-flap {
+      display: inline-block;
+      z-index: -1;
+      width: $spacing-xs;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      right: -$spacing-xs / 2;
+      border-radius: $border-width-lg;
+      background-color: inherit;
+    }
+  }
+
+  .ql-cursor-flag:hover,
+  .ql-cursor-caret-container:hover + .ql-cursor-flag {
+    opacity: 1;
+    visibility: visible;
+    transition: none;
+  }
+
+  .ql-cursor-caret-container {
+    margin-left: -$spacing-sm;
+    padding: 0 $spacing-sm;
+    z-index: 1;
+
+    .ql-cursor-caret {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: $border-width-base;
+      margin-left: -($border-width-base / 2);
+
+      background-color: attr(data-color);
+    }
+  }
+
+  .ql-cursor-selection-block {
+    position: absolute;
+  }
+}

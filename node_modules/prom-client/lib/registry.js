@@ -1,0 +1,154 @@
+'use strict';
+const { getValueAsString } = require('./util');
+
+function escapeString(str) {
+	return str.replace(/\n/g, '\\n').replace(/\\(?!n)/g, '\\\\');
+}
+function escapeLabelValue(str) {
+	if (typeof str !== 'string') {
+		return str;
+	}
+	return escapeString(str).replace(/"/g, '\\"');
+}
+
+const defaultMetricsOpts = {
+	timestamps: true
+};
+
+class Registry {
+	constructor() {
+		this._metrics = {};
+		this._defaultLabels = {};
+	}
+
+	getMetricsAsArray() {
+		return Object.keys(this._metrics).map(this.getSingleMetric, this);
+	}
+
+	getMetricAsPrometheusString(metric, conf) {
+		const opts = Object.assign({}, defaultMetricsOpts, conf);
+		const item = metric.get();
+		const name = escapeString(item.name);
+		const help = `# HELP ${name} ${escapeString(item.help)}`;
+		const type = `# TYPE ${name} ${item.type}`;
+		const defaultLabelNames = Object.keys(this._defaultLabels);
+
+		let values = '';
+		for (const val of item.values || []) {
+			val.labels = val.labels || {};
+			for (const labelName of defaultLabelNames) {
+				val.labels[labelName] =
+					val.labels[labelName] || this._defaultLabels[labelName];
+			}
+
+			let labels = '';
+			for (const key of Object.keys(val.labels)) {
+				labels += `${key}="${escapeLabelValue(val.labels[key])}",`;
+			}
+
+			let metricName = val.metricName || item.name;
+			if (labels) {
+				metricName += `{${labels.replace(/,$/, '')}}`;
+			}
+
+			let line = `${metricName} ${getValueAsString(val.value)}`;
+			if (opts.timestamps && val.timestamp) {
+				line += ` ${val.timestamp}`;
+			}
+			values += `${line.trim()}\n`;
+		}
+
+		return `${help}\n${type}\n${values}`.trim();
+	}
+
+	metrics(opts) {
+		let metrics = '';
+
+		for (const metric of this.getMetricsAsArray()) {
+			metrics += `${this.getMetricAsPrometheusString(metric, opts)}\n\n`;
+		}
+
+		return metrics.replace(/\n$/, '');
+	}
+
+	registerMetric(metricFn) {
+		if (
+			this._metrics[metricFn.name] &&
+			this._metrics[metricFn.name] !== metricFn
+		) {
+			throw new Error(
+				`A metric with the name ${metricFn.name} has already been registered.`
+			);
+		}
+
+		this._metrics[metricFn.name] = metricFn;
+	}
+
+	clear() {
+		this._metrics = {};
+		this._defaultLabels = {};
+	}
+
+	getMetricsAsJSON() {
+		const metrics = [];
+		const defaultLabelNames = Object.keys(this._defaultLabels);
+
+		for (const metric of this.getMetricsAsArray()) {
+			const item = metric.get();
+
+			if (item.values) {
+				for (const val of item.values) {
+					for (const labelName of defaultLabelNames) {
+						val.labels[labelName] =
+							val.labels[labelName] || this._defaultLabels[labelName];
+					}
+				}
+			}
+
+			metrics.push(item);
+		}
+
+		return metrics;
+	}
+
+	removeSingleMetric(name) {
+		delete this._metrics[name];
+	}
+
+	getSingleMetricAsString(name) {
+		return this.getMetricAsPrometheusString(this._metrics[name]);
+	}
+
+	getSingleMetric(name) {
+		return this._metrics[name];
+	}
+
+	setDefaultLabels(labels) {
+		this._defaultLabels = labels;
+	}
+
+	resetMetrics() {
+		for (const metric in this._metrics) {
+			this._metrics[metric].reset();
+		}
+	}
+
+	get contentType() {
+		return 'text/plain; version=0.0.4; charset=utf-8';
+	}
+
+	static merge(registers) {
+		const mergedRegistry = new Registry();
+
+		const metricsToMerge = registers.reduce(
+			(acc, reg) => acc.concat(reg.getMetricsAsArray()),
+			[]
+		);
+
+		metricsToMerge.forEach(mergedRegistry.registerMetric, mergedRegistry);
+		return mergedRegistry;
+	}
+}
+
+module.exports = Registry;
+module.exports.globalRegistry = new Registry();

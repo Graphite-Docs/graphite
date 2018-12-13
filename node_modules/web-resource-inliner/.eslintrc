@@ -1,0 +1,29 @@
+{
+    "rules": {
+        "indent": 0,
+        "quotes": [
+            2,
+            "double",
+            "avoid-escape"
+        ],
+        "linebreak-style": [
+            2,
+            "unix"
+        ],
+        "semi": [
+            2,
+            "always"
+        ],
+        "space-in-parens": [
+            2,
+            "always"
+        ],
+        "no-console": 0,
+        "eol-last": 2
+    },
+    "env": {
+        "node": true,
+        "es6": true
+    },
+    "extends": "eslint:recommended"
+}

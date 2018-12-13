@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+- '0.10'
+- '0.11'
+deploy:
+  provider: npm
+  email: andrew@balmos.org
+  api_key:
+    secure: IMkSB4fm/1IriMMi+lLQfWuzpK3zUudXOTLj2ugC7cA6gJUVlDTvlCEcx6ClUN6IOVAwSZIGKIrJPMNOzcTYPyJh+R01KIhuJ+NkhdlssTfg7hVih5V46X4QWh4x6dXeanAzEiN/1U6ewKiJHu66YqR+I7qDvdLjnScx1YlFup0=
+  on:
+    tags: true
+    all_branches: true
+    repo: OADA/rsa-pem-to-jwk
+before_install:
+- npm install -g gulp
+script:
+- gulp lint
+- gulp style
+- npm run cover
+after_success:
+- cat ./coverage/lcov.info | ./node_modules/.bin/coveralls --verbose

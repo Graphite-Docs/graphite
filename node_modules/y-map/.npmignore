@@ -1,0 +1,8 @@
+/node_modules/
+/build/
+bower_components
+.directory
+.c9
+.codio
+.settings
+.vscode

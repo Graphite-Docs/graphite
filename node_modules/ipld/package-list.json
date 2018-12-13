@@ -1,0 +1,29 @@
+{
+  "columns": [
+    "Package",
+    "Version",
+    "Deps",
+    "CI",
+    "Coverage",
+    "Lead Maintainer"
+  ],
+  "rows": [
+    "IPLD Formats",
+    ["ipld/js-ipld-bitcoin", "ipld-bitcoin"],
+    ["ipld/js-ipld-dag-cbor", "ipld-dag-cbor"],
+    ["ipld/js-ipld-dag-pb", "ipld-dag-pb"],
+    ["ipld/js-ipld-ethereum", "ipld-ethereum"],
+    ["ipld/js-ipld-git", "ipld-git"],
+    ["ipld/js-ipld-raw", "ipld-raw"],
+    ["ipld/js-ipld-zcash", "ipld-zcash"],
+
+    "Data Types (non IPLD specific)",
+    ["multiformats/js-multihash", "multihashes"],
+    ["ipfs/js-ipfs-block", "ipfs-block"],
+
+    "Storage", 
+    ["ipfs/js-ipfs-repo", "ipfs-repo"],
+    ["ipfs/interface-datastore", "interface-datastore"],
+    ["ipfs/js-ipfs-block-service", "ipfs-block-service"]
+  ]
+}

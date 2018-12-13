@@ -1,0 +1,25 @@
+{
+  "name": "scrollparent",
+  "main": [
+    "scrollparent.js"
+  ],
+  "dependencies": {},
+  "version": "2.0.1",
+  "homepage": "https://github.com/olahol/scrollparent.js",
+  "description": "A function to get the scrolling parent of an html element.",
+  "keywords": [
+    "scroll",
+    "scrollparent",
+    "dom"
+  ],
+  "authors": [
+    "Ola Holmström <olaholmstrom@gmail.com>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test.html"
+  ]
+}

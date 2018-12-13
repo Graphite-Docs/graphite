@@ -1,0 +1,20 @@
+2016.08.23, Version 0.0.4
+
+* don't use arrow functions yet (support Safari)
+
+
+2016.08.23, Version 0.0.3
+
+* fix timeout when inadvertently waiting for drain
+* add tests
+
+
+2016.08.21, Version 0.0.2
+
+* add .eslingrc.js
+* replace reopenOnTimeout with snapshot option
+
+
+2016.08.02, Version 0.0.1
+
+* public release

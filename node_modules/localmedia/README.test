@@ -1,0 +1,6 @@
+test with browserify test/basic.js | testling -u
+
+automatted testing with chromium:
+use --use-fake-ui-for-media-stream and --use-fake-device-for-media-stream
+Use --user-data-dir to start a new instance
+use --allow-http-screen-capture and --enable-usermedia-screen-capturing (not yet)

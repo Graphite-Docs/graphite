@@ -1,0 +1,11 @@
+sudo: false
+language: node_js
+node_js:
+  - "6"
+  - "7"
+  - "8"
+  - "9"
+  - "10"
+env:
+  - TEST_SUITE=unit
+script: npm run-script $TEST_SUITE

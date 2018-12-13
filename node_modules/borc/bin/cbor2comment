@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+'use strict'
+
+const cbor = require('../src/cbor')
+const utils = require('../src/utils')
+const pkg = require('../package.json')
+
+const opts = require('commander')
+  .version(pkg.version)
+  .usage('[options] <file ...>')
+  .option('-x, --hex [string]', 'Hex string input')
+  .option('-t, --tabsize [spaces]', 'Indent amount')
+  .parse(process.argv)
+
+const numTabs = (opts.tabsize | 0) || 10
+const argv = opts.args
+if (opts.hex) {
+  argv.push(new utils.DeHexStream(opts.hex))
+}
+
+if (argv.length === 0) {
+  argv.push('-')
+}
+
+utils.streamFiles(argv, function () {
+  const c = new cbor.Commented({
+    max_depth: numTabs
+  })
+  c.pipe(process.stdout)
+  return c
+})
