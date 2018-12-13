@@ -18,7 +18,7 @@ const FileSaver = require('file-saver');
 const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
-const showdown  = require('showdown');
+// const showdown  = require('showdown');
 const html2pdf = require('html2pdf.js')
 // const turndownService = new TurndownService()
 const isBoldHotkey = isKeyHotkey('mod+b')
@@ -455,48 +455,48 @@ export function copyLink() {
   }
 
 export function sharedInfoSingleDocRTC(props){
-  this.setState({ receiverID: props, rtc: true, loading: true });
-  const user = props;
-  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    this.setState({ receiverID: props, rtc: true, loading: true });
+    const user = props;
+    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
 
-  getFile('key.json', options)
-    .then((file) => {
-      this.setState({ pubKey: JSON.parse(file)})
-      console.log("Step One: PubKey Loaded");
-    })
-    .then(() => {
-      getFile('graphiteprofile.json', options)
-        .then((fileContents) => {
-          if(JSON.parse(fileContents).emailOK) {
-            const object = {};
-            object.sharedBy = loadUserData().username;
-            object.title = this.state.title;
-            object.from_email = "contact@graphitedocs.com";
-            object.to_email = JSON.parse(fileContents).profileEmail;
-            if(window.location.href.includes('/documents')) {
-              object.subject = 'New Graphite document shared by ' + loadUserData().username;
-              object.link = window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1];
-              object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
-              axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
-                .then((res) => {
-                  console.log(res);
-                })
-              console.log(object);
-            }
-          } else {
-            console.log("you can't email this person")
-          }
-        })
-    })
-      .then(() => {
-        this.loadMyFile();
+    getFile('key.json', options)
+      .then((file) => {
+        this.setState({ pubKey: JSON.parse(file)})
+        console.log("Step One: PubKey Loaded");
       })
-      .catch(error => {
-        console.log("No key: " + error);
-        this.setState({ loading: false, displayMessage: true, results: [] }, () => {
-          setTimeout(() => this.setState({displayMessage: false}), 3000);
+      .then(() => {
+        getFile('graphiteprofile.json', options)
+          .then((fileContents) => {
+            if(JSON.parse(fileContents).emailOK) {
+              const object = {};
+              object.sharedBy = loadUserData().username;
+              object.title = this.state.title;
+              object.from_email = "contact@graphitedocs.com";
+              object.to_email = JSON.parse(fileContents).profileEmail;
+              if(window.location.href.includes('/documents')) {
+                object.subject = 'New Graphite document shared by ' + loadUserData().username;
+                object.link = window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1];
+                object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
+                axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
+                  .then((res) => {
+                    console.log(res);
+                  })
+                console.log(object);
+              }
+            } else {
+              console.log("you can't email this person")
+            }
+          })
+      })
+        .then(() => {
+          this.loadMyFile();
+        })
+        .catch(error => {
+          console.log("No key: " + error);
+          this.setState({ loading: false, displayMessage: true, results: [] }, () => {
+            setTimeout(() => this.setState({displayMessage: false}), 3000);
+          });
         });
-      });
 }
 
 export function sharedInfoSingleDocStatic(props){
@@ -561,7 +561,7 @@ export function loadMyFile() {
     object.id = window.location.href.split('doc/')[1];
     object.receiverID = this.state.receiverID;
     object.words = wordcount(html.serialize(this.state.content));
-    object.sharedWith = this.state.sharedWith;
+    object.sharedWith = [...this.state.sharedWith, this.state.receiverID];
     object.shared = getMonthDayYear();
     object.rtc = this.state.rtc;
     object.user = loadUserData().username;

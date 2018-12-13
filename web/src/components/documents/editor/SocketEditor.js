@@ -78,6 +78,7 @@ class SocketEditor extends Component {
         docLoaded={this.props.docLoaded}
         idToLoad={this.props.idToLoad}
         createRTC={this.props.createRTC}
+        collabContent={this.props.collabContent}
       />
     );
   }

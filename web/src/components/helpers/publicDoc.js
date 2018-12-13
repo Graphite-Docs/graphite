@@ -178,7 +178,6 @@ export function fetchData() {
   const user = window.location.href.split('docs/')[1].split('-')[0]
   lookupProfile(user, "https://core.blockstack.org/v1/names")
   .then((profile) => {
-    console.log(profile)
     this.setState({ url: profile.apps[window.location.origin]}, () => {
       this.loadDoc();
     })
@@ -199,21 +198,20 @@ export function loadDoc() {
         lastUpdated: lastUpdated,
         singleDocIsPublic: response.data.singleDocIsPublic,
         title: response.data.title,
+        readOnlyContent: response.data.content,
+        collabContent: html.deserialize(lzjs.decompress(response.data.content)),
         readOnly: response.data.readOnly,
         words: response.data.words,
         wholeFile: response.data
-      }, () => {
-        if(this.state.readOnly) {
-          this.setState({content: response.data.content, docLoaded: true})
-        } else {
-          this.setState({content: html.deserialize(lzjs.decompress(response.data.content)), docLoaded: true})
-        }
       })
     } else {
       this.setState({
         singleDocIsPublic: false,
       })
     }
+  })
+  .then(() => {
+    this.setState({ docLoaded: true })
   })
   .catch((error) => {
     console.log('error:', error);
@@ -223,8 +221,10 @@ export function loadDoc() {
 //this function is for TextEdit...
 export function handlePubChange(change) { //calling this on change in textarea...
   this.setState({
-    content: change.value
+    collabContent: change.value
   });
+  clearTimeout(this.timeout);
+  this.timeout = setTimeout(this.fetchData, 3000)
 }
 
 export function handlePubTitleChange(e) {

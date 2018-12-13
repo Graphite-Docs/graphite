@@ -502,7 +502,7 @@ onClickAlign = (event, align) => {
             />
           }
           <div className="ql-editor">
-          {this.props.readOnly ?
+          {this.props.collabContent ?
             <Editor
               className='editor'
               spellCheck
@@ -510,12 +510,11 @@ onClickAlign = (event, align) => {
               plugins={plugins}
               placeholder="Write something great..."
               ref={this.ref}
-              value={this.props.content}
+              value={this.props.collabContent}
               onChange={this.onChange}
               onKeyDown={this.onKeyDown}
               renderNode={this.renderNode}
               renderMark={this.renderMark}
-              readOnly
             /> :
             <Editor
               className='editor'

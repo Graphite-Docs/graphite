@@ -9,8 +9,6 @@ export default class PublicDoc extends Component {
 
   componentDidMount() {
     this.props.fetchData();
-    setTimeout(this.props.loadDoc, 5000);
-    this.interval = setInterval(() => this.props.loadDoc(), 3000);
   }
 
   componentWillUnmount() {
@@ -18,7 +16,6 @@ export default class PublicDoc extends Component {
   }
 
   render() {
-    console.log(this.props.content)
     // let toolbar = window.document.getElementsByClassName('ql-toolbar')[0];
     // if(toolbar[0]) {
     //   if(this.props.readOnly) {
@@ -49,17 +46,17 @@ export default class PublicDoc extends Component {
               <div className="double-space doc-margin">
 
                 {
-                  this.props.docLoaded === true && this.props.content ?
+                  this.props.docLoaded ?
                   <div>
                   {
                     this.props.singleDocIsPublic === true ?
                     <div style={{maxWidth: "85%", margin: "auto", marginTop: "100px"}}>
                     <h1 style={{textAlign: "center", marginBottom: "45px"}}>{this.props.title}</h1>
-                    <div dangerouslySetInnerHTML={{__html: this.props.content}} />
+                    <div dangerouslySetInnerHTML={{__html: this.props.readOnlyContent}} />
                     </div>
                     :
                     <div style={{marginTop: "20%", textAlign: "center"}}>
-                      <h1>
+                      <h1 style={{maxWidth: "85%", margin: "auto"}}>
                         This document is not being shared at this time.
                       </h1>
                     </div>
@@ -98,7 +95,7 @@ export default class PublicDoc extends Component {
               <div className="double-space doc-margin">
 
                 {
-                  this.props.docLoaded === true && this.props.content ?
+                  this.props.docLoaded === true ?
                   <div>
                   {
                     this.props.singleDocIsPublic === true && !this.props.readOnly ?
@@ -111,7 +108,7 @@ export default class PublicDoc extends Component {
                         <SocketEditor
                           roomId={this.props.idToLoad} //this is a string!
                           docLoaded={this.props.docLoaded} //this is set by loadDoc
-                          content={this.props.content}
+                          content={this.props.collabContent}
                           readOnly={this.props.readOnly}
                           handlePubChange={this.props.handlePubChange}
                         />
@@ -119,7 +116,7 @@ export default class PublicDoc extends Component {
                     </div>
                     :
                     <div style={{marginTop: "20%"}}>
-                      <h1>
+                      <h1 style={{maxWidth: "85%", margin: "auto"}}>
                         This document is not being shared at this time.
                       </h1>
                     </div>
