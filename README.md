@@ -14,10 +14,18 @@ Steps to install:
 
 1) Clone the repo.
 2) cd into `graphite`
+3) cd into `web`
 3) Run `npm install`
 4) Run `npm run start`
 
-Note 1: Local development will result in CORS errors on authentication. Use a CORS browser extension to get around this. Future version will eliminate this need and when pushed to a hosted site, the CORS error is resolved. 
+If you will be running a local websockets server, then you will also need to take the following steps:
+
+1) cd into `server`  
+2) `node index.js`
+3) In your `web` folder, access `src/components/documents/editor`
+4) In the `SocketEditor` file, change the endpoint to `http://localhost:5000`
+
+Note 1: Local development will result in CORS errors on authentication. Use a CORS browser extension to get around this. Future version will eliminate this need and when pushed to a hosted site, the CORS error is resolved.
 
 Note 2: Configuration files `src/components/helpers/prod.js` and `src/components/helpers/dev.js` both need to be present in order to compile successfully. In case they are missing, add them before starting the project.
 
