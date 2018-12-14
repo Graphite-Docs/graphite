@@ -645,7 +645,6 @@ export function handleTitleChange(e) {
 }
 
 export function handleChange(change, options = {}) {
-  console.log("change")
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 3000)
@@ -732,23 +731,63 @@ export function handleAutoAdd() {
   objectTwo.singleDocTags = this.state.singleDocTags;
   objectTwo.fileType = "documents";
   const index = this.state.index;
-  const updatedDoc = update(this.state.value, {$splice: [[index, 1, objectTwo]]}); //splice is replacing 1 element at index position with objectTwo
-  if(this.state.newSharedDoc) {
-    this.setState({value: [...this.state.value, object], filteredValue: this.state.value, singleDoc: object, autoSave: "Saving..." }, () => {
-      this.autoSave();
-      if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-        this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-      }
-    });
-  } else {
-    this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
-      this.autoSave();
-      if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-        this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-      }
-    });
-  }
+  console.log(index)
+  if(index > -1) {
+    console.log(index)
 
+    if(this.state.newSharedDoc) {
+      console.log("new shared doc")
+      this.setState({value: [...this.state.value, object], filteredValue: [...this.state.value, object], singleDoc: object, autoSave: "Saving..." }, () => {
+        this.setState({ newSharedDoc: false }, () => {
+          this.autoSave();
+          console.log(this.state.value);
+        })
+        if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+          this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+        }
+      });
+    } else {
+      console.log("not a new shared doc")
+      if(this.state.index) {
+        console.log("index already set")
+        const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
+        this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+          this.autoSave();
+          console.log(this.state.value);
+          if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+            this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+          }
+        });
+      } else {
+        let value = this.state.value;
+        const thisDoc = value.find((doc) => {
+          console.log(typeof doc.id)
+          if(typeof doc.id === "string") {
+            return doc.id === window.location.href.split('shared/')[1].split('/')[1]
+          } else {
+            return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+          }
+
+        });
+        let index = thisDoc && thisDoc.id;
+        function findObjectIndex(doc) {
+          return doc.id === index; //this is comparing a number to a number
+        }
+        this.setState({index: value.findIndex(findObjectIndex)}, () => {
+          const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
+          this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+            this.autoSave();
+            console.log(this.state.value);
+            if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+              this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+            }
+          });
+        })
+      }
+    }
+  } else {
+    console.log("Index error")
+  }
 }
 
 export function autoSave() {
@@ -767,15 +806,18 @@ export function saveSingleDocCollection() {
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
     .then(() => {
       this.setState({autoSave: "Saved"});
-      if(this.state.stealthyConnected) {
-        setTimeout(this.connectStealthy, 300);
-      } else if(this.state.travelstackConnected) {
-        setTimeout(this.connectTravelstack, 300);
-      } else if (this.state.coinsConnected) {
-        setTimeout(this.connectCoins, 300);
-      }
+      // if(this.state.stealthyConnected) {
+      //   setTimeout(this.connectStealthy, 300);
+      // } else if(this.state.travelstackConnected) {
+      //   setTimeout(this.connectTravelstack, 300);
+      // } else if (this.state.coinsConnected) {
+      //   setTimeout(this.connectCoins, 300);
+      // }
 
       // this.saveDocsStealthy();
+    })
+    .then(() => {
+      this.loadCollection()
     })
     .catch(e => {
       console.log(e);

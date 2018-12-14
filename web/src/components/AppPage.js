@@ -116,7 +116,7 @@ export default class AppPage extends Component {
         target: ".cards"
       },
       {
-        content: <p>You will see your 14 most recet files listed here. Click the name of a file for easy access.</p>,
+        content: <p>You will see your 14 most recent files listed here. Click the name of a file for easy access.</p>,
         placement: "top",
         disableBeacon: true,
         styles: {
