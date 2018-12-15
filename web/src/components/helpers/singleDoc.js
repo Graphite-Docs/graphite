@@ -227,7 +227,12 @@ export function initialDocLoad() {
     this.setState({ value: JSON.parse(fileContents || '{}').value })
     let value = this.state.value;
     const thisDoc = value.find((doc) => {
-      return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+      if(typeof doc.id === "string") {
+        return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+      } else {
+        return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+      }
+
     });
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {

@@ -279,7 +279,6 @@ export default class Menu extends Component {
                               <li onClick={() => this.props.formatSpacing('double')}><a>Double Space</a></li>
                           </ul>
                       </li>
-                      {this.props.rtc ? <li className="hide" /> : this.props.markdown ? <li className="topmenu" onClick={this.props.changeEditor}><a>WYSIWYG Editor</a></li> : <li className="topmenu" onClick={this.props.changeEditor}><a>Markdown Editor</a></li>}
                   </ul>
               </div>
     );
