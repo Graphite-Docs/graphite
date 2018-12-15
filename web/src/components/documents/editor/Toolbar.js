@@ -56,22 +56,24 @@ export default class Toolbar extends Component {
   }
 
   onColorClick = () => {
-    this.setState({ display: !this.state.display}, () => {
-      if(this.state.display) {
-        colorPicker = 'colorPicker'
-      } else {
-        colorPicker = 'hide'
-      }
-    })
+    console.log("click")
+    this.setState({ display: !this.state.display})
   }
 
   handleChangeComplete = (color) => {
-    this.setState({ color: color.hex }, () => {
+    this.setState({ color: color.hex, display: false }, () => {
       this.props.onClickColor(color);
     });
   };
 
   render() {
+    if(this.state.display) {
+      colorPicker = 'colorPicker'
+    } else {
+      colorPicker = 'hide'
+    }
+
+
     if(window.innerWidth < 620) {
       return (
         <div className='slate-toolbar'>

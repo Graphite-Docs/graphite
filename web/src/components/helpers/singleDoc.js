@@ -168,7 +168,7 @@ const rules = [
             type: type,
             data: {
               href: el.getAttribute('href'),
-              style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
+              // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
             },
             nodes: next(el.childNodes),
           }
@@ -228,10 +228,15 @@ export function initialDocLoad() {
     let value = this.state.value;
     const thisDoc = value.find((doc) => {
       if(typeof doc.id === "string") {
-        return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+        if(doc.id) {
+          return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+        }
       } else {
-        return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+        if(doc.id) {
+          return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+        }
       }
+      return null;
 
     });
     let index = thisDoc && thisDoc.id;
@@ -766,13 +771,16 @@ export function handleAutoAdd() {
       } else {
         let value = this.state.value;
         const thisDoc = value.find((doc) => {
-          console.log(typeof doc.id)
           if(typeof doc.id === "string") {
-            return doc.id === window.location.href.split('shared/')[1].split('/')[1]
+            if(doc.id) {
+              return doc.id === window.location.href.split('shared/')[1].split('/')[1]
+            }
           } else {
-            return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+            if(doc.id) {
+              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+            }
           }
-
+          return null;
         });
         let index = thisDoc && thisDoc.id;
         function findObjectIndex(doc) {

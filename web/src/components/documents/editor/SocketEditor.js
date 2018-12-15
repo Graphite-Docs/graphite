@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import socketIOClient from 'socket.io-client';
 import SlateEditor from './SlateEditor';
+import { loadUserData } from 'blockstack';
 
 class SocketEditor extends Component {
   constructor(props) {
@@ -11,7 +12,7 @@ class SocketEditor extends Component {
       // endpoint: 'http://localhost:5000'
     }
 
-    this.uniqueID = Math.round(Math.random() * 1000000000000);
+    this.uniqueID = loadUserData().username;
 
     this.socket = socketIOClient(this.state.endpoint);
 
@@ -21,6 +22,7 @@ class SocketEditor extends Component {
       if (ops !== null && this.uniqueID !== uniqueID) {
         setTimeout(() => {
           try {
+            console.log(uniqueID)
             this.slate.applyOperations(ops);
           } catch(e) {
             console.log(e)

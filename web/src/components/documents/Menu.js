@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Modal, Input, Button, Item } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 import { loadUserData } from 'blockstack';
 
 export default class Menu extends Component {
@@ -266,6 +267,25 @@ export default class Menu extends Component {
                       <li className="topmenu">
                           <a>Info</a>
                           <ul className="submenu">
+                            <Modal closeIcon trigger={<li><a>Markdown Guide</a></li>}>
+                            <Modal.Header>Markdown Guide</Modal.Header>
+                              <Modal.Content>
+                                <Modal.Description>
+                                  <SemanticHeader>Basic Syntax</SemanticHeader>
+                                  <ul>
+                                    <li><span><h2>Headings</h2></span> <span><pre> # Headings</pre></span></li>
+                                    <li><span>New Paragraph</span> <span> <pre>Hit "return" twice</pre></span></li>
+                                    <li><span>Blockquote</span><span> <pre>">" then hit space</pre></span></li>
+                                    {/*<li><span>Hyperlinked <a>text</a></span> <span><pre>[text](http://www.link.com)</pre></span></li>*/}
+                                    <li><span><em>Italicize</em></span> <span><pre>"_" then hit space</pre></span></li>
+                                    {/*<li><span><strong>Bold</strong></span> <span><pre>**Bold**</pre></span></li>*/}
+                                    {/*<li><span>Ordered lists</span> <span><pre><br/>1. Item One <br/> 2. Item Two</pre></span></li>*/}
+                                    <li><span>Unordered lists</span> <span><pre>"*" then his space</pre></span></li>
+                                  </ul>
+                                  <p>Learn more <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer">here.</a></p>
+                                </Modal.Description>
+                              </Modal.Content>
+                            </Modal>
                               <li><a href="https://github.com/Graphite-Docs/graphite" target="_blank" rel="noopener noreferrer">github</a></li>
                               <li><a href="https://graphitedocs.com/about" target="_blank" rel="noopener noreferrer">about</a></li>
                               <li className="divider-menu"><hr /></li>
