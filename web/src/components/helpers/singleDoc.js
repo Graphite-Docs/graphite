@@ -47,7 +47,9 @@ const MARK_TAGS = {
 }
 
 const INLINE_TAGS = {
-  a: 'link'
+  a: 'link',
+  img: 'image',
+  iframe: 'video'
 }
 const rules = [
   {
@@ -168,6 +170,7 @@ const rules = [
             type: type,
             data: {
               href: el.getAttribute('href'),
+              src: el.getArrtribute('src')
               // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
             },
             nodes: next(el.childNodes),
@@ -181,6 +184,10 @@ const rules = [
               return <a href={obj.data.get('href')}>{children}</a>
             case 'color':
               return <span style={ obj.data.get('style') }>{children}</span>
+            case 'image':
+              return <img src={ obj.data.get('src') } alt='thumbnail'/>
+            case 'video':
+              return <iframe src={ obj.data.get('src') } title="video" />
             default: return ''
           }
         }
