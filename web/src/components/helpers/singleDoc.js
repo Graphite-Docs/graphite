@@ -12,6 +12,7 @@ import {
 import update from 'immutability-helper';
 // import TurndownService from 'turndown';
 import { isKeyHotkey } from 'is-hotkey';
+import { Value } from 'slate'
 import Html from 'slate-html-serializer';
 const wordcount = require("wordcount");
 const FileSaver = require('file-saver');
@@ -57,22 +58,13 @@ const rules = [
       const type = BLOCK_TAGS[el.tagName.toLowerCase()]
 
       if (type) {
-        if(type === 'align') {
-          // console.log(el.getAttribute('class'))
-          return {
-            object: 'block',
-            type: type,
-            data: {
-              class: el.getAttribute('class'),
-            },
-            nodes: next(el.childNodes),
-          }
-        } else {
-          return {
-            object: 'block',
-            type: type,
-            nodes: next(el.childNodes),
-          }
+        return {
+          object: 'block',
+          type: type,
+          data: {
+            class: el.getAttribute('class'),
+          },
+          nodes: next(el.childNodes),
         }
 
       }
@@ -109,11 +101,25 @@ const rules = [
           case 'ordered':
             return <ol>{children}</ol>
           case 'table':
-            return <table>{children}</table>
-          case 'table_row':
-            return <tr>{children}</tr>
-          case 'table_cell':
-            return <td>{children}</td>
+            const headers = !obj.data.get('headless');
+            const rows = children;
+            const split = (!headers || !rows || !rows.size || rows.size===1)
+                ?  { header: null, rows: rows }
+                : {
+                    header: rows.get(0),
+                    rows: rows.slice(1),
+                 }
+
+            return (
+                <table>
+                    {headers &&
+                        <thead>{split.header}</thead>
+                    }
+                    <tbody>{split.rows}</tbody>
+                </table>
+            );
+          case 'table_row': return <tr>{children}</tr>;
+          case 'table_cell': return <td>{children}</td>;
           case 'align':
             return <div className={obj.data.get('class')}>{children}</div>
           case 'code-block':
@@ -202,124 +208,139 @@ export function initialDocLoad() {
   const thisFile = window.location.href.split('doc/')[1];
   const fullFile = '/documents/' + thisFile + '.json';
 
-  getFile("contact.json", {decrypt: true})
-  .then((fileContents) => {
-    let file = JSON.parse(fileContents || '{}');
-    let contacts = file.contacts;
-    if(contacts.length > 0) {
-      this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
-    } else {
-      this.setState({ contacts: [] });
-    }
-  })
-  .catch(error => {
-    console.log(error);
-  });
-
-  getFile(window.location.href.split('doc/')[1] + 'sharedwith.json', {decrypt: true})
-  .then((fileContents) => {
-    if(fileContents) {
-      this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
-    } else {
-      this.setState({ sharedWith: [] })
-    }
-  })
-  .catch(error => {
-    console.log("shared with doc error: ")
-    console.log(error);
-  });
-
   getFile("documentscollection.json", {decrypt: true})
-  .then((fileContents) => {
-    this.setState({ value: JSON.parse(fileContents || '{}').value })
-    let value = this.state.value;
-    const thisDoc = value.find((doc) => {
-      if(typeof doc.id === "string") {
-        if(doc.id) {
-          return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
-        }
-      } else {
-        if(doc.id) {
-          return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
-        }
-      }
-      return null;
+   .then((fileContents) => {
+     if(fileContents) {
+       if(JSON.parse(fileContents).value) {
+         this.setState({ value: JSON.parse(fileContents).value, filteredValue: JSON.parse(fileContents).value }, () => {
+           console.log(this.state.value)
+           let value = this.state.value;
+           const thisDoc = value.find((doc) => {
+             if(typeof doc.id === "string") {
+               if(doc.id) {
+                 return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+               }
+             } else {
+               if(doc.id) {
+                 return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+               }
+             }
+             return null;
 
-    });
-    let index = thisDoc && thisDoc.id;
-    function findObjectIndex(doc) {
-      return doc.id === index; //this is comparing a number to a number
-    }
-    this.setState({index: value.findIndex(findObjectIndex)})
-  })
-  .catch(error => {
-    console.log(error);
-  });
-
-  getFile(fullFile, {decrypt: true})
-  .then((fileContents) => {
-    console.log(JSON.parse(fileContents));
-    if(JSON.parse(fileContents).compressed === true) {
-      this.setState({
-        content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content))
-      })
+           });
+           let index = thisDoc && thisDoc.id;
+           function findObjectIndex(doc) {
+             return doc.id === index; //this is comparing a number to a number
+           }
+           this.setState({index: value.findIndex(findObjectIndex)})
+         });
+       }
     } else {
-      this.setState({
-        content: html.deserialize(JSON.parse(fileContents).content)
-      })
+      this.setState({ value: [], filteredValue: [] });
     }
-    this.setState({
-      title: JSON.parse(fileContents || '{}').title,
-      tags: JSON.parse(fileContents || '{}').tags,
-      idToLoad: JSON.parse(fileContents || '{}').id,
-      singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-      docLoaded: true,
-      readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-      rtc: JSON.parse(fileContents || '{}').rtc || false,
-      sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-      teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-      compressed: JSON.parse(fileContents || '{}').compressed || false,
-      spacing: JSON.parse(fileContents || '{}').spacing,
-      lastUpdate: JSON.parse(fileContents).lastUpdate
-    })
-  //   if(JSON.parse(fileContents).rtc) {
-  //     this.setState({
-  //       title: JSON.parse(fileContents || '{}').title,
-  //       tags: JSON.parse(fileContents || '{}').tags,
-  //       idToLoad: JSON.parse(fileContents || '{}').id,
-  //       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-  //       docLoaded: true,
-  //       readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-  //       rtc: JSON.parse(fileContents || '{}').rtc || false,
-  //       sharedWith: JSON.parse(fileContents || '{}').sharedWith
-  //     })
-  //     // setTimeout(this.noCollaboration, 1000);
-  //   } else {
-  //     this.setState({
-  //       title: JSON.parse(fileContents || '{}').title,
-  //       content: JSON.parse(fileContents || '{}').content,
-  //       tags: JSON.parse(fileContents || '{}').tags,
-  //       idToLoad: JSON.parse(fileContents || '{}').id,
-  //       singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-  //       docLoaded: true,
-  //       readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-  //       rtc: JSON.parse(fileContents || '{}').rtc || false,
-  //       sharedWith: JSON.parse(fileContents || '{}').sharedWith
-  //     })
-  //   }
-  })
-  .then(() => {
-    this.loadLocal();
-  })
-  .then(() => {
-    this.setState({ loading: false}, () => {
-      // document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
-      this.loadAvatars();
-    })
-  })
-  .catch(error => {
-    console.log(error);
-  });
+   })
+   .then(() => {
+     getFile(fullFile, {decrypt: true})
+     .then((fileContents) => {
+       console.log(JSON.parse(fileContents).content)
+       let thisContent;
+
+       if(JSON.parse(fileContents).compressed === true) {
+         console.log("compressed doc")
+         this.setState({
+           content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)),
+           title: JSON.parse(fileContents || '{}').title,
+           tags: JSON.parse(fileContents || '{}').tags,
+           idToLoad: JSON.parse(fileContents || '{}').id,
+           singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+           docLoaded: true,
+           readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+           rtc: JSON.parse(fileContents || '{}').rtc || false,
+           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+           teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+           compressed: JSON.parse(fileContents || '{}').compressed || false,
+           spacing: JSON.parse(fileContents || '{}').spacing,
+           lastUpdate: JSON.parse(fileContents).lastUpdate,
+           jsonContent: true
+         })
+       } else {
+         console.log("Not compressed")
+         if(JSON.parse(fileContents).jsonContent) {
+           console.log("Json doc")
+           thisContent = JSON.parse(fileContents).content;
+           this.setState({
+             content: Value.fromJSON(thisContent),
+             title: JSON.parse(fileContents || '{}').title,
+             tags: JSON.parse(fileContents || '{}').tags,
+             idToLoad: JSON.parse(fileContents || '{}').id,
+             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+             docLoaded: true,
+             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+             rtc: JSON.parse(fileContents || '{}').rtc || false,
+             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+             compressed: JSON.parse(fileContents || '{}').compressed || false,
+             spacing: JSON.parse(fileContents || '{}').spacing,
+             lastUpdate: JSON.parse(fileContents).lastUpdate,
+             jsonContent: true
+           })
+         } else {
+           console.log("html doc")
+           this.setState({
+             content: html.deserialize(JSON.parse(fileContents).content),
+             title: JSON.parse(fileContents || '{}').title,
+             tags: JSON.parse(fileContents || '{}').tags,
+             idToLoad: JSON.parse(fileContents || '{}').id,
+             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+             docLoaded: true,
+             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+             rtc: JSON.parse(fileContents || '{}').rtc || false,
+             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+             compressed: JSON.parse(fileContents || '{}').compressed || false,
+             spacing: JSON.parse(fileContents || '{}').spacing,
+             lastUpdate: JSON.parse(fileContents).lastUpdate,
+           })
+         }
+
+       }
+     })
+     .then(() => {
+       this.loadContacts()
+     })
+     .then(() => {
+
+     })
+     .then(() => {
+       console.log(this.state.index)
+       getFile(window.location.href.split('doc/')[1] + 'sharedwith.json', {decrypt: true})
+       .then((fileContents) => {
+         if(fileContents) {
+           this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
+         } else {
+           this.setState({ sharedWith: [] })
+         }
+       })
+       .catch(error => {
+         console.log("shared with doc error: ")
+         console.log(error);
+       });
+     })
+     .then(() => {
+       this.setState({ loading: false}, () => {
+         // document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
+         this.loadAvatars();
+       })
+     })
+     .catch(error => {
+       console.log(error);
+     });
+   })
+   .catch(error => {
+     console.log(error)
+   })
+
+
   this.printPreview = () => {
     if(this.state.printPreview === true) {
       this.setState({printPreview: false});
@@ -397,7 +418,8 @@ export function sharePublicly() {
     this.setState({ readOnly: true }, () => {
       const object = {};
       object.title = this.state.title;
-      object.content = html.serialize(this.state.content);
+      // object.content = html.serialize(this.state.content);
+      object.content = document.getElementsByClassName('editor')[0].innerHTML;
       object.readOnly = true;
       object.words = wordcount(html.serialize(this.state.content));
       object.shared = getMonthDayYear();
@@ -412,7 +434,12 @@ export function sharePublicly() {
   } else {
     const object = {};
     object.title = this.state.title;
-    object.content = html.serialize(this.state.content);
+    if(this.state.readOnly) {
+      object.content = document.getElementsByClassName('editor')[0].innerHTML;
+    } else {
+      let content = this.state.content;
+      object.content = content.toJSON();
+    }
     object.readOnly = this.state.readOnly;
     object.words = wordcount(html.serialize(this.state.content));
     object.shared = getMonthDayYear();
@@ -571,9 +598,11 @@ export function loadMyFile() {
   })
   .then(() => {
     const object = {};
+    let content = this.state.content;
     object.title = this.state.title;
-    object.compressed = true;
-    object.content = lzjs.compress(html.serialize(this.state.content));
+    object.compressed = false;
+    object.jsonContent = true;
+    object.content = content.toJSON();
     this.state.teamShare ? object.teamDoc = true : object.teamDoc = false;
     object.id = window.location.href.split('doc/')[1];
     object.receiverID = this.state.receiverID;
@@ -590,8 +619,10 @@ export function loadMyFile() {
     this.setState({ loading: "", show: "hide" });
 
     const object = {};
+    let content = this.state.content;
     object.title = this.state.title;
-    object.content = lzjs.compress(html.serialize(this.state.content));
+    object.jsonContent = true;
+    object.content = content.toJSON();
     if(this.state.teamShare === true) {
       object.teamDoc = true;
     }
@@ -665,35 +696,9 @@ export function handleChange(change, options = {}) {
   this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 3000)
-
-  // clearTimeout(this.longTimeout);
-  // this.longTimeout = setTimeout(this.autoSave, 5000)
-
-  // if (!options.remote) {
-  //   this.onRTCChange(change)
-  // }
-
-
-  // this.setState({ content: value }, () => {
-  //   this.setState({ markdownContent: turndownService.turndown(this.state.content)})
-  // });
-  // clearTimeout(this.timeout);
-  // this.timeout = setTimeout(this.handleAutoAdd, 1500)
-  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  // }
 }
 
 export function handleMDChange(event) {
-  // var converter = new showdown.Converter();
-  // this.setState({ markdownContent: event.target.value }, () => {
-  //   this.setState({ content: converter.makeHtml(this.state.markdownContent)})
-  // });
-  // clearTimeout(this.timeout);
-  // this.timeout = setTimeout(this.handleAutoAdd, 3000)
-  // if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-  //   this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-  // }
 }
 
 export function handleIDChange(e) {
@@ -710,10 +715,12 @@ export function handleBack() {
 
 export function handleAutoAdd() {
   // this.analyticsRun('documents');
+  let content = this.state.content;
   const object = {};
   object.title = this.state.title;
-  object.content = lzjs.compress(html.serialize(this.state.content));
-  object.compressed = true;
+  object.content = content.toJSON();
+  object.compressed = false;
+  object.jsonContent = true;
   this.state.teamDoc ? object.teamDoc = true : object.teamDoc = false;
   if(window.location.href.includes('docs')) {
     object.id = window.location.href.split('docs/')[1]
@@ -748,16 +755,12 @@ export function handleAutoAdd() {
   objectTwo.singleDocTags = this.state.singleDocTags;
   objectTwo.fileType = "documents";
   const index = this.state.index;
-  console.log(index)
-  if(index > -1) {
-    console.log(index)
-
+  console.log(this.state.index)
     if(this.state.newSharedDoc) {
       console.log("new shared doc")
-      this.setState({value: [...this.state.value, object], filteredValue: [...this.state.value, object], singleDoc: object, autoSave: "Saving..." }, () => {
+      this.setState({value: [...this.state.value, objectTwo], filteredValue: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
         this.setState({ newSharedDoc: false }, () => {
           this.autoSave();
-          console.log(this.state.value);
         })
         if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
           this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
@@ -765,12 +768,11 @@ export function handleAutoAdd() {
       });
     } else {
       console.log("not a new shared doc")
-      if(this.state.index) {
+      if(index !== "" && index > -1) {
         console.log("index already set")
         const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
         this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
           this.autoSave();
-          console.log(this.state.value);
           if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
             this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
           }
@@ -797,7 +799,6 @@ export function handleAutoAdd() {
           const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
           this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
             this.autoSave();
-            console.log(this.state.value);
             if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
               this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
             }
@@ -805,9 +806,6 @@ export function handleAutoAdd() {
         })
       }
     }
-  } else {
-    console.log("Index error")
-  }
 }
 
 export function autoSave() {
@@ -930,8 +928,9 @@ export function shareToTeam() {
     }
     if(this.state.webhookConnected) {
       const object = {};
+      let content = this.state.content;
       object.title = this.state.title;
-      object.content = html.serialize(this.state.content);
+      object.content = content.toJSON();
       object.words = wordcount(html.serialize(this.state.content));;
       object.sharedWith = this.state.sharedWith;
       this.postToWebhook(object);

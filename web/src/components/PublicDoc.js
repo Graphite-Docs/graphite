@@ -9,6 +9,7 @@ export default class PublicDoc extends Component {
 
   componentDidMount() {
     this.props.fetchData();
+    setInterval(this.props.pollData, 3000)
   }
 
   componentWillUnmount() {

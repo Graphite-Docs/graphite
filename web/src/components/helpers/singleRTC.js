@@ -9,6 +9,7 @@ import {
 } from './getMonthDayYear';
 // import Plain from 'slate-plain-serializer';
 import Html from 'slate-html-serializer';
+import { Value } from 'slate'
 const { decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const lzjs = require('lzjs');
@@ -178,7 +179,8 @@ const html = new Html({ rules })
 export function findDoc() {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
-    let value = this.state.value;
+    let value = JSON.parse(fileContents).value;
+    console.log(value)
     const thisDoc = value.find((doc) => {
       if(typeof doc.id === "string") {
         if(doc.id) {
@@ -226,20 +228,52 @@ export function loadSharedRTC() {
         this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
           let docs = this.state.sharedFile;
           const thisDoc = docs.find((doc) => {
-            return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+            if(doc.id){
+              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+            }
+            return null
           });
-          this.setState({
-            content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
-            title: thisDoc && thisDoc.title,
-            newSharedDoc: true,
-            rtc: thisDoc && thisDoc.rtc,
-            docLoaded: true,
-            idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-            tempDocId: window.location.href.split('shared/')[1].split('/')[1],
-            teamDoc: thisDoc && thisDoc.teamDoc,
-            sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
-           })
-        })
+          if(thisDoc && thisDoc.jsonContent) {
+            let content = thisDoc && thisDoc.content;
+            this.setState({
+              content: Value.fromJSON(content),
+              title: thisDoc && thisDoc.title,
+              newSharedDoc: true,
+              rtc: thisDoc && thisDoc.rtc,
+              docLoaded: true,
+              idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+              tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+              teamDoc: thisDoc && thisDoc.teamDoc,
+              sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+             })
+        } else {
+          if(thisDoc && thisDoc.compressed) {
+            this.setState({
+              content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
+              title: thisDoc && thisDoc.title,
+              newSharedDoc: true,
+              rtc: thisDoc && thisDoc.rtc,
+              docLoaded: true,
+              idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+              tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+              teamDoc: thisDoc && thisDoc.teamDoc,
+              sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+            })
+          } else {
+            this.setState({
+              content: thisDoc && html.deserialize(thisDoc.content),
+              title: thisDoc && thisDoc.title,
+              newSharedDoc: true,
+              rtc: thisDoc && thisDoc.rtc,
+              docLoaded: true,
+              idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+              tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+              teamDoc: thisDoc && thisDoc.teamDoc,
+              sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+            })
+          }
+        }
+       })
      })
      .then(() => {
        console.log(this.state.index)
@@ -250,48 +284,21 @@ export function loadSharedRTC() {
 }
 
 export function loadSingleRTC() {
-  // let userToLoadFrom = window.location.href.split('shared/')[1].split('/')[0];
-  // let fileString = 'shareddocs.json';
-  // let file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + fileString;
-  // const privateKey = loadUserData().appPrivateKey;
-  // const directory = 'shared/' + file;
-  // const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  //   getFile(directory, options)
-  //    .then((fileContents) => {
-  //       this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
-  //         let docs = this.state.sharedFile;
-  //         const thisDoc = docs.find((doc) => {
-  //           return doc.id === window.location.href.split('shared/')[1].split('/')[1]
-  //         });
-  //         this.setState({
-  //           content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
-  //           title: thisDoc && thisDoc.title,
-  //           newSharedDoc: false,
-  //           rtc: thisDoc && thisDoc.rtc,
-  //           docLoaded: true,
-  //           idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-  //           tempDocId: window.location.href.split('shared/')[1].split('/')[1],
-  //           teamDoc: thisDoc && thisDoc.teamDoc,
-  //           sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user],
-  //           lastUpdate: thisDoc && thisDoc.lastUpdate
-  //          })
-  //       })
-  //    })
-  //    .then(() => {
-  //      this.loadAvatars();
-  //    })
-  //     .catch(error => {
-  //       console.log(error);
-  //     });
 
   const thisFile = window.location.href.split('shared/')[1].split('/')[1];
   const fullFile = '/documents/' + thisFile + '.json';
   getFile(fullFile, {decrypt: true})
   .then((fileContents) => {
+    console.log(JSON.parse(fileContents))
       if(JSON.parse(fileContents).compressed) {
         this.setState({ content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)) })
       } else {
-        this.setState({ content: html.deserialize(JSON.parse(fileContents).content) });
+        if(JSON.parse(fileContents).jsonContent) {
+          let content = JSON.parse(fileContents).content;
+          this.setState({ content: Value.fromJSON(content) });
+        } else {
+          this.setState({ content: html.deserialize(JSON.parse(fileContents).content) });
+        }
       }
       this.setState({
         title: JSON.parse(fileContents || '{}').title,

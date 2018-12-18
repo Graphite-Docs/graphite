@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import socketIOClient from 'socket.io-client';
 import SlateEditor from './SlateEditor';
-import { loadUserData } from 'blockstack';
+import { loadUserData, isUserSignedIn } from 'blockstack';
 
 class SocketEditor extends Component {
   constructor(props) {
@@ -11,8 +11,11 @@ class SocketEditor extends Component {
       endpoint: process.env.REACT_APP_SERVER
       // endpoint: 'http://localhost:5000'
     }
-
-    this.uniqueID = loadUserData().username;
+    if(isUserSignedIn()) {
+      this.uniqueID = loadUserData().username;
+    } else {
+      this.uniqueID = Math.round(Math.random() * 1000000000000);
+    }
 
     this.socket = socketIOClient(this.state.endpoint);
 

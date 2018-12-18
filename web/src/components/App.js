@@ -137,7 +137,9 @@ import {
   loadDoc,
   handlePubChange,
   handlePubTitleChange,
-  loadInitial
+  loadInitial,
+  loadPublicState,
+  pollData
 } from './helpers/publicDoc'
 import {
   loadIntegrations,
@@ -778,6 +780,8 @@ export default class App extends Component {
     this.handlePubChange = handlePubChange.bind(this);
     this.handlePubTitleChange = handlePubTitleChange.bind(this);
     this.loadInitial = loadInitial.bind(this);
+    this.loadPublicState = loadPublicState.bind(this);
+    this.pollData = pollData.bind(this);
 
     //Team
     this.handleTeammateName = handleTeammateName.bind(this);
@@ -1231,6 +1235,7 @@ export default class App extends Component {
                   collabContent={collabContent}
                   readOnlyContent={readOnlyContent}
                   avatars={avatars}
+                  pollData={this.loadPublicState}
                   onRTCChange={this.onRTCChange}
                   applyOperations={this.applyOperations}
                   hasMark={this.hasMark}
