@@ -14,6 +14,7 @@ export default class SingleRTCDoc extends Component {
   }
 
   renderView() {
+    const { loading } = this.props;
     let toolbar = window.document.getElementsByClassName('ql-toolbar');
     if(toolbar[0]) {
       toolbar[0].style.top = "63px";
@@ -30,7 +31,7 @@ export default class SingleRTCDoc extends Component {
     }
 
 
-    if(!docLoaded) {
+    if(!docLoaded || loading) {
       return (
         <Loading />
       )
@@ -128,6 +129,10 @@ export default class SingleRTCDoc extends Component {
                       onClickMark={this.props.onClickMark}
                       docLoaded={this.props.docLoaded}
                       createRTC={this.props.createRTC}
+                      loadSingleVaultFile={this.props.loadSingleVaultFile}
+                      handleVaultDrop={this.props.handleVaultDrop}
+                      files={this.props.files}
+                      link={this.props.link}
                       rtc={rtc}
                     />
                     :

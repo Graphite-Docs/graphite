@@ -62,7 +62,7 @@ export function handleDeleteDoc(props) {
 };
 
 export function saveNewDocFile(props) {
-  putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
     .then(() => {
       this.saveDocFileTwo(props);
     })

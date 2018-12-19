@@ -244,7 +244,7 @@ export function handleaddTwoSheet() {
 }
 
 export function saveToDocs() {
-    putFile("documentscollection.json", JSON.stringify(this.state), { encrypt: true })
+    putFile("documentscollection.json", JSON.stringify(this.state.value), { encrypt: true })
       .then(() => {
         console.log("Saved!");
         this.saveToDocsTwo();

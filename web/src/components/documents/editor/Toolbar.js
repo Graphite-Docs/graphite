@@ -68,7 +68,12 @@ export default class Toolbar extends Component {
   };
 
   render() {
-    const imageFiles = this.props.files.filter(x => x.type.includes('image'));
+    let imageFiles;
+    if(this.props.files) {
+      imageFiles = this.props.files.filter(x => x.type.includes('image'));
+    } else {
+      imageFiles = []
+    }
 
     const imagesCollection = <Table unstackable style={{borderRadius: "0"}}>
       <Table.Header>
@@ -105,6 +110,19 @@ export default class Toolbar extends Component {
     >
       <Modal.Content>
         <Modal.Description>
+          {window.location.href.includes('shared/docs/') ?
+          <div>
+          <h3>Upload a Photo</h3>
+          <Dropzone
+            style={{ background: "none" }}
+            onDrop={ this.props.onImageUpload }
+            accept="image/png,image/jpeg,image/jpg,image/tiff,image/gif"
+            multiple={ false }
+            onDropRejected={ this.props.handleDropRejected }>
+            <Button secondary>Upload New Photo</Button>
+          </Dropzone>
+          </div> :
+          <div>
           <h3>Select a photo from Graphite Vault or upload a new one</h3>
           <Dropzone
             style={{ background: "none" }}
@@ -120,6 +138,8 @@ export default class Toolbar extends Component {
           <div>
             {imagesCollection}
           </div>
+          </div>
+          }
         </Modal.Description>
       </Modal.Content>
     </Modal>

@@ -288,7 +288,7 @@ onClickImage = (props) => {
   this.props.loadSingleVaultFile(props)
   this.setState({ modalOpen: false });
   setTimeout(() => {
-    if(this.props.file.file) {
+    if(this.props.link) {
       console.log("Link is here")
       const src = this.props.link;
       // const src = this.props.file.file["preview"];

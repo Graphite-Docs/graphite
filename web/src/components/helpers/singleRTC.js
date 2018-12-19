@@ -373,19 +373,21 @@ export function handleAddRTC() {
 }
 
 export function handleAddStatic() {
+  this.setState({ loading: true });
   const object = {};
   const objectTwo = {}
   object.title = this.state.title;
   object.lastUpdate = Date.now();
-  object.id = window.location.href.split('shared/')[1].split('/')[1];
+  object.id = Date.now();
   object.updated = getMonthDayYear();
   object.singleDocTags = [];
   object.sharedWith = [];
   object.fileType = 'documents';
   objectTwo.title = object.title;
   objectTwo.id = object.id;
-  objectTwo.updated = object.created;
+  objectTwo.updated = Date.now();
   objectTwo.content = this.state.fullContent;
+  objectTwo.compressed = false;
   objectTwo.jsonContent = true;
   objectTwo.singleDocTags = [];
   objectTwo.sharedWith = [];
@@ -398,14 +400,11 @@ export function handleAddStatic() {
   }, () => {
     this.saveNewSharedFile();
   });
-
-  this.setState({ show: "hide" });
-  this.setState({ hideButton: "hide", loading: "" })
 }
 
 export function saveNewSharedFile() {
   this.setState({loading: true})
-  putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
+  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt:true})
     .then(() => {
       console.log("Saved!");
       this.saveNewSingleSharedDoc();

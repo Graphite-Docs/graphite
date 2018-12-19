@@ -124,7 +124,7 @@ export function filterList(event){
 }
 
 export function saveNewFile() {
-  putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
+  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt:true})
     .then(() => {
       // this.saveNewSingleDoc();
       console.log("Saved Collection!");
@@ -405,7 +405,7 @@ export function saveSingleFile(doc) {
 }
 
 export function saveCollection() {
-  putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
     .then(() => {
       console.log("Saved Collection");
       // this.sendFile();
@@ -558,7 +558,7 @@ export function saveNewTags(doc) {
 }
 
 export function saveFullCollectionTags(doc) {
-  putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
     .then(() => {
       console.log("Saved");
       this.saveSingleDocTags(doc);

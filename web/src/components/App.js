@@ -977,12 +977,12 @@ export default class App extends Component {
 
     this.handleTagChange = handleTagChange.bind(this);
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
-    isUserSignedIn() ?  this.loadDocs() : loadUserData();
     // isUserSignedIn() ? this.loadAccountPlan() : loadUserData();
     // isUserSignedIn() ? this.loadInviteStatus() : loadUserData();
   }
 
   componentDidMount() {
+    isUserSignedIn() ?  this.loadDocs() : loadUserData();
     // node.on('ready', async () => {
     //   const version = await node.version()
     //
@@ -1241,6 +1241,9 @@ export default class App extends Component {
                   collabContent={collabContent}
                   readOnlyContent={readOnlyContent}
                   avatars={avatars}
+                  link={link}
+                  loadSingleVaultFile={this.loadSingleVaultFile}
+                  handleVaultDrop={this.handleVaultDrop}
                   pollData={this.loadPublicState}
                   onRTCChange={this.onRTCChange}
                   applyOperations={this.applyOperations}
@@ -1289,6 +1292,11 @@ export default class App extends Component {
                   hasMark={this.hasMark}
                   onKeyDown={this.onKeyDown}
                   onClickMark={this.onClickMark}
+                  files={files}
+                  link={link}
+                  loadSingleVaultFile={this.loadSingleVaultFile}
+                  handleVaultDrop={this.handleVaultDrop}
+                  loading={loading}
                   createRTC={createRTC}
                   title={title}
                   rtc={rtc}

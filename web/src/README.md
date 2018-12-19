@@ -32,7 +32,7 @@ export function analyticsRun(props) {
       })
       .then(() => {
         if(this.state.countFilesDone) {
-          putFile('documentscollection.json', JSON.stringify(this.state), {encrypt: true})
+          putFile('documentscollection.json', JSON.stringify(this.state.value), {encrypt: true})
         }
       })
       .catch(error => {

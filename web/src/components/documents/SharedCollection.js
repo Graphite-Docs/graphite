@@ -102,7 +102,7 @@ export default class SharedCollection extends Component {
   }
 
   save() {
-    putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+    putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
       .then(() => {
         console.log("saved");
       })

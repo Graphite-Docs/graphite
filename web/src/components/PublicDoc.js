@@ -112,6 +112,9 @@ export default class PublicDoc extends Component {
                           content={this.props.collabContent}
                           readOnly={this.props.readOnly}
                           handlePubChange={this.props.handlePubChange}
+                          link={this.props.link}
+                          loadSingleVaultFile={this.props.loadSingleVaultFile}
+                          handleVaultDrop={this.props.handleVaultDrop}
                         />
                       </div>
                     </div>
