@@ -179,8 +179,12 @@ const html = new Html({ rules })
 export function findDoc() {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
-    let value = JSON.parse(fileContents).value;
-    console.log(value)
+    let value;
+    if(JSON.parse(fileContents).value) {
+      value = JSON.parse(fileContents).value;
+    } else {
+      value = JSON.parse(fileContents);
+    }
     const thisDoc = value.find((doc) => {
       if(typeof doc.id === "string") {
         if(doc.id) {
@@ -233,45 +237,60 @@ export function loadSharedRTC() {
             }
             return null
           });
-          if(thisDoc && thisDoc.jsonContent) {
-            let content = thisDoc && thisDoc.content;
-            this.setState({
-              content: Value.fromJSON(content),
-              title: thisDoc && thisDoc.title,
-              newSharedDoc: true,
-              rtc: thisDoc && thisDoc.rtc,
-              docLoaded: true,
-              idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-              tempDocId: window.location.href.split('shared/')[1].split('/')[1],
-              teamDoc: thisDoc && thisDoc.teamDoc,
-              sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
-             })
-        } else {
-          if(thisDoc && thisDoc.compressed) {
-            this.setState({
-              content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
-              title: thisDoc && thisDoc.title,
-              newSharedDoc: true,
-              rtc: thisDoc && thisDoc.rtc,
-              docLoaded: true,
-              idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-              tempDocId: window.location.href.split('shared/')[1].split('/')[1],
-              teamDoc: thisDoc && thisDoc.teamDoc,
-              sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
-            })
+          if(thisDoc && thisDoc.rtc) {
+            if(thisDoc && thisDoc.jsonContent) {
+              let content = thisDoc && thisDoc.content;
+              this.setState({
+                content: Value.fromJSON(content),
+                title: thisDoc && thisDoc.title,
+                newSharedDoc: true,
+                rtc: thisDoc && thisDoc.rtc,
+                docLoaded: true,
+                idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+                tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+                teamDoc: thisDoc && thisDoc.teamDoc,
+                sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+               })
           } else {
-            this.setState({
-              content: thisDoc && html.deserialize(thisDoc.content),
-              title: thisDoc && thisDoc.title,
-              newSharedDoc: true,
-              rtc: thisDoc && thisDoc.rtc,
-              docLoaded: true,
-              idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-              tempDocId: window.location.href.split('shared/')[1].split('/')[1],
-              teamDoc: thisDoc && thisDoc.teamDoc,
-              sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
-            })
+            if(thisDoc && thisDoc.compressed) {
+              this.setState({
+                content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
+                title: thisDoc && thisDoc.title,
+                newSharedDoc: true,
+                rtc: thisDoc && thisDoc.rtc,
+                docLoaded: true,
+                idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+                tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+                teamDoc: thisDoc && thisDoc.teamDoc,
+                sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+              })
+            } else {
+              this.setState({
+                content: thisDoc && html.deserialize(thisDoc.content),
+                title: thisDoc && thisDoc.title,
+                newSharedDoc: true,
+                rtc: thisDoc && thisDoc.rtc,
+                docLoaded: true,
+                idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+                tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+                teamDoc: thisDoc && thisDoc.teamDoc,
+                sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+              })
+            }
           }
+        } else {
+          this.setState({
+            content: thisDoc && thisDoc.content,
+            fullContent: thisDoc && thisDoc.fullContent,
+            title: thisDoc && thisDoc.title,
+            newSharedDoc: true,
+            rtc: thisDoc && thisDoc.rtc,
+            docLoaded: true,
+            idToLoad: window.location.href.split('shared/')[1].split('/')[1],
+            tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+            teamDoc: thisDoc && thisDoc.teamDoc,
+            sharedWith: thisDoc && thisDoc.sharedWith
+          })
         }
        })
      })
@@ -366,20 +385,26 @@ export function handleAddStatic() {
   objectTwo.title = object.title;
   objectTwo.id = object.id;
   objectTwo.updated = object.created;
-  objectTwo.content = this.state.content;
+  objectTwo.content = this.state.fullContent;
+  objectTwo.jsonContent = true;
   objectTwo.singleDocTags = [];
   objectTwo.sharedWith = [];
 
-  this.setState({ value: [...this.state.value, object], filteredValue: [...this.state.value, object] });
-  this.setState({ singleDoc: objectTwo });
-  this.setState({ tempDocId: object.id });
-  setTimeout(this.saveNewSharedFile, 500);
+  this.setState({
+    value: [...this.state.value, object],
+    filteredValue: [...this.state.value, object],
+    singleDoc: objectTwo,
+    tempDocId: object.id
+  }, () => {
+    this.saveNewSharedFile();
+  });
 
   this.setState({ show: "hide" });
   this.setState({ hideButton: "hide", loading: "" })
 }
 
 export function saveNewSharedFile() {
+  this.setState({loading: true})
   putFile("documentscollection.json", JSON.stringify(this.state), {encrypt:true})
     .then(() => {
       console.log("Saved!");
@@ -410,8 +435,12 @@ export function saveNewSingleSharedDoc() {
 export function loadAllDocs() {
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
-     if(fileContents) {
-       this.setState({ value: JSON.parse(fileContents || '{}').value });
+     if(JSON.parse(fileContents)) {
+       if(JSON.parse(fileContents).value) {
+         this.setState({ value: JSON.parse(fileContents || '{}').value });
+       } else {
+         this.setState({ value: JSON.parse(fileContents || '{}') });
+       }
      } else {
        console.log("No docs");
      }

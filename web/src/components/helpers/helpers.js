@@ -9,6 +9,8 @@ export function loadDocs() {
        if(fileContents) {
          if(JSON.parse(fileContents).value) {
            this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
+         } else {
+           this.setState({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents) });
          }
          if(JSON.parse(fileContents).countFilesDone) {
           this.setState({ countFilesDone: true });

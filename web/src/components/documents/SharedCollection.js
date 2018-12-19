@@ -54,10 +54,12 @@ export default class SharedCollection extends Component {
     this.setState({ user: window.location.href.split('shared/')[1], loading: true });
     getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
-       if(fileContents) {
-         this.setState({ value: JSON.parse(fileContents || '{}').value });
-         // this.setState({filteredValue: this.state.value})
-         // this.setState({ loading: "hide" });
+       if(JSON.parse(fileContents)) {
+         if(JSON.parse(fileContents).value) {
+           this.setState({ value: JSON.parse(fileContents || '{}').value });
+         } else {
+           this.setState({ value: JSON.parse(fileContents || '{}') });
+         }
        } else {
          console.log("No docs");
        }

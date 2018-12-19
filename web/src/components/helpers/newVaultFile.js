@@ -8,8 +8,12 @@ import XLSX from 'xlsx';
 const str2ab = require('string-to-arraybuffer');
 
 export function handleVaultDrop(files) {
+  if(window.location.href.includes('doc/')) {
+  } else {
+    this.setState({ loading: true });
+  }
   this.analyticsRun('vault');
-  this.setState({ loading: true });
+
   var file = files[0]
   const reader = new FileReader();
   reader.onload = (event) => {
@@ -50,7 +54,7 @@ export function handleVaultDrop(files) {
      if(object.size > 111048576) {
        this.handleDropRejected();
      }else {
-       this.setState({singleFile: object, files: [...this.state.files, objectTwo] }, () => {
+       this.setState({singleFile: object, files: [...this.state.files, objectTwo], link: object.link, file: object.file }, () => {
          this.saveNewVaultFile();
        });
      }

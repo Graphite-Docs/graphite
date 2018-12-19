@@ -53,8 +53,12 @@ export default class SingleSharedDoc extends Component {
 
     getFile("documentscollection.json", {decrypt: true})
      .then((fileContents) => {
-       if(fileContents) {
-         this.setState({ value: JSON.parse(fileContents || '{}').value });
+       if(JSON.parse(fileContents)) {
+         if(JSON.parse(fileContents).value) {
+           this.setState({ value: JSON.parse(fileContents || '{}').value });
+         } else {
+           this.setState({ value: JSON.parse(fileContents || '{}') });
+         }
          this.setState({ user: JSON.parse(fileContents || '{}').user });
          this.refresh = setInterval(() => this.getOther(), 1000);
        } else {

@@ -226,8 +226,13 @@ export default class SingleDoc extends Component {
                         onKeyDown={this.props.onKeyDown}
                         onClickMark={this.props.onClickMark}
                         handleChange={this.props.handleChange}
+                        loadSingleVaultFile={this.props.loadSingleVaultFile}
                         docLoaded={this.props.docLoaded}
                         idToLoad={this.props.idToLoad}
+                        handleVaultDrop={this.props.handleVaultDrop}
+                        link={this.props.link}
+                        files={this.props.files}
+                        file={this.props.file}
                       />
                   </div>
                 </div>

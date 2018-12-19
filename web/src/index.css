@@ -406,6 +406,13 @@ div.markdown-editor__editor-container h2 {
   left: 40%;
 }
 
+/* Images */
+.img-center {
+  max-width: 80%;
+  margin: auto;
+  height: 300px;
+}
+
 /* Colors */
 
 .color_4d4d4d {

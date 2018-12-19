@@ -84,6 +84,11 @@ class SocketEditor extends Component {
         idToLoad={this.props.idToLoad}
         createRTC={this.props.createRTC}
         collabContent={this.props.collabContent}
+        loadSingleVaultFile={this.props.loadSingleVaultFile}
+        handleVaultDrop={this.props.handleVaultDrop}
+        link={this.props.link}
+        files={this.props.files}
+        file={this.props.file}
       />
     );
   }

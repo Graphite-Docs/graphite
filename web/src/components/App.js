@@ -627,7 +627,8 @@ export default class App extends Component {
       createRTC: false,
       wholeFile: {},
       collabContent: "",
-      readOnlyContent: ""
+      readOnlyContent: "",
+      fullContent: "",
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1061,7 +1062,7 @@ export default class App extends Component {
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
       optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
-      markdownContent, wordCount, createRTC, collabContent, readOnlyContent
+      markdownContent, wordCount, createRTC, collabContent, readOnlyContent, file
     } = this.state;
     return (
       <div>
@@ -1191,6 +1192,11 @@ export default class App extends Component {
                   onKeyDown={this.onKeyDown}
                   onClickMark={this.onClickMark}
                   doPDF={this.doPDF}
+                  loadSingleVaultFile={this.loadSingleVaultFile}
+                  handleVaultDrop={this.handleVaultDrop}
+                  link={link}
+                  file={file}
+                  files={files}
                   wordCount={wordCount}
                   markdown={markdown}
                   markdownContent={markdownContent}

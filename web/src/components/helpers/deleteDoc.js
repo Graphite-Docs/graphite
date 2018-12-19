@@ -6,8 +6,13 @@ import {
 export function loadDocToDelete() {
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
-      this.setState({ value: JSON.parse(fileContents || '{}').value })
-      console.log("loaded");
+      if(JSON.parse(fileContents).value) {
+        this.setState({ value: JSON.parse(fileContents || '{}').value })
+        console.log("loaded");
+      } else {
+        this.setState({ value: JSON.parse(fileContents || '{}') })
+        console.log("loaded");
+      }
    }).then(() =>{
      let value = this.state.value;
      const thisDoc = value.find((doc) => { return doc.id.toString() === window.location.href.split('/documents/doc/delete/')[1]}); //comparing strings

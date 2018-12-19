@@ -2,7 +2,8 @@ import { Editor } from 'slate-react'
 import React from 'react'
 import { isKeyHotkey } from 'is-hotkey'
 import Loading from '../../Loading';
-import { List } from 'semantic-ui-react';
+import { Block } from 'slate';
+import { List, Image } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 // import DeepTable from 'slate-deep-table'
@@ -39,6 +40,38 @@ function wrapLink(editor, href) {
 
 function unwrapLink(editor) {
   editor.unwrapInline('link')
+}
+
+//Images
+function insertImage(editor, src, target) {
+  if (target) {
+    editor.select(target)
+  }
+
+  editor.insertBlock({
+    type: 'image',
+    data: { src, class: 'img-center' },
+  })
+}
+
+const schema = {
+  document: {
+    last: { type: 'paragraph' },
+    normalize: (editor, { code, node, child }) => {
+      switch (code) {
+        case 'last_child_type_invalid': {
+          const paragraph = Block.create('paragraph')
+          return editor.insertNodeByKey(node.key, node.nodes.size, paragraph)
+        }
+        default: return null
+      }
+    },
+  },
+  blocks: {
+    image: {
+      isVoid: true,
+    },
+  },
 }
 
 class SlateEditor extends React.Component {
@@ -250,6 +283,49 @@ onBackspace = (event, editor, next) => {
   }
 }
 
+onClickImage = (props) => {
+  // event.preventDefault()
+  this.props.loadSingleVaultFile(props)
+  this.setState({ modalOpen: false });
+  setTimeout(() => {
+    if(this.props.file.file) {
+      console.log("Link is here")
+      const src = this.props.link;
+      // const src = this.props.file.file["preview"];
+      this.editor.command(insertImage, src)
+    } else {
+      console.log("no link, trying again")
+      setTimeout(() => {
+        const src = this.props.link;
+        // const src = this.props.file.file["preview"];
+        if (!src) return
+        this.editor.command(insertImage, src)
+      }, 1000)
+    }
+  }, 1000)
+
+}
+
+onImageUpload = (files) => {
+  this.props.handleVaultDrop(files)
+  this.setState({ modalOpen: false });
+  setTimeout(() => {
+    if(this.props.link) {
+      console.log("Link is here")
+      const src = this.props.link;
+      this.editor.command(insertImage, src)
+    } else {
+      console.log("no link, trying again")
+      setTimeout(() => {
+        console.log('Link: ' + this.props.link)
+        const src = this.props.link;
+        if (!src) return
+        this.editor.command(insertImage, src)
+      }, 1000)
+    }
+  }, 1000)
+}
+
 onClickAlign = (event, align) => {
   event.preventDefault()
   const { editor } = this
@@ -321,30 +397,6 @@ onClickAlign = (event, align) => {
     } else {
       editor.addMark({ type: 'color', data: { class: 'color_' + color.hex.split('#')[1] } }).focus()
     }
-
-    // if (hasColor) {
-    //   editor.command(unwrapColor)
-    // } else if (value.selection.isExpanded) {
-    //   const style = {
-    //     color: color.hex
-    //   }
-    //
-    //   if (style === null) {
-    //     return
-    //   }
-    //
-    //   editor.command(wrapColor, style)
-    // } else {
-    //   const style = {
-    //     color: color.hex
-    //   }
-    //
-    //   if (style === null) {
-    //     return
-    //   }
-    //
-    //   editor.command(wrapColor, style)
-    // }
   }
 
   onClickMark = (event, type) => {
@@ -498,7 +550,10 @@ onClickAlign = (event, align) => {
               modalController={this.modalController}
               hasLinks={this.hasLinks}
               onClickAlign={this.onClickAlign}
+              onClickImage={this.onClickImage}
+              onImageUpload={this.onImageUpload}
               isTable={isTable}
+              files={this.props.files}
             />
           }
           <div className="ql-editor">
@@ -508,6 +563,7 @@ onClickAlign = (event, align) => {
               spellCheck
               autoFocus
               plugins={plugins}
+              schema={schema}
               placeholder="Write something great..."
               ref={this.ref}
               value={this.props.collabContent}
@@ -522,6 +578,7 @@ onClickAlign = (event, align) => {
               autoFocus
               plugins={plugins}
               placeholder="Write something great..."
+              schema={schema}
               ref={this.ref}
               value={this.props.content}
               onChange={this.onChange}
@@ -542,7 +599,7 @@ onClickAlign = (event, align) => {
   }
 
   renderNode = (props, editor, next) => {
-    const { attributes, children, node } = props
+    const { attributes, children, node, isFocused } = props
     switch (node.type) {
       case 'block-quote':
         return <blockquote {...attributes}>{children}</blockquote>
@@ -576,6 +633,11 @@ onClickAlign = (event, align) => {
             </a>
           )
         }
+      case 'image': {
+        const src = node.data.get('src')
+        const imageClass = node.data.get('class')
+        return <Image className={imageClass} selected={isFocused} src={src} {...attributes} />
+      }
       case 'align':
         const align = node.data.get('class')
         return <div {...attributes} className={align}>{children}</div>

@@ -405,10 +405,16 @@ export function loadCoinsKey() {
 export function loadSharedDocs() {
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
-     if(JSON.parse(fileContents || '{}').value) {
-       this.setState({
-         docs: JSON.parse(fileContents || '{}').value
-       })
+     if(JSON.parse(fileContents)) {
+       if(JSON.parse(fileContents).value) {
+         this.setState({
+           docs: JSON.parse(fileContents || '{}').value
+         })
+       } else {
+         this.setState({
+           docs: JSON.parse(fileContents || '{}')
+         })
+       }
      } else {
        console.log("No saved files");
      }

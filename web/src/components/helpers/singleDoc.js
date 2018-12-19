@@ -26,6 +26,8 @@ const isBoldHotkey = isKeyHotkey('mod+b')
 const isItalicHotkey = isKeyHotkey('mod+i')
 const isUnderlinedHotkey = isKeyHotkey('mod+u')
 const isCodeHotkey = isKeyHotkey('mod+`')
+
+let htmlContent;
 // const canvas = require('html2canvas')
 
 const BLOCK_TAGS = {
@@ -35,7 +37,8 @@ const BLOCK_TAGS = {
   ul: 'list',
   ol: 'ordered',
   li: 'list-item',
-  div: 'align'
+  div: 'align',
+  img: 'image'
 }
 // Add a dictionary of mark tags.
 const MARK_TAGS = {
@@ -48,9 +51,7 @@ const MARK_TAGS = {
 }
 
 const INLINE_TAGS = {
-  a: 'link',
-  img: 'image',
-  iframe: 'video'
+  a: 'link'
 }
 const rules = [
   {
@@ -124,6 +125,10 @@ const rules = [
             return <div className={obj.data.get('class')}>{children}</div>
           case 'code-block':
             return <code>{children}</code>
+          case 'image':
+            return <img src={ obj.data.get('src') } alt='thumbnail'/>
+          case 'video':
+            return <iframe src={ obj.data.get('src') } title="video" />
           default: return ''
         }
       }
@@ -190,10 +195,6 @@ const rules = [
               return <a href={obj.data.get('href')}>{children}</a>
             case 'color':
               return <span style={ obj.data.get('style') }>{children}</span>
-            case 'image':
-              return <img src={ obj.data.get('src') } alt='thumbnail'/>
-            case 'video':
-              return <iframe src={ obj.data.get('src') } title="video" />
             default: return ''
           }
         }
@@ -211,29 +212,52 @@ export function initialDocLoad() {
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
-       if(JSON.parse(fileContents).value) {
-         this.setState({ value: JSON.parse(fileContents).value, filteredValue: JSON.parse(fileContents).value }, () => {
-           console.log(this.state.value)
-           let value = this.state.value;
-           const thisDoc = value.find((doc) => {
-             if(typeof doc.id === "string") {
-               if(doc.id) {
-                 return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+       if(JSON.parse(fileContents)) {
+         if(JSON.parse(fileContents).value) {
+           this.setState({ value: JSON.parse(fileContents).value, filteredValue: JSON.parse(fileContents).value }, () => {
+             let value = this.state.value;
+             const thisDoc = value.find((doc) => {
+               if(typeof doc.id === "string") {
+                 if(doc.id) {
+                   return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+                 }
+               } else {
+                 if(doc.id) {
+                   return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+                 }
                }
-             } else {
-               if(doc.id) {
-                 return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
-               }
-             }
-             return null;
+               return null;
 
+             });
+             let index = thisDoc && thisDoc.id;
+             function findObjectIndex(doc) {
+               return doc.id === index; //this is comparing a number to a number
+             }
+             this.setState({index: value.findIndex(findObjectIndex)})
            });
-           let index = thisDoc && thisDoc.id;
-           function findObjectIndex(doc) {
-             return doc.id === index; //this is comparing a number to a number
-           }
-           this.setState({index: value.findIndex(findObjectIndex)})
-         });
+         } else {
+           this.setState({ value: JSON.parse(fileContents), filteredValue: JSON.parse(fileContents) }, () => {
+             let value = this.state.value;
+             const thisDoc = value.find((doc) => {
+               if(typeof doc.id === "string") {
+                 if(doc.id) {
+                   return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
+                 }
+               } else {
+                 if(doc.id) {
+                   return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
+                 }
+               }
+               return null;
+
+             });
+             let index = thisDoc && thisDoc.id;
+             function findObjectIndex(doc) {
+               return doc.id === index; //this is comparing a number to a number
+             }
+             this.setState({index: value.findIndex(findObjectIndex)})
+           });
+         }
        }
     } else {
       this.setState({ value: [], filteredValue: [] });
@@ -242,7 +266,7 @@ export function initialDocLoad() {
    .then(() => {
      getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
-       console.log(JSON.parse(fileContents).content)
+       console.log(JSON.parse(fileContents))
        let thisContent;
 
        if(JSON.parse(fileContents).compressed === true) {
@@ -544,6 +568,7 @@ export function sharedInfoSingleDocRTC(props){
 }
 
 export function sharedInfoSingleDocStatic(props){
+  htmlContent = document.getElementsByClassName('editor')[0].innerHTML;
   this.setState({ receiverID: props, rtc: false, loading: true });
   const user = props;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
@@ -601,8 +626,14 @@ export function loadMyFile() {
     let content = this.state.content;
     object.title = this.state.title;
     object.compressed = false;
-    object.jsonContent = true;
-    object.content = content.toJSON();
+    if(this.state.rtc) {
+      object.jsonContent = true;
+      object.content = content.toJSON();
+    } else {
+      object.jsonContent = false;
+      object.content = htmlContent;
+      object.fullContent = content.toJSON();
+    }
     this.state.teamShare ? object.teamDoc = true : object.teamDoc = false;
     object.id = window.location.href.split('doc/')[1];
     object.receiverID = this.state.receiverID;
@@ -621,7 +652,11 @@ export function loadMyFile() {
     const object = {};
     let content = this.state.content;
     object.title = this.state.title;
-    object.jsonContent = true;
+    if(this.state.rtc) {
+      object.jsonContent = true;
+    } else {
+      object.jsonContent = false;
+    }
     object.content = content.toJSON();
     if(this.state.teamShare === true) {
       object.teamDoc = true;
@@ -821,7 +856,7 @@ export function autoSave() {
 }
 
 export function saveSingleDocCollection() {
-  putFile("documentscollection.json", JSON.stringify(this.state), {encrypt: true})
+  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
     .then(() => {
       this.setState({autoSave: "Saved"});
       // if(this.state.stealthyConnected) {
@@ -864,7 +899,12 @@ export function componentDidMountData(props) {
 
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
-      this.setState({ value: JSON.parse(fileContents || '{}').value })
+      if(JSON.parse(fileContents).value) {
+        this.setState({ value: JSON.parse(fileContents || '{}').value })
+      } else {
+        this.setState({ value: JSON.parse(fileContents || '{}') })
+      }
+
       let value = this.state.value;
       const thisDoc = value.find((doc) => { return doc.id.toString() === props}); //comparing strings
       let index = thisDoc && thisDoc.id;

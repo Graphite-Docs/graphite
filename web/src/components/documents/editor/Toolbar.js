@@ -1,6 +1,7 @@
 import React, { Component } from "react";
-import { Menu, Icon, Dropdown, Popup, Modal, Input } from 'semantic-ui-react';
+import { Menu, Icon, Dropdown, Popup, Modal, Input, Button, Table } from 'semantic-ui-react';
 import { CompactPicker } from 'react-color';
+import Dropzone from 'react-dropzone';
 let colorPicker = 'hide'
 
 export default class Toolbar extends Component {
@@ -67,6 +68,62 @@ export default class Toolbar extends Component {
   };
 
   render() {
+    const imageFiles = this.props.files.filter(x => x.type.includes('image'));
+
+    const imagesCollection = <Table unstackable style={{borderRadius: "0"}}>
+      <Table.Header>
+        <Table.Row>
+          <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
+          <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Uploaded</Table.HeaderCell>
+        </Table.Row>
+      </Table.Header>
+
+      <Table.Body>
+        {
+          imageFiles.map(file => {
+
+          return(
+            <Table.Row key={file.id} style={{ marginTop: "35px"}}>
+              <Table.Cell><a style={{cursor: "pointer"}} onClick={() => this.props.onClickImage(file.id)}>{file.name ? file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name : "Untitled"}</a></Table.Cell>
+              <Table.Cell>{file.uploaded}</Table.Cell>
+            </Table.Row>
+          );
+          })
+        }
+      </Table.Body>
+    </Table>
+
+    const modal = <Modal trigger={
+      <Icon onClick={() => this.props.modalController(true)}  name='image outline' />
+    }
+      open={this.props.modalOpen}
+      onClose={() => this.props.modalController(false)}
+      size='small'
+      closeOnEscape={true}
+      closeOnDimmerClick={true}
+      closeIcon
+    >
+      <Modal.Content>
+        <Modal.Description>
+          <h3>Select a photo from Graphite Vault or upload a new one</h3>
+          <Dropzone
+            style={{ background: "none" }}
+            onDrop={ this.props.onImageUpload }
+            accept="image/png,image/jpeg,image/jpg,image/tiff,image/gif"
+            multiple={ false }
+            onDropRejected={ this.props.handleDropRejected }>
+            <Button secondary>Upload New Photo</Button>
+          </Dropzone>
+          <div style={{marginTop: "15px", marginBottom: "15px"}}>
+            <h5>Your Photos</h5>
+          </div>
+          <div>
+            {imagesCollection}
+          </div>
+        </Modal.Description>
+      </Modal.Content>
+    </Modal>
+
     if(this.state.display) {
       colorPicker = 'colorPicker'
     } else {
@@ -146,6 +203,9 @@ export default class Toolbar extends Component {
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}}>
+                  {modal}
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -228,6 +288,9 @@ export default class Toolbar extends Component {
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}}>
+                  {modal}
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -306,6 +369,9 @@ export default class Toolbar extends Component {
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}}>
+                  {modal}
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -381,6 +447,9 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}}>
+            {modal}
+          </Menu.Item>
         </Menu>
         <div className={colorPicker}>
           <CompactPicker

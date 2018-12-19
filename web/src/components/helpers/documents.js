@@ -17,8 +17,13 @@ export function loadCollection() {
   this.setState({ results: [] })
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
-     if(JSON.parse(fileContents || '{}').value) {
-       this.setState({ value: JSON.parse(fileContents || '{}').value, filteredValue: JSON.parse(fileContents || '{}').value, loading: false });
+     if(JSON.parse(fileContents || '{}')) {
+       if(JSON.parse(fileContents).value) {
+         this.setState({ value: JSON.parse(fileContents || '{}').value, filteredValue: JSON.parse(fileContents || '{}').value, loading: false });
+       } else {
+         this.setState({ value: JSON.parse(fileContents), filteredValue: JSON.parse(fileContents), loading: false });
+       }
+
      } else {
        console.log("No saved files");
        this.setState({ loading: false });
@@ -307,8 +312,13 @@ export function loadSingle(doc) {
 export function getCollection(doc) {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
-     this.setState({ value: JSON.parse(fileContents || '{}').value })
-     this.setState({ initialLoad: "hide" });
+    if(JSON.parse(fileContents).value) {
+      this.setState({ value: JSON.parse(fileContents || '{}').value })
+      this.setState({ initialLoad: "hide" });
+    } else {
+      this.setState({ value: JSON.parse(fileContents || '{}') })
+      this.setState({ initialLoad: "hide" });
+    }
   }).then(() =>{
     let value = this.state.value;
     const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
@@ -500,8 +510,13 @@ export function loadSingleTags(doc) {
 export function getCollectionTags(doc) {
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
-     this.setState({ value: JSON.parse(fileContents || '{}').value })
-     this.setState({ initialLoad: "hide" });
+     if(JSON.parse(fileContents).value) {
+       this.setState({ value: JSON.parse(fileContents || '{}').value })
+       this.setState({ initialLoad: "hide" });
+     } else {
+       this.setState({ value: JSON.parse(fileContents || '{}') })
+       this.setState({ initialLoad: "hide" });
+     }
   }).then(() =>{
     let value = this.state.value;
     const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
