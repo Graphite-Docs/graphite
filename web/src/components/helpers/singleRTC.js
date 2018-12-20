@@ -238,6 +238,7 @@ export function loadSharedRTC() {
             return null
           });
           if(thisDoc && thisDoc.rtc) {
+            console.log("real-time")
             if(thisDoc && thisDoc.jsonContent) {
               let content = thisDoc && thisDoc.content;
               this.setState({
@@ -279,6 +280,7 @@ export function loadSharedRTC() {
             }
           }
         } else {
+          console.log("static")
           this.setState({
             content: thisDoc && thisDoc.content,
             fullContent: thisDoc && thisDoc.fullContent,
