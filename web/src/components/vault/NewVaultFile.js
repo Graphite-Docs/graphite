@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Dropzone from 'react-dropzone';
+import { Icon } from 'semantic-ui-react';
 
 
 export default class NewVaultFile extends Component {
@@ -62,7 +63,7 @@ export default class NewVaultFile extends Component {
             accept="application/rtf, application/x-rtf, text/richtext, text/plain, application/rtf, application/x-rtf, text/rtf, application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv, video/quicktime, video/x-ms-wmv,video/mp4,application/pdf,image/png,image/jpeg,image/jpg,image/tiff,image/gif"
             multiple={ false }
             onDropRejected={ this.props.handleDropRejected }>
-            <h1 className="upload-cloud"><i className="material-icons white-text large">cloud_upload</i></h1>
+            <h1 className="upload-cloud"><Icon name="cloud download" /></h1>
             <h3 className="white-text">Drag files or click to upload</h3>
           </Dropzone>
 

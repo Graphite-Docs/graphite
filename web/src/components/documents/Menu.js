@@ -8,7 +8,8 @@ export default class Menu extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      modalOpen: false
+      modalOpen: false,
+      modalTwoOpen: false
     }
   }
 
@@ -43,12 +44,12 @@ export default class Menu extends Component {
                               {/*<li><a>Add tag</a></li>*/}
                               <li className="divider-menu"><hr /></li>
                               <li><Modal
-                                trigger={<a onClick={() => this.setState({ modalOpen: true })}>rename</a> }
+                                trigger={<a onClick={() => this.setState({ modalTwoOpen: true })}>rename</a> }
                                 closeIcon
-                                open={this.state.modalOpen}
+                                open={this.state.modalTwoOpen}
                                 closeOnEscape={true}
                                 closeOnDimmerClick={true}
-                                onClose={() => this.setState({ modalOpen: false})}
+                                onClose={() => this.setState({ modalTwoOpen: false})}
                                 >
                                 <Modal.Header>Edit Document Title</Modal.Header>
                                 <Modal.Content>
@@ -292,13 +293,13 @@ export default class Menu extends Component {
                               <li><a href="https://github.com/Graphite-Docs/graphite/issues" target="_blank" rel="noopener noreferrer">bug report</a></li>
                           </ul>
                       </li>
-                      <li className="topmenu">
+                      {/*<li className="topmenu">
                           <a>Page settings</a>
                           <ul className="submenu">
                               <li><a onClick={() => this.props.formatSpacing('single')}>Single Space</a></li>
                               <li onClick={() => this.props.formatSpacing('double')}><a>Double Space</a></li>
                           </ul>
-                      </li>
+                      </li>*/}
                   </ul>
               </div>
     );

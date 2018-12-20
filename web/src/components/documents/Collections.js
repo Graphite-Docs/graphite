@@ -95,30 +95,6 @@ export default class Collections extends Component {
     })
   }
 
-  // loadIt = () => {
-  //   const options = {};
-  //   options.filename = 'testfile1.json';
-  //   options.decrypt = true;
-  //   options.ipfs = false;
-  //   options.gaia = false;
-  //   options.local = true;
-  //   loadFile(options).then((data) => {
-  //     console.log(data);
-  //   })
-  // }
-  //
-  // postIt = () => {
-  //   const options = {};
-  //   options.filename = 'testfile1.json';
-  //   options.encrypt = true;
-  //   options.data = "Rage, against the dying of the light";
-  //   options.ipfs = false;
-  //   options.sync = true;
-  //   storeFile(options).then((data) => {
-  //     console.log(data)
-  //   })
-  // }
-
   render() {
     const steps = [
       {
@@ -205,7 +181,7 @@ export default class Collections extends Component {
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
     // const currentDocs = filteredValue.slice(0).reverse();
-    const currentDocs = filteredValue.sort(function(a,b){return new Date(b.updated) - new Date(a.updated)});
+    const currentDocs = filteredValue.sort(function(a,b){return new Date(b.lastUpdate) - new Date(a.lastUpdate)});
     let shared = currentDocs.map(a => a.sharedWith);
     let newShared = shared.filter(function(n){ return n !== undefined });
     let mergedShared = [].concat.apply([], newShared);
@@ -332,7 +308,7 @@ export default class Collections extends Component {
             graphitePro={graphitePro}
           />
           <Container style={{marginTop:"65px"}}>
-          
+
           <Joyride
             continuous
             scrollToFirstStep

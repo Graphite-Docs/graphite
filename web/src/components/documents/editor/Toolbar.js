@@ -52,7 +52,7 @@ export default class Toolbar extends Component {
   trackKeys = (event) => {
     if(event.key === 'Enter') {
       this.props.onClickLink(event, this.state.url)
-      setTimeout(() => this.props.modalController(false), 300)
+      setTimeout(() => this.props.modalController(false, "link"), 300)
     }
   }
 
@@ -144,6 +144,23 @@ export default class Toolbar extends Component {
       </Modal.Content>
     </Modal>
 
+    const linkModal = <Modal trigger={
+      <Icon onClick={() => this.props.modalController(true, "link")}  name='linkify' />
+    }
+      open={this.props.modalTwoOpen}
+      onClose={() => this.props.modalController(false, "link")}
+      size='small'
+      closeOnEscape={true}
+      closeOnDimmerClick={true}
+      closeIcon
+    >
+      <Modal.Content>
+        <Modal.Description className='link-modal'>
+          <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
+        </Modal.Description>
+      </Modal.Content>
+    </Modal>
+
     if(this.state.display) {
       colorPicker = 'colorPicker'
     } else {
@@ -200,21 +217,7 @@ export default class Toolbar extends Component {
                 {
                   this.props.hasLinks() ?
                   <Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /> :
-                  <Modal trigger={
-                    <Icon onClick={() => this.props.modalController(true)}  name='linkify' />
-                  }
-                    open={this.props.modalOpen}
-                    onClose={() => this.props.modalController(false)}
-                    size='small'
-                    closeOnEscape={true}
-                    closeOnDimmerClick={true}
-                  >
-                    <Modal.Content>
-                      <Modal.Description className='link-modal'>
-                        <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
-                      </Modal.Description>
-                    </Modal.Content>
-                  </Modal>
+                  linkModal
                 }
 
                 </Dropdown.Item>
@@ -285,21 +288,7 @@ export default class Toolbar extends Component {
                 {
                   this.props.hasLinks() ?
                   <Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /> :
-                  <Modal trigger={
-                    <Icon onClick={() => this.props.modalController(true)}  name='linkify' />
-                  }
-                    open={this.props.modalOpen}
-                    onClose={() => this.props.modalController(false)}
-                    size='small'
-                    closeOnEscape={true}
-                    closeOnDimmerClick={true}
-                  >
-                    <Modal.Content>
-                      <Modal.Description className='link-modal'>
-                        <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
-                      </Modal.Description>
-                    </Modal.Content>
-                  </Modal>
+                  linkModal
                 }
 
                 </Dropdown.Item>
@@ -365,21 +354,7 @@ export default class Toolbar extends Component {
             this.props.hasLinks() ?
             <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
             <Menu.Item style={{cursor: "pointer"}}>
-            <Modal trigger={
-              <Icon onClick={() => this.props.modalController(true)}  name='linkify' />
-            }
-              open={this.props.modalOpen}
-              onClose={() => this.props.modalController(false)}
-              size='small'
-              closeOnEscape={true}
-              closeOnDimmerClick={true}
-            >
-              <Modal.Content>
-                <Modal.Description className='link-modal'>
-                  <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
-                </Modal.Description>
-              </Modal.Content>
-            </Modal>
+            {linkModal}
             </Menu.Item>
           }
           <Menu.Item style={{cursor: "pointer"}}>
@@ -446,21 +421,7 @@ export default class Toolbar extends Component {
             this.props.hasLinks() ?
             <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
             <Menu.Item style={{cursor: "pointer"}}>
-            <Modal trigger={
-              <Icon onClick={() => this.props.modalController(true)}  name='linkify' />
-            }
-              open={this.props.modalOpen}
-              onClose={() => this.props.modalController(false)}
-              size='small'
-              closeOnEscape={true}
-              closeOnDimmerClick={true}
-            >
-              <Modal.Content>
-                <Modal.Description className='link-modal'>
-                  <Input onKeyDown={this.trackKeys} onChange={this.linkHandler} placeholder='ex: https://graphitedocs.com' />
-                </Modal.Description>
-              </Modal.Content>
-            </Modal>
+            {linkModal}
             </Menu.Item>
           }
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Menu.Item>

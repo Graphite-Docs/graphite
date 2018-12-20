@@ -51,7 +51,7 @@ export default class SingleVaultFile extends Component {
         <div>
         <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
           <MainMenu.Item>
-            <Link style={{color: "#fff"}} to={'/vault'}><Icon name='arrow left' /></Link>
+            <Link style={{color: "#fff"}} to={'/vault'}><Icon style={{color:"fff"}} name='arrow left' /></Link>
           </MainMenu.Item>
           <MainMenu.Item style={{color: "#fff"}}>
             {name.length > 14 ? name.substring(0,17).toUpperCase() +"..." : name.toUpperCase()}
@@ -59,23 +59,23 @@ export default class SingleVaultFile extends Component {
 
           {type.includes("image") ? (
             <MainMenu.Item>
-              <a href={link} download={name}>
-                <i className="material-icons">cloud_download</i>
+              <a style={{color:"#fff"}} href={link} download={name}>
+                <Icon style={{color:"#fff"}} name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("video") ? (
             <MainMenu.Item>
-              <a href={link} download={name}>
-                <i className="material-icons">cloud_download</i>
+              <a style={{color:"#fff"}} href={link} download={name}>
+                <Icon style={{color:"#fff"}} name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("application/pdf") ? (
             <MainMenu.Item>
-              <a style={{cursor: 'pointer'}}
+              <a style={{cursor: 'pointer', color: "#fff"}}
                 onClick={this.props.downloadPDF}
                 title={name}
               >
-                <i className="material-icons">cloud_download</i>
+                <Icon style={{color:"#fff"}} name="cloud download" />
               </a>
               <a onClick={() => this.props.signWithBlockusign(window.location.href.split('vault/')[1])} style={{marginLeft: "20px", cursor: "pointer"}}>
                 <img style={{height: "30px"}} src='https://blockusign.co/assets/imgs/blockusignLogoSvg.svg' alt='blockusign' /><span style={{marginLeft: "5px", color: "#fff", position: "relative", top: "-7px"}}>Sign with Blockusign</span>
@@ -86,13 +86,14 @@ export default class SingleVaultFile extends Component {
               <a
                 onClick={this.props.downloadPDF}
                 title={name}
+                style={{color:"#fff"}}
               >
-                <i className="material-icons">cloud_download</i>
+                <Icon name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("sheet")|| type.includes("csv") ? (
             <MainMenu.Item>
-              <CSVLink data={cells} filename={name + '.csv'} ><i className="material-icons">cloud_download</i></CSVLink>
+              <CSVLink style={{color:"#fff"}} data={cells} filename={name + '.csv'} ><Icon style={{color:"fff"}} name="cloud download" /></CSVLink>
             </MainMenu.Item>
           ) : (
             <MainMenu.Item />

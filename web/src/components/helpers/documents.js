@@ -3,15 +3,190 @@ import {
   getFile,
   loadUserData
 } from 'blockstack';
-
-
+import React from 'react'
+import { Value } from 'slate'
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
+import Html from 'slate-html-serializer';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
-// const uuidv4 = require('uuid/v4');
+const lzjs = require('lzjs');
 
 const { encryptECIES } = require('blockstack/lib/encryption');
+
+const BLOCK_TAGS = {
+  blockquote: 'block-quote',
+  p: 'paragraph',
+  pre: 'code',
+  ul: 'list',
+  ol: 'ordered',
+  li: 'list-item',
+  div: 'align',
+  img: 'image'
+}
+// Add a dictionary of mark tags.
+const MARK_TAGS = {
+  em: 'italic',
+  strong: 'bold',
+  u: 'underline',
+  pre: 'code',
+  strike: 'strikethrough',
+  span: 'color'
+}
+
+const INLINE_TAGS = {
+  a: 'link'
+}
+const rules = [
+  {
+    deserialize(el, next) {
+      const type = BLOCK_TAGS[el.tagName.toLowerCase()]
+
+      if (type) {
+        return {
+          object: 'block',
+          type: type,
+          data: {
+            class: el.getAttribute('class'),
+          },
+          nodes: next(el.childNodes),
+        }
+
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'block') {
+        switch (obj.type) {
+          case 'code':
+            return (
+              <pre>
+                <code>{children}</code>
+              </pre>
+            )
+          case 'paragraph':
+            return <p className={obj.data.get('className')}>{children}</p>
+          case 'block-quote':
+            return <blockquote>{children}</blockquote>
+          case 'list':
+            return <ul>{children}</ul>
+          case 'heading-one':
+            return <h1>{children}</h1>
+          case 'heading-two':
+            return <h2>{children}</h2>
+          case 'heading-three':
+            return <h3>{children}</h3>
+          case 'heading-four':
+            return <h4>{children}</h4>
+          case 'heading-five':
+            return <h5>{children}</h5>
+          case 'heading-six':
+            return <h6>{children}</h6>
+          case 'list-item':
+            return <li>{children}</li>
+          case 'ordered':
+            return <ol>{children}</ol>
+          case 'table':
+            const headers = !obj.data.get('headless');
+            const rows = children;
+            const split = (!headers || !rows || !rows.size || rows.size===1)
+                ?  { header: null, rows: rows }
+                : {
+                    header: rows.get(0),
+                    rows: rows.slice(1),
+                 }
+
+            return (
+                <table>
+                    {headers &&
+                        <thead>{split.header}</thead>
+                    }
+                    <tbody>{split.rows}</tbody>
+                </table>
+            );
+          case 'table_row': return <tr>{children}</tr>;
+          case 'table_cell': return <td>{children}</td>;
+          case 'align':
+            return <div className={obj.data.get('class')}>{children}</div>
+          case 'code-block':
+            return <code>{children}</code>
+          case 'image':
+            return <img src={ obj.data.get('src') } alt='thumbnail'/>
+          case 'video':
+            return <iframe src={ obj.data.get('src') } title="video" />
+          default: return ''
+        }
+      }
+    }
+  },
+  // Add a new rule that handles marks...
+  {
+    deserialize(el, next) {
+      const type = MARK_TAGS[el.tagName.toLowerCase()]
+      if (type) {
+        return {
+          object: 'mark',
+          type: type,
+          data: {
+            class: el.getAttribute('class'),
+          },
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+    serialize(obj, children) {
+      if (obj.object === 'mark') {
+        switch (obj.type) {
+          case 'bold':
+            return <strong>{children}</strong>
+          case 'italic':
+            return <em>{children}</em>
+          case 'underline':
+            return <u>{children}</u>
+          case 'strikethrough':
+            return <strike>{children}</strike>
+          case 'color':
+            return <span className={obj.data.get('class')}>{children}</span>
+          case 'code':
+            return <pre><code>{children}</code></pre>
+          case 'code-block':
+            return <pre className={obj.data.get('className')}><code>{children}</code></pre>
+          default: return ''
+        }
+      }
+    }
+  },
+    {
+      deserialize(el, next) {
+        const type = INLINE_TAGS[el.tagName.toLowerCase()]
+        if (type) {
+          // return console.log(el.style)
+          return {
+            object: 'inline',
+            type: type,
+            data: {
+              href: el.getAttribute('href'),
+              src: el.getArrtribute('src')
+              // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
+            },
+            nodes: next(el.childNodes),
+          }
+        }
+      },
+      serialize(obj, children) {
+        if (obj.object === 'inline') {
+          switch (obj.type) {
+            case 'link':
+              return <a href={obj.data.get('href')}>{children}</a>
+            case 'color':
+              return <span style={ obj.data.get('style') }>{children}</span>
+            default: return ''
+          }
+        }
+      },
+  },
+]
+
+const html = new Html({ rules })
 
 export function loadCollection() {
   this.setState({ results: [] })
@@ -269,34 +444,68 @@ export function loadSharedCollection (doc) {
 export function loadSingle(doc) {
     const thisFile = doc.id;
     const fullFile = '/documents/' + thisFile + '.json';
-
+    let thisContent;
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
-       if(JSON.parse(fileContents || '{}').sharedWith) {
-         console.log(JSON.parse(fileContents || '{}'))
+       if(JSON.parse(fileContents).compressed === true) {
+         console.log("compressed doc")
          this.setState({
+           content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)),
            title: JSON.parse(fileContents || '{}').title,
-           content: JSON.parse(fileContents || '{}').content,
-           singleDocTags: JSON.parse(fileContents || '{}').singleDocTags,
-           updated: JSON.parse(fileContents || '{}').updated,
-           words: JSON.parse(fileContents || '{}').words,
-           id: JSON.parse(fileContents || '{}').id,
+           tags: JSON.parse(fileContents || '{}').tags,
+           idToLoad: JSON.parse(fileContents || '{}').id,
+           singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+           docLoaded: true,
+           readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+           rtc: JSON.parse(fileContents || '{}').rtc || false,
+           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+           teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+           compressed: JSON.parse(fileContents || '{}').compressed || false,
+           spacing: JSON.parse(fileContents || '{}').spacing,
            lastUpdate: JSON.parse(fileContents).lastUpdate,
-           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith,
-           compressed: JSON.parse(fileContents).compressed
-        });
-      } else {
-        this.setState({
-          title: JSON.parse(fileContents || '{}').title,
-          content: JSON.parse(fileContents || '{}').content,
-          singleDocTags: JSON.parse(fileContents || '{}').singleDocTags,
-          updated: JSON.parse(fileContents || '{}').updated,
-          words: JSON.parse(fileContents || '{}').words,
-          id: JSON.parse(fileContents || '{}').id,
-          sharedWithSingle: [],
-          compressed: JSON.parse(fileContents).compressed
-       });
-      }
+           jsonContent: true
+         })
+       } else {
+         console.log("Not compressed")
+         if(JSON.parse(fileContents).jsonContent) {
+           console.log("Json doc")
+           thisContent = JSON.parse(fileContents).content;
+           this.setState({
+             content: Value.fromJSON(thisContent),
+             title: JSON.parse(fileContents || '{}').title,
+             tags: JSON.parse(fileContents || '{}').tags,
+             idToLoad: JSON.parse(fileContents || '{}').id,
+             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+             docLoaded: true,
+             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+             rtc: JSON.parse(fileContents || '{}').rtc || false,
+             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+             compressed: JSON.parse(fileContents || '{}').compressed || false,
+             spacing: JSON.parse(fileContents || '{}').spacing,
+             lastUpdate: JSON.parse(fileContents).lastUpdate,
+             jsonContent: true
+           })
+         } else {
+           console.log("html doc")
+           this.setState({
+             content: html.deserialize(JSON.parse(fileContents).content),
+             title: JSON.parse(fileContents || '{}').title,
+             tags: JSON.parse(fileContents || '{}').tags,
+             idToLoad: JSON.parse(fileContents || '{}').id,
+             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+             docLoaded: true,
+             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+             rtc: JSON.parse(fileContents || '{}').rtc || false,
+             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+             compressed: JSON.parse(fileContents || '{}').compressed || false,
+             spacing: JSON.parse(fileContents || '{}').spacing,
+             lastUpdate: JSON.parse(fileContents).lastUpdate,
+           })
+         }
+
+       }
 
      })
       .then(() => {
@@ -337,9 +546,11 @@ export function getCollection(doc) {
 }
 
 export function share(doc) {
+  let thisContent = this.state.content;
   const object = {};
   object.title = this.state.title;
-  object.content = this.state.content;
+  object.jsonContent = true;
+  object.content = thisContent.toJSON();
   object.id = doc.id;
   object.updated = getMonthDayYear();
   object.sharedWith = this.state.sharedWithSingle;
@@ -347,7 +558,7 @@ export function share(doc) {
   object.singleDocTags = this.state.singleDocTags;
   object.words = this.state.words;
   object.rtc = this.state.rtc;
-  object.compressed = true;
+  object.compressed = false;
   const index = this.state.index;
   const updatedDocs = update(this.state.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
   this.setState({value: updatedDocs, singleDoc: object, sharedCollection: [...this.state.sharedCollection, object]});
@@ -447,56 +658,186 @@ export function loadSingleTags(doc) {
 
   getFile(fullFile, {decrypt: true})
    .then((fileContents) => {
+     let thisContent;
      if(JSON.parse(fileContents || '{}').singleDocTags || JSON.parse(fileContents).tags) {
        if(JSON.parse(fileContents).singleDocTags) {
+         if(JSON.parse(fileContents).compressed === true) {
+         console.log("compressed doc")
          this.setState({
-           shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+           content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)),
            title: JSON.parse(fileContents || '{}').title,
-           id: JSON.parse(fileContents || '{}').id,
-           singleDocTags: JSON.parse(fileContents || '{}').singleDocTags,
-           updated: JSON.parse(fileContents || '{}').updated,
+           tags: JSON.parse(fileContents || '{}').tags,
+           idToLoad: JSON.parse(fileContents || '{}').id,
+           singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+           docLoaded: true,
+           readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+           rtc: JSON.parse(fileContents || '{}').rtc || false,
            sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-           content: JSON.parse(fileContents || '{}').content,
-           lastUpdate: JSON.parse(fileContents || '{}').lastUpdate,
-           compressed: JSON.parse(fileContents).compressed
+           teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+           compressed: JSON.parse(fileContents || '{}').compressed || false,
+           spacing: JSON.parse(fileContents || '{}').spacing,
+           lastUpdate: JSON.parse(fileContents).lastUpdate,
+           jsonContent: true
+         }, () => {
+           if(this.state.tag !=="") {
+             this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+               this.setState({ tag: "" });
+             });
+           }
+         })
+       } else {
+         console.log("Not compressed")
+         if(JSON.parse(fileContents).jsonContent) {
+           console.log("Json doc")
+           thisContent = JSON.parse(fileContents).content;
+           this.setState({
+             content: Value.fromJSON(thisContent),
+             title: JSON.parse(fileContents || '{}').title,
+             tags: JSON.parse(fileContents || '{}').tags,
+             idToLoad: JSON.parse(fileContents || '{}').id,
+             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+             docLoaded: true,
+             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+             rtc: JSON.parse(fileContents || '{}').rtc || false,
+             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+             compressed: JSON.parse(fileContents || '{}').compressed || false,
+             spacing: JSON.parse(fileContents || '{}').spacing,
+             lastUpdate: JSON.parse(fileContents).lastUpdate,
+             jsonContent: true
+           }, () => {
+             if(this.state.tag !=="") {
+               this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+                 this.setState({ tag: "" });
+               });
+             }
+           })
+         } else {
+           console.log("html doc")
+           this.setState({
+             content: html.deserialize(JSON.parse(fileContents).content),
+             title: JSON.parse(fileContents || '{}').title,
+             tags: JSON.parse(fileContents || '{}').tags,
+             idToLoad: JSON.parse(fileContents || '{}').id,
+             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+             docLoaded: true,
+             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+             rtc: JSON.parse(fileContents || '{}').rtc || false,
+             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+             compressed: JSON.parse(fileContents || '{}').compressed || false,
+             spacing: JSON.parse(fileContents || '{}').spacing,
+             lastUpdate: JSON.parse(fileContents).lastUpdate,
+           }, () => {
+             if(this.state.tag !=="") {
+               this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+                 this.setState({ tag: "" });
+               });
+             }
+           })
+         }
+       }
+      } else if(JSON.parse(fileContents).tags) {
+        if(JSON.parse(fileContents).compressed === true) {
+        console.log("compressed doc")
+        this.setState({
+          content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)),
+          title: JSON.parse(fileContents || '{}').title,
+          tags: JSON.parse(fileContents || '{}').tags,
+          idToLoad: JSON.parse(fileContents || '{}').id,
+          singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+          docLoaded: true,
+          readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+          rtc: JSON.parse(fileContents || '{}').rtc || false,
+          sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+          teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+          compressed: JSON.parse(fileContents || '{}').compressed || false,
+          spacing: JSON.parse(fileContents || '{}').spacing,
+          lastUpdate: JSON.parse(fileContents).lastUpdate,
+          jsonContent: true
         }, () => {
           if(this.state.tag !=="") {
             this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
               this.setState({ tag: "" });
             });
           }
-        });
-      } else if(JSON.parse(fileContents).tags) {
-        this.setState({
-          shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-          title: JSON.parse(fileContents || '{}').title,
-          id: JSON.parse(fileContents || '{}').id,
-          singleDocTags: JSON.parse(fileContents || '{}').tags,
-          updated: JSON.parse(fileContents || '{}').updated,
-          sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-          content: JSON.parse(fileContents || '{}').content,
-          lastUpdate: JSON.parse(fileContents || '{}').lastUpdate,
-          compressed: JSON.parse(fileContents).compressed
-       }, () => {
-         if(this.state.tag !=="") {
-           this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
-             this.setState({ tag: "" });
-           });
-         }
-       });
+        })
+      } else {
+        console.log("Not compressed")
+        if(JSON.parse(fileContents).jsonContent) {
+          console.log("Json doc")
+          thisContent = JSON.parse(fileContents).content;
+          this.setState({
+            content: Value.fromJSON(thisContent),
+            title: JSON.parse(fileContents || '{}').title,
+            tags: JSON.parse(fileContents || '{}').tags,
+            idToLoad: JSON.parse(fileContents || '{}').id,
+            singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+            docLoaded: true,
+            readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+            rtc: JSON.parse(fileContents || '{}').rtc || false,
+            sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+            teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+            compressed: JSON.parse(fileContents || '{}').compressed || false,
+            spacing: JSON.parse(fileContents || '{}').spacing,
+            lastUpdate: JSON.parse(fileContents).lastUpdate,
+            jsonContent: true
+          }, () => {
+            if(this.state.tag !=="") {
+              this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+                this.setState({ tag: "" });
+              });
+            }
+          })
+        } else {
+          console.log("html doc")
+          this.setState({
+            content: html.deserialize(JSON.parse(fileContents).content),
+            title: JSON.parse(fileContents || '{}').title,
+            tags: JSON.parse(fileContents || '{}').tags,
+            idToLoad: JSON.parse(fileContents || '{}').id,
+            singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+            docLoaded: true,
+            readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+            rtc: JSON.parse(fileContents || '{}').rtc || false,
+            sharedWith: JSON.parse(fileContents || '{}').sharedWith,
+            teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+            compressed: JSON.parse(fileContents || '{}').compressed || false,
+            spacing: JSON.parse(fileContents || '{}').spacing,
+            lastUpdate: JSON.parse(fileContents).lastUpdate,
+          }, () => {
+            if(this.state.tag !=="") {
+              this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+                this.setState({ tag: "" });
+              });
+            }
+          })
+        }
+      }
       }
 
     } else {
       this.setState({
-        shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+        content: html.deserialize(JSON.parse(fileContents).content),
         title: JSON.parse(fileContents || '{}').title,
-        id: JSON.parse(fileContents || '{}').id,
-        updated: JSON.parse(fileContents || '{}').updated,
+        tags: JSON.parse(fileContents || '{}').tags,
+        idToLoad: JSON.parse(fileContents || '{}').id,
+        singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+        docLoaded: true,
+        readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+        rtc: JSON.parse(fileContents || '{}').rtc || false,
         sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-        singleDocTags: [],
-        content: JSON.parse(fileContents || '{}').content,
-        lastUpdate: JSON.parse(fileContents || '{}').lastUpdate
-     });
+        teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+        compressed: JSON.parse(fileContents || '{}').compressed || false,
+        spacing: JSON.parse(fileContents || '{}').spacing,
+        lastUpdate: JSON.parse(fileContents).lastUpdate,
+      }, () => {
+        if(this.state.tag !=="") {
+          this.setState({ singleDocTags: [...this.state.singleDocTags, this.state.tag]}, () => {
+            this.setState({ tag: "" });
+          });
+        }
+      })
     }
    })
    .then(() => {
@@ -533,15 +874,17 @@ export function getCollectionTags(doc) {
 
 export function saveNewTags(doc) {
   this.setState({ loading: true });
+  let content = this.state.content;
   const object = {};
   object.id = doc.id;
   object.title = this.state.title;
   object.updated = getMonthDayYear();
   object.singleDocTags = this.state.singleDocTags;
-  object.content = this.state.content;
+  object.content = content.toJSON();
+  object.jsonContent = true;
   object.sharedWith = this.state.sharedWith;
   object.lastUpdate = Date.now();
-  object.compressed = true;
+  object.compressed = false;
   const objectTwo = {};
   objectTwo.title = this.state.title;
   objectTwo.id = doc.id;
@@ -662,6 +1005,7 @@ export function loadTeamDocs() {
 }
 
 export function handleRestore(file) {
+  let content = file.content;
   console.log(file);
   this.setState({loading: true})
   const rando = Date.now();
@@ -678,7 +1022,8 @@ export function handleRestore(file) {
   objectTwo.title = object.title;
   objectTwo.id = object.id;
   objectTwo.updated = object.created;
-  objectTwo.content = file.content;
+  objectTwo.content = content.toJSON();
+  objectTwo.jsonContent = true;
   objectTwo.singleDocTags = object.singleDocTags;
   objectTwo.sharedWith = object.sharedWith;
 

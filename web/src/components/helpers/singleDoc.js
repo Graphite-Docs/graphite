@@ -988,7 +988,7 @@ export function sendArticle() {
 
 export function downloadDoc(props) {
   if(props === "word") {
-    var content = '<!DOCTYPE html>' + this.state.content;
+    var content = '<!DOCTYPE html>' + document.getElementsByClassName('editor')[0].innerHTML;;
     var converted = htmlDocx.asBlob(content);
     var blob = new Blob([converted], {type: "application/msword"});
     FileSaver.saveAs(blob, this.state.title + '.docx');
@@ -1004,10 +1004,10 @@ export function downloadDoc(props) {
     }
 
 
-    html2pdf('<div class="pdf" style="margin:45px;margin-bottom:20px;"}>' + html.serialize(this.state.content) + '</div>')
+    html2pdf('<div class="pdf" style="margin:45px;margin-bottom:20px;"}>' + document.getElementsByClassName('editor')[0].innerHTML + '</div>')
     .set(opt)
   } else if(props === 'txt') {
-    window.open("data:application/txt," + encodeURIComponent(this.state.content.replace(/<[^>]+>/g, '')), "_self");
+    window.open("data:application/txt," + encodeURIComponent(document.getElementsByClassName('editor')[0].innerHTML.replace(/<[^>]+>/g, '')), "_self");
   }
 
 }

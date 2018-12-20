@@ -29,6 +29,7 @@ h5, h6 {
 blockquote {
   border-left: 3px solid #756f6f;
   margin-left: 20px!important;
+  padding-left: 8px!important;
   font-size: 18px;
   color: #756f6f;
 }
@@ -607,12 +608,7 @@ div.markdown-editor__editor-container h2 {
   .ql-editor {
     max-width: 95%;
     margin: auto;
-    margin-top: 245px;
-  }
-
-  .slate-toolbar, .slate-toolbar-vertical {
-    position: fixed;
-    top: 123px;
+    margin-top: 215px;
   }
 }
 
@@ -620,7 +616,7 @@ div.markdown-editor__editor-container h2 {
   .ql-editor {
     max-width: 95%;
     margin: auto;
-    margin-top: 285px;
+    margin-top: 215px;
   }
 }
 

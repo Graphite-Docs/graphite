@@ -78,7 +78,8 @@ class SlateEditor extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      modalOpen: false
+      modalOpen: false,
+      modalTwoOpen: false,
     };
     this.editor = null;
 }
@@ -366,17 +367,6 @@ onClickAlign = (event, align) => {
       if (href === null) {
         return
       }
-
-      const text = window.prompt('Enter the text for the link:')
-
-      if (text === null) {
-        return
-      }
-
-      editor
-        .insertText(text)
-        .moveFocusBackward(text.length)
-        .command(wrapLink, href)
     }
   }
 
@@ -507,8 +497,12 @@ onClickAlign = (event, align) => {
     );
   }
 
-  modalController = (props) => {
-    this.setState({ modalOpen: props });
+  modalController = (props, type) => {
+    if(type === "link") {
+      this.setState({ modalTwoOpen: props })
+    } else {
+      this.setState({ modalOpen: props });
+    }
   }
 
   applyOperations = operations => {
@@ -521,11 +515,20 @@ onClickAlign = (event, align) => {
 
 
   render() {
-    let table = document.getElementsByTagName('table')[0];
-    if(table) {
-      table.classList.add("ui");
-      table.classList.add("unstackable");
-      table.classList.add("table");
+    let table = document.getElementsByTagName('table');
+
+    let length = table !== null ? table.length : 0;
+    let i = 0;
+    for(i; i < length; i++) {
+      if(table) {
+        if(table[i].classList.length > 0) {
+
+        } else {
+          table[i].classList.add("ui");
+          table[i].classList.add("unstackable");
+          table[i].classList.add("table");
+        }
+      }
     }
 
     const isTable = this.editor && this.editor.isSelectionInTable(this.props.content);
@@ -547,6 +550,7 @@ onClickAlign = (event, align) => {
               onClickLink={this.onClickLink}
               onClickColor={this.onClickColor}
               modalOpen={this.state.modalOpen}
+              modalTwoOpen={this.state.modalTwoOpen}
               modalController={this.modalController}
               hasLinks={this.hasLinks}
               onClickAlign={this.onClickAlign}

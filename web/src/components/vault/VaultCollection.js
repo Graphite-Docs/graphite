@@ -252,7 +252,7 @@ export default class VaultCollection extends Component {
                       multiple={ false }
                       onDropRejected={ this.props.handleDropRejected }>
                       <div style={{marginTop: "45px"}}>
-                        <h1 style={{textAlign: "center", color: "#fff"}} className="upload-cloud"><i style={{fontSize: "40px"}} className="material-icons white-text large">cloud_upload</i></h1>
+                        <h1 style={{textAlign: "center", color: "#fff"}} className="upload-cloud"><Icon style={{fontSize: "40px"}} name="cloud upload" /></h1>
                         <h3 style={{textAlign: "center", color: "#fff", fontSize: "40px"}} className="white-text">Drag files or click to upload</h3>
                       </div>
                     </Dropzone>
