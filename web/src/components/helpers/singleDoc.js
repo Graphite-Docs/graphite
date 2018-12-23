@@ -64,6 +64,7 @@ const rules = [
           type: type,
           data: {
             class: el.getAttribute('class'),
+            // src: el.getArrtribute('src')
           },
           nodes: next(el.childNodes),
         }
@@ -180,8 +181,7 @@ const rules = [
             object: 'inline',
             type: type,
             data: {
-              href: el.getAttribute('href'),
-              src: el.getArrtribute('src')
+              href: el.getAttribute('href')
               // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
             },
             nodes: next(el.childNodes),
@@ -752,17 +752,24 @@ export function handleAutoAdd() {
   // this.analyticsRun('documents');
   let content = this.state.content;
   const object = {};
+  const objectTwo = {};
   object.title = this.state.title;
   object.content = content.toJSON();
   object.compressed = false;
   object.jsonContent = true;
   this.state.teamDoc ? object.teamDoc = true : object.teamDoc = false;
-  if(window.location.href.includes('docs')) {
-    object.id = window.location.href.split('docs/')[1]
+  if(window.location.href.includes('docs/')) {
+    console.log("Public Doc")
+    object.id = window.location.href.split('docs/')[1];
+    objectTwo.id = window.location.href.split('docs/')[1];
   } else if(window.location.href.includes('shared/')) {
+    console.log("Shared Doc")
     object.id = window.location.href.split('shared/')[1].split('/')[1];
+    objectTwo.id = window.location.href.split('shared/')[1].split('/')[1];
   } else {
+    console.log("My Doc")
     object.id = window.location.href.split('doc/')[1];
+    objectTwo.id = window.location.href.split('doc/')[1];
   }
   object.updated = getMonthDayYear();
   object.sharedWith = this.state.sharedWith;
@@ -775,7 +782,6 @@ export function handleAutoAdd() {
   object.fileType = "documents";
   object.spacing = this.state.spacing;
   object.lastUpdate = Date.now();
-  const objectTwo = {};
   objectTwo.title = this.state.title;
   this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
   objectTwo.id = object.id;
@@ -793,8 +799,9 @@ export function handleAutoAdd() {
   console.log(this.state.index)
     if(this.state.newSharedDoc) {
       console.log("new shared doc")
-      this.setState({value: [...this.state.value, objectTwo], filteredValue: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
-        this.setState({ newSharedDoc: false }, () => {
+      console.log(objectTwo)
+      this.setState({ newSharedDoc: false, value: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
+        this.setState({ filteredValue: this.state.value }, () => {
           this.autoSave();
         })
         if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
@@ -814,6 +821,7 @@ export function handleAutoAdd() {
         });
       } else {
         let value = this.state.value;
+        console.log(value);
         const thisDoc = value.find((doc) => {
           if(typeof doc.id === "string") {
             if(doc.id) {

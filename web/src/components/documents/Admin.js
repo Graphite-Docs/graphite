@@ -49,7 +49,12 @@ export default class Admin extends Component {
      .then((fileContents) => {
        if(fileContents) {
          console.log("Files are here");
-         this.setState({ value: JSON.parse(fileContents || '{}').value });
+         if(JSON.parse(fileContents).value) {
+           this.setState({ value: JSON.parse(fileContents || '{}').value });
+         } else {
+           this.setState({ value: JSON.parse(fileContents || '{}') });
+         }
+
          this.setState({filteredValue: this.state.value})
          this.setState({ loading: "hide" });
        } else {

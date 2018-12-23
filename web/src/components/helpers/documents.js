@@ -1022,7 +1022,7 @@ export function handleRestore(file) {
   objectTwo.title = object.title;
   objectTwo.id = object.id;
   objectTwo.updated = object.created;
-  objectTwo.content = content.toJSON();
+  objectTwo.content = content;
   objectTwo.jsonContent = true;
   objectTwo.singleDocTags = object.singleDocTags;
   objectTwo.sharedWith = object.sharedWith;
