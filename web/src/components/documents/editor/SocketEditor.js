@@ -8,8 +8,10 @@ class SocketEditor extends Component {
     super(props);
 
     this.state = {
-      endpoint: process.env.REACT_APP_SERVER
-      // endpoint: 'http://localhost:5000'
+      // endpoint: process.env.REACT_APP_SERVER
+      endpoint: 'http://localhost:5000',
+      showCollab: false,
+      uniqueID: ""
     }
     if(isUserSignedIn()) {
       this.uniqueID = loadUserData().username;
@@ -31,6 +33,9 @@ class SocketEditor extends Component {
             console.log(e)
           }
         });
+        this.setState({showCollab: true, uniqueID: uniqueID})
+        clearTimeout(this.timeout);
+        this.timeout = setTimeout(this.removeAuthorship, 300)
       }
     });
   }
@@ -71,6 +76,10 @@ class SocketEditor extends Component {
     }
   }
 
+  removeAuthorship = () => {
+    this.setState({ showCollab: false, uniqueID: ""})
+  }
+
   render() {
     return (
       <SlateEditor
@@ -86,6 +95,8 @@ class SocketEditor extends Component {
         collabContent={this.props.collabContent}
         loadSingleVaultFile={this.props.loadSingleVaultFile}
         handleVaultDrop={this.props.handleVaultDrop}
+        showCollab={this.state.showCollab}
+        uniqueID={this.state.uniqueID}
         link={this.props.link}
         files={this.props.files}
         file={this.props.file}

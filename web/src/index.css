@@ -580,6 +580,16 @@ div.markdown-editor__editor-container h2 {
   margin-top: 135px;
 }
 
+.authorship {
+  position: fixed;
+  bottom:10px;
+  left:0px;
+  z-index: 999;
+  width: 30%;
+  background: #282828!important;
+  padding: 8px;
+}
+
 /* @media screen and (max-width: 675px) {
   .ql-editor {
     padding-left: 50px;
@@ -601,6 +611,10 @@ div.markdown-editor__editor-container h2 {
     max-width: 90%;
     margin: auto;
     margin-top: 215px;
+  }
+
+  .authorship {
+    width: 60%;
   }
 }
 

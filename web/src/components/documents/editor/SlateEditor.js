@@ -80,6 +80,8 @@ class SlateEditor extends React.Component {
     this.state = {
       modalOpen: false,
       modalTwoOpen: false,
+      showCollab: false,
+      uniqueID: ""
     };
     this.editor = null;
 }
@@ -505,7 +507,7 @@ onClickAlign = (event, align) => {
     }
   }
 
-  applyOperations = operations => {
+  applyOperations = (operations) => {
     this.remote = true;
     if(operations) {
       operations.forEach(o => this.editor.applyOperation(o))
@@ -559,6 +561,15 @@ onClickAlign = (event, align) => {
               isTable={isTable}
               files={this.props.files}
             />
+          }
+          {
+            this.props.showCollab ?
+            <div className='authorship'>
+              <div>
+                <h4 style={{color: "#fff", marginLeft: "15px"}}>{this.props.uniqueID}...</h4>
+              </div>
+            </div>:
+            <div className="hide" />
           }
           <div className="ql-editor">
           {this.props.collabContent ?

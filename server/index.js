@@ -21,6 +21,7 @@ io.on("connection", socket => {
     socket.join(room);
     // roomName = room;
     socket.on("update content", content => {
+      // console.log(content);
       // once we get a 'update content' event from one of our clients, we will send it to the rest of the clients
       // we make use of the socket.emit method again with the argument given to use from the callback function above
       console.log("Updating content...");
