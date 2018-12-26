@@ -8,8 +8,8 @@ class SocketEditor extends Component {
     super(props);
 
     this.state = {
-      // endpoint: process.env.REACT_APP_SERVER
-      endpoint: 'http://localhost:5000',
+      endpoint: process.env.REACT_APP_SERVER,
+      // endpoint: 'http://localhost:5000',
       showCollab: false,
       uniqueID: ""
     }

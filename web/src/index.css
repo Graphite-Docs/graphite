@@ -719,10 +719,19 @@ div.markdown-editor__editor-container h2 {
 
 /* Sheets */
 
-.color-picker {
-  height: 15px!important;
-  width: 15px!important;
-  margin: 5px;
+.bold {
+  font-weight: bold!important;
+}
+
+.italic {
+  font-style: italic!important;
+}
+
+.colorPickerSheets {
+  position: fixed;
+  z-index: 999;
+  top: 120px;
+  left: 20%;
 }
 
 .sheetsMenu {
