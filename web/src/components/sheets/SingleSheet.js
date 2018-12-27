@@ -10,7 +10,9 @@ import {Menu as MainMenu} from 'semantic-ui-react';
 import {
   SUPPORTED_FORMULAS
 } from '../helpers/formulas.js';
-import { HotTable } from '@handsontable-pro/react';
+import {Bar} from 'react-chartjs-2';
+import {Line} from 'react-chartjs-2';
+import {Doughnut} from 'react-chartjs-2';
 import Loading from '../Loading';
 import 'handsontable-pro/dist/handsontable.full.css';
 // import Handsontable from 'handsontable-pro';
@@ -18,8 +20,29 @@ import update from 'immutability-helper';
 import { CompactPicker } from 'react-color';
 // import {CSVLink} from 'react-csv';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
+import Handsontable from 'handsontable-pro';
 const { encryptECIES } = require('blockstack/lib/encryption');
-let colorPicker = 'hide'
+const randomColor = require('randomcolor');
+let colorPicker = 'hide';
+let filteredMetas;
+
+let hot;
+let selectedData;
+let labels;
+let values;
+let background;
+let border;
+let hoverBackground;
+let hoverBorder;
+let renderedChart;
+
+var color = randomColor({
+  count: 4
+});
+background = color[0];
+border = color[1];
+hoverBackground = color[2];
+hoverBorder = color[3];
 
 export default class SingleSheet extends Component {
   constructor(props) {
@@ -71,51 +94,62 @@ export default class SingleSheet extends Component {
       selectedRange: {},
       colWidths: 100,
       modalOpen: false,
-      display: false
+      display: false,
+      cellsMeta: [],
+      sidebar: false,
+      chartType: "bar",
+      chartLocation: "",
+      chartData: {},
+      inputModal: false,
+      chartModal: false,
+      chartColor: false
     }
 
     //Handsontable
     this.id = 'hot';
-    this.hotSettings = {
-      data: this.state.grid,
-      renderer: 'html',
-      stretchH: 'all',
-      manualRowResize: true,
-      manualColumnResize: true,
-      colHeaders: true,
-      rowHeaders: true,
-      colWidths: this.state.colWidths,
-      rowHeights: 30,
-      minCols: 26,
-      minRows: 100,
-      contextMenu: true,
-      formulas: true,
-      columnSorting: true,
-      autoRowSize: true,
-      manualColumnMove: true,
-      manualRowMove: true,
-      outsideClickDeselects: false,
-      ref: "hot",
-      fixedRowsTop: 0,
-      minSpareRows: 1,
-      comments: true,
-      selectionMode: 'multiple',
-      licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
-      afterChange: (changes, source) => {if(changes){
-        clearTimeout(this.changeTimeout);
-        this.changeTimeout = setTimeout(this.handleAddItem, 3000)
-      }},
-      afterSelection: (r, c, r2, c2, preventScrolling) => {
-         preventScrolling.value = true;
-         clearTimeout(this.timeout);
-         this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
-       },
-       afterColumnResize: (currentColumn, newSize, isDoubleClick) => {
-         this.handleResizeColumn([currentColumn, newSize]);
-         setTimeout(this.handleAddItem, 3000)
-       }
-    };
-    this.hotTableComponent = React.createRef();
+    // this.hotSettings = {
+    //   data: this.state.grid,
+    //   renderer: 'html',
+    //   stretchH: 'all',
+    //   manualRowResize: true,
+    //   manualColumnResize: true,
+    //   colHeaders: true,
+    //   rowHeaders: true,
+    //   colWidths: this.state.colWidths,
+    //   rowHeights: 30,
+    //   minCols: 26,
+    //   minRows: 100,
+    //   contextMenu: true,
+    //   formulas: true,
+    //   columnSorting: true,
+    //   autoRowSize: true,
+    //   manualColumnMove: true,
+    //   manualRowMove: true,
+    //   outsideClickDeselects: false,
+    //   ref: "hot",
+    //   fixedRowsTop: 0,
+    //   minSpareRows: 1,
+    //   comments: true,
+    //   selectionMode: 'multiple',
+    //   licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
+    //   afterChange: (changes, source) => {if(changes){
+    //     console.log("change")
+    //     clearTimeout(this.changeTimeout);
+    //     this.changeTimeout = setTimeout(this.handleAddItem, 3000)
+    //   }},
+    //   afterSelection: (r, c, r2, c2, preventScrolling) => {
+    //     console.log("selection")
+    //      preventScrolling.value = true;
+    //      clearTimeout(this.timeout);
+    //      this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
+    //    },
+    //    afterColumnResize: (currentColumn, newSize, isDoubleClick) => {
+    //      console.log("column resize")
+    //      this.handleResizeColumn([currentColumn, newSize]);
+    //      setTimeout(this.handleAddItem, 3000)
+    //    }
+    // };
+    // this.hotTableComponent = React.createRef();
 
     this.autoSave = this.autoSave.bind(this);
     this.shareModal = this.shareModal.bind(this);
@@ -134,44 +168,8 @@ export default class SingleSheet extends Component {
     this.loadSingleForm = this.loadSingleForm.bind(this);
   }
   componentDidMount() {
-    document.addEventListener("keydown", (event) => {
-      let ctrl = event.which === 66 && event.ctrlKey;
-      let cmd = event.metaKey && event.which === 66;
-      let ctrli = event.which === 73 && event.ctrlKey;
-      let cmdi = event.metaKey && event.which === 73;
-      if(ctrl || cmd) {
-        this.makeItBold();
-      }
-      if(ctrli || cmdi) {
-        this.makeItItalic();
-      }
-    });
-
-    getFile("contact.json", {decrypt: true})
-     .then((fileContents) => {
-       if(fileContents) {
-         this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
-       } else {
-         console.log("No contacts");
-       }
-     })
-      .catch(error => {
-        console.log(error);
-      });
-
-      getFile(window.location.href.split('sheet/') + 'sharedwith.json', {decrypt: true})
-       .then((fileContents) => {
-         if(JSON.parse(fileContents || '{}').length > 0) {
-           this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
-         } else {
-           this.setState({ sharedWith: [] });
-         }
-       })
-        .catch(error => {
-          console.log("shared with doc error: ")
-          console.log(error);
-        });
-
+    this.setState({ loading: true })
+    console.log("loading sheets")
     getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
@@ -209,6 +207,7 @@ export default class SingleSheet extends Component {
   }
 
   loadSingleForm() {
+    console.log("loading form")
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: this.state.decryption})
@@ -226,23 +225,133 @@ export default class SingleSheet extends Component {
   }
 
   loadSingle() {
+    console.log("loading single sheet")
+
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
+         console.log(JSON.parse(fileContents))
          if(JSON.parse(fileContents).colWidths) {
-           this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content, colWidths: JSON.parse(fileContents || '{}').colWidths })
+
+           this.setState({
+             title: JSON.parse(fileContents || '{}').title,
+             grid: JSON.parse(fileContents || '{}').content,
+             colWidths: JSON.parse(fileContents || '{}').colWidths,
+             cellsMeta: JSON.parse(fileContents).cellsMeta
+           })
          } else {
-           this.setState({ title: JSON.parse(fileContents || '{}').title, grid: JSON.parse(fileContents || '{}').content, colWidths: 100 })
+
+           this.setState({
+             title: JSON.parse(fileContents || '{}').title,
+             grid: JSON.parse(fileContents || '{}').content,
+             colWidths: 100,
+             cellsMeta: JSON.parse(fileContents).cellsMeta
+            })
          }
        }
      })
      .then(() => {
-       this.hotSettings.colWidths = this.state.colWidths;
-       this.setState({ initialLoad: "hide" });
-       this.hotTableComponent.current.hotInstance.loadData(this.state.grid);
+       this.setState({ loading: false });
+       var container = document.getElementById('sheet');
+       hot = new Handsontable(container, {
+         data: this.state.grid,
+         filters: true,
+         dropdownMenu: true,
+         licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
+         manualRowResize: true,
+         manualColumnResize: true,
+         colHeaders: true,
+         rowHeaders: true,
+         rowHeights: 30,
+         minCols: 26,
+         minRows: 100,
+         contextMenu: true,
+         formulas: true,
+         columnSorting: true,
+         autoRowSize: true,
+         manualColumnMove: true,
+         manualRowMove: true,
+         outsideClickDeselects: false,
+         ref: "hot",
+         fixedRowsTop: 0,
+         minSpareRows: 1,
+         comments: true,
+         selectionMode: 'multiple',
+         afterChange: (changes, source) => {if(changes){
+           console.log("change")
+           clearTimeout(this.changeTimeout);
+           this.changeTimeout = setTimeout(this.handleAddItem, 3000)
+         }},
+         afterSelection: (r, c, r2, c2, preventScrolling) => {
+           console.log("selection")
+            preventScrolling.value = true;
+            clearTimeout(this.timeout);
+            this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
+          },
+          afterColumnResize: (currentColumn, newSize, isDoubleClick) => {
+            console.log("column resize")
+            this.handleResizeColumn([currentColumn, newSize]);
+            setTimeout(this.handleAddItem, 3000)
+          }
+       });
      })
+     .then(() => {
+        console.log("checking for cell meta")
+       if(this.state.cellsMeta) {
+         let meta = this.state.cellsMeta;
+         for (var i = 0; i < meta.length; i++) {
+           for (var key in meta[i]) {
+             if (key === 'row' || key === 'col') {
+               continue;
+             }
+
+             if (meta[i].hasOwnProperty(key)) {
+               hot.setCellMeta(meta[i].row, meta[i].col, key, meta[i][key])
+             }
+           }
+         }
+
+         hot.render();
+       }
+
+      })
+       .then(() => {
+         this.setState({ loading: false });
+       })
+       .then(() => {
+         this.loadContacts();
+       })
+      .catch(error => {
+        console.log(error);
+      });
+  }
+
+  loadContacts = () => {
+    getFile("contact.json", {decrypt: true})
+     .then((fileContents) => {
+       if(fileContents) {
+         this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
+       } else {
+         console.log("No contacts");
+       }
+     })
+      .then(() => {
+
+        getFile(window.location.href.split('sheet/') + 'sharedwith.json', {decrypt: true})
+         .then((fileContents) => {
+           if(JSON.parse(fileContents || '{}').length > 0) {
+             this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
+           } else {
+             this.setState({ sharedWith: [] });
+           }
+         })
+          .catch(error => {
+            console.log("shared with doc error: ")
+            console.log(error);
+          });
+      })
       .catch(error => {
         console.log(error);
       });
@@ -254,7 +363,34 @@ export default class SingleSheet extends Component {
     }
   }
 
+
+filterMetas = (cellsMeta) => {
+  // Standard cell meta properties are row, col, prop, visualCol, visualRow and instance
+  var standardMetas = ['prop', 'visualCol', 'visualRow', 'instance'];
+  filteredMetas = [];
+  if(cellsMeta) {
+    console.log(cellsMeta)
+    for (var i = 0; i < cellsMeta.length; i++) {
+      if(Object.keys(cellsMeta[i])) {
+        if (Object.keys(cellsMeta[i]).length > 6) {
+          for (var j = 0; j < standardMetas.length; j++) {
+            if (cellsMeta[i][standardMetas[j]] !== void 0) {
+              delete cellsMeta[i][standardMetas[j]];
+            }
+          }
+          filteredMetas.push(cellsMeta[i]);
+        }
+      }
+    }
+  }
+}
+
     handleAddItem() {
+      let cellsMeta = hot.getCellsMeta();
+      if(cellsMeta) {
+        this.filterMetas(cellsMeta);
+      }
+
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
@@ -264,6 +400,7 @@ export default class SingleSheet extends Component {
       object.fileType = "sheets";
       object.form = this.state.singleSheet.form;
       object.colWidths = this.state.colWidths;
+      object.cellsMeta = filteredMetas;
       const objectTwo = {};
       objectTwo.title = object.title;
       objectTwo.id = object.id;
@@ -453,7 +590,7 @@ sharedInfo(){
       .catch(error => {
         console.log("No key: " + error);
         window.Materialize.toast(this.state.receiverID + " has not logged into Graphite yet. Ask them to log in before you share.", 4000);
-        this.setState({ shareModal: "hide", loading: "hide", show: "", hideSheet: "" });
+        this.setState({ shareModal: "hide", loading: false, show: "", hideSheet: "" });
       });
 }
 
@@ -467,7 +604,7 @@ loadMyFile() {
   getFile(file, {decrypt: true})
    .then((fileContents) => {
       this.setState({ shareFile: JSON.parse(fileContents || '{}') })
-      this.setState({ loading: "", show: "hide" });
+      this.setState({ loading: true, show: "hide" });
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
@@ -505,7 +642,7 @@ shareSheet() {
   const file = userShort + fileName;
   putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
     .then(() => {
-      this.setState({ shareModal: "hide", loading: "hide", show: "", hideSheet: "" });
+      this.setState({ shareModal: "hide", loading: false, show: "", hideSheet: "" });
       window.Materialize.toast('Sheet shared with ' + this.state.receiverID, 4000);
     })
     .catch(e => {
@@ -541,28 +678,37 @@ print(){
 }
 
 captureCellData = (props) => {
-  // let data;
-  // this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1]) == null ? data = "" : data = this.hotTableComponent.current.hotInstance.getDataAtCell(props[0], props[1]);
-  // this.setState({ dataLocation: props, selectedData: data}, () => {
-  //   if(this.state.selectedData === null) {
-  //     this.setState({ selectedData: "" });
-  //   }
-  // })
-  // if(this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row > this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row) {
-  //   this.setState({ selectedRange: this.hotTableComponent.current.hotInstance.getSelectedRange()[0] })
-  //   this.setState({ range: true, rangeParams: [this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col] })
-  // }
-  // if(this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col > this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col) {
-  //   this.setState({ selectedRange: this.hotTableComponent.current.hotInstance.getSelectedRange()[0] })
-  //   this.setState({ colRange: true, range: true, rangeParams: [this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.row, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].from.col, this.hotTableComponent.current.hotInstance.getSelectedRange()[0].to.col] })
-  // } else {
-  //   this.setState({ colRange: false });
-  // }
+  let data;
+  const selection = hot.getSelected();
+  selectedData = [];
+  for (var i = 0; i < selection.length; i += 1) {
+    var item = selection[i];
+
+    selectedData.push(hot.getData.apply(hot, item));
+  }
+  console.log(selectedData)
+
+  hot.getDataAtCell(props[0], props[1]) == null ? data = "" : data = hot.getDataAtCell(props[0], props[1]);
+  this.setState({ dataLocation: props, selectedData: data}, () => {
+    if(this.state.selectedData === null) {
+      this.setState({ selectedData: "" });
+    }
+  })
+  if(hot.getSelectedRange()[0].to.row > hot.getSelectedRange()[0].from.row) {
+    this.setState({ selectedRange: hot.getSelectedRange()[0] })
+    this.setState({ range: true, rangeParams: [hot.getSelectedRange()[0].from.row, hot.getSelectedRange()[0].to.row, hot.getSelectedRange()[0].from.col, hot.getSelectedRange()[0].to.col] })
+  }
+  if(hot.getSelectedRange()[0].to.col > hot.getSelectedRange()[0].from.col) {
+    this.setState({ selectedRange: hot.getSelectedRange()[0] })
+    this.setState({ colRange: true, range: true, rangeParams: [hot.getSelectedRange()[0].from.row, hot.getSelectedRange()[0].to.row, hot.getSelectedRange()[0].from.col, hot.getSelectedRange()[0].to.col] })
+  } else {
+    this.setState({ colRange: false });
+  }
 }
 
 makeItBold = () => {
-  const hot3 = this.hotTableComponent.current.hotInstance;
-  var selected = hot3.getSelected();
+  // const hot3 = hot;
+  var selected = hot.getSelected();
 
   for (var index = 0; index < selected.length; index += 1) {
     var item = selected[index];
@@ -575,22 +721,22 @@ makeItBold = () => {
       for (var columnIndex = startCol; columnIndex <= endCol; columnIndex += 1) {
         let styles;
 
-        if(hot3.getCellMeta(rowIndex, columnIndex).className) {
-          styles = hot3.getCellMeta(rowIndex, columnIndex).className + ' bold';
-          hot3.setCellMeta(rowIndex, columnIndex, 'className', styles);
+        if(hot.getCellMeta(rowIndex, columnIndex).className) {
+          styles = hot.getCellMeta(rowIndex, columnIndex).className + ' bold';
+          hot.setCellMeta(rowIndex, columnIndex, 'className', styles);
         } else {
           styles = 'bold';
-          hot3.setCellMeta(rowIndex, columnIndex, 'className', styles);
+          hot.setCellMeta(rowIndex, columnIndex, 'className', styles);
         }
 
       }
     }
   }
-  hot3.render()
+  hot.render()
 }
 
 makeItItalic = () => {
-  const hot3 = this.hotTableComponent.current.hotInstance;
+  const hot3 = hot;
   var selected = hot3.getSelected();
 
   for (var index = 0; index < selected.length; index += 1) {
@@ -620,7 +766,7 @@ makeItItalic = () => {
 
 handleInput = (e) => {
   this.setState({ selectedData: e.target.value }, () => {
-    this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData);
+    hot.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], this.state.selectedData);
   });
 
   let data = this.state.dataLocation;
@@ -634,7 +780,7 @@ handleInput = (e) => {
 handleResizeColumn = (props) => {
   if(this.hotSettings.colWidths === 100) {
     var i;
-    var b = this.hotTableComponent.current.hotInstance.countCols();
+    var b = hot.countCols();
     let cols = [];
     for (i = 0; i < b; i++) {
       cols = [...cols, 100];
@@ -649,7 +795,7 @@ handleResizeColumn = (props) => {
 }
 
 handleColorSelect = (props) => {
-  const hot3 = this.hotTableComponent.current.hotInstance;
+  const hot3 = hot;
   let color = 'color_' + props.hex.split('#')[1];
   var selected = hot3.getSelected();
 
@@ -678,8 +824,8 @@ handleColorSelect = (props) => {
 }
 
 handleFormulaSet = (props) => {
-  this.hotTableComponent.current.hotInstance.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '=' + props + '()');
-  this.hotTableComponent.current.hotInstance.selectCell(this.state.dataLocation[0],this.state.dataLocation[1]);
+  hot.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '=' + props + '()');
+  hot.selectCell(this.state.dataLocation[0],this.state.dataLocation[1]);
 }
 
 onColorClick = () => {
@@ -693,12 +839,137 @@ handleChangeComplete = (color) => {
   });
 };
 
+handleHideClick = () => this.setState({ sidebar: false })
+handleShowClick = () => this.setState({ sidebar: true })
+handleSidebarHide = () => this.setState({ sidebar: false })
+
+handleChartInput = (e) => {
+  this.setState({ chartLocation: e.target.value });
+}
+
+insertChart = (data) => {
+  this.setState({ inputModal: false, chartModal: false, chartData: data }, () => {
+    renderedChart = <Bar data={this.state.chartData} />
+  });
+}
+
+handleChartColorChange = () => {
+  console.log("try it")
+  var color = randomColor({
+    count: 4
+  });
+  background = color[0];
+  border = color[1];
+  hoverBackground = color[2];
+  hoverBorder = color[3];
+}
+
 renderView() {
+  if(document.getElementById("movableChart")) {
+    dragElement(document.getElementById("movableChart"));
+
+    function dragElement(elmnt) {
+      var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+      if (document.getElementById(elmnt.id + "header")) {
+        // if present, the header is where you move the DIV from:
+        document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+      } else {
+        // otherwise, move the DIV from anywhere inside the DIV:
+        elmnt.onmousedown = dragMouseDown;
+      }
+
+      function dragMouseDown(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // get the mouse cursor position at startup:
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        // call a function whenever the cursor moves:
+        document.onmousemove = elementDrag;
+      }
+
+      function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        // calculate the new cursor position:
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        // set the element's new position:
+        elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+        elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+      }
+
+      function closeDragElement() {
+        // stop moving when mouse button is released:
+        document.onmouseup = null;
+        document.onmousemove = null;
+      }
+    }
+  }
+
+
+
+  document.addEventListener("keydown", (event) => {
+    let ctrl = event.which === 66 && event.ctrlKey;
+    let cmd = event.metaKey && event.which === 66;
+    let ctrli = event.which === 73 && event.ctrlKey;
+    let cmdi = event.metaKey && event.which === 73;
+    if(ctrl || cmd) {
+      this.makeItBold();
+    }
+    if(ctrli || cmdi) {
+      this.makeItItalic();
+    }
+  });
+
+
   if(this.state.display) {
     colorPicker = 'colorPickerSheets'
   } else {
     colorPicker = 'hide'
   }
+
+
+  //This takes the array of selected data and converts it for use in a chart
+  let merged;
+
+  if(selectedData) {
+    console.log(selectedData);
+    merged = [].concat.apply([], selectedData[0]);
+
+    console.log(merged);
+    labels = merged.filter((element, index) => {
+      return index % 2 === 0;
+    })
+
+    values = merged.filter((element, index) => {
+      return index % 2 !== 0;
+    })
+
+    for(var i=0; i<values.length;i++) values[i] = parseInt(values[i], 10);
+
+    console.log(labels)
+    console.log(values);
+  }
+
+  ///
+  const chartData = {
+    labels: labels,
+    datasets: [
+      {
+        label: 'Numbers',
+        backgroundColor: background,
+        borderColor: border,
+        borderWidth: 1,
+        hoverBackgroundColor: hoverBackground,
+        hoverBorderColor: hoverBorder,
+        data: values
+      }
+    ]
+  };
 
   const {  loading, autoSave, shareModal, show, contacts, publicShare, title } = this.state;
 
@@ -771,27 +1042,13 @@ renderView() {
             <Input onChange={this.handleInput} value={!isNaN(this.state.selectedData) ? this.state.selectedData : this.state.selectedData != null && this.state.selectedData.includes('<') ? this.state.selectedData.replace(/<(?:.|\n)*?>/gm, '') : this.state.selectedData === null ? "" : this.state.selectedData} placeholder="fx" />
           </MainMenu.Item>
           <MainMenu.Item>
-            <a style={{color: "#fff"}} onClick={this.makeItBold}><Icon name='bold' /></a>
+            <a style={{color: "#fff", cursor: "pointer"}} onClick={this.makeItBold}><Icon name='bold' /></a>
           </MainMenu.Item>
           <MainMenu.Item>
-            <a style={{color: "#fff"}} onClick={this.makeItItalic}><Icon name='italic' /></a>
+            <a style={{color: "#fff", cursor: "pointer"}} onClick={this.makeItItalic}><Icon name='italic' /></a>
           </MainMenu.Item>
           <MainMenu.Item>
-            <a style={{color: "#fff"}} onClick={() => this.setState({display: !this.state.display})}><Icon name='eye dropper' /></a>
-            {/*<Dropdown icon='eye dropper'>
-              <Dropdown.Menu>
-              <Dropdown.Menu scrolling>
-                {
-                  colorList.map(c => {
-
-                    return(
-                      <Dropdown.Item key={c}><a style={{background: "#" + c.toString(), padding: "5px"}} onClick={() => this.handleColorSelect(c)}>{c}</a></Dropdown.Item>
-                    )
-                  })
-                }
-              </Dropdown.Menu>
-              </Dropdown.Menu>
-              </Dropdown>*/}
+            <a style={{color: "#fff", cursor: "pointer"}} onClick={() => this.setState({display: !this.state.display})}><Icon name='eye dropper' /></a>
           </MainMenu.Item>
           <MainMenu.Item>
             <Dropdown text='Formulas'>
@@ -808,7 +1065,44 @@ renderView() {
               </Dropdown.Menu>
               </Dropdown>
           </MainMenu.Item>
+          <MainMenu.Item>
+            <Modal
+              trigger={<Icon onClick={() => this.setState({chartModal: true})} name='chart pie' style={{ cursor: "pointer", color: "#fff"}} /> }
+              closeIcon
+              closeOnEscape={true}
+              closeOnDimmerClick={true}
+              open={this.state.chartModal}
+              onClose={() => this.setState({ chartModal: false })}
+              >
+              <Modal.Header>Add Chart</Modal.Header>
+              <Modal.Content>
+                <Modal.Description>
+                  <p>Create a chart with your selected data</p>
+                  <Button onClick={() => this.setState({ chartType: "bar"})}>Bar</Button><Button onClick={() => this.setState({ chartType: "donut"})}>Donut</Button><Button onClick={() => this.setState({ chartType: "line"})}>Line</Button>
+
+                  <div id='chart'>
+                    {
+                      this.state.chartType === "bar" ?
+                      <Bar
+                        data={chartData}
+                        width={100}
+                        height={50}
+
+                      /> :
+                      this.state.chartType === "donut" ?
+                      <Doughnut data={chartData} /> :
+                      this.state.chartType === "line" ?
+                      <Line data={chartData} /> :
+                      <div />
+                    }
+                  </div>
+                  <Button style={{marginTop: "20px"}} secondary onClick={() => this.insertChart(chartData)}>Insert Chart</Button>
+                </Modal.Description>
+              </Modal.Content>
+            </Modal>
+          </MainMenu.Item>
           </MainMenu>
+
           <div className={colorPicker}>
             <CompactPicker
               style={{zIndex: "999"}}
@@ -870,42 +1164,8 @@ renderView() {
         </div>
         </div>
         <div>
-
-              {
-                this.state.decryption !==true ?
-                <div className='spreadsheet'>
-                <HotTable id='table' root="hot" settings={{
-                  data: this.state.grid,
-                  renderer: 'html',
-                  stretchH: 'all',
-                  manualRowResize: true,
-                  manualColumnResize: true,
-                  colHeaders: true,
-                  rowHeaders: true,
-                  colWidths: 100,
-                  rowHeights: 30,
-                  minCols: 26,
-                  minRows: 1,
-                  contextMenu: true,
-                  formulas: true,
-                  columnSorting: true,
-                  autoRowSize: true,
-                  manualColumnMove: true,
-                  manualRowMove: true,
-                  ref: "hot",
-                  fixedRowsTop: 0,
-                  minSpareRows: 0,
-                  comments: true,
-                  licenseKey: '6061a-b3be5-94c65-64d27-a1d41',
-                  onAfterChange: (changes, source) => {if(changes){
-                    clearTimeout(this.timeout);
-                    this.timeout = setTimeout(this.handleAddItem, 3000)
-                  }},
-
-                }}
-                 /></div> :
-                 <div className='spreadsheet'><HotTable data={this.state.grid} ref={this.hotTableComponent} id={this.id} settings={this.hotSettings} /></div>
-              }
+          <div id='movableChart' dangerouslySetInnerHTML={{__html: renderedChart }} />
+          <div id='sheet' className='spreadsheet'></div>
         </div>
         </div>
 

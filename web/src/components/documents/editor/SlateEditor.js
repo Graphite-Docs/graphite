@@ -72,6 +72,11 @@ const schema = {
       isVoid: true,
     },
   },
+  inlines: {
+    emoji: {
+      isVoid: true,
+    },
+  },
 }
 
 class SlateEditor extends React.Component {
@@ -459,6 +464,13 @@ onClickAlign = (event, align) => {
     }
   }
 
+  onClickEmoji = (code) => {
+    console.log(code);
+    this.editor
+      .insertText(code.native)
+      .focus()
+  }
+
 
   onInsertTable = () => {
     this.onChange(
@@ -558,6 +570,7 @@ onClickAlign = (event, align) => {
               onClickAlign={this.onClickAlign}
               onClickImage={this.onClickImage}
               onImageUpload={this.onImageUpload}
+              onClickEmoji={this.onClickEmoji}
               isTable={isTable}
               files={this.props.files}
             />
@@ -652,6 +665,18 @@ onClickAlign = (event, align) => {
         const src = node.data.get('src')
         const imageClass = node.data.get('class')
         return <Image className={imageClass} selected={isFocused} src={src} {...attributes} />
+      }
+      case 'emoji': {
+        const code = node.data.get('code')
+        return (
+          <span
+            {...attributes}
+            selected={isFocused}
+            contentEditable={false}
+          >
+            {code}
+          </span>
+        )
       }
       case 'align':
         const align = node.data.get('class')

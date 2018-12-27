@@ -2,7 +2,10 @@ import React, { Component } from "react";
 import { Menu, Icon, Dropdown, Popup, Modal, Input, Button, Table } from 'semantic-ui-react';
 import { CompactPicker } from 'react-color';
 import Dropzone from 'react-dropzone';
+import 'emoji-mart/css/emoji-mart.css'
+import { Picker } from 'emoji-mart'
 let colorPicker = 'hide'
+let emojiPicker = 'hide'
 
 export default class Toolbar extends Component {
   constructor(props) {
@@ -10,7 +13,8 @@ export default class Toolbar extends Component {
     this.state = {
       url: "",
       display: false,
-      color: "#fff"
+      color: "#fff",
+      emojiDisplay: false
     }
   }
 
@@ -66,6 +70,12 @@ export default class Toolbar extends Component {
       this.props.onClickColor(color);
     });
   };
+
+  addEmoji = (e) => {
+    console.log(e);
+    this.props.onClickEmoji(e);
+    this.setState({emojiDisplay: false})
+  }
 
   render() {
     let imageFiles;
@@ -168,6 +178,12 @@ export default class Toolbar extends Component {
       colorPicker = 'hide'
     }
 
+    if(this.state.emojiDisplay) {
+      emojiPicker = 'emojiPicker';
+    } else {
+      emojiPicker = 'hide';
+    }
+
 
     if(window.innerWidth < 620) {
       return (
@@ -229,6 +245,9 @@ export default class Toolbar extends Component {
                 <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}>
                   {modal}
+                </Dropdown.Item>
+                <Dropdown.Item>
+                  <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
                 </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
@@ -301,6 +320,9 @@ export default class Toolbar extends Component {
                 <Dropdown.Item style={{cursor: "pointer"}}>
                   {modal}
                 </Dropdown.Item>
+                <Dropdown.Item>
+                  <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -368,6 +390,9 @@ export default class Toolbar extends Component {
                 <Dropdown.Item style={{cursor: "pointer"}}>
                   {modal}
                 </Dropdown.Item>
+                <Dropdown.Item>
+                  <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -432,13 +457,22 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}}>
             {modal}
           </Menu.Item>
+          <Menu.Item>
+            <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
+          </Menu.Item>
         </Menu>
-        <div className={colorPicker}>
-          <CompactPicker
-            color={ this.state.color }
-            onChangeComplete={this.handleChangeComplete}
-          />
-        </div>
+          <div className={colorPicker}>
+            <CompactPicker
+              color={ this.state.color }
+              onChangeComplete={this.handleChangeComplete}
+            />
+          </div>
+          <div className={emojiPicker}>
+            <Picker
+              set='emojione'
+              onSelect={this.addEmoji}
+              />
+          </div>
         </div>
       );
     }
