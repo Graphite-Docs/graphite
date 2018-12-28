@@ -511,6 +511,16 @@ onClickAlign = (event, align) => {
     );
   }
 
+  onClickRedo = event => {
+    event.preventDefault()
+    this.editor.redo()
+  }
+
+  onClickUndo = event => {
+    event.preventDefault()
+    this.editor.undo()
+  }
+
   modalController = (props, type) => {
     if(type === "link") {
       this.setState({ modalTwoOpen: props })
@@ -571,6 +581,8 @@ onClickAlign = (event, align) => {
               onClickImage={this.onClickImage}
               onImageUpload={this.onImageUpload}
               onClickEmoji={this.onClickEmoji}
+              onClickRedo={this.onClickRedo}
+              onClickUndo={this.onClickUndo}
               isTable={isTable}
               files={this.props.files}
             />

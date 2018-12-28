@@ -79,7 +79,6 @@ export default class Toolbar extends Component {
 
   render() {
     let imageFiles;
-    console.log(this.props.files);
     if(this.props.files) {
       imageFiles = this.props.files.filter(x => x.type && x.type.includes('image'));
     } else {

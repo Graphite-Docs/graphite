@@ -731,6 +731,8 @@ div.markdown-editor__editor-container h2 {
 
 #movableChart {
   position: absolute;
+  top:40%;
+  left:40%;
   z-index: 975;
   background-color: #f1f1f1;
   border: 1px solid #d3d3d3;

@@ -34,7 +34,8 @@ let background;
 let border;
 let hoverBackground;
 let hoverBorder;
-let renderedChart;
+let top;
+let left;
 
 var color = randomColor({
   count: 4
@@ -99,10 +100,12 @@ export default class SingleSheet extends Component {
       sidebar: false,
       chartType: "bar",
       chartLocation: "",
-      chartData: {},
+      chartHTML: "",
       inputModal: false,
       chartModal: false,
-      chartColor: false
+      chartColor: false,
+      chartData: {},
+      displayChart: false
     }
 
     //Handsontable
@@ -169,7 +172,7 @@ export default class SingleSheet extends Component {
   }
   componentDidMount() {
     this.setState({ loading: true })
-    console.log("loading sheets")
+
     getFile("sheetscollection.json", {decrypt: true})
      .then((fileContents) => {
         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets })
@@ -207,7 +210,7 @@ export default class SingleSheet extends Component {
   }
 
   loadSingleForm() {
-    console.log("loading form")
+
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: this.state.decryption})
@@ -225,29 +228,37 @@ export default class SingleSheet extends Component {
   }
 
   loadSingle() {
-    console.log("loading single sheet")
+
 
     const thisFile = window.location.href.split('sheets/sheet/')[1];
     const fullFile = '/sheets/' + thisFile + '.json';
     getFile(fullFile, {decrypt: true})
      .then((fileContents) => {
        if(fileContents) {
-         console.log(JSON.parse(fileContents))
-         if(JSON.parse(fileContents).colWidths) {
 
+         if(JSON.parse(fileContents).colWidths) {
+           top = JSON.parse(fileContents).chartTop || 0;
+           left = JSON.parse(fileContents).chartLeft || 0;
            this.setState({
              title: JSON.parse(fileContents || '{}').title,
              grid: JSON.parse(fileContents || '{}').content,
              colWidths: JSON.parse(fileContents || '{}').colWidths,
-             cellsMeta: JSON.parse(fileContents).cellsMeta
+             cellsMeta: JSON.parse(fileContents).cellsMeta,
+             // displayChart: JSON.parse(fileContents).displayChart,
+             // chartData: JSON.parse(fileContents).chartData,
+             // chartType: JSON.parse(fileContents).chartType || 'bar'
            })
          } else {
-
+           top = JSON.parse(fileContents).chartTop || 0;
+           left = JSON.parse(fileContents).chartLeft || 0;
            this.setState({
              title: JSON.parse(fileContents || '{}').title,
              grid: JSON.parse(fileContents || '{}').content,
              colWidths: 100,
-             cellsMeta: JSON.parse(fileContents).cellsMeta
+             cellsMeta: JSON.parse(fileContents).cellsMeta,
+             // displayChart: JSON.parse(fileContents).displayChart,
+             // chartData: JSON.parse(fileContents).chartData,
+             // chartType: JSON.parse(fileContents).chartType || 'bar'
             })
          }
        }
@@ -280,25 +291,25 @@ export default class SingleSheet extends Component {
          comments: true,
          selectionMode: 'multiple',
          afterChange: (changes, source) => {if(changes){
-           console.log("change")
+
            clearTimeout(this.changeTimeout);
            this.changeTimeout = setTimeout(this.handleAddItem, 3000)
          }},
          afterSelection: (r, c, r2, c2, preventScrolling) => {
-           console.log("selection")
+
             preventScrolling.value = true;
             clearTimeout(this.timeout);
             this.timeout = setTimeout(() => this.captureCellData([r,c]), 500);
           },
           afterColumnResize: (currentColumn, newSize, isDoubleClick) => {
-            console.log("column resize")
+
             this.handleResizeColumn([currentColumn, newSize]);
             setTimeout(this.handleAddItem, 3000)
           }
        });
      })
      .then(() => {
-        console.log("checking for cell meta")
+
        if(this.state.cellsMeta) {
          let meta = this.state.cellsMeta;
          for (var i = 0; i < meta.length; i++) {
@@ -369,7 +380,7 @@ filterMetas = (cellsMeta) => {
   var standardMetas = ['prop', 'visualCol', 'visualRow', 'instance'];
   filteredMetas = [];
   if(cellsMeta) {
-    console.log(cellsMeta)
+
     for (var i = 0; i < cellsMeta.length; i++) {
       if(Object.keys(cellsMeta[i])) {
         if (Object.keys(cellsMeta[i]).length > 6) {
@@ -386,11 +397,11 @@ filterMetas = (cellsMeta) => {
 }
 
     handleAddItem() {
+
       let cellsMeta = hot.getCellsMeta();
       if(cellsMeta) {
         this.filterMetas(cellsMeta);
       }
-
       const object = {};
       object.title = this.state.title;
       object.content = this.state.grid;
@@ -400,6 +411,11 @@ filterMetas = (cellsMeta) => {
       object.fileType = "sheets";
       object.form = this.state.singleSheet.form;
       object.colWidths = this.state.colWidths;
+      // object.displayChart = this.state.displayChart;
+      // object.chartData = [].concat(this.state.chartData);
+      // object.chartType = this.state.chartType;
+      // object.chartTop = top;
+      // object.chartLeft = left;
       object.cellsMeta = filteredMetas;
       const objectTwo = {};
       objectTwo.title = object.title;
@@ -438,6 +454,7 @@ handleIDChange(e) {
   }
 
 autoSave() {
+
   const file = this.props.match.params.id;
   const fullFile = '/sheets/' + file + '.json';
   if(this.state.singleSheet.form === true) {
@@ -520,9 +537,6 @@ savePublic() {
   const apps = profile.apps;
   // gaiaLink = apps["https://app.graphitedocs.com"];
   gaiaLink = apps["http://localhost:3000"];
-
-  console.log("Shared: ")
-  console.log(this.state.singlePublic);
   const user = loadUserData().username;
   const userShort = user.slice(0, -3);
   const params = this.props.match.params.id;
@@ -530,8 +544,7 @@ savePublic() {
   const file = directory + userShort + params + '.json'
   putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
     .then(() => {
-      console.log("Shared Public Link")
-      console.log(gaiaLink + file);
+
       this.setState({gaiaLink: gaiaLink + file, publicShare: "", shareModal: "hide"});
     })
     .catch(e => {
@@ -686,7 +699,6 @@ captureCellData = (props) => {
 
     selectedData.push(hot.getData.apply(hot, item));
   }
-  console.log(selectedData)
 
   hot.getDataAtCell(props[0], props[1]) == null ? data = "" : data = hot.getDataAtCell(props[0], props[1]);
   this.setState({ dataLocation: props, selectedData: data}, () => {
@@ -848,13 +860,10 @@ handleChartInput = (e) => {
 }
 
 insertChart = (data) => {
-  this.setState({ inputModal: false, chartModal: false, chartData: data }, () => {
-    renderedChart = <Bar data={this.state.chartData} />
-  });
+  this.setState({ inputModal: false, chartModal: false, chartData: data, displayChart: true });
 }
 
 handleChartColorChange = () => {
-  console.log("try it")
   var color = randomColor({
     count: 4
   });
@@ -900,6 +909,8 @@ renderView() {
         // set the element's new position:
         elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
         elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+        top = (elmnt.offsetTop - pos2) + "px";
+        left = (elmnt.offsetLeft - pos1) + "px";
       }
 
       function closeDragElement() {
@@ -935,12 +946,10 @@ renderView() {
 
   //This takes the array of selected data and converts it for use in a chart
   let merged;
-
+  console.log(selectedData)
   if(selectedData) {
-    console.log(selectedData);
     merged = [].concat.apply([], selectedData[0]);
 
-    console.log(merged);
     labels = merged.filter((element, index) => {
       return index % 2 === 0;
     })
@@ -950,9 +959,8 @@ renderView() {
     })
 
     for(var i=0; i<values.length;i++) values[i] = parseInt(values[i], 10);
-
     console.log(labels)
-    console.log(values);
+    console.log(values)
   }
 
   ///
@@ -960,7 +968,7 @@ renderView() {
     labels: labels,
     datasets: [
       {
-        label: 'Numbers',
+        label: 'Data',
         backgroundColor: background,
         borderColor: border,
         borderWidth: 1,
@@ -1093,10 +1101,11 @@ renderView() {
                       <Doughnut data={chartData} /> :
                       this.state.chartType === "line" ?
                       <Line data={chartData} /> :
-                      <div />
+                      <p>Please select two columns of data, one with labels and one with numeric values</p>
                     }
                   </div>
-                  <Button style={{marginTop: "20px"}} secondary onClick={() => this.insertChart(chartData)}>Insert Chart</Button>
+                  <p>Charts are rendered ad hoc for now, but in a future release you will be able to add them to your sheet.</p>
+                  {/*<Button style={{marginTop: "20px"}} secondary onClick={() => this.insertChart(chartData)}>Insert Chart</Button>*/}
                 </Modal.Description>
               </Modal.Content>
             </Modal>
@@ -1164,7 +1173,17 @@ renderView() {
         </div>
         </div>
         <div>
-          <div id='movableChart' dangerouslySetInnerHTML={{__html: renderedChart }} />
+            <div style={{top: top, left: left}} id='movableChart'>
+              { this.state.displayChart ?
+                this.state.chartType === 'bar' ?
+                <Bar data={this.state.chartData} /> : this.state.chartType === 'donut' ?
+                <Doughnut data={this.state.chartData} /> :
+                <Line data={this.state.chartData} /> :
+                <div className='hide' />
+              }
+            </div>
+
+
           <div id='sheet' className='spreadsheet'></div>
         </div>
         </div>
