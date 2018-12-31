@@ -407,6 +407,12 @@ div.markdown-editor__editor-container h2 {
   left: 40%;
 }
 
+.colorPickerHighlight {
+  position: fixed;
+  top: 140px;
+  left: 50%;
+}
+
 .emoji-mart-preview {
   display: none!important;
 }

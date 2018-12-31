@@ -5,6 +5,7 @@ import Dropzone from 'react-dropzone';
 import 'emoji-mart/css/emoji-mart.css'
 import { Picker } from 'emoji-mart'
 let colorPicker = 'hide'
+let colorPickerHighlight = 'hide'
 let emojiPicker = 'hide'
 
 export default class Toolbar extends Component {
@@ -14,7 +15,8 @@ export default class Toolbar extends Component {
       url: "",
       display: false,
       color: "#fff",
-      emojiDisplay: false
+      emojiDisplay: false,
+      displayHighlight: false
     }
   }
 
@@ -60,14 +62,24 @@ export default class Toolbar extends Component {
     }
   }
 
-  onColorClick = () => {
-    console.log("click")
-    this.setState({ display: !this.state.display})
+  onColorClick = (type) => {
+    if(type === 'color') {
+      this.setState({ display: !this.state.display})
+    } else {
+      this.setState({ displayHighlight: !this.state.displayHighlight})
+    }
+
   }
 
   handleChangeComplete = (color) => {
     this.setState({ color: color.hex, display: false }, () => {
       this.props.onClickColor(color);
+    });
+  };
+
+  handleHighlightChangeComplete = (color) => {
+    this.setState({ color: color.hex, displayHighlight: false }, () => {
+      this.props.onClickHighlight(color);
     });
   };
 
@@ -177,6 +189,12 @@ export default class Toolbar extends Component {
       colorPicker = 'hide'
     }
 
+    if(this.state.displayHighlight) {
+      colorPickerHighlight = 'colorPickerHighlight'
+    } else {
+      colorPickerHighlight = 'hide'
+    }
+
     if(this.state.emojiDisplay) {
       emojiPicker = 'emojiPicker';
     } else {
@@ -224,10 +242,14 @@ export default class Toolbar extends Component {
                 <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
               }
               </Dropdown.Item>
-                <Dropdown.Item onClick={this.onColorClick} style={{cursor: "pointer"}}>
+                <Dropdown.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}>
                   <Popup position='bottom center' trigger={
                   <Icon name='eye dropper' />
                   } content='Color' />
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => this.onColorClick('highlight')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
+                  <Icon name='tint' />
+                } content='Highlight' />
                 </Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}>
 
@@ -257,6 +279,13 @@ export default class Toolbar extends Component {
           <CompactPicker
             color={ this.state.color }
             onChangeComplete={this.handleChangeComplete}
+          />
+        </div>
+
+        <div className={colorPickerHighlight}>
+          <CompactPicker
+            color={ this.state.color }
+            onChangeComplete={this.handleHighlightChangeComplete}
           />
         </div>
         </div>
@@ -299,10 +328,14 @@ export default class Toolbar extends Component {
                   <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
                 }
                 </Dropdown.Item>
-                <Dropdown.Item onClick={this.onColorClick} style={{cursor: "pointer"}}>
+                <Dropdown.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}>
                   <Popup position='bottom center' trigger={
                   <Icon name='eye dropper' />
                   } content='Color' />
+                </Dropdown.Item>
+                <Dropdown.Item onClick={() => this.onColorClick('highlight')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
+                  <Icon name='tint' />
+                } content='Highlight' />
                 </Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}>
 
@@ -332,6 +365,13 @@ export default class Toolbar extends Component {
           <CompactPicker
             color={ this.state.color }
             onChangeComplete={this.handleChangeComplete}
+          />
+        </div>
+
+        <div className={colorPickerHighlight}>
+          <CompactPicker
+            color={ this.state.color }
+            onChangeComplete={this.handleHighlightChangeComplete}
           />
         </div>
         </div>
@@ -370,9 +410,13 @@ export default class Toolbar extends Component {
             <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
           }
           </Menu.Item>
-          <Menu.Item onClick={this.onColorClick} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
+          <Menu.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
             <Icon name='eye dropper' />
             } content='Color' />
+          </Menu.Item>
+          <Menu.Item onClick={() => this.onColorClick('highlight')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
+            <Icon name='tint' />
+          } content='Highlight' />
           </Menu.Item>
           {
             this.props.hasLinks() ?
@@ -404,6 +448,14 @@ export default class Toolbar extends Component {
             onChangeComplete={this.handleChangeComplete}
           />
         </div>
+
+        <div className={colorPickerHighlight}>
+          <CompactPicker
+            color={ this.state.color }
+            onChangeComplete={this.handleHighlightChangeComplete}
+          />
+        </div>
+
         </div>
       );
     } else {
@@ -440,9 +492,13 @@ export default class Toolbar extends Component {
             <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
           }
           </Menu.Item>
-          <Menu.Item onClick={this.onColorClick} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
+          <Menu.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
             <Icon name='eye dropper' />
             } content='Color' />
+          </Menu.Item>
+          <Menu.Item onClick={() => this.onColorClick('highlight')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
+            <Icon name='tint' />
+          } content='Highlight' />
           </Menu.Item>
           {
             this.props.hasLinks() ?
@@ -468,6 +524,14 @@ export default class Toolbar extends Component {
               onChangeComplete={this.handleChangeComplete}
             />
           </div>
+
+          <div className={colorPickerHighlight}>
+            <CompactPicker
+              color={ this.state.color }
+              onChangeComplete={this.handleHighlightChangeComplete}
+            />
+          </div>
+
           <div className={emojiPicker}>
             <Picker
               set='emojione'

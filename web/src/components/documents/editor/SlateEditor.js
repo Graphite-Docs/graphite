@@ -4,6 +4,7 @@ import { isKeyHotkey } from 'is-hotkey'
 import Loading from '../../Loading';
 import { Block } from 'slate';
 import { List, Image } from 'semantic-ui-react';
+import { List as VList } from 'immutable'
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 // import DeepTable from 'slate-deep-table'
@@ -86,7 +87,9 @@ class SlateEditor extends React.Component {
       modalOpen: false,
       modalTwoOpen: false,
       showCollab: false,
-      uniqueID: ""
+      uniqueID: "",
+      versions: [],
+      v: '',
     };
     this.editor = null;
 }
@@ -137,6 +140,11 @@ getType = chars => {
     return content.marks.some(mark => mark.type === 'color')
   }
 
+  hasHighlight = () => {
+    const { content } = this.props;
+    return content.marks.some(mark => mark.type === 'highlight')
+  }
+
   hasAlign = (foundAlign) => {
     const {content} = this.props
     return content.blocks.some(node => node.data.get('align') === foundAlign)
@@ -159,8 +167,12 @@ getType = chars => {
   onChange = (change, options={}) => {
     if(window.location.href.includes('shared/docs')) {
       this.props.handlePubChange(change)
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(this.saveVersion, 3000)
     } else {
       this.props.handleChange(change)
+      clearTimeout(this.timeout);
+      this.timeout = setTimeout(this.saveVersion, 3000)
     }
 
     if (!this.remote) {
@@ -406,6 +418,24 @@ onClickAlign = (event, align) => {
     }
   }
 
+  onClickHighlight = (color) => {
+    const { editor } = this
+    const { value } = this.editor
+    const hasHighlight = this.hasHighlight()
+
+    if(hasHighlight) {
+      if(value.selection.isExpanded) {
+        value.marks.filter(mark => mark.type === 'highlight').forEach(mark => {
+        editor
+        .removeMark(mark).focus()
+        .addMark({ type: 'highlight', data: { class: 'background_' + color.hex.split('#')[1] } }).focus()
+      })
+      }
+    } else {
+      editor.addMark({ type: 'highlight', data: { class: 'background_' + color.hex.split('#')[1] } }).focus()
+    }
+  }
+
   onClickMark = (event, type) => {
     event.preventDefault()
     this.editor.toggleMark(type)
@@ -548,6 +578,28 @@ onClickAlign = (event, align) => {
     }
   }
 
+  saveVersion = () => {
+    const { value } = this.editor
+    const { data } = value
+    const undos = data.get('undos') || VList()
+
+    const version = {
+      createdAt: new Date(),
+      operations: undos.flatten(1).toArray(),
+    }
+
+    this.setState(
+      state => ({
+        versions: [...state.versions, version],
+        v: state.v === '' ? 0 : state.v + 1,
+      }),
+      () => {
+        // this.editor.resetHistory()
+        console.log(this.state.versions)
+      }
+    )
+  }
+
 
 
   render() {
@@ -585,6 +637,7 @@ onClickAlign = (event, align) => {
               onRemoveTable={this.onRemoveTable}
               onClickLink={this.onClickLink}
               onClickColor={this.onClickColor}
+              onClickHighlight={this.onClickHighlight}
               modalOpen={this.state.modalOpen}
               modalTwoOpen={this.state.modalTwoOpen}
               modalController={this.modalController}
@@ -728,6 +781,9 @@ onClickAlign = (event, align) => {
       case 'color':
         const color = mark.data.get('class');
         return <span className={color} {...attributes}>{children}</span>
+      case 'highlight':
+        const highlight = mark.data.get('class');
+        return <span className={highlight} {...attributes}>{children}</span>
       default:
         return next()
     }
