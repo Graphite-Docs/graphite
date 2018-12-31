@@ -24,6 +24,7 @@ import Handsontable from 'handsontable-pro';
 const { encryptECIES } = require('blockstack/lib/encryption');
 const randomColor = require('randomcolor');
 let colorPicker = 'hide';
+let colorPickerHighlight = 'hide';
 let filteredMetas;
 
 let hot;
@@ -105,7 +106,8 @@ export default class SingleSheet extends Component {
       chartModal: false,
       chartColor: false,
       chartData: {},
-      displayChart: false
+      displayChart: false,
+      displayHighlight: false
     }
 
     //Handsontable
@@ -835,6 +837,35 @@ handleColorSelect = (props) => {
   hot3.render()
 }
 
+handleColorSelectHighlight = (props) => {
+  const hot3 = hot;
+  let color = 'background_' + props.hex.split('#')[1];
+  var selected = hot3.getSelected();
+
+  for (var index = 0; index < selected.length; index += 1) {
+    var item = selected[index];
+    var startRow = Math.min(item[0], item[2]);
+    var endRow = Math.max(item[0], item[2]);
+    var startCol = Math.min(item[1], item[3]);
+    var endCol = Math.max(item[1], item[3]);
+    var style = color;
+
+    for (var rowIndex = startRow; rowIndex <= endRow; rowIndex += 1) {
+      for (var columnIndex = startCol; columnIndex <= endCol; columnIndex += 1) {
+        let styles;
+        if(hot3.getCellMeta(rowIndex, columnIndex).className) {
+          styles = hot3.getCellMeta(rowIndex, columnIndex).className + ' ' + style;
+          hot3.setCellMeta(rowIndex, columnIndex, 'className', styles);
+        } else {
+          styles = 'bold';
+          hot3.setCellMeta(rowIndex, columnIndex, 'className', style);
+        }
+      }
+    }
+  }
+  hot3.render()
+}
+
 handleFormulaSet = (props) => {
   hot.setDataAtCell(this.state.dataLocation[0],this.state.dataLocation[1], '=' + props + '()');
   hot.selectCell(this.state.dataLocation[0],this.state.dataLocation[1]);
@@ -848,6 +879,13 @@ handleChangeComplete = (color) => {
   this.setState({ color: color.hex, display: false }, () => {
 
     this.handleColorSelect(color);
+  });
+};
+
+handleHighlightChangeComplete = (color) => {
+  this.setState({ color: color.hex, displayHighlight: false }, () => {
+
+    this.handleColorSelectHighlight(color);
   });
 };
 
@@ -943,12 +981,19 @@ renderView() {
     colorPicker = 'hide'
   }
 
+  if(this.state.displayHighlight) {
+    colorPickerHighlight = 'colorPickerSheets'
+  } else {
+    colorPickerHighlight = 'hide'
+  }
+
 
   //This takes the array of selected data and converts it for use in a chart
   let merged;
-  console.log(selectedData)
   if(selectedData) {
     merged = [].concat.apply([], selectedData[0]);
+    for(var i=0; i<merged.length;i++) merged[i] = parseInt(merged[i], 10);
+    console.log(merged)
 
     labels = merged.filter((element, index) => {
       return index % 2 === 0;
@@ -958,7 +1003,7 @@ renderView() {
       return index % 2 !== 0;
     })
 
-    for(var i=0; i<values.length;i++) values[i] = parseInt(values[i], 10);
+    for(var z=0; i<values.length;z++) values[z] = parseInt(values[z], 10);
     console.log(labels)
     console.log(values)
   }
@@ -1059,6 +1104,9 @@ renderView() {
             <a style={{color: "#fff", cursor: "pointer"}} onClick={() => this.setState({display: !this.state.display})}><Icon name='eye dropper' /></a>
           </MainMenu.Item>
           <MainMenu.Item>
+            <a style={{color: "#fff", cursor: "pointer"}} onClick={() => this.setState({displayHighlight: !this.state.displayHighlight})}><Icon name='tint' /></a>
+          </MainMenu.Item>
+          <MainMenu.Item>
             <Dropdown text='Formulas'>
               <Dropdown.Menu>
               <Dropdown.Menu scrolling>
@@ -1117,6 +1165,14 @@ renderView() {
               style={{zIndex: "999"}}
               color={ this.state.color }
               onChangeComplete={this.handleChangeComplete}
+            />
+          </div>
+
+          <div className={colorPickerHighlight}>
+            <CompactPicker
+              style={{zIndex: "999"}}
+              color={ this.state.color }
+              onChangeComplete={this.handleHighlightChangeComplete}
             />
           </div>
         </div>
