@@ -97,6 +97,8 @@ getType = chars => {
     case '-':
     case '+':
       return 'list-item'
+    case '[]':
+      return 'check-list-item'
     case '>':
       return 'block-quote'
     case '#':
@@ -168,9 +170,10 @@ getType = chars => {
     }
   }
 
-  // onCheckboxChange = (event) => {
-  //   const checked = event.target.checked;
-  // }
+  onCheckboxChange = (event, node) => {
+    const checked = event.target.checked
+    this.editor.setNodeByKey(node.key, { data: { checked } })
+  }
 
 
   onKeyDown = (event, editor, next) => {
@@ -212,7 +215,9 @@ getType = chars => {
     const { value } = editor
     const { selection } = value
     const { start, end, isExpanded } = selection
-    if (isExpanded) return next()
+    if (isExpanded){
+      return next()
+    }
 
     const { startBlock } = value
     if (start.offset === 0 && startBlock.text.length === 0)
@@ -264,6 +269,9 @@ onSpace = (event, editor, next) => {
   if (type === 'list-item') {
     event.preventDefault()
     editor.wrapBlock('list')
+  } else if(type === 'check-list-item') {
+    event.preventDefault()
+    editor.wrapBlock('check-list')
   }
 
   if(thisMark) {
@@ -288,6 +296,8 @@ onBackspace = (event, editor, next) => {
 
   if (startBlock.type === 'list-item') {
     editor.unwrapBlock('list')
+  } else if (startBlock.type === 'check-list-item') {
+    editor.unwrapBlock('check-list')
   }
 }
 
@@ -403,6 +413,8 @@ onClickAlign = (event, align) => {
 
   onClickBlock = (event, type) => {
     event.preventDefault()
+    console.log("click")
+    console.log(type)
     const { editor } = this
     const { value } = editor
     const { document } = value
@@ -423,7 +435,7 @@ onClickAlign = (event, align) => {
     } else {
       // Handle the extra wrapping required for list buttons.
       if(type === 'check-list') {
-        const isCheckList = this.hasBLock('check-list-item')
+        const isCheckList = this.hasBlock('check-list-item')
         const isType = value.blocks.some(block => {
           return !!document.getClosest(block.key, parent => parent.type === type)
         })
@@ -660,8 +672,8 @@ onClickAlign = (event, align) => {
       case 'list-item':
         return <li {...attributes}>{children}</li>
       case 'check-list-item':
-        const checked = node.data.get('checked')
-        return <List.Item {...attributes}><input type='checkbox' checked={checked} onChange={this.onCheckboxChange} style={{paddingTop: "3px"}} /><span style={{ marginLeft: "5px"}}>{children}</span></List.Item>
+        const checked = node.data.get('checked') || false
+        return <List.Item style={{marginLeft: "10px", marginBottom: "12px"}}{...attributes}><label className='checkmarkContainer'><input type='checkbox' checked={checked} onChange={(e) =>this.onCheckboxChange(e, node)} /><span className="checkmark"></span></label><span style={{ marginLeft: "30px"}}>{checked ? <strike style={{color: "#cecece"}}>{children}</strike> : <span>{children}</span>}</span></List.Item>
       case 'ordered':
         return <ol {...attributes}>{children}</ol>
       case 'link': {
@@ -694,7 +706,7 @@ onClickAlign = (event, align) => {
         const align = node.data.get('class')
         return <div {...attributes} className={align}>{children}</div>
       case 'check-list':
-        return <List className='check-list' {...props}>{children}</List>
+        return <List className='check-list'>{children}</List>
       default:
         return next()
     }

@@ -445,7 +445,7 @@ export function sharePublicly() {
       // object.content = html.serialize(this.state.content);
       object.content = document.getElementsByClassName('editor')[0].innerHTML;
       object.readOnly = true;
-      object.words = wordcount(html.serialize(this.state.content));
+      object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
       object.shared = getMonthDayYear();
       object.singleDocIsPublic = true;
       this.setState({
@@ -465,7 +465,7 @@ export function sharePublicly() {
       object.content = content.toJSON();
     }
     object.readOnly = this.state.readOnly;
-    object.words = wordcount(html.serialize(this.state.content));
+    object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
     object.shared = getMonthDayYear();
     object.singleDocIsPublic = true;
     this.setState({
@@ -637,7 +637,7 @@ export function loadMyFile() {
     this.state.teamShare ? object.teamDoc = true : object.teamDoc = false;
     object.id = window.location.href.split('doc/')[1];
     object.receiverID = this.state.receiverID;
-    object.words = wordcount(html.serialize(this.state.content));
+    object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
     object.sharedWith = [...this.state.sharedWith, this.state.receiverID];
     object.shared = getMonthDayYear();
     object.rtc = this.state.rtc;
@@ -663,7 +663,7 @@ export function loadMyFile() {
     }
     object.id = Date.now();
     object.receiverID = this.state.receiverID;
-    object.words = wordcount(html.serialize(this.state.content));
+    object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
     object.shared = getMonthDayYear();
     object.rtc = this.state.rtc;
     this.setState({ shareFile: [...this.state.shareFile, object] });
@@ -728,7 +728,7 @@ export function handleTitleChange(e) {
 }
 
 export function handleChange(change, options = {}) {
-  this.setState({ content: change.value, wordCount: wordcount(html.serialize(change.value).replace(/<(?:.|\n)*?>/gm, '')) });
+  this.setState({ content: change.value, wordCount: wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, '')) });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 3000)
 }
@@ -777,7 +777,7 @@ export function handleAutoAdd() {
   object.readOnly = this.state.readOnly; //true or false...
   object.rtc = this.state.rtc;
   // object.author = loadUserData().username;
-  object.words = wordcount(html.serialize(this.state.content)) || "";
+  object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, '')) || "";
   object.singleDocTags = this.state.singleDocTags;
   object.fileType = "documents";
   object.spacing = this.state.spacing;
@@ -786,7 +786,7 @@ export function handleAutoAdd() {
   this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
   objectTwo.id = object.id;
   objectTwo.updated = getMonthDayYear();
-  objectTwo.words = wordcount(html.serialize(this.state.content));
+  objectTwo.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''));
   objectTwo.lastUpdate = Date.now();
   objectTwo.sharedWith = this.state.sharedWith;
   objectTwo.rtc = this.state.rtc;
@@ -979,7 +979,7 @@ export function shareToTeam() {
       let content = this.state.content;
       object.title = this.state.title;
       object.content = content.toJSON();
-      object.words = wordcount(html.serialize(this.state.content));;
+      object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''));
       object.sharedWith = this.state.sharedWith;
       this.postToWebhook(object);
     }
@@ -996,7 +996,7 @@ export function sendArticle() {
 
 export function downloadDoc(props) {
   if(props === "word") {
-    var content = '<!DOCTYPE html>' + document.getElementsByClassName('editor')[0].innerHTML;;
+    var content = '<!DOCTYPE html>' + document.getElementsByClassName('editor')[0].innerHTML;
     var converted = htmlDocx.asBlob(content);
     var blob = new Blob([converted], {type: "application/msword"});
     FileSaver.saveAs(blob, this.state.title + '.docx');

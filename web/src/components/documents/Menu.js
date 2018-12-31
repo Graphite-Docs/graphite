@@ -268,8 +268,8 @@ export default class Menu extends Component {
                       <li className="topmenu">
                           <a>Info</a>
                           <ul className="submenu">
-                            <Modal closeIcon trigger={<li><a>Markdown Guide</a></li>}>
-                            <Modal.Header>Markdown Guide</Modal.Header>
+                            <Modal closeIcon trigger={<li><a>Shortcuts & Markdown Guide</a></li>}>
+                            <Modal.Header>Shortcuts & Markdown Guide</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
                                   <SemanticHeader>Basic Syntax</SemanticHeader>
@@ -281,7 +281,8 @@ export default class Menu extends Component {
                                     <li><span><em>Italicize</em></span> <span><pre>"_" then hit space</pre></span></li>
                                     {/*<li><span><strong>Bold</strong></span> <span><pre>**Bold**</pre></span></li>*/}
                                     {/*<li><span>Ordered lists</span> <span><pre><br/>1. Item One <br/> 2. Item Two</pre></span></li>*/}
-                                    <li><span>Unordered lists</span> <span><pre>"*" then his space</pre></span></li>
+                                    <li><span>Unordered lists</span> <span><pre>"*" then hit space</pre></span></li>
+                                    <li><span>Check lists</span> <span><pre>"[]" then hit space</pre></span></li>
                                   </ul>
                                   <p>Learn more <a href="https://www.markdownguide.org/basic-syntax/" target="_blank" rel="noopener noreferrer">here.</a></p>
                                 </Modal.Description>
