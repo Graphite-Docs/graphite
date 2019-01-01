@@ -95,7 +95,11 @@ export default class SingleVaultFile extends Component {
             <MainMenu.Item>
               <CSVLink style={{color:"#fff"}} data={cells} filename={name + '.csv'} ><Icon style={{color:"fff"}} name="cloud download" /></CSVLink>
             </MainMenu.Item>
-          ) : (
+          ) : type.includes('html') ?
+          <MainMenu.Item>
+            <a style={{color: "#fff"}} href={link} download={name}><Icon style={{color:"fff"}} name="cloud download" /></a>
+          </MainMenu.Item> :
+           (
             <MainMenu.Item />
           )}
 
@@ -117,7 +121,7 @@ export default class SingleVaultFile extends Component {
                 Edit in Sheets
               </a>
             </MainMenu.Item>
-          ) : (
+          ) :  (
             <MainMenu.Item />
           )}
 
@@ -215,7 +219,13 @@ export default class SingleVaultFile extends Component {
                         />
                       </div>
                     </div>
-                  ) : (
+                  ) : type.includes('html') ?
+                  <div>
+                    <div className='html-card html-card-1'>
+                      <div dangerouslySetInnerHTML={{ __html: window.atob(link.split('base64,')[1])  }} />
+                    </div>
+                  </div> :
+                  (
                     <div />
                   )}
                 </div>
