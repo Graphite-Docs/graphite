@@ -4,7 +4,6 @@ import { isKeyHotkey } from 'is-hotkey'
 import Loading from '../../Loading';
 import { Block } from 'slate';
 import { List, Image } from 'semantic-ui-react';
-import { List as VList } from 'immutable'
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 // import DeepTable from 'slate-deep-table'
@@ -94,6 +93,9 @@ class SlateEditor extends React.Component {
     this.editor = null;
 }
 
+componentDidMount() {
+}
+
 getType = chars => {
   switch (chars) {
     case '*':
@@ -166,13 +168,9 @@ getType = chars => {
 
   onChange = (change, options={}) => {
     if(window.location.href.includes('shared/docs')) {
-      this.props.handlePubChange(change)
-      clearTimeout(this.timeout);
-      this.timeout = setTimeout(this.saveVersion, 3000)
+      this.props.handlePubChange(change, this.state.versions)
     } else {
-      this.props.handleChange(change)
-      clearTimeout(this.timeout);
-      this.timeout = setTimeout(this.saveVersion, 3000)
+      this.props.handleChange(change, this.state.versions)
     }
 
     if (!this.remote) {
@@ -576,28 +574,6 @@ onClickAlign = (event, align) => {
     if(operations) {
       operations.forEach(o => this.editor.applyOperation(o))
     }
-  }
-
-  saveVersion = () => {
-    const { value } = this.editor
-    const { data } = value
-    const undos = data.get('undos') || VList()
-
-    const version = {
-      createdAt: new Date(),
-      operations: undos.flatten(1).toArray(),
-    }
-
-    this.setState(
-      state => ({
-        versions: [...state.versions, version],
-        v: state.v === '' ? 0 : state.v + 1,
-      }),
-      () => {
-        // this.editor.resetHistory()
-        console.log(this.state.versions)
-      }
-    )
   }
 
 

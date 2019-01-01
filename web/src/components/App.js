@@ -130,7 +130,8 @@ import {
   hasMark,
   onKeyDown,
   onClickMark,
-  doPDF
+  doPDF,
+  setVersion
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -629,6 +630,8 @@ export default class App extends Component {
       collabContent: "",
       readOnlyContent: "",
       fullContent: "",
+      versions: [],
+      versionModal: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -721,6 +724,7 @@ export default class App extends Component {
     this.onRTCChange = onRTCChange.bind(this);
     this.send = send.bind(this);
     this.doPDF = doPDF.bind(this);
+    this.setVersion = setVersion.bind(this);
 
     //Delete Document
     this.loadDocToDelete = loadDocToDelete.bind(this);
@@ -1062,7 +1066,7 @@ export default class App extends Component {
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
       optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
-      markdownContent, wordCount, createRTC, collabContent, readOnlyContent, file
+      markdownContent, wordCount, createRTC, collabContent, readOnlyContent, file, versions, versionModal
     } = this.state;
     return (
       <div>
@@ -1194,6 +1198,9 @@ export default class App extends Component {
                   doPDF={this.doPDF}
                   loadSingleVaultFile={this.loadSingleVaultFile}
                   handleVaultDrop={this.handleVaultDrop}
+                  setVersion={this.setVersion}
+                  versions={versions}
+                  versionModal={versionModal}
                   link={link}
                   file={file}
                   files={files}

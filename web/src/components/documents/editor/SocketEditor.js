@@ -96,6 +96,8 @@ class SocketEditor extends Component {
         loadSingleVaultFile={this.props.loadSingleVaultFile}
         handleVaultDrop={this.props.handleVaultDrop}
         showCollab={this.state.showCollab}
+        mainDocVersions={this.props.mainDocVersions}
+        revertTo={this.props.revertTo}
         uniqueID={this.state.uniqueID}
         link={this.props.link}
         files={this.props.files}

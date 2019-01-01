@@ -16,6 +16,7 @@ import { Value } from 'slate'
 import Html from 'slate-html-serializer';
 const wordcount = require("wordcount");
 const FileSaver = require('file-saver');
+const uuidv4 = require('uuid/v4');
 const htmlDocx = require('html-docx-js/dist/html-docx');
 const lzjs = require('lzjs');
 const { encryptECIES } = require('blockstack/lib/encryption');
@@ -28,6 +29,7 @@ const isUnderlinedHotkey = isKeyHotkey('mod+u')
 const isCodeHotkey = isKeyHotkey('mod+`')
 
 let htmlContent;
+let versionID;
 // const canvas = require('html2canvas')
 
 const BLOCK_TAGS = {
@@ -285,7 +287,8 @@ export function initialDocLoad() {
            compressed: JSON.parse(fileContents || '{}').compressed || false,
            spacing: JSON.parse(fileContents || '{}').spacing,
            lastUpdate: JSON.parse(fileContents).lastUpdate,
-           jsonContent: true
+           jsonContent: true,
+           versions: JSON.parse(fileContents).versions || []
          })
        } else {
          console.log("Not compressed")
@@ -306,7 +309,8 @@ export function initialDocLoad() {
              compressed: JSON.parse(fileContents || '{}').compressed || false,
              spacing: JSON.parse(fileContents || '{}').spacing,
              lastUpdate: JSON.parse(fileContents).lastUpdate,
-             jsonContent: true
+             jsonContent: true,
+             versions: JSON.parse(fileContents).versions || []
            })
          } else {
            console.log("html doc")
@@ -324,6 +328,7 @@ export function initialDocLoad() {
              compressed: JSON.parse(fileContents || '{}').compressed || false,
              spacing: JSON.parse(fileContents || '{}').spacing,
              lastUpdate: JSON.parse(fileContents).lastUpdate,
+             versions: JSON.parse(fileContents).versions || []
            })
          }
 
@@ -331,9 +336,6 @@ export function initialDocLoad() {
      })
      .then(() => {
        this.loadContacts()
-     })
-     .then(() => {
-
      })
      .then(() => {
        console.log(this.state.index)
@@ -727,7 +729,7 @@ export function handleTitleChange(e) {
   this.timeout = setTimeout(this.handleAutoAdd, 1500)
 }
 
-export function handleChange(change, options = {}) {
+export function handleChange(change) {
   this.setState({ content: change.value, wordCount: wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, '')) });
   clearTimeout(this.timeout);
   this.timeout = setTimeout(this.handleAutoAdd, 3000)
@@ -749,12 +751,17 @@ export function handleBack() {
 }
 
 export function handleAutoAdd() {
+  versionID = uuidv4();
   // this.analyticsRun('documents');
   let content = this.state.content;
   const object = {};
   const objectTwo = {};
+  const versionObject = {};
+  versionObject.createdAt = new Date();
+  versionObject.id = versionID;
   object.title = this.state.title;
   object.content = content.toJSON();
+  object.versions = [...this.state.versions, versionObject]
   object.compressed = false;
   object.jsonContent = true;
   this.state.teamDoc ? object.teamDoc = true : object.teamDoc = false;
@@ -800,7 +807,7 @@ export function handleAutoAdd() {
     if(this.state.newSharedDoc) {
       console.log("new shared doc")
       console.log(objectTwo)
-      this.setState({ newSharedDoc: false, value: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
+      this.setState({ versions: [...this.state.versions, versionObject], newSharedDoc: false, value: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
         this.setState({ filteredValue: this.state.value }, () => {
           this.autoSave();
         })
@@ -813,7 +820,7 @@ export function handleAutoAdd() {
       if(index !== "" && index > -1) {
         console.log("index already set")
         const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
-        this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+        this.setState({versions: [...this.state.versions, versionObject], value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
           this.autoSave();
           if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
             this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
@@ -840,7 +847,7 @@ export function handleAutoAdd() {
         }
         this.setState({index: value.findIndex(findObjectIndex)}, () => {
           const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
-          this.setState({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
+          this.setState({versions: [...this.state.versions, versionObject], value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
             this.autoSave();
             if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
               this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
@@ -849,6 +856,15 @@ export function handleAutoAdd() {
         })
       }
     }
+}
+
+export function setVersion(id) {
+  console.log('Fetching ' + id)
+  getFile(id + '.json', {decrypt: true})
+    .then((file) => {
+      this.setState({ content: Value.fromJSON(JSON.parse(file)), versionModal: false  })
+    })
+    .catch(error => console.log(error))
 }
 
 export function autoSave() {
@@ -866,19 +882,14 @@ export function autoSave() {
 export function saveSingleDocCollection() {
   putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
     .then(() => {
+      let content = this.state.content;
       this.setState({autoSave: "Saved"});
-      // if(this.state.stealthyConnected) {
-      //   setTimeout(this.connectStealthy, 300);
-      // } else if(this.state.travelstackConnected) {
-      //   setTimeout(this.connectTravelstack, 300);
-      // } else if (this.state.coinsConnected) {
-      //   setTimeout(this.connectCoins, 300);
-      // }
-
-      // this.saveDocsStealthy();
-    })
-    .then(() => {
-      this.loadCollection()
+      console.log( 'Saving ' + versionID);
+      putFile(versionID + '.json', JSON.stringify(content.toJSON()), {encrypt: true})
+        .then(() => {
+          console.log("Versions saved");
+          this.loadCollection()
+        })
     })
     .catch(e => {
       console.log(e);

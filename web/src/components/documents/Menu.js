@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Modal, Input, Button, Item } from 'semantic-ui-react';
+import { Modal, Input, Button, Item, List } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import { loadUserData } from 'blockstack';
 
@@ -9,7 +9,8 @@ export default class Menu extends Component {
     super(props);
     this.state = {
       modalOpen: false,
-      modalTwoOpen: false
+      modalTwoOpen: false,
+      visible: false
     }
   }
 
@@ -29,10 +30,19 @@ export default class Menu extends Component {
     this.setState({modalOpen: false})
   }
 
+  handleHideClick = () => this.setState({ visible: false })
+  handleShowClick = () => this.setState({ visible: true })
+  handleSidebarHide = () => this.setState({ visible: false })
+
+  handleClose = () => this.setState({ versionModal: false });
+
+  handleVersionSelect = (id) => {
+    this.setState({ versionModal: false })
+    this.props.setVersion(id)
+  }
+
   render() {
-
-    const { title, results, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.props;
-
+    const { versions, title, results, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.props;
     return (
 
               <div className="cm-e-menu">
@@ -293,6 +303,42 @@ export default class Menu extends Component {
                               <li className="divider-menu"><hr /></li>
                               <li><a href="https://github.com/Graphite-Docs/graphite/issues" target="_blank" rel="noopener noreferrer">bug report</a></li>
                           </ul>
+                      </li>
+                      <li className="topmenu">
+                      <Modal
+                        open={this.state.versionModal}
+                        onClose={this.handleClose}
+                        closeIcon
+                        closeOnEscape={true}
+                        closeOnDimmerClick={true}
+                        style={{borderRadius: "0"}}
+                        trigger={<a onClick={() => this.setState({ versionModal: true })}>History</a>}>
+                        <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Document History</Modal.Header>
+                        <Modal.Content>
+                          <Modal.Description>
+                            <h3>View History or Revert to a Past Version</h3>
+                            <List divided relaxed>
+                              {
+                                versions.slice(0).reverse().map(version => {
+                                  let timestamp = new Date(version.createdAt).getTime();
+                                  let newDate = new Date();
+                                  newDate.setTime(timestamp);
+                                  let dateString = newDate.toUTCString();
+                                  return (
+                                    <List.Item key={version.id}>
+                                      <List.Icon name='clock outline' size='large' verticalAlign='middle' />
+                                      <List.Content>
+                                        <List.Header as='a' onPointerDown={(e) => this.handleVersionSelect(version.id)}>Version {versions.indexOf(version) + 1}</List.Header>
+                                        <List.Description as='a'>Created at {dateString}</List.Description>
+                                      </List.Content>
+                                    </List.Item>
+                                  )
+                                })
+                              }
+                            </List>
+                          </Modal.Description>
+                        </Modal.Content>
+                      </Modal>
                       </li>
                       {/*<li className="topmenu">
                           <a>Page settings</a>

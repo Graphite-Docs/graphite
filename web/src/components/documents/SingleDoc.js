@@ -149,7 +149,10 @@ export default class SingleDoc extends Component {
             toggleReadOnly={this.props.toggleReadOnly}
             stopSharing={this.props.stopSharing}
             changeEditor={this.props.changeEditor}
+            setVersion={this.props.setVersion}
             markdown={markdown}
+            versions={this.props.versions}
+            versionModal={this.props.versionModal}
             rtc={rtc}
             singleDocIsPublic={singleDocIsPublic}
             readOnly={readOnly}
@@ -230,6 +233,8 @@ export default class SingleDoc extends Component {
                         docLoaded={this.props.docLoaded}
                         idToLoad={this.props.idToLoad}
                         handleVaultDrop={this.props.handleVaultDrop}
+                        versions={this.props.versions}
+                        revertTo={this.props.revertTo}
                         link={this.props.link}
                         files={this.props.files}
                         file={this.props.file}
