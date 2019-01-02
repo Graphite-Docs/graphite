@@ -7,8 +7,10 @@ const Papa = require('papaparse');
 let abuf4;
 
 export function loadPublicVault() {
-  let fileName = 'public/vault/' + window.location.href.split('vault/')[1].split('/')[1];
-  getFile(fileName, {decrypt: false})
+  const user = window.location.href.split('vault/')[1].split('/')[0]
+  const fileName = 'public/vault/' + window.location.href.split('vault/')[1].split('/')[1];
+  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+  getFile(fileName, options)
     .then((file) => {
       if(JSON.parse(file).type) {
         this.setState({ loading: true });

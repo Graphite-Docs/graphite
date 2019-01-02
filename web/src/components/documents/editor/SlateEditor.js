@@ -181,6 +181,7 @@ getType = chars => {
   }
 
   onCheckboxChange = (event, node) => {
+    console.log("change")
     const checked = event.target.checked
     this.editor.setNodeByKey(node.key, { data: { checked } })
   }
@@ -702,7 +703,8 @@ onClickAlign = (event, align) => {
         return <li {...attributes}>{children}</li>
       case 'check-list-item':
         const checked = node.data.get('checked') || false
-        return <List.Item style={{marginLeft: "10px", marginBottom: "12px"}}{...attributes}><label className='checkmarkContainer'><input type='checkbox' checked={checked} onChange={(e) =>this.onCheckboxChange(e, node)} /><span className="checkmark"></span></label><span style={{ marginLeft: "30px"}}>{checked ? <strike style={{color: "#cecece"}}>{children}</strike> : <span>{children}</span>}</span></List.Item>
+        console.log(checked)
+        return <List.Item style={{marginLeft: "10px", marginBottom: "12px"}}{...attributes}><label className='checkmarkContainer'><input type='checkbox' value={checked} checked={checked} onChange={(e) =>this.onCheckboxChange(e, node)} /><span className="checkmark"></span></label><span style={{ marginLeft: "30px"}}>{checked ? <strike style={{color: "#cecece"}}>{children}</strike> : <span>{children}</span>}</span></List.Item>
       case 'ordered':
         return <ol {...attributes}>{children}</ol>
       case 'link': {
