@@ -32,7 +32,8 @@ export function loadSingleVaultFile(props) {
           link: JSON.parse(file || "{}").link,
           type: JSON.parse(file || "{}").type,
           sharedWith: JSON.parse(file || "{}").sharedWith,
-          tags: JSON.parse(file || "{}").tags
+          tags: JSON.parse(file || "{}").tags,
+          publicVaultFile: JSON.parse(file).publicVaultFile || false
         });
       })
       .then(() => {
@@ -55,7 +56,8 @@ export function loadSingleVaultFile(props) {
           link: JSON.parse(file || "{}").link,
           type: JSON.parse(file || "{}").type,
           sharedWith: JSON.parse(file || "{}").sharedWith,
-          tags: JSON.parse(file || "{}").tags
+          tags: JSON.parse(file || "{}").tags,
+          publicVaultFile: JSON.parse(file).publicVaultFile || false
         });
         if (this.state.type.includes("word")) {
           abuf4 = str2ab(this.state.link);
@@ -452,4 +454,59 @@ export function signWithBlockusign(fileId) {
           console.log(error)
         })
     })
+}
+
+export function shareVaultFile() {
+  let fileName = 'public/vault/' + window.location.href.split('vault/')[1];
+  const object = {};
+  object.file = this.state.file;
+  object.uploaded = this.state.lastModifiedDate;
+  object.link = this.state.link;
+  object.name = this.state.name;
+  object.size = this.state.size;
+  object.type = this.state.type;
+  object.tags = this.state.tags;
+  object.sharedWith = this.state.sharedWith;
+  object.lastModifiedDate = this.state.lastModifiedDate;
+  object.id = window.location.href.split('vault/')[1];
+  object.vault = "vault";
+  object.publicVaultFile = true;
+  this.setState({ singleVaultFile: object, publicVaultFile: true }, () => {
+    putFile(fileName, JSON.stringify(this.state.singleVaultFile), {encrypt: false})
+      .then(() => {
+        console.log('Saved: ' + window.location.origin + '/public/' + loadUserData().username + '/' + window.location.href.split('vault/')[1]);
+        putFile(window.location.href.split('vault/')[1] + '.json', JSON.stringify(this.state.singleVaultFile), {encrypt: true})
+          .then(() => {
+            console.log("saved single vault file")
+          })
+      })
+      .catch(error => console.log(error))
+  })
+}
+
+export function stopSharingPubVaultFile() {
+  let fileName = 'public/vault/' + window.location.href.split('vault/')[1];
+  const object = {};
+  object.file = this.state.file;
+  object.uploaded = this.state.lastModifiedDate;
+  object.link = this.state.link;
+  object.name = this.state.name;
+  object.size = this.state.size;
+  object.type = this.state.type;
+  object.tags = this.state.tags;
+  object.sharedWith = this.state.sharedWith;
+  object.lastModifiedDate = this.state.lastModifiedDate;
+  object.id = window.location.href.split('vault/')[1];
+  object.vault = "vault";
+  object.publicVaultFile = false;
+  this.setState({ singleVaultFile: object, publicVaultFile: false }, () => {
+    putFile(fileName, JSON.stringify({}), {encrypt: false})
+      .then(() => {
+        putFile(window.location.href.split('vault/')[1] + '.json', JSON.stringify(this.state.singleVaultFile), {encrypt: true})
+          .then(() => {
+            console.log("No longer sharing")
+          })
+      })
+      .catch(error => console.log(error))
+  })
 }

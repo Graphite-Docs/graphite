@@ -26,6 +26,7 @@ import Contacts from './contacts/Contacts';
 import ContactsProfile from './contacts/ContactsProfile';
 import DeleteContact from './contacts/DeleteContact';
 import VaultCollection from './vault/VaultCollection';
+import PublicVault from './vault/PublicVault';
 import SingleVaultFile from './vault/SingleVaultFile';
 import NewVaultFile from './vault/NewVaultFile';
 import DeleteVaultFile from './vault/DeleteVaultFile';
@@ -317,7 +318,9 @@ import {
   saveToDocsTwo,
   saveToSheets,
   saveToSheetsTwo,
-  signWithBlockusign
+  signWithBlockusign,
+  shareVaultFile,
+  stopSharingPubVaultFile
 } from './helpers/singleVaultFile';
 import {
   handleIDChangeVault,
@@ -410,6 +413,9 @@ import {
   storeLocal,
   loadLocal
 } from './helpers/decentralizedDB';
+import {
+  loadPublicVault
+} from './helpers/publicVault';
 import work from 'webworkify-webpack';
 // const IPFS = require("ipfs");
 // const node = new IPFS();
@@ -631,7 +637,9 @@ export default class App extends Component {
       readOnlyContent: "",
       fullContent: "",
       versions: [],
-      versionModal: false
+      versionModal: false,
+      publicVaultFile: false,
+      pubVaultShared: true
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -901,6 +909,8 @@ export default class App extends Component {
     this.handleAddToVaultTwo = handleAddToVaultTwo.bind(this);
     this.saveNewVaultTwo = saveNewVaultTwo.bind(this);
     this.signWithBlockusign = signWithBlockusign.bind(this);
+    this.shareVaultFile = shareVaultFile.bind(this);
+    this.stopSharingPubVaultFile = stopSharingPubVaultFile.bind(this);
 
     //Contacts
     this.profileLoad = profileLoad.bind(this);
@@ -974,6 +984,9 @@ export default class App extends Component {
     this.saveProfile = saveProfile.bind(this);
     this.loadProfile = loadProfile.bind(this);
     this.handleRestore = handleRestore.bind(this);
+
+    //Public Vault
+    this.loadPublicVault = loadPublicVault.bind(this);
 
     //Shared
 
@@ -1066,7 +1079,8 @@ export default class App extends Component {
       showFirstLink, types, checked, rtc, hideButton, avatars, docsSelected, loadingIndicator, userRole, teamDoc,
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
       optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
-      markdownContent, wordCount, createRTC, collabContent, readOnlyContent, file, versions, versionModal
+      markdownContent, wordCount, createRTC, collabContent, readOnlyContent, file, versions, versionModal, publicVaultFile,
+      pubVaultShared
     } = this.state;
     return (
       <div>
@@ -1500,6 +1514,9 @@ export default class App extends Component {
                   handleaddSheet={this.handleaddSheet}
                   handleaddItem={this.handleaddItem}
                   signWithBlockusign={this.signWithBlockusign}
+                  shareVaultFile={this.shareVaultFile}
+                  stopSharingPubVaultFile={this.stopSharingPubVaultFile}
+                  publicVaultFile={publicVaultFile}
                   page={page}
                   type={type}
                   loading={loading}
@@ -1521,6 +1538,24 @@ export default class App extends Component {
                   name={name}
                   loading={loading}
                   save={save}
+                />
+              }/>
+
+              <Route exact path="/public/vault/:id/:id" render={(location, match, props) =>
+                <PublicVault {...props}
+                  loadPublicVault={this.loadPublicVault}
+                  loading={loading}
+                  page={page}
+                  type={type}
+                  show={show}
+                  shareModal={shareModal}
+                  contacts={contacts}
+                  pages={pages}
+                  name={name}
+                  link={link}
+                  content={content}
+                  grid={grid}
+                  pubVaultShared={pubVaultShared}
                 />
               }/>
               <Route exact path="/shared-vault" render={(location, match, props) =>

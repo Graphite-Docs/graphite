@@ -6,8 +6,10 @@ import "video-react/dist/video-react.css";
 import HotTable from "react-handsontable";
 import {CSVLink} from 'react-csv';
 import Loading from '../Loading';
-import { Pagination, Container, Image, Icon } from 'semantic-ui-react';
+import { Pagination, Container, Image, Icon, Modal, Button } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
+import { loadUserData } from 'blockstack';
 
 
 export default class SingleVaultFile extends Component {
@@ -31,7 +33,24 @@ export default class SingleVaultFile extends Component {
     )
   }
 
+  copyLink = () => {
+    if (document.selection) {
+      var range = document.body.createTextRange();
+      range.moveToElementText(document.getElementById('shared-vault-link'));
+      range.select().createTextRange();
+      document.execCommand("copy");
+
+    } else if (window.getSelection) {
+      var rangeNew = document.createRange();
+       rangeNew.selectNode(document.getElementById('shared-vault-link'));
+       window.getSelection().addRange(range);
+       document.execCommand("copy");
+    }
+
+  }
+
   render() {
+    const { publicVaultFile } = this.props;
     var thisStyle = {
       display: "none"
     };
@@ -102,7 +121,29 @@ export default class SingleVaultFile extends Component {
            (
             <MainMenu.Item />
           )}
-
+          <MainMenu.Item>
+            <Modal trigger={<a><Icon style={{cursor: "pointer", color: "#fff"}} name='linkify' /></a>}>
+              <Modal.Header>Create a Public Link</Modal.Header>
+              <Modal.Content>
+                <Modal.Description>
+                  <SemanticHeader>Public Link</SemanticHeader>
+                  <p>By generating a public link, you will be saving an unencrypted copy of your file. Only those will the link can access it.</p>
+                  {
+                    publicVaultFile ?
+                    <Button style={{ borderRadius: "0" }} onClick={this.props.stopSharingPubVaultFile} color="red">Stop Sharing Publicly</Button> :
+                    <Button style={{ borderRadius: "0" }} onClick={this.props.shareVaultFile} color="green">Generate Public Link</Button>
+                  }
+                  <div style={{marginTop: "15px"}}>
+                    {
+                      publicVaultFile ?
+                      <div><a id='shared-vault-link' href={window.location.origin + '/public/vault/' + loadUserData().username + '/' + window.location.href.split('vault/')[1]} target='_blank' style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/vault/' + loadUserData().username + '/' + window.location.href.split('vault/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
+                      <div className='hide' />
+                    }
+                  </div>
+                </Modal.Description>
+              </Modal.Content>
+            </Modal>
+          </MainMenu.Item>
           {type.includes("word") ? (
             <MainMenu.Item>
               <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddItem}>
