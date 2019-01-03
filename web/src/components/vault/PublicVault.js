@@ -14,7 +14,17 @@ export default class PublicVault extends Component {
 
   componentDidMount() {
     this.props.loadPublicVault();
-    setInterval(this.props.loadPublicVault, 3000)
+    setInterval(this.loadAgain, 3000)
+  }
+
+  loadAgain = () => {
+    const { player } = this.refs.player.getState();
+  
+    if(player.paused) {
+      console.log("bingo")
+      this.props.loadPublicVault()
+    }
+
   }
 
   renderPagination(page, pages) {
@@ -160,7 +170,7 @@ export default class PublicVault extends Component {
                     <Container>
                     <div className="single-file-div">
                       <div className="center-align container">
-                        <Player playsInline src={link} />
+                        <Player ref="player" id='video' playsInline src={link} />
                       </div>
                     </div>
                     </Container>

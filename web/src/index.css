@@ -771,6 +771,7 @@ div.markdown-editor__editor-container h2 {
   cursor: pointer;
   height: 0;
   width: 0;
+  visibility: hidden;
 }
 
 .checkmark {

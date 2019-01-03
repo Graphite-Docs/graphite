@@ -34,18 +34,15 @@ export default class SingleVaultFile extends Component {
   }
 
   copyLink = () => {
-    if (document.selection) {
-      var range = document.body.createTextRange();
-      range.moveToElementText(document.getElementById('shared-vault-link'));
-      range.select().createTextRange();
-      document.execCommand("copy");
+      var copyTextarea = document.querySelector('#shared-vault-link').innerHTML;
+      console.log(copyTextarea)
 
-    } else if (window.getSelection) {
-      var rangeNew = document.createRange();
-       rangeNew.selectNode(document.getElementById('shared-vault-link'));
-       window.getSelection().addRange(range);
-       document.execCommand("copy");
-    }
+
+      navigator.clipboard.writeText(copyTextarea).then(function() {
+        console.log('Async: Copying to clipboard was successful!');
+      }, function(err) {
+        console.error('Async: Could not copy text: ', err);
+      });
 
   }
 
