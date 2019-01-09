@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   loadUserData,
   getFile,
@@ -14,167 +13,106 @@ const { decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const lzjs = require('lzjs');
 const BLOCK_TAGS = {
-  blockquote: 'block-quote',
   p: 'paragraph',
-  pre: 'code',
-  ul: 'list',
-  ol: 'ordered',
   li: 'list-item',
-  div: 'align'
-}
-// Add a dictionary of mark tags.
-const MARK_TAGS = {
-  em: 'italic',
-  strong: 'bold',
-  u: 'underline',
+  ul: 'bulleted-list',
+  ol: 'numbered-list',
+  blockquote: 'quote',
   pre: 'code',
-  strike: 'strikethrough',
-  span: 'color'
+  h1: 'heading-one',
+  h2: 'heading-two',
+  h3: 'heading-three',
+  h4: 'heading-four',
+  h5: 'heading-five',
+  h6: 'heading-six',
 }
 
-const INLINE_TAGS = {
-  a: 'link'
+const MARK_TAGS = {
+  strong: 'bold',
+  em: 'italic',
+  u: 'underline',
+  s: 'strikethrough',
+  code: 'code',
 }
-const rules = [
+
+const RULES = [
   {
     deserialize(el, next) {
-      const type = BLOCK_TAGS[el.tagName.toLowerCase()]
+      const block = BLOCK_TAGS[el.tagName.toLowerCase()]
 
-      if (type) {
-        if(type === 'align') {
-          // console.log(el.getAttribute('class'))
-          return {
-            object: 'block',
-            type: type,
-            data: {
-              class: el.getAttribute('class'),
-            },
-            nodes: next(el.childNodes),
-          }
-        } else {
-          return {
-            object: 'block',
-            type: type,
-            nodes: next(el.childNodes),
-          }
-        }
-
-      }
-    },
-    serialize(obj, children) {
-      if (obj.object === 'block') {
-        switch (obj.type) {
-          case 'code':
-            return (
-              <pre>
-                <code>{children}</code>
-              </pre>
-            )
-          case 'paragraph':
-            return <p className={obj.data.get('className')}>{children}</p>
-          case 'block-quote':
-            return <blockquote>{children}</blockquote>
-          case 'list':
-            return <ul>{children}</ul>
-          case 'heading-one':
-            return <h1>{children}</h1>
-          case 'heading-two':
-            return <h2>{children}</h2>
-          case 'heading-three':
-            return <h3>{children}</h3>
-          case 'heading-four':
-            return <h4>{children}</h4>
-          case 'heading-five':
-            return <h5>{children}</h5>
-          case 'heading-six':
-            return <h6>{children}</h6>
-          case 'list-item':
-            return <li>{children}</li>
-          case 'ordered':
-            return <ol>{children}</ol>
-          case 'table':
-            return <table>{children}</table>
-          case 'table_row':
-            return <tr>{children}</tr>
-          case 'table_cell':
-            return <td>{children}</td>
-          case 'align':
-            return <div className={obj.data.get('class')}>{children}</div>
-          case 'code-block':
-            return <code>{children}</code>
-          default: return ''
-        }
-      }
-    }
-  },
-  // Add a new rule that handles marks...
-  {
-    deserialize(el, next) {
-      const type = MARK_TAGS[el.tagName.toLowerCase()]
-      if (type) {
+      if (block) {
         return {
-          object: 'mark',
-          type: type,
-          data: {
-            class: el.getAttribute('class'),
-          },
+          object: 'block',
+          type: block,
           nodes: next(el.childNodes),
         }
       }
     },
-    serialize(obj, children) {
-      if (obj.object === 'mark') {
-        switch (obj.type) {
-          case 'bold':
-            return <strong>{children}</strong>
-          case 'italic':
-            return <em>{children}</em>
-          case 'underline':
-            return <u>{children}</u>
-          case 'strikethrough':
-            return <strike>{children}</strike>
-          case 'color':
-            return <span className={obj.data.get('class')}>{children}</span>
-          case 'code':
-            return <pre><code>{children}</code></pre>
-          case 'code-block':
-            return <pre className={obj.data.get('className')}><code>{children}</code></pre>
-          default: return ''
+  },
+  {
+    deserialize(el, next) {
+      const mark = MARK_TAGS[el.tagName.toLowerCase()]
+
+      if (mark) {
+        return {
+          object: 'mark',
+          type: mark,
+          nodes: next(el.childNodes),
         }
       }
-    }
+    },
   },
-    {
-      deserialize(el, next) {
-        const type = INLINE_TAGS[el.tagName.toLowerCase()]
-        if (type) {
-          // return console.log(el.style)
-          return {
-            object: 'inline',
-            type: type,
-            data: {
-              href: el.getAttribute('href'),
-              // style: JSON.parse('{' + JSON.stringify(el.getAttribute('style')).split(':')[0] + '"' + JSON.parse(JSON.stringify(':')) + '"' + JSON.stringify(el.getAttribute('style')).split(':')[1] + '}'),
-            },
-            nodes: next(el.childNodes),
-          }
+  {
+    // Special case for code blocks, which need to grab the nested childNodes.
+    deserialize(el, next) {
+      if (el.tagName.toLowerCase() === 'pre') {
+        const code = el.childNodes[0]
+        const childNodes =
+          code && code.tagName.toLowerCase() === 'code'
+            ? code.childNodes
+            : el.childNodes
+
+        return {
+          object: 'block',
+          type: 'code',
+          nodes: next(childNodes),
         }
-      },
-      serialize(obj, children) {
-        if (obj.object === 'inline') {
-          switch (obj.type) {
-            case 'link':
-              return <a href={obj.data.get('href')}>{children}</a>
-            case 'color':
-              return <span style={ obj.data.get('style') }>{children}</span>
-            default: return ''
-          }
+      }
+    },
+  },
+  {
+    // Special case for images, to grab their src.
+    deserialize(el, next) {
+      if (el.tagName.toLowerCase() === 'img') {
+        return {
+          object: 'block',
+          type: 'image',
+          nodes: next(el.childNodes),
+          data: {
+            src: el.getAttribute('src'),
+          },
         }
-      },
+      }
+    },
+  },
+  {
+    // Special case for links, to grab their href.
+    deserialize(el, next) {
+      if (el.tagName.toLowerCase() === 'a') {
+        return {
+          object: 'inline',
+          type: 'link',
+          nodes: next(el.childNodes),
+          data: {
+            href: el.getAttribute('href'),
+          },
+        }
+      }
+    },
   },
 ]
 
-const html = new Html({ rules })
+const html = new Html({ rules: RULES })
 
 export function findDoc() {
   getFile("documentscollection.json", {decrypt: true})

@@ -1,12 +1,15 @@
-import { Editor } from 'slate-react'
+import { Editor, getEventTransfer } from 'slate-react'
 import React from 'react'
 import { isKeyHotkey } from 'is-hotkey'
+import Html from 'slate-html-serializer'
 import Loading from '../../Loading';
 import { Block } from 'slate';
-import { List, Image } from 'semantic-ui-react';
+import { List, Image, Icon, Modal, Button } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 // import DeepTable from 'slate-deep-table'
+// import myTimeline from './initialTimeline.json';
 const PluginDeepTable = require('slate-deep-table/dist')
 
 const DEFAULT_NODE = 'paragraph'
@@ -54,6 +57,58 @@ function insertImage(editor, src, target) {
   })
 }
 
+//Embeds
+function insertEmbed(editor, src, target) {
+  let updatedSrc;
+  if(src) {
+    if(src.includes('youtube')) {
+      updatedSrc = "https://www.youtube.com/embed/" + src.split('=')[1]
+    } else if(src.includes("tu.be")) {
+      updatedSrc = "https://www.youtube.com/embed/" + src.split('be/')[1]
+    } else if(src.includes('vimeo')) {
+      updatedSrc = "https://player.vimeo.com/video/" + src.split('com/')[1]
+    } else {
+      updatedSrc = src.split('status/')[1]
+    }
+  } else {
+    updatedSrc = "none"
+  }
+
+  if (target) {
+    editor.select(target)
+  }
+
+  editor.insertBlock({
+    type: 'embed',
+    data: {
+      src: updatedSrc,
+    },
+  })
+  setTimeout(() => {
+    if(src.includes("status/")) {
+      //Find all tweets that have been embeded and fetch the content via Twitter
+      var tweets = document.getElementsByClassName("tweet");
+
+      var t;
+      for (t = 0; t < tweets.length; t++) {
+        let id = document.getElementsByClassName("tweet")[t].getAttribute("id");
+        window.twttr.widgets.createTweet(
+          id, tweets[t],
+          {
+            conversation : 'none',    // or all
+            cards        : 'hidden',  // or visible
+            linkColor    : '#cc0000', // default is blue
+            theme        : 'light'    // or dark
+          });
+      }
+    }
+
+    // let timeline = new window.TL.Timeline('timeline-embed',
+    //       'https://docs.google.com/spreadsheets/d/1cWqQBZCkX9GpzFtxCWHoqFXCHg-ylTVUWlnrdYMzKUI/pubhtml');
+
+  }, 1000)
+}
+
 const schema = {
   document: {
     last: { type: 'paragraph' },
@@ -71,6 +126,12 @@ const schema = {
     image: {
       isVoid: true,
     },
+    video: {
+      isVoid: true,
+    },
+    embed: {
+      isVoid: true,
+    }
   },
   inlines: {
     emoji: {
@@ -78,6 +139,108 @@ const schema = {
     },
   },
 }
+
+const BLOCK_TAGS = {
+  p: 'paragraph',
+  li: 'list-item',
+  ul: 'bulleted-list',
+  ol: 'numbered-list',
+  blockquote: 'quote',
+  pre: 'code',
+  h1: 'heading-one',
+  h2: 'heading-two',
+  h3: 'heading-three',
+  h4: 'heading-four',
+  h5: 'heading-five',
+  h6: 'heading-six',
+}
+
+const MARK_TAGS = {
+  strong: 'bold',
+  em: 'italic',
+  u: 'underline',
+  s: 'strikethrough',
+  code: 'code',
+}
+
+const RULES = [
+  {
+    deserialize(el, next) {
+      const block = BLOCK_TAGS[el.tagName.toLowerCase()]
+
+      if (block) {
+        return {
+          object: 'block',
+          type: block,
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+  },
+  {
+    deserialize(el, next) {
+      const mark = MARK_TAGS[el.tagName.toLowerCase()]
+
+      if (mark) {
+        return {
+          object: 'mark',
+          type: mark,
+          nodes: next(el.childNodes),
+        }
+      }
+    },
+  },
+  {
+    // Special case for code blocks, which need to grab the nested childNodes.
+    deserialize(el, next) {
+      if (el.tagName.toLowerCase() === 'pre') {
+        const code = el.childNodes[0]
+        const childNodes =
+          code && code.tagName.toLowerCase() === 'code'
+            ? code.childNodes
+            : el.childNodes
+
+        return {
+          object: 'block',
+          type: 'code',
+          nodes: next(childNodes),
+        }
+      }
+    },
+  },
+  {
+    // Special case for images, to grab their src.
+    deserialize(el, next) {
+      if (el.tagName.toLowerCase() === 'img') {
+        return {
+          object: 'block',
+          type: 'image',
+          nodes: next(el.childNodes),
+          data: {
+            src: el.getAttribute('src'),
+          },
+        }
+      }
+    },
+  },
+  {
+    // Special case for links, to grab their href.
+    deserialize(el, next) {
+      if (el.tagName.toLowerCase() === 'a') {
+        return {
+          object: 'inline',
+          type: 'link',
+          nodes: next(el.childNodes),
+          data: {
+            href: el.getAttribute('href'),
+          },
+        }
+      }
+    },
+  },
+]
+
+const html = new Html({ rules: RULES })
 
 class SlateEditor extends React.Component {
   constructor (props) {
@@ -89,11 +252,34 @@ class SlateEditor extends React.Component {
       uniqueID: "",
       versions: [],
       v: '',
+      timelineModal: false
     };
     this.editor = null;
 }
 
 componentDidMount() {
+  //Find all tweets that have been embeded and fetch the content via Twitter
+  var tweets = document.getElementsByClassName("tweet");
+
+  var t;
+  for (t = 0; t < tweets.length; t++) {
+    let id = document.getElementsByClassName("tweet")[t].getAttribute("id");
+    window.twttr.widgets.createTweet(
+      id, tweets[t],
+      {
+        conversation : 'none',    // or all
+        cards        : 'hidden',  // or visible
+        linkColor    : '#cc0000', // default is blue
+        theme        : 'light'    // or dark
+      });
+  }
+  setTimeout(() => {
+    if(document.getElementById('timeline-embed')) {
+      // let timeline = new window.TL.Timeline('timeline-embed',
+      //       myTimeline);
+    }
+  }, 500)
+
 }
 
 getType = chars => {
@@ -313,6 +499,10 @@ onBackspace = (event, editor, next) => {
   } else if (startBlock.type === 'check-list-item') {
     editor.unwrapBlock('check-list')
   }
+}
+
+onClickEmbed = (type, src) => {
+  this.editor.command(insertEmbed, src)
 }
 
 onClickImage = (props) => {
@@ -565,6 +755,13 @@ onClickAlign = (event, align) => {
     this.editor.undo()
   }
 
+  onPaste = (event, editor, next) => {
+    const transfer = getEventTransfer(event)
+    if (transfer.type !== 'html') return next()
+    const { document } = html.deserialize(transfer.html)
+    editor.insertFragment(document)
+  }
+
   modalController = (props, type) => {
     if(type === "link") {
       this.setState({ modalTwoOpen: props })
@@ -583,6 +780,7 @@ onClickAlign = (event, align) => {
 
 
   render() {
+    //Style all tables in doc
     let table = document.getElementsByTagName('table');
 
     let length = table !== null ? table.length : 0;
@@ -625,6 +823,7 @@ onClickAlign = (event, align) => {
               onClickAlign={this.onClickAlign}
               onClickImage={this.onClickImage}
               onImageUpload={this.onImageUpload}
+              onClickEmbed={this.onClickEmbed}
               onClickEmoji={this.onClickEmoji}
               onClickRedo={this.onClickRedo}
               onClickUndo={this.onClickUndo}
@@ -653,6 +852,7 @@ onClickAlign = (event, align) => {
               ref={this.ref}
               value={this.props.collabContent}
               onChange={this.onChange}
+              onPaste={this.onPaste}
               onKeyDown={this.onKeyDown}
               renderNode={this.renderNode}
               renderMark={this.renderMark}
@@ -667,6 +867,7 @@ onClickAlign = (event, align) => {
               ref={this.ref}
               value={this.props.content}
               onChange={this.onChange}
+              onPaste={this.onPaste}
               onKeyDown={this.onKeyDown}
               renderNode={this.renderNode}
               renderMark={this.renderMark}
@@ -746,6 +947,59 @@ onClickAlign = (event, align) => {
         return <div {...attributes} className={align}>{children}</div>
       case 'check-list':
         return <List className='check-list'>{children}</List>
+      case 'embed': {
+          const src = node.data.get('src');
+          if(src !== "none") {
+            if(src.includes('youtube') || src.includes('vimeo')) {
+              return(
+                <div className='video-center'>
+                <iframe
+                  title="youtube video"
+                  id="ytplayer"
+                  type="text/html"
+                  width="640"
+                  height="476"
+                  src={src}
+                  frameBorder="0"
+                  allowFullScreen="allowfullscreen"
+                  mozallowFullScreen="mozallowfullscreen"
+                  msallowfullscreen="msallowfullscreen"
+                  oallowfullscreen="oallowfullscreen"
+                  webkitallowfullscreen="webkitallowfullscreen"
+                />
+                </div>
+              )
+            } else {
+              return (
+                <div className='tweet' id={src} />
+              )
+            }
+          } else {
+            return (
+              <div>
+              <Modal
+                trigger={<Icon style={{cursor: "pointer"}} name='add' />}
+                closeIcon
+                size='small'
+                >
+                <Modal.Content>
+                  <SemanticHeader icon='browser' content='Update Your Timeline' />
+                  <h3>Add new events or update the starting information</h3>
+
+
+                </Modal.Content>
+                <Modal.Actions>
+                  <Button color='black' onClick={() => this.setState({timelineModal: false})}>
+                    Save
+                  </Button>
+                </Modal.Actions>
+                </Modal>
+                <div id='timeline-embed' style={{width: "100%", height: "600px"}}></div>
+              </div>
+            )
+          }
+
+      }
       default:
         return next()
     }

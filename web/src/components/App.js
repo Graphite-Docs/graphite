@@ -417,6 +417,7 @@ import {
   loadPublicVault
 } from './helpers/publicVault';
 import work from 'webworkify-webpack';
+
 // const IPFS = require("ipfs");
 // const node = new IPFS();
 const Config = require('Config');

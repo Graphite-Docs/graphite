@@ -5,10 +5,14 @@ import Header from "./Header";
 import Loading from "./Loading";
 import {
   isUserSignedIn,
-  redirectToSignIn,
+  // redirectToSignIn,
   signUserOut,
   getFile,
-  putFile
+  putFile,
+  makeAuthRequest,
+  redirectToSignInWithAuthRequest,
+  generateAndStoreTransitKey,
+  nextHour,
 } from "blockstack";
 import { Grid, Icon, Container, Card, Table } from 'semantic-ui-react';
 import PropTypes from "prop-types";
@@ -57,12 +61,20 @@ export default class AppPage extends Component {
 
 
   handleSignIn(e) {
+    console.log("yeah")
     e.preventDefault();
     const origin = window.location.origin;
-    redirectToSignIn(origin, origin + "/manifest.json", [
-      "store_write",
-      "publish_data"
-    ])
+    const authRequest = makeAuthRequest(
+      generateAndStoreTransitKey(),
+      origin,
+      origin + '/manifest.json',
+      ['store_write', 'publish_data'],
+      origin,
+      nextHour().getTime(), {
+        solicitGaiaHubUrl: true
+      }
+    );
+    redirectToSignInWithAuthRequest(authRequest);
   }
 
   handleSignOut(e) {

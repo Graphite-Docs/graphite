@@ -815,6 +815,23 @@ div.markdown-editor__editor-container h2 {
   transform: rotate(45deg);
 }
 
+.tweet {
+  max-width: 70%;
+  margin: auto;
+}
+
+.EmbeddedTweet {
+  margin: auto!important;
+}
+
+.twitter-tweet {
+  margin: auto!important;
+}
+
+.video-center {
+  text-align: center;
+}
+
 
 /* @media screen and (max-width: 675px) {
   .ql-editor {

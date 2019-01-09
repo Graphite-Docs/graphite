@@ -51,6 +51,7 @@
     <link rel="manifest" href="/manifest.json">
     <link id="favicon" rel="shortcut icon" href="https://www.graphitedocs.com/favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+          <link title="timeline-styles" rel="stylesheet" href="https://cdn.knightlab.com/libs/timeline3/latest/css/timeline.css">
     <script src="https://js.stripe.com/v3/"></script>
     <title>Graphite</title>
     <!-- Piwik -->
@@ -77,6 +78,25 @@
     <div id="root">
 
     </div>
+    <script>window.twttr = (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0],
+        t = window.twttr || {};
+      if (d.getElementById(id)) return t;
+      js = d.createElement(s);
+      js.id = id;
+      js.src = "https://platform.twitter.com/widgets.js";
+      fjs.parentNode.insertBefore(js, fjs);
+
+      t._e = [];
+      t.ready = function(f) {
+        t._e.push(f);
+      };
+
+      return t;
+    }(document, "script", "twitter-wjs"));</script>
+
+    <script src="https://cdn.knightlab.com/libs/timeline3/latest/js/timeline.js"></script>
+
     <script>
     navigator.serviceWorker.getRegistrations().then(function(registrations) {
      for(let registration of registrations) {

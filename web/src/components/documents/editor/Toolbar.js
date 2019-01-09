@@ -1,5 +1,6 @@
 import React, { Component } from "react";
 import { Menu, Icon, Dropdown, Popup, Modal, Input, Button, Table } from 'semantic-ui-react';
+import {Header as SemanticHeader } from 'semantic-ui-react';
 import { CompactPicker } from 'react-color';
 import Dropzone from 'react-dropzone';
 import 'emoji-mart/css/emoji-mart.css'
@@ -16,12 +17,35 @@ export default class Toolbar extends Component {
       display: false,
       color: "#fff",
       emojiDisplay: false,
-      displayHighlight: false
+      displayHighlight: false,
+      videoEmbedModal: false,
+      tweetEmbedModal: false,
+      embedType: "",
+      videoLink: "",
+      tweetLink: ""
     }
   }
 
   componentDidMount() {
     window.addEventListener('resize', this.resize);
+  }
+
+  handleEmbed = (type) => {
+    let link;
+    if(type === 'video') {
+      link = this.state.videoLink;
+      this.setState({videoEmbedModal: false}, () => {
+        this.props.onClickEmbed(type, link)
+      })
+    } else if(type === 'tweet') {
+      link = this.state.tweetLink;
+      this.setState({tweetEmbedModal: false}, () => {
+        this.props.onClickEmbed(type, link)
+      })
+    } else {
+      this.props.onClickEmbed(type);
+    }
+
   }
 
   resize = () => this.forceUpdate();
@@ -47,6 +71,52 @@ export default class Toolbar extends Component {
         <Dropdown.Item text='Remove Row' onPointerDown={(e) => this.props.onRemoveRow()} />
         <Dropdown.Item text='Remove Column' onPointerDown={(e) => this.props.onRemoveCol()} />
         <Dropdown.Item text='Remove Table' onPointerDown={(e) => this.props.onRemoveTable()} />
+      </Dropdown.Menu>
+    )
+  }
+
+  renderEmbedDrop() {
+    return (
+      <Dropdown.Menu>
+        <Modal
+          trigger={<Dropdown.Item text='Video' onClick={() => this.setState({ videoEmbedModal: true, embedType: 'video'})} />}
+          open={this.state.videoEmbedModal}
+          onClose={() => this.setState({videoEmbedModal: false})}
+          size='small'
+          closeIcon
+        >
+          <SemanticHeader icon='video' content='Embed a video' />
+          <Modal.Content>
+            <h3>Paste the link to the video below and click "Add"</h3>
+            <p>Most hosted video services are supported.</p>
+            <Input value={this.state.videoLink} placeholder='https://youtube.com' onChange={(e) => this.setState({ videoLink: e.target.value })} />
+          </Modal.Content>
+          <Modal.Actions>
+            <Button color='black' onClick={()=> this.handleEmbed('video')}>
+              Add
+            </Button>
+          </Modal.Actions>
+        </Modal>
+        {/*<Dropdown.Item text='Timeline' onClick={(e) => this.handleEmbed('timeline')} />*/}
+        <Modal
+          trigger={<Dropdown.Item text='Tweet' onClick={() => this.setState({ tweetEmbedModal: true, embedType: 'tweet'})} />}
+          open={this.state.tweetEmbedModal}
+          onClose={() => this.setState({tweetEmbedModal: false})}
+          size='small'
+          closeIcon
+        >
+          <SemanticHeader icon='twitter' content='Add a tweet' />
+          <Modal.Content>
+          <h3>Paste the link to the tweet below and click "Add"</h3>
+          <p>The tweet must be publicly available.</p>
+          <Input placeholder='https://twitter.com' value={this.state.tweetLink} onChange={(e) => this.setState({ tweetLink: e.target.value })} />
+          </Modal.Content>
+          <Modal.Actions>
+            <Button color='black' onClick={()=> this.handleEmbed('tweet')}>
+              Add
+            </Button>
+          </Modal.Actions>
+        </Modal>
       </Dropdown.Menu>
     )
   }
@@ -223,7 +293,7 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}}>
             <Dropdown text='More'>
               <Dropdown.Menu>
-              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='code' />} content='Code (ctrl + `)' /></Dropdown.Item>
+              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Dropdown.Item>
               <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Dropdown.Item>
               <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Dropdown.Item>
               <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Dropdown.Item>
@@ -271,6 +341,14 @@ export default class Toolbar extends Component {
                 <Dropdown.Item>
                   <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
                 </Dropdown.Item>
+                <Dropdown.Item>
+                  <Popup trigger={
+                    <Dropdown icon='code'>
+                      {this.renderEmbedDrop()}
+                    </Dropdown>
+                  }
+                    position='bottom center' content='Embed' />
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -305,7 +383,7 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='code' />} content='Code (ctrl + `)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'file code outline')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
@@ -357,6 +435,14 @@ export default class Toolbar extends Component {
                 <Dropdown.Item>
                   <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
                 </Dropdown.Item>
+                <Dropdown.Item>
+                  <Popup trigger={
+                    <Dropdown icon='code'>
+                      {this.renderEmbedDrop()}
+                    </Dropdown>
+                  }
+                    position='bottom center' content='Embed' />
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -391,7 +477,7 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='code' />} content='Code (ctrl + `)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
           {/*<Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
@@ -438,6 +524,14 @@ export default class Toolbar extends Component {
                 <Dropdown.Item>
                   <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
                 </Dropdown.Item>
+                <Dropdown.Item>
+                  <Popup trigger={
+                    <Dropdown icon='code'>
+                      {this.renderEmbedDrop()}
+                    </Dropdown>
+                  }
+                    position='bottom center' content='Embed' />
+                </Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </Menu.Item>
@@ -473,7 +567,7 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='code' />} content='Code (ctrl + `)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
@@ -516,6 +610,14 @@ export default class Toolbar extends Component {
           </Menu.Item>
           <Menu.Item>
             <a onClick={() => this.setState({ emojiDisplay: !this.state.emojiDisplay })} style={{cursor: "pointer"}}><span role="img" aria-label="smiley">😃</span></a>
+          </Menu.Item>
+          <Menu.Item>
+            <Popup trigger={
+              <Dropdown icon='code'>
+                {this.renderEmbedDrop()}
+              </Dropdown>
+            }
+              position='bottom center' content='Embed' />
           </Menu.Item>
         </Menu>
           <div className={colorPicker}>
