@@ -85,7 +85,7 @@ export default class Header extends Component {
                 }
                 <Dropdown.Item><Link to={'/profile'}>Profile</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/integrations'}>Integrations</Link></Dropdown.Item>
-                <Dropdown.Item><Link to={'/settings'}>Team Management</Link></Dropdown.Item>
+                <Dropdown.Item><Link to={'/teams'}>Team Management</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item><a onClick={this.handleSignOut}>Sign Out</a></Dropdown.Item>

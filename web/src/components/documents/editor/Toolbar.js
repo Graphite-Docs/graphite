@@ -97,7 +97,7 @@ export default class Toolbar extends Component {
             </Button>
           </Modal.Actions>
         </Modal>
-        {/*<Dropdown.Item text='Timeline' onClick={(e) => this.handleEmbed('timeline')} />*/}
+        <Dropdown.Item text='Timeline' onClick={(e) => this.handleEmbed('timeline')} />
         <Modal
           trigger={<Dropdown.Item text='Tweet' onClick={() => this.setState({ tweetEmbedModal: true, embedType: 'tweet'})} />}
           open={this.state.tweetEmbedModal}

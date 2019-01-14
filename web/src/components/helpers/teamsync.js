@@ -15,13 +15,13 @@ export function loadAccount() {
       if(fileContents){
         console.log(JSON.parse(fileContents || '{}'))
         this.setState({
-          team: JSON.parse(fileContents || '{}').team || [],
+          teamOld: JSON.parse(fileContents || '{}').team || [],
           integrations: JSON.parse(fileContents || '{}').integrations || [],
           lastUpdated: JSON.parse(fileContents || '{}').lastUpdated
         })
       } else {
         this.setState({
-          team: [],
+          teamOld: [],
           integrations: [],
           lastUpdated: ""
         });

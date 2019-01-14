@@ -43,7 +43,7 @@ export function loadIntegrations() {
     })
     .then(() => {
       this.setState({ loading: false}, () => {
-        this.loadAccountPlan()
+        // this.loadAccountPlan()
       })
     })
     .then(() => {

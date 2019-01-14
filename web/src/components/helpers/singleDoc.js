@@ -13,6 +13,7 @@ import update from 'immutability-helper';
 import { isKeyHotkey } from 'is-hotkey';
 import { Value } from 'slate'
 import Html from 'slate-html-serializer';
+import myTimeline from '../documents/editor/initialTimeline.json';
 const wordcount = require("wordcount");
 const FileSaver = require('file-saver');
 const uuidv4 = require('uuid/v4');
@@ -135,6 +136,11 @@ const html = new Html({ rules: RULES })
 
 export function initialDocLoad() {
   this.setState({ loading: true})
+  this.setState({
+    myTimeline: myTimeline,
+    timelineTitle: myTimeline.title,
+    timelineEvents: myTimeline.events
+  })
   const thisFile = window.location.href.split('doc/')[1];
   const fullFile = '/documents/' + thisFile + '.json';
 
@@ -265,7 +271,25 @@ export function initialDocLoad() {
        this.loadContacts()
      })
      .then(() => {
-       console.log(this.state.index)
+       let timelineFile = 'timelines/' + window.location.href.split('doc/')[1] + '.json'
+       getFile(timelineFile, {decrypt: true})
+        .then((file) => {
+          if(file) {
+            this.setState({
+              myTimeline: JSON.parse(file),
+              timelineTitle: JSON.parse(file).title,
+              timelineEvents: JSON.parse(file).events
+            })
+          } else {
+            this.setState({
+              myTimeline: myTimeline,
+              timelineTitle: myTimeline.title,
+              timelineEvents: myTimeline.events
+            })
+          }
+        })
+     })
+     .then(() => {
        getFile(window.location.href.split('doc/')[1] + 'sharedwith.json', {decrypt: true})
        .then((fileContents) => {
          if(fileContents) {
@@ -1031,3 +1055,107 @@ export function onClickMark(event, type) {
 export function doPDF() {
 
 }
+
+//Timeline Stuff Here
+
+export function handleTimelineTitleMediaUrl(e) {
+  this.setState({ timelineTitleMediaUrl: e.target.value })
+}
+
+export function handleTimelineTitleMediaCaption(e) {
+  this.setState({ timelineTitleMediaCaption: e.target.value })
+}
+
+export function handleTimelineTitleMediaCredit(e) {
+  this.setState({ timelineTitleMediaCredit: e.target.value })
+}
+
+export function handleTimelineTitleTextHeadline(e) {
+  this.setState({ timelineTitleTextHeadline: e.target.value })
+}
+
+export function handleTimelineTitleTextText(e) {
+  this.setState({ timelineTitleTextText: e.target.value })
+}
+
+export function handleTimelineEventMediaUrl(e) {
+  this.setState({ timelineEventMediaUrl: e.target.value })
+}
+
+export function handleTimelineEventMediaCaption(e) {
+  this.setState({ timelineEventMediaCaption: e.target.value })
+}
+
+export function handleTimelineEventMediaCredit(e) {
+  this.setState({ timelineEventMediaCredit: e.target.value })
+}
+
+export function handleTimelineEventStartMonth(e) {
+  this.setState({ timelineEventStartMonth: e.target.value })
+}
+
+export function handleTimelineEventStartDay(e) {
+  this.setState({ timelineEventStartDay: e.target.value })
+}
+
+export function handleTimelineEventStartYear(e) {
+  this.setState({ timelineEventStartYear: e.target.value })
+}
+
+export function handleTimelineEventTextHeadline(e) {
+  this.setState({ timelineEventTextHeadline: e.target.value })
+}
+
+export function handleTimelineEventTextText(e) {
+  this.setState({ timelineEventTextText: e.target.value })
+}
+
+export function handleUpdateTimelineTitle() {
+  const object = {};
+  const media = {}
+  const text = {}
+  media.url = this.state.timelineTitleMediaUrl;
+  media.caption = this.state.timelineTitleMediaCaption;
+  media.credit = this.state.timelineTitleMediaCredit;
+  text.headline = this.state.timelineTitleTextHeadline;
+  text.text = this.state.timelineTitleTextText;
+  object.media = media;
+  object.text = text;
+  this.setState({ timelineTitle: object }, () => {
+    console.log(this.state.timelineTitle)
+  })
+}
+
+export function handleAddNewTimelineEvent() {
+  const object = {};
+  const media = {};
+  const start_date = {};
+  const text = {};
+  media.url = this.state.timelineEventMediaUrl
+  media.caption = this.state.timelineEventMediaCaption
+  media.credit = this.state.timelineEventMediaCredit
+  start_date.month = this.state.timelineEventStartMonth
+  start_date.day = this.state.timelineEventStartDay
+  start_date.year = this.state.timelineEventStartYear
+  text.headline = this.state.timelineEventTextHeadline
+  text.text = this.state.timelineEventTextText
+  object.media = media;
+  object.start_date = start_date;
+  object.text = text;
+  object.unique_id = Date.now()
+  this.setState({ timelineEvents: [...this.state.timelineEvents, object] }, () => {
+    const timelineObj = {};
+    timelineObj.title = this.state.timelineTitle;
+    timelineObj.events = this.state.timelineEvents;
+    this.setState({ myTimeline: timelineObj });
+  })
+}
+
+export function handleTimelineSave() {
+  const object = {};
+  object.title = this.state.timelineTitle;
+  object.events = this.state.timelineEvents
+  this.setState({ myTimeline: object });
+}
+
+//End of the Timeline Stuff

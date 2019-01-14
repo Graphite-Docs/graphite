@@ -102,6 +102,38 @@ class SocketEditor extends Component {
         link={this.props.link}
         files={this.props.files}
         file={this.props.file}
+        myTimeline={this.props.myTimeline}
+        timelineTitle={this.props.timelineTitle}
+        timelineEvents={this.props.timelineEvents}
+        handleAddNewTimelineEvent={this.props.handleAddNewTimelineEvent}
+        handleTimelineSave={this.props.handleTimelineSave}
+        timelineTitleMediaUrl={this.props.timelineTitleMediaUrl}
+        timelineTitleMediaCaption={this.props.timelineTitleMediaCaption}
+        timelineTitleMediaCredit={this.props.timelineTitleMediaCredit}
+        timelineTitleTextHeadline={this.props.timelineTitleTextHeadline}
+        timelineTitleTextText={this.props.timelineTitleTextText}
+        timelineEventMediaUrl={this.props.timelineEventMediaUrl}
+        timelineEventMediaCaption={this.props.timelineEventMediaCaption}
+        timelineEventMediaCredit={this.props.timelineEventMediaCredit}
+        timelineEventStartMonth={this.props.timelineEventStartMonth}
+        timelineEventStartDay={this.props.timelineEventStartDay}
+        timelineEventStartYear={this.props.timelineEventStartYear}
+        timelineEventTextHeadline={this.props.timelineEventTextHeadline}
+        timelineEventTextText={this.props.timelineEventTextText}
+        handleTimelineTitleTextText={this.props.handleTimelineTitleTextText}
+        handleTimelineTitleTextHeadline={this.props.handleTimelineTitleTextHeadline}
+        handleTimelineTitleMediaUrl={this.props.handleTimelineTitleMediaUrl}
+        handleTimelineTitleMediaCredit={this.props.handleTimelineTitleMediaCredit}
+        handleTimelineTitleMediaCaption={this.props.handleTimelineTitleMediaCaption}
+        handleTimelineEventMediaUrl={this.props.handleTimelineEventMediaUrl}
+        handleTimelineEventMediaCaption={this.props.handleTimelineEventMediaCaption}
+        handleTimelineEventMediaCredit={this.props.handleTimelineEventMediaCredit}
+        handleTimelineEventTextText={this.props.handleTimelineEventTextText}
+        handleTimelineEventTextHeadline={this.props.handleTimelineEventTextHeadline}
+        handleTimelineEventStartDay={this.props.handleTimelineEventStartDay}
+        handleTimelineEventStartYear={this.props.handleTimelineEventStartYear}
+        handleTimelineEventStartMonth={this.props.handleTimelineEventStartMonth}
+        handleUpdateTimelineTitle={this.props.handleUpdateTimelineTitle}
       />
     );
   }

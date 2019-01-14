@@ -36,7 +36,9 @@ import SingleSharedFile from './vault/SingleSharedFile';
 import Export from './Export';
 import PublicDoc from './PublicDoc';
 import Integrations from './Integrations';
-import Settings from './Settings';
+// import Settings from './Settings';
+import Teams from './teamManagement/Teams'
+import SubTeams from './teamManagement/SubTeams'
 import PaymentSuccess from './PaymentSuccess';
 import Invites from './Invites';
 import Acceptances from './Acceptances';
@@ -132,7 +134,23 @@ import {
   onKeyDown,
   onClickMark,
   doPDF,
-  setVersion
+  setVersion,
+  handleTimelineTitleTextText,
+  handleTimelineTitleTextHeadline,
+  handleTimelineTitleMediaUrl,
+  handleTimelineTitleMediaCredit,
+  handleTimelineTitleMediaCaption,
+  handleTimelineEventMediaUrl,
+  handleTimelineEventMediaCaption,
+  handleTimelineEventMediaCredit,
+  handleTimelineEventTextText,
+  handleTimelineEventTextHeadline,
+  handleTimelineEventStartDay,
+  handleTimelineEventStartYear,
+  handleTimelineEventStartMonth,
+  handleUpdateTimelineTitle,
+  handleAddNewTimelineEvent,
+  handleTimelineSave
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -229,6 +247,7 @@ import {
   accountDetails,
   loadMainAccount
 } from './helpers/accountPlan';
+import { loadTeams, handleTeamNameChange, saveNewTeamInfo } from './helpers/teams';
 import {
   acceptInvite,
   loadInvite,
@@ -640,7 +659,25 @@ export default class App extends Component {
       versions: [],
       versionModal: false,
       publicVaultFile: false,
-      pubVaultShared: true
+      pubVaultShared: true,
+      teams: [],
+      teamName: "",
+      myTimeline: {},
+      timelineTitle: {},
+      timelineEvents: {},
+      timelineTitleMediaUrl: "",
+      timelineTitleMediaCaption: "",
+      timelineTitleMediaCredit: "",
+      timelineTitleTextHeadline: "",
+      timelineTitleTextText: "",
+      timelineEventMediaUrl: "",
+      timelineEventMediaCaption: "",
+      timelineEventMediaCredit: "",
+      timelineEventStartMonth: "",
+      timelineEventStartDay: "",
+      timelineEventStartYear: "",
+      timelineEventTextHeadline: "",
+      timelineEventTextText: ""
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -820,6 +857,10 @@ export default class App extends Component {
     this.loadOriginalConfig = loadOriginalConfig.bind(this);
     this.saveOriginalConfig = saveOriginalConfig.bind(this);
 
+    this.loadTeams = loadTeams.bind(this);
+    this.handleTeamNameChange = handleTeamNameChange.bind(this);
+    this.saveNewTeamInfo = saveNewTeamInfo.bind(this);
+
     // Account Plan
     this.savePlan = savePlan.bind(this);
     this.savePlanFile = savePlanFile.bind(this);
@@ -989,6 +1030,24 @@ export default class App extends Component {
     //Public Vault
     this.loadPublicVault = loadPublicVault.bind(this);
 
+    //Timeline Stuff
+    this.handleTimelineTitleTextText = handleTimelineTitleTextText.bind(this);
+    this.handleTimelineTitleTextHeadline = handleTimelineTitleTextHeadline.bind(this);
+    this.handleTimelineTitleMediaUrl = handleTimelineTitleMediaUrl.bind(this);
+    this.handleTimelineTitleMediaCredit = handleTimelineTitleMediaCredit.bind(this);
+    this.handleTimelineTitleMediaCaption = handleTimelineTitleMediaCaption.bind(this);
+    this.handleTimelineEventMediaUrl = handleTimelineEventMediaUrl.bind(this);
+    this.handleTimelineEventMediaCaption = handleTimelineEventMediaCaption.bind(this);
+    this.handleTimelineEventMediaCredit = handleTimelineEventMediaCredit.bind(this);
+    this.handleTimelineEventTextText = handleTimelineEventTextText.bind(this);
+    this.handleTimelineEventTextHeadline = handleTimelineEventTextHeadline.bind(this);
+    this.handleTimelineEventStartDay = handleTimelineEventStartDay.bind(this);
+    this.handleTimelineEventStartYear = handleTimelineEventStartYear.bind(this);
+    this.handleTimelineEventStartMonth = handleTimelineEventStartMonth.bind(this);
+    this.handleUpdateTimelineTitle = handleUpdateTimelineTitle.bind(this);
+    this.handleAddNewTimelineEvent = handleAddNewTimelineEvent.bind(this);
+    this.handleTimelineSave = handleTimelineSave.bind(this);
+
     //Shared
 
     this.signInRedirect = signInRedirect.bind(this);
@@ -1066,6 +1125,7 @@ export default class App extends Component {
   }
 
   render() {
+
     const {
       value, sheets, contacts, files, pubKey, appliedFilter, dateList, tagList, collaboratorsModal, singleDocTags,
       contactDisplay, loadingTwo, confirmAdd, shareModal, tagModal, currentPage, docsPerPage, loading, redirect, tempDocId,
@@ -1081,7 +1141,10 @@ export default class App extends Component {
       webhookConnected, webhookUrl, gDocs, filteredGDocs, importAll, forms, singleForm, formContents, questionTitle,
       optionValue, required, publicForm, fullFile, spacing, emailOK, profileEmail, displayMessage, visible, markdown,
       markdownContent, wordCount, createRTC, collabContent, readOnlyContent, file, versions, versionModal, publicVaultFile,
-      pubVaultShared
+      pubVaultShared, teams, teamName, myTimeline, timelineTitle, timelineEvents, timelineTitleMediaUrl, timelineTitleMediaCaption,
+      timelineTitleMediaCredit, timelineTitleTextHeadline, timelineTitleTextText, timelineEventMediaUrl, timelineEventMediaCaption,
+      timelineEventMediaCredit, timelineEventStartMonth, timelineEventStartDay, timelineEventStartYear, timelineEventTextHeadline,
+      timelineEventTextText
     } = this.state;
     return (
       <div>
@@ -1214,6 +1277,38 @@ export default class App extends Component {
                   loadSingleVaultFile={this.loadSingleVaultFile}
                   handleVaultDrop={this.handleVaultDrop}
                   setVersion={this.setVersion}
+                  handleAddNewTimelineEvent={this.handleAddNewTimelineEvent}
+                  handleTimelineSave={this.handleTimelineSave}
+                  handleTimelineTitleTextText={this.handleTimelineTitleTextText}
+                  handleTimelineTitleTextHeadline={this.handleTimelineTitleTextHeadline}
+                  handleTimelineTitleMediaUrl={this.handleTimelineTitleMediaUrl}
+                  handleTimelineTitleMediaCredit={this.handleTimelineTitleMediaCredit}
+                  handleTimelineTitleMediaCaption={this.handleTimelineTitleMediaCaption}
+                  handleTimelineEventMediaUrl={this.handleTimelineEventMediaUrl}
+                  handleTimelineEventMediaCaption={this.handleTimelineEventMediaCaption}
+                  handleTimelineEventMediaCredit={this.handleTimelineEventMediaCredit}
+                  handleTimelineEventTextText={this.handleTimelineEventTextText}
+                  handleTimelineEventTextHeadline={this.handleTimelineEventTextHeadline}
+                  handleTimelineEventStartDay={this.handleTimelineEventStartDay}
+                  handleTimelineEventStartYear={this.handleTimelineEventStartYear}
+                  handleTimelineEventStartMonth={this.handleTimelineEventStartMonth}
+                  handleUpdateTimelineTitle={this.handleUpdateTimelineTitle}
+                  timelineTitleMediaUrl={timelineTitleMediaUrl}
+                  timelineTitleMediaCaption={timelineTitleMediaCaption}
+                  timelineTitleMediaCredit={timelineTitleMediaCredit}
+                  timelineTitleTextHeadline={timelineTitleTextHeadline}
+                  timelineTitleTextText={timelineTitleTextText}
+                  timelineEventMediaUrl={timelineEventMediaUrl}
+                  timelineEventMediaCaption={timelineEventMediaCaption}
+                  timelineEventMediaCredit={timelineEventMediaCredit}
+                  timelineEventStartMonth={timelineEventStartMonth}
+                  timelineEventStartDay={timelineEventStartDay}
+                  timelineEventStartYear={timelineEventStartYear}
+                  timelineEventTextHeadline={timelineEventTextHeadline}
+                  timelineEventTextText={timelineEventTextText}
+                  myTimeline={myTimeline}
+                  timelineTitle={timelineTitle}
+                  timelineEvents={timelineEvents}
                   versions={versions}
                   versionModal={versionModal}
                   link={link}
@@ -1653,8 +1748,8 @@ export default class App extends Component {
                   filteredGDocs={filteredGDocs}
                 />
               }/>
-              <Route exact path="/settings" render={(location, match, props) =>
-                <Settings {...props}
+              <Route exact path="/teams/0/:id" render={(location, match, props) =>
+                <SubTeams {...props}
                   addTeammate={this.addTeammate}
                   clearNewTeammate={this.clearNewTeammate}
                   handleTeammateEmail={this.handleTeammateEmail}
@@ -1663,6 +1758,11 @@ export default class App extends Component {
                   testingDeleteAll={this.testingDeleteAll}
                   teammateToDelete={this.teammateToDelete}
                   updateTeammate={this.updateTeammate}
+                  loadTeams={this.loadTeams}
+                  handleTeamNameChange={this.handleTeamNameChange}
+                  saveNewTeamInfo={this.saveNewTeamInfo}
+                  teams={teams}
+                  teamName={teamName}
                   loading={loading}
                   userRole={userRole}
                   team={team}
@@ -1676,6 +1776,36 @@ export default class App extends Component {
                   audits={audits}
                 />
               }/>
+
+              <Route exact path="/teams" render={(location, match, props) =>
+                <Teams {...props}
+                  addTeammate={this.addTeammate}
+                  clearNewTeammate={this.clearNewTeammate}
+                  handleTeammateEmail={this.handleTeammateEmail}
+                  handleTeammateRole={this.handleTeammateRole}
+                  handleTeammateName={this.handleTeammateName}
+                  testingDeleteAll={this.testingDeleteAll}
+                  teammateToDelete={this.teammateToDelete}
+                  updateTeammate={this.updateTeammate}
+                  loadTeams={this.loadTeams}
+                  handleTeamNameChange={this.handleTeamNameChange}
+                  saveNewTeamInfo={this.saveNewTeamInfo}
+                  teams={teams}
+                  teamName={teamName}
+                  loading={loading}
+                  userRole={userRole}
+                  team={team}
+                  newTeammateName={newTeammateName}
+                  newTeammateRole={newTeammateRole}
+                  newTeammateEmail={newTeammateEmail}
+                  graphitePro={graphitePro}
+                  settingsMain={settingsMain}
+                  settingsOnboarding={settingsOnboarding}
+                  loadingBar={loadingBar}
+                  audits={audits}
+                />
+              }/>
+
               <Route exact path="/success" render={(location, match, props) =>
                 <PaymentSuccess {...props}
                   savePlan={this.savePlan}

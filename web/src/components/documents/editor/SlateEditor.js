@@ -4,7 +4,7 @@ import { isKeyHotkey } from 'is-hotkey'
 import Html from 'slate-html-serializer'
 import Loading from '../../Loading';
 import { Block } from 'slate';
-import { List, Image, Icon, Modal, Button } from 'semantic-ui-react';
+import { List, Image, Modal, Button, Table, Input, Grid } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
@@ -85,26 +85,28 @@ function insertEmbed(editor, src, target) {
     },
   })
   setTimeout(() => {
-    if(src.includes("status/")) {
-      //Find all tweets that have been embeded and fetch the content via Twitter
-      var tweets = document.getElementsByClassName("tweet");
+    if(src) {
+      if(src.includes("status/")) {
+        //Find all tweets that have been embeded and fetch the content via Twitter
+        var tweets = document.getElementsByClassName("tweet");
 
-      var t;
-      for (t = 0; t < tweets.length; t++) {
-        let id = document.getElementsByClassName("tweet")[t].getAttribute("id");
-        window.twttr.widgets.createTweet(
-          id, tweets[t],
-          {
-            conversation : 'none',    // or all
-            cards        : 'hidden',  // or visible
-            linkColor    : '#cc0000', // default is blue
-            theme        : 'light'    // or dark
-          });
+        var t;
+        for (t = 0; t < tweets.length; t++) {
+          let id = document.getElementsByClassName("tweet")[t].getAttribute("id");
+          window.twttr.widgets.createTweet(
+            id, tweets[t],
+            {
+              conversation : 'none',    // or all
+              cards        : 'hidden',  // or visible
+              linkColor    : '#cc0000', // default is blue
+              theme        : 'light'    // or dark
+            });
+        }
       }
     }
 
-    // let timeline = new window.TL.Timeline('timeline-embed',
-    //       'https://docs.google.com/spreadsheets/d/1cWqQBZCkX9GpzFtxCWHoqFXCHg-ylTVUWlnrdYMzKUI/pubhtml');
+    new window.TL.Timeline('timeline-embed',
+          this.props.myTimeline);
 
   }, 1000)
 }
@@ -252,7 +254,9 @@ class SlateEditor extends React.Component {
       uniqueID: "",
       versions: [],
       v: '',
-      timelineModal: false
+      timelineModal: false,
+      timelineTitleOpen: false,
+      timelineEventOpen: false
     };
     this.editor = null;
 }
@@ -275,8 +279,8 @@ componentDidMount() {
   }
   setTimeout(() => {
     if(document.getElementById('timeline-embed')) {
-      // let timeline = new window.TL.Timeline('timeline-embed',
-      //       myTimeline);
+      new window.TL.Timeline('timeline-embed',
+            this.props.myTimeline);
     }
   }, 500)
 
@@ -777,9 +781,41 @@ onClickAlign = (event, align) => {
     }
   }
 
+  closeConfigShow = (closeOnEscape, closeOnDimmerClick) => () => {
+    this.setState({ closeOnEscape, closeOnDimmerClick, timelineTitleOpen: true })
+  }
+
+  close = () => this.setState({ timelineTitleOpen: false })
+
+  handleTimelineTitleUpdate = () => {
+    this.close()
+    this.props.handleUpdateTimelineTitle()
+  }
+
+  closeConfig2Show = (closeOnEscape, closeOnDimmerClick) => () => {
+    this.setState({ closeOnEscape, closeOnDimmerClick, timelineEventOpen: true })
+  }
+
+  close2 = () => this.setState({ timelineEventOpen: false })
+
+  handleTimelineEventUpdate = () => {
+    this.close2()
+    this.props.handleAddNewTimelineEvent()
+  }
+
+  handleTimelineSave = () => {
+    new window.TL.Timeline('timeline-embed',
+          this.props.myTimeline);
+    this.setState({timelineModal: false})
+    this.props.handleTimelineSave();
+  }
+
+  handleOpen = () => this.setState({ timelineModal: true })
+  handleClose = () => this.setState({ timelineModal: false })
 
 
   render() {
+
     //Style all tables in doc
     let table = document.getElementsByTagName('table');
 
@@ -885,6 +921,8 @@ onClickAlign = (event, align) => {
   }
 
   renderNode = (props, editor, next) => {
+    const { myTimeline } = this.props;
+    console.log(myTimeline)
     const { attributes, children, node, isFocused } = props
     switch (node.type) {
       case 'block-quote':
@@ -978,18 +1016,130 @@ onClickAlign = (event, align) => {
             return (
               <div>
               <Modal
-                trigger={<Icon style={{cursor: "pointer"}} name='add' />}
+                trigger={<Button secondary circular icon='add' style={{cursor: "pointer"}} onClick={this.handleOpen}></Button>}
+                open={this.state.timelineModal}
+                onClose={this.handleClose}
                 closeIcon
                 size='small'
                 >
                 <Modal.Content>
                   <SemanticHeader icon='browser' content='Update Your Timeline' />
                   <h3>Add new events or update the starting information</h3>
+                  <div>
+                  <h5><a onClick={this.closeConfigShow(true, true)}>Update Timeline Title Card</a></h5>
+                  <Modal
+                    open={this.state.timelineTitleOpen}
+                    closeOnEscape={this.state.closeOnEscape}
+                    closeOnDimmerClick={this.state.closeOnDimmerClick}
+                    onClose={this.close}
+                  >
+                    <Modal.Header>Update Timeline Title Card</Modal.Header>
+                    <Modal.Content>
+                      <Grid columns='two' divided>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <p>Media URL</p>
+                            <Input onChange={this.props.handleTimelineTitleMediaUrl} placeholder='Enter a url to the media you want to use' /> <br/>
+                            <p>Media Caption</p>
+                            <Input onChange={this.props.handleTimelineTitleMediaCaption} placeholder='Enter a caption for the media you want to use' /> <br/>
+                            <p>Media Credit</p>
+                            <Input onChange={this.props.handleTimelineTitleMediaCredit} placeholder='Give credit to the creator of the media' /> <br/>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <p>Title Headline</p>
+                            <Input onChange={this.props.handleTimelineTitleTextHeadline} placeholder='Enter a headline' /> <br/>
+                            <p>Title Sub-Text</p>
+                            <Input onChange={this.props.handleTimelineTitleTextText} placeholder='Enter some sub-text' /> <br/>
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                    </Modal.Content>
+                    <Modal.Actions>
+                      <Button
+                        onClick={this.handleTimelineTitleUpdate}
+                        secondary
+                        style={{borderRadius: "0"}}
+                        content='Update'
+                      />
+                      <Button style={{borderRadius: "0"}} onClick={this.close}>
+                        Cancel
+                      </Button>
+                    </Modal.Actions>
+                  </Modal>
+                  <h3>Timeline Events ({myTimeline.events.length}) <Button onClick={this.closeConfig2Show(true, true)} secondary style={{borderRadius: "0"}}>New Event</Button></h3>
 
+                  <Modal
+                    open={this.state.timelineEventOpen}
+                    closeOnEscape={this.state.close2OnEscape}
+                    closeOnDimmerClick={this.state.close2OnDimmerClick}
+                    onClose={this.close2}
+                  >
+                    <Modal.Header>Add New Timeline Event</Modal.Header>
+                    <Modal.Content>
+                      <Grid columns='two' divided>
+                        <Grid.Row>
+                          <Grid.Column>
+                            <p>Media URL</p>
+                            <Input onChange={this.props.handleTimelineEventMediaUrl} placeholder='Enter a url to the media you want to use' /> <br/>
+                            <p>Media Caption</p>
+                            <Input onChange={this.props.handleTimelineEventMediaCaption} placeholder='Enter a caption for the media you want to use' /> <br/>
+                            <p>Media Credit</p>
+                            <Input onChange={this.props.handleTimelineEventMediaCredit} placeholder='Give credit to the creator of the media' /> <br/>
+                          </Grid.Column>
+                          <Grid.Column>
+                            <p>Event Headline</p>
+                            <Input onChange={this.props.handleTimelineEventTextHeadline} placeholder='Enter a headline' /> <br/>
+                            <p>Event Sub-Text</p>
+                            <Input onChange={this.props.handleTimelineEventTextText} placeholder='Enter some sub-text' /> <br/>
+                            <p>Event Month</p>
+                            <Input onChange={this.props.handleTimelineEventStartMonth} placeholder='Enter a headline' /> <br/>
+                            <p>Event Day</p>
+                            <Input onChange={this.props.handleTimelineEventStartDay} placeholder='Enter some sub-text' /> <br/>
+                            <p>Event Year</p>
+                            <Input onChange={this.props.handleTimelineEventStartYear} placeholder='Enter some sub-text' /> <br/>
+                          </Grid.Column>
+                        </Grid.Row>
+                      </Grid>
+                    </Modal.Content>
+                    <Modal.Actions>
+                      <Button
+                        onClick={this.handleTimelineEventUpdate}
+                        secondary
+                        style={{borderRadius: "0"}}
+                        content='Update'
+                      />
+                      <Button style={{borderRadius: "0"}} onClick={this.close2}>
+                        Cancel
+                      </Button>
+                    </Modal.Actions>
+                  </Modal>
+
+
+                  <Table unstackable style={{borderRadius: "0"}}>
+                    <Table.Header>
+                      <Table.Row>
+                        <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
+                        <Table.HeaderCell style={{borderRadius: "0", border: "none"}}></Table.HeaderCell>
+                      </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                      {
+                        myTimeline.events.reverse().map(a => {
+                        return(
+                          <Table.Row key={a.text.headline}>
+                            <Table.Cell>{a.text.headline}</Table.Cell>
+                            <Table.Cell>Delete</Table.Cell>
+                          </Table.Row>
+                        );
+                        })
+                      }
+                    </Table.Body>
+                  </Table>
+                  </div>
 
                 </Modal.Content>
                 <Modal.Actions>
-                  <Button color='black' onClick={() => this.setState({timelineModal: false})}>
+                  <Button color='black' onClick={this.handleTimelineSave}>
                     Save
                   </Button>
                 </Modal.Actions>
