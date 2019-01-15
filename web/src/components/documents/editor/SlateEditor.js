@@ -27,6 +27,7 @@ const plugins = [
 ];
 
 let thisMark;
+let timelineEmbedded = false
 
 //TODO: Move these into their own plugin modules
 
@@ -819,6 +820,11 @@ onClickAlign = (event, align) => {
 
 
   render() {
+    if(document.getElementById('timeline-embed')) {
+      timelineEmbedded = true;
+    } else {
+      timelineEmbedded = false;
+    }
 
     //Style all tables in doc
     let table = document.getElementsByTagName('table');
@@ -869,6 +875,7 @@ onClickAlign = (event, align) => {
               onClickUndo={this.onClickUndo}
               isTable={isTable}
               files={this.props.files}
+              timelineEmbedded={timelineEmbedded}
             />
           }
           {
@@ -1030,7 +1037,7 @@ onClickAlign = (event, align) => {
                   <SemanticHeader icon='browser' content='Update Your Timeline' />
                   <h3>Add new events or update the starting information</h3>
                   <div>
-                  <h5><a onClick={this.closeConfigShow(true, true)}>Update Timeline Title Card</a></h5>
+                  <h5><a style={{cursor: "pointer"}} onClick={this.closeConfigShow(true, true)}>Update Timeline Title Card</a></h5>
                   <Modal
                     open={this.state.timelineTitleOpen}
                     closeOnEscape={this.state.closeOnEscape}
