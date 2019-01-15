@@ -150,7 +150,8 @@ import {
   handleTimelineEventStartMonth,
   handleUpdateTimelineTitle,
   handleAddNewTimelineEvent,
-  handleTimelineSave
+  handleTimelineSave,
+  handleDeleteTimelineEvent
 } from './helpers/singleDoc';
 import {
   fetchData,
@@ -1047,6 +1048,7 @@ export default class App extends Component {
     this.handleUpdateTimelineTitle = handleUpdateTimelineTitle.bind(this);
     this.handleAddNewTimelineEvent = handleAddNewTimelineEvent.bind(this);
     this.handleTimelineSave = handleTimelineSave.bind(this);
+    this.handleDeleteTimelineEvent = handleDeleteTimelineEvent.bind(this);
 
     //Shared
 
@@ -1277,6 +1279,7 @@ export default class App extends Component {
                   loadSingleVaultFile={this.loadSingleVaultFile}
                   handleVaultDrop={this.handleVaultDrop}
                   setVersion={this.setVersion}
+                  handleDeleteTimelineEvent={this.handleDeleteTimelineEvent}
                   handleAddNewTimelineEvent={this.handleAddNewTimelineEvent}
                   handleTimelineSave={this.handleTimelineSave}
                   handleTimelineTitleTextText={this.handleTimelineTitleTextText}

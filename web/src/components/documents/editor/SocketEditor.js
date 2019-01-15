@@ -105,6 +105,7 @@ class SocketEditor extends Component {
         myTimeline={this.props.myTimeline}
         timelineTitle={this.props.timelineTitle}
         timelineEvents={this.props.timelineEvents}
+        handleDeleteTimelineEvent={this.props.handleDeleteTimelineEvent}
         handleAddNewTimelineEvent={this.props.handleAddNewTimelineEvent}
         handleTimelineSave={this.props.handleTimelineSave}
         timelineTitleMediaUrl={this.props.timelineTitleMediaUrl}

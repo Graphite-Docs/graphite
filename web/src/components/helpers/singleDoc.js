@@ -279,6 +279,9 @@ export function initialDocLoad() {
               myTimeline: JSON.parse(file),
               timelineTitle: JSON.parse(file).title,
               timelineEvents: JSON.parse(file).events
+            }, () => {
+              new window.TL.Timeline('timeline-embed',
+                    this.state.myTimeline);
             })
           } else {
             this.setState({
@@ -1122,7 +1125,10 @@ export function handleUpdateTimelineTitle() {
   object.media = media;
   object.text = text;
   this.setState({ timelineTitle: object }, () => {
-    console.log(this.state.timelineTitle)
+    const timelineObj = {};
+    timelineObj.title = this.state.timelineTitle;
+    timelineObj.events = this.state.timelineEvents;
+    this.setState({ myTimeline: timelineObj });
   })
 }
 
@@ -1155,7 +1161,23 @@ export function handleTimelineSave() {
   const object = {};
   object.title = this.state.timelineTitle;
   object.events = this.state.timelineEvents
-  this.setState({ myTimeline: object });
+  this.setState({ myTimeline: object }, () => {
+    let timelineFile = 'timelines/' + window.location.href.split('doc/')[1] + '.json'
+    putFile(timelineFile, JSON.stringify(this.state.myTimeline), {encrypt: true})
+      .then(() => console.log("Timeline saved!"))
+  });
+}
+
+export function handleDeleteTimelineEvent(id) {
+  let events = this.state.timelineEvents;
+  console.log(events)
+  let index = events.findIndex(a => a.unique_id === id);
+  if (index > -1) {
+    events.splice(index, 1);
+  }
+  this.setState({ timelineEvents: events}, () => {
+    this.handleTimelineSave();
+  })
 }
 
 //End of the Timeline Stuff

@@ -239,6 +239,7 @@ export default class SingleDoc extends Component {
                         files={this.props.files}
                         file={this.props.file}
                         myTimeline={this.props.myTimeline}
+                        handleDeleteTimelineEvent={this.props.handleDeleteTimelineEvent}
                         timelineTitle={this.props.timelineTitle}
                         timelineEvents={this.props.timelineEvents}
                         handleAddNewTimelineEvent={this.props.handleAddNewTimelineEvent}

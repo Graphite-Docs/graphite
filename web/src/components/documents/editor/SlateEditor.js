@@ -9,7 +9,7 @@ import {Header as SemanticHeader } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 // import DeepTable from 'slate-deep-table'
-// import myTimeline from './initialTimeline.json';
+import initialTimeline from './initialTimeline.json';
 const PluginDeepTable = require('slate-deep-table/dist')
 
 const DEFAULT_NODE = 'paragraph'
@@ -106,7 +106,7 @@ function insertEmbed(editor, src, target) {
     }
 
     new window.TL.Timeline('timeline-embed',
-          this.props.myTimeline);
+          initialTimeline);
 
   }, 1000)
 }
@@ -810,6 +810,10 @@ onClickAlign = (event, align) => {
     this.props.handleTimelineSave();
   }
 
+  handleTimelineDeleteEvent = () => {
+
+  }
+
   handleOpen = () => this.setState({ timelineModal: true })
   handleClose = () => this.setState({ timelineModal: false })
 
@@ -1126,9 +1130,9 @@ onClickAlign = (event, align) => {
                       {
                         myTimeline.events.reverse().map(a => {
                         return(
-                          <Table.Row key={a.text.headline}>
+                          <Table.Row key={a.unique_id}>
                             <Table.Cell>{a.text.headline}</Table.Cell>
-                            <Table.Cell>Delete</Table.Cell>
+                            <Table.Cell><a style={{cursor: "pointer", color: "red"}} onClick={() => this.props.handleDeleteTimelineEvent(a.unique_id)}>Delete</a></Table.Cell>
                           </Table.Row>
                         );
                         })
