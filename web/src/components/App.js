@@ -436,6 +436,17 @@ import {
 import {
   loadPublicVault
 } from './helpers/publicVault';
+import {
+  createTeam,
+  postToSharedBucket
+} from '../enterpriseModel/teams';
+import {
+  createMember
+} from '../enterpriseModel/people';
+import {
+  postData,
+  getData
+} from '../enterpriseModel/shared';
 import work from 'webworkify-webpack';
 
 // const IPFS = require("ipfs");
@@ -678,7 +689,8 @@ export default class App extends Component {
       timelineEventStartDay: "",
       timelineEventStartYear: "",
       timelineEventTextHeadline: "",
-      timelineEventTextText: ""
+      timelineEventTextText: "",
+      peopleList: []
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1053,6 +1065,11 @@ export default class App extends Component {
     //Shared
 
     this.signInRedirect = signInRedirect.bind(this);
+    this.createTeam = createTeam.bind(this);
+    this.postToSharedBucket = postToSharedBucket.bind(this);
+    this.postData = postData.bind(this);
+    this.getData = getData.bind(this);
+    this.createMember = createMember.bind(this);
 
     this.handleTagChange = handleTagChange.bind(this);
     // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
@@ -1146,7 +1163,7 @@ export default class App extends Component {
       pubVaultShared, teams, teamName, myTimeline, timelineTitle, timelineEvents, timelineTitleMediaUrl, timelineTitleMediaCaption,
       timelineTitleMediaCredit, timelineTitleTextHeadline, timelineTitleTextText, timelineEventMediaUrl, timelineEventMediaCaption,
       timelineEventMediaCredit, timelineEventStartMonth, timelineEventStartDay, timelineEventStartYear, timelineEventTextHeadline,
-      timelineEventTextText
+      timelineEventTextText, peopleList
     } = this.state;
     return (
       <div>
@@ -1793,9 +1810,14 @@ export default class App extends Component {
                   loadTeams={this.loadTeams}
                   handleTeamNameChange={this.handleTeamNameChange}
                   saveNewTeamInfo={this.saveNewTeamInfo}
+                  createTeam={this.createTeam}
+                  postToSharedBucket={this.postToSharedBucket}
+                  getData={this.getData}
+                  createMember={this.createMember}
                   teams={teams}
                   teamName={teamName}
                   loading={loading}
+                  peopleList={peopleList}
                   userRole={userRole}
                   team={team}
                   newTeammateName={newTeammateName}

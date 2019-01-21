@@ -1,0 +1,13 @@
+{
+  "members": [
+    {
+      "name": "kaelyn.admin.graphite"
+    },
+    {
+      "name": "jim.admin.graphite"
+    },
+    {
+      "name": "kate.admin.graphite"
+    }
+  ]
+}

@@ -10,12 +10,15 @@ export default class Teams extends Component {
     super(props);
     this.state = {
       mateInfo: "",
-      modalOpen: false
+      modalOpen: false,
+      newTeamName: ""
     }
   }
 
   componentDidMount() {
-    //TODO: This is where we'd need to load some pointer file from the shared hub that determine's the user's access.
+    const fileName = 'AdminFolder/teams.json';
+    const stateVar = "teams"
+    this.props.getData(fileName, stateVar);
   }
 
   handleOpen = () => this.setState({ modalOpen: true })
@@ -24,7 +27,8 @@ export default class Teams extends Component {
     if(props === 'cancel') {
       this.props.clearNewTeammate();
     } else if(props === 'save') {
-      this.props.saveNewTeamInfo();
+      this.props.createTeam(this.state.newTeamName);
+      this.setState({ newTeamName: "" })
     }
 
   })
@@ -44,9 +48,14 @@ export default class Teams extends Component {
 
   render() {
     // this.state.mateInfo !=="" ? window.$('#modal4').modal('open') : window.$('#modal4').modal('close');
-    const { loading, teams, newTeamName } = this.props;
+    const { loading, teams } = this.props;
     let teamList;
     teams === undefined ? teamList = [] : teamList = teams;
+    console.log(teamList.filter(a => a.name === "Administrators"))
+    if(teamList.filter(a => a.name === "Administrators")) {
+      teamList = [...teamList, {name: "Administrators", id: 1, teamPath: "Admins", members: []}]
+    }
+
       if(!loading) {
         return (
           <div>
@@ -70,7 +79,7 @@ export default class Teams extends Component {
                         <Modal.Content>
                           <Modal.Description style={{maxWidth: "75%", margin: "auto"}}>
                           <div style={{marginBottom: "10px"}}>
-                            <Input style={{marginRight: "15px"}} value={newTeamName} onChange={this.props.handleTeamNameChange} placeholder="HR" />
+                            <Input style={{marginRight: "15px"}} value={this.state.newTeamName} onChange={(e) => this.setState({ newTeamName: e.target.value })} placeholder="HR" />
                             <label className="active">Team Name<span className="red-text">*</span></label>
                           </div>
                           <Button secondary style={{borderRadius: "0"}} onClick={() => this.handleClose('save')}>Save Team</Button>
@@ -98,8 +107,8 @@ export default class Teams extends Component {
                     {
                       teamList.slice(0).map(team => {
                       return(
-                        <Table.Row key={team.id} style={{ marginTop: "35px"}}>
-                          <Table.Cell><a href={'/teams/' + team.id}>{team.name}</a></Table.Cell>
+                        <Table.Row key={team.teamID} style={{ marginTop: "35px"}}>
+                          <Table.Cell><a href={'/teams/' + team.id}>{team.teamName}</a></Table.Cell>
                           <Table.Cell>{team.createdDate}</Table.Cell>
                           <Table.Cell>{team.memberCount}</Table.Cell>
                           <Table.Cell>
@@ -154,6 +163,7 @@ export default class Teams extends Component {
                   </Table.Body>
                 </Table>
                 </div>
+
                 </div>
               </div>
             </div>
