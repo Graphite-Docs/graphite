@@ -447,10 +447,15 @@ import {
   postData,
   getData
 } from '../enterpriseModel/shared';
+import {
+  handleAuth,
+  signOut
+} from './helpers/authentication';
+import {
+  makeProfile
+} from './onboarding/profiles/profiles';
+import { handleStorage } from './onboarding/storage/connectStorage';
 import work from 'webworkify-webpack';
-
-// const IPFS = require("ipfs");
-// const node = new IPFS();
 const Config = require('Config');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -1071,19 +1076,17 @@ export default class App extends Component {
     this.getData = getData.bind(this);
     this.createMember = createMember.bind(this);
 
+    //Auth.
+    this.handleAuth = handleAuth.bind(this);
+    this.signOut = signOut.bind(this);
+    this.makeProfile = makeProfile.bind(this);
+    this.handleStorage = handleStorage.bind(this);
+
     this.handleTagChange = handleTagChange.bind(this);
-    // isUserSignedIn() ? this.loadIntegrations() : console.warn("App componentWillMount - user is not signed in...");
-    // isUserSignedIn() ? this.loadAccountPlan() : loadUserData();
-    // isUserSignedIn() ? this.loadInviteStatus() : loadUserData();
   }
 
   componentDidMount() {
     isUserSignedIn() ?  this.loadDocs() : loadUserData();
-    // node.on('ready', async () => {
-    //   const version = await node.version()
-    //
-    //   console.log('Version:', version.version)
-    // })
     const isIos = () => {
       const userAgent = window.navigator.userAgent.toLowerCase();
       return /iphone|ipad|ipod/.test( userAgent );
@@ -1097,18 +1100,6 @@ export default class App extends Component {
       localStorage.setItem('showInstallMessage', false);
       setTimeout(localStorage.getItem('showInstallMessage'), 10000);
     }
-    // // this.launchWorker();
-    // const ADMIN_ADDRESS = "14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv"
-    // const ADMIN_AUTH_TOKEN = "eyJwdWJsaWNrZXkiOiIwMzVlODg4YTU4NDc3MGNjMGMyOTZkNDBjNGJhZDI3N2Y5MzA4OTllNjczMzZmYjFmNDdmNTIxNGQ5MDZmODkzNjIiLCJzaWduYXR1cmUiOiIzMDQ0MDIyMDFkZDRiOGIwODNlMDFhMjIwMjM1ZDMzN2U5ZmQ4MmNkY2M5MDY3ZjY0NjhlMmE2NmEyMGVjYWE0MjI0NWFjZmUwMjIwNWRhZDI0MDAwNTliZTE4MTkzNjBhZjZjNTE1MWZmZDg1MGVlY2NlZWFlNzQzNjJiMTU1ZDVmYTMyNWNjYmY4MSJ9"
-    //
-    // if(loadUserData().username === "khunter.id") {
-    //   const gaiaConfigJSON = localStorage.getItem('blockstack-gaia-hub-config')
-    //   const gaiaConfig = JSON.parse(gaiaConfigJSON)
-    //   gaiaConfig.address = ADMIN_ADDRESS
-    //   gaiaConfig.token = ADMIN_AUTH_TOKEN
-    //   localStorage.setItem('blockstack-gaia-hub-config', JSON.stringify(gaiaConfig))
-    //   setTimeout(this.testing, 300)
-    // }
 
     console.log('Build Date: ', Config.BUILD_DATE_STAMP)
     console.log('Build Time: ', Config.BUILD_TIME_STAMP)
@@ -1127,11 +1118,6 @@ export default class App extends Component {
     }
 
   }
-
-  // handleSignIn(e) {
-  //   e.preventDefault();
-  //   redirectToSignIn();
-  // }
 
   handleSignOut(e) {
     e.preventDefault();
@@ -1184,6 +1170,8 @@ export default class App extends Component {
                     <AppPage {...props}
                     postToLog={this.postToLog}
                     signInRedirect={this.signInRedirect}
+                    handleAuth={this.handleAuth}
+                    handleStorage={this.handleStorage}
                     loading={loading}
                     value={value}
                     sheets={sheets}
@@ -1768,7 +1756,7 @@ export default class App extends Component {
                   filteredGDocs={filteredGDocs}
                 />
               }/>
-              <Route exact path="/teams/0/:id" render={(location, match, props) =>
+              <Route exact path="/teams/:id/:id" render={(location, match, props) =>
                 <SubTeams {...props}
                   addTeammate={this.addTeammate}
                   clearNewTeammate={this.clearNewTeammate}
@@ -1781,6 +1769,7 @@ export default class App extends Component {
                   loadTeams={this.loadTeams}
                   handleTeamNameChange={this.handleTeamNameChange}
                   saveNewTeamInfo={this.saveNewTeamInfo}
+                  createMember={this.createMember}
                   teams={teams}
                   teamName={teamName}
                   loading={loading}

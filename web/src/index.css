@@ -9,16 +9,20 @@ body {
 }
 
 p {
-  font-size: 1.25rem;
+  font-size: 1.15rem;
 }
 
 h1 {
   font-size: 3rem!important;
 }
 
+h3 {
+  font-size: 1.5rem!important;
+}
+
 h1, h2, h3, h4, button {
   font-family: 'Muli', sans-serif!important;
-  font-weight: 200!important;
+  font-weight: 300!important;
 }
 
 h5, h6 {

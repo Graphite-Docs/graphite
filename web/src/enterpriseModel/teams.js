@@ -21,10 +21,24 @@ export async function createTeam(teamName) {
     //need to find logged in user's appPubKey
     let userPubKey = blockstack.getPublicKeyFromPrivate(blockstack.loadUserData().appPrivateKey)
     //file name for the root level team key.
-    let fileName = `keys/root/teamkey/${userPubKey}.json`;
+    let fileName = `${userPubKey}/keys/root/teamkey.json`;
     //will always be looking this up from root level user.
     let user = `${blockstack.loadUserData().username.split('.')[1]}.${blockstack.loadUserData().username.split('.')[2]}`
-    pubKey = getUserKey(fileName, user);
+    let encryptedKey = await getUserKey(fileName, user);
+    pubKey = await blockstack.decryptContent(JSON.stringify(encryptedKey), {
+      privateKey: blockstack.loadUserData().appPrivateKey
+    });
+    const object = {};
+    object.id = uuidv4();
+    object.name = teamName;
+    object.teamPath = teamName ? `Teams/${teamName}` : 'Teams/Administrators';
+    object.members = [];
+    await this.setState({ teams: [...this.state.teams, object] }, () => {
+      let data = this.state.teams;
+      let file = "Administrators/teams.json";
+      let scopesFile = "Administrators";
+        this.postData(data, file, scopesFile, pubKey);
+    });
   } else {
     //User is root user, so normal getFile will work.
     let fileName = 'keys/root/teamkey.json';
@@ -45,19 +59,18 @@ export async function createTeam(teamName) {
             .catch(error => console.log(error))
         }
       })
+      const object = {};
+      object.id = uuidv4();
+      object.name = teamName;
+      object.teamPath = teamName ? `Teams/${teamName}` : 'Teams/Administrators';
+      object.members = [];
+      await this.setState({ teams: [...this.state.teams, object] }, () => {
+        let data = this.state.teams;
+        let file = "Administrators/teams.json";
+        let scopesFile = "Administrators";
+          this.postData(data, file, scopesFile, pubKey);
+      });
   }
-
-  const object = {};
-  object.id = uuidv4();
-  object.name = teamName;
-  object.teamPath = `Teams/${teamName}`;
-  object.members = [];
-  this.setState({ teams: [...this.state.teams, object] }, () => {
-    let data = this.state.teams;
-    let file = "Administrators/teams.json";
-    let scopesFile = "Administrators";
-    this.postData(data, file, scopesFile, pubKey);
-  });
 }
 
 export function postToSharedBucket() {

@@ -75,12 +75,12 @@ If there is no access config file returned, the user does not have permission to
   teams: [
   {
     teamName: String,
-    teamID: Number, 
+    teamID: Number,
     teamList: [
       {
         teamMateName: String,
         teamMateID: String,
-        teamMateWriteAccess: Boolean
+        teamMateAdmin: Boolean
       }
     ]
   }

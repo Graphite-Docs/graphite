@@ -3,16 +3,16 @@ import { Link } from "react-router-dom";
 import Signin from "./Signin";
 import Header from "./Header";
 import Loading from "./Loading";
+import Onboarding from './onboarding/Onboarding';
+import { foundProfile, isSignedIn } from "./helpers/authentication";
 import {
-  isUserSignedIn,
-  // redirectToSignIn,
   signUserOut,
   getFile,
   putFile,
   makeAuthRequest,
   redirectToSignInWithAuthRequest,
   generateAndStoreTransitKey,
-  nextHour,
+  nextHour
 } from "blockstack";
 import { Grid, Icon, Container, Card, Table } from "semantic-ui-react";
 import PropTypes from "prop-types";
@@ -77,10 +77,11 @@ export default class AppPage extends Component {
     const authRequest = makeAuthRequest(
       generateAndStoreTransitKey(),
       origin,
-      origin + '/manifest.json',
-      ['store_write', 'publish_data'],
+      origin + "/manifest.json",
+      ["store_write", "publish_data"],
       origin,
-      nextHour().getTime(), {
+      nextHour().getTime(),
+      {
         solicitGaiaHubUrl: true
       }
     );
@@ -269,9 +270,13 @@ export default class AppPage extends Component {
 
           <div className="site-wrapper">
             <div className="site-wrapper-inner">
-              {!isUserSignedIn() ? (
-                <Signin handleSignIn={this.handleSignIn} />
-              ) : (
+              {!isSignedIn() ? (
+                <Signin
+                  handleSignIn={this.handleSignIn}
+                  handleAuth={this.props.handleAuth}
+                  handleStorage={this.props.handleStorage}
+                />
+              ) : foundProfile() ? (
                 <Container>
                   <Joyride
                     continuous
@@ -512,6 +517,10 @@ export default class AppPage extends Component {
                     </Table.Body>
                   </Table>
                 </Container>
+              ) : (
+                <Onboarding
+                handleStorage={this.props.handleStorage}
+                open={true} />
               )}
             </div>
           </div>

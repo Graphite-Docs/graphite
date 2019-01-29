@@ -21,7 +21,8 @@ export default class People extends Component {
       mateInfo: "",
       modalOpen: false,
       memberList: initialTeam.members,
-      memberName: ""
+      memberName: "",
+      role: ""
     }
   }
 
@@ -34,17 +35,20 @@ export default class People extends Component {
 
   handleClose = (props) => this.setState({ modalOpen: false }, () => {
     if(props === 'cancel') {
-      this.setState({memberName: "" })
+      this.setState({memberName: "", role: "" })
     } else if(props === 'save') {
-      let memberName = this.state.memberName;
-      let team;
-      if(window.location.href.split('teams/').length > 1) {
-        team = window.location.href.split('teams/')[1];
+      if(!this.state.memberName || !this.state.role) {
+        alert("Make sure to select a person and role.")
       } else {
-        team = "Root";
+        // let memberName = this.state.memberName;
+        const object = {
+          memberName: this.state.memberName,
+          memberRole: this.state.role
+        }
+        let team = window.location.href.split('teams/')[1].split('/')[0];
+        this.props.createMember(object, team);
+        this.setState({ memberName: "" })
       }
-      this.props.createMember(memberName, team);
-      this.setState({ memberName: "" })
     }
 
   })
@@ -55,14 +59,22 @@ export default class People extends Component {
 
   render() {
     const { peopleList, team } = this.props;
-    const { memberList, memberName } = this.state;
+    const { memberList, memberName, role } = this.state;
     let list;
-    if(memberList) {
-      list = memberList;
+    let members;
+
+    if(peopleList) {
+      list = peopleList;
     } else {
       list = [];
     }
-    console.log(list)
+
+    if(memberList) {
+      members = memberList;
+    } else {
+      members = []
+    }
+
     return (
       <div>
         <div>
@@ -72,9 +84,8 @@ export default class People extends Component {
                 <Grid stackable columns={2} style={{ marginBottom: "15px" }}>
                   <Grid.Column>
                     <h2>
-                      Members ({peopleList.length})
+                      Members ({list.length})
                       <Modal
-                        closeIcon
                         style={{ borderRadius: "0" }}
                         open={this.state.modalOpen}
                         onClose={this.handleClose}
@@ -103,10 +114,11 @@ export default class People extends Component {
                             <div style={{ marginBottom: "10px" }}>
                               <Dropdown
                                 text={memberName ? memberName : "Choose a team member"}
+                                style={{padding: "5px", border: "0.5px solid #eee", borderRadius: "5px"}}
                               >
                               <Dropdown.Menu style={{padding: "5px", marginBottom: "15px"}}>
                               {
-                                list.map(person => {
+                                members.map(person => {
                                   return (
                                     <a style={{cursor: "pointer"}} onClick={() => this.selectMember(person.name)}><Dropdown.Item key={person.name}>
                                       {person.name}
@@ -116,7 +128,11 @@ export default class People extends Component {
                               }
                               </Dropdown.Menu>
                               </Dropdown>
-
+                              <div style={{marginTop: "15px", marginBottom: "35px"}}>
+                                <p>Set Role</p>
+                                  {role === 'admin' ? <Button onClick={() => this.setState({ role: "admin" })} style={{background: "green", color: "#fff"}}>Administrator</Button> : <Button onClick={() => this.setState({ role: "admin" })}>Administrator</Button>}
+                                  {role === 'user' ? <Button onClick={() => this.setState({ role: "user" })} style={{background: "green", color: "#fff"}}>User</Button> : <Button onClick={() => this.setState({ role: "user" })}>User</Button>}
+                              </div>
                             </div>
                             <Button
                               secondary
@@ -159,7 +175,7 @@ export default class People extends Component {
                       </Table.Header>
 
                       <Table.Body>
-                        {peopleList.slice(0).map(person => {
+                        {list.slice(0).map(person => {
                           return (
                             <Table.Row
                               key={person.id}
@@ -213,8 +229,8 @@ export default class People extends Component {
                                         <SemanticHeader
                                           icon="trash alternate outline"
                                           content={
-                                            team.name ? (
-                                              "Delete " + team.name + "?"
+                                            person.name ? (
+                                              "Delete " + person.name + "?"
                                             ) : (
                                               "Delete team?"
                                             )

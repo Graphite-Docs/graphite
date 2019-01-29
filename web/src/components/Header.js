@@ -2,15 +2,16 @@ import React, { Component } from 'react';
 import {
   isSignInPending,
   isUserSignedIn,
-  redirectToSignIn,
   handlePendingSignIn,
   loadUserData,
   Person,
-  signUserOut,
 } from 'blockstack';
+import {
+  signOut
+} from './helpers/authentication';
 import { Link } from 'react-router-dom';
 import logo from '../assets/images/whitelogo.svg';
-import logoSquare from '../assets/images/gIcon.png';
+import logoSquare from '../assets/images/graphite-mark.svg';
 import { Menu, Image, Icon, Dropdown } from 'semantic-ui-react'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -37,23 +38,13 @@ export default class Header extends Component {
         window.location = window.location.origin;
       });
     }
-  }
 
-  handleSignIn(e) {
-    e.preventDefault();
-    const origin = window.location.origin
-    redirectToSignIn(origin, origin + '/manifest.json', ['store_write', 'publish_data'])
-  }
-
-  handleSignOut(e) {
-    e.preventDefault();
-    signUserOut(window.location.origin);
+    this.signOut = signOut.bind(this);
   }
 
   renderHeader() {
     if (isUserSignedIn() ) {
       const userData = loadUserData();
-      // console.log('userData', userData);
 
       const person = new Person(userData.profile);
       const trigger = (
@@ -62,9 +53,9 @@ export default class Header extends Component {
         </span>
       )
       return (
-        <Menu className='header-menu' style={{ borderRadius: "0", background: "#282828", border: "none" }}>
+        <Menu className='header-menu' style={{ borderRadius: "0", background: "#000", border: "none" }}>
           <Menu.Item>
-            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px" }} /></Link>
+            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px", marginLeft: "10px" }} /></Link>
           </Menu.Item>
           <Menu.Item position="right">
           <Dropdown icon='th' className="app-switcher" style={{ color: "#fff", marginRight: "15px" }}>
@@ -88,7 +79,7 @@ export default class Header extends Component {
                 <Dropdown.Item><Link to={'/teams'}>Team Management</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>
                 <Dropdown.Divider />
-                <Dropdown.Item><a onClick={this.handleSignOut}>Sign Out</a></Dropdown.Item>
+                <Dropdown.Item><a onClick={this.signOut}>Sign Out</a></Dropdown.Item>
               </Dropdown.Menu>
           </Dropdown>
           </Menu.Item>
