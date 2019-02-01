@@ -14,6 +14,9 @@ export default class Onboarding extends Component {
   }
 
   componentDidMount() {
+    // if(window.location.href.includes('state')) {
+    //   this.props.handleStorage()
+    // }
     this.props.handleStorage()
   }
 

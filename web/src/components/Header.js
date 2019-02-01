@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
 import {
-  isSignInPending,
   isUserSignedIn,
-  handlePendingSignIn,
   loadUserData,
   Person,
 } from 'blockstack';
 import {
-  signOut
+  signOut,
+  blockstackSignIn
 } from './helpers/authentication';
 import { Link } from 'react-router-dom';
 import logo from '../assets/images/whitelogo.svg';
@@ -32,13 +31,8 @@ export default class Header extends Component {
   	};
   }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then((userData) => {
-        window.location = window.location.origin;
-      });
-    }
-
+  componentDidMount() {
+    this.blockstackSignIn = blockstackSignIn.bind(this);
     this.signOut = signOut.bind(this);
   }
 

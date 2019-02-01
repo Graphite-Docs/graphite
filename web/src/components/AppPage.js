@@ -17,6 +17,7 @@ import {
 import { Grid, Icon, Container, Card, Table } from "semantic-ui-react";
 import PropTypes from "prop-types";
 import Joyride from "react-joyride";
+let profileFound;
 
 export default class AppPage extends Component {
   state = {
@@ -31,6 +32,7 @@ export default class AppPage extends Component {
   };
 
   componentDidMount() {
+    profileFound = foundProfile();
     getFile("appPageOnboarding.json", { decrypt: true })
       .then(fileContents => {
         if (fileContents) {
@@ -276,7 +278,7 @@ export default class AppPage extends Component {
                   handleAuth={this.props.handleAuth}
                   handleStorage={this.props.handleStorage}
                 />
-              ) : foundProfile() ? (
+              ) : profileFound ? (
                 <Container>
                   <Joyride
                     continuous

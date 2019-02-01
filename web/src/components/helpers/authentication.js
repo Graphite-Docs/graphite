@@ -5,12 +5,20 @@ import {
   generateAndStoreTransitKey,
   nextHour,
   isUserSignedIn,
-  signUserOut
+  signUserOut,
+  isSignInPending,
+  handlePendingSignIn
 } from "blockstack";
+import {
+  makeProfile as profileCheck
+} from '../onboarding/profiles/profiles';
 
 const uport = new Connect("Graphite", {
   network: "mainnet"
 });
+
+let did;
+let didProfile;
 
 export function handleAuth(provider) {
   if (provider === "uPort") {
@@ -68,12 +76,44 @@ export function isSignedIn() {
   }
 }
 
-export function foundProfile() {
-  //Here we will query the Graphite DB for the profile and fallback to OrbitDB if Graphite is inaccessible.
-  if(isUserSignedIn()) {
-    //probably still want to write these profiles to Graphite's DB and to OrbitDB
-    return true
+export async function foundProfile() {
+  //Here we will query the Graphite DB for the profile and fallback to IPFS if Graphite is inaccessible.
+  if(isSignedIn()) {
+    const authType = await JSON.parse(localStorage.getItem('authProvider'))
+    let fullProfile;
+    if(authType === 'uPort') {
+      did = await JSON.parse(localStorage.getItem("uPortUser")).payload.did;
+      didProfile = await JSON.parse(localStorage.getItem("uPortUser")).payload;
+      fullProfile = await {
+        did: did,
+        profile: didProfile,
+        profileLastUpdated: Date.now(),
+        create: false
+      };
+    } else {
+      did = await JSON.parse(localStorage.getItem("blockstackUser")).decentralizedID;
+      didProfile = await JSON.parse(localStorage.getItem("blockstackUser")).username;
+      fullProfile = await {
+        did: did,
+        profile: didProfile,
+        profileLastUpdated: Date.now(),
+        create: true
+      };
+    }
+    const response = await profileCheck(fullProfile);
+    return response;
   } else {
     return false;
+  }
+}
+
+export function blockstackSignIn() {
+  if (isSignInPending()) {
+    handlePendingSignIn().then((userData) => {
+      console.log(userData)
+      localStorage.setItem("authProvider", JSON.stringify("blockstack"));
+      localStorage.setItem("blockstackUser", JSON.stringify(userData));
+      window.location = window.location.origin;
+    });
   }
 }
