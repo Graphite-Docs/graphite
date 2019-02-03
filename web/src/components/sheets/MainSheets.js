@@ -3,11 +3,13 @@ import Signin from '../Signin';
 import SheetsCollections from './SheetsCollections';
 import {
   isSignInPending,
-  isUserSignedIn,
   redirectToSignIn,
   handlePendingSignIn,
   signUserOut,
 } from 'blockstack';
+import {
+  isSignedIn
+} from '../helpers/authentication';
 
 export default class MainSheets extends Component {
 
@@ -28,7 +30,7 @@ export default class MainSheets extends Component {
       <div>
       <div className="site-wrapper">
         <div className="site-wrapper-inner">
-          { !isUserSignedIn() ?
+          { !isSignedIn() ?
             <Signin handleSignIn={ this.handleSignIn } />
             : <SheetsCollections
                 results={this.props.results}

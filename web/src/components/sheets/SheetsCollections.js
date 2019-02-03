@@ -21,7 +21,7 @@ import { getMonthDayYear } from '../helpers/getMonthDayYear';
 import Joyride from "react-joyride";
 
 const { encryptECIES } = require('blockstack/lib/encryption');
-const { getPublicKeyFromPrivate } = require('blockstack');
+// const { getPublicKeyFromPrivate } = require('blockstack');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SheetsCollections extends Component {
@@ -132,11 +132,11 @@ export default class SheetsCollections extends Component {
   }
   componentDidMount() {
     this.setState({ loading: true });
-  const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
-  putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
-    .catch(e => {
-      console.log(e);
-    });
+  // const publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey)
+  // putFile('key.json', JSON.stringify(publicKey), {encrypt: false})
+  //   .catch(e => {
+  //     console.log(e);
+  //   });
 
     getFile("contact.json", {decrypt: true})
      .then((fileContents) => {
@@ -166,6 +166,7 @@ export default class SheetsCollections extends Component {
     })
     .catch(e => {
       console.log(e);
+      this.setState({ loading: false})
     });
 }
 
@@ -199,6 +200,7 @@ loadCollection() {
     })
     .catch(error => {
       console.log(error);
+      this.setState({ loading: false })
     });
 }
 

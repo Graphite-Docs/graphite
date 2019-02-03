@@ -1,12 +1,15 @@
 import {
   putFile,
   getFile,
-  loadUserData
+  loadUserData,
+  encryptContent
 } from 'blockstack';
 import React from 'react'
 import { Value } from 'slate'
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
+// import { checkStorageProvider } from '../onboarding/profiles/storage'
+import { postToStorageProvider } from './storageProviders/post';
 import Html from 'slate-html-serializer';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
@@ -298,19 +301,35 @@ export function filterList(event){
   this.setState({filteredValue: updatedList});
 }
 
-export function saveNewFile() {
-  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt:true})
-    .then(() => {
-      // this.saveNewSingleDoc();
-      console.log("Saved Collection!");
-      setTimeout(this.saveNewSingleDoc, 200);
-    })
-    .catch(e => {
-      console.log("e");
-      console.log(e);
-      this.setState({ loading: false })
-      alert("Trouble saving");
-    });
+export async function saveNewFile() {
+  let authProvider = await JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'uPort') {
+    const publicKey = await getPublicKeyFromPrivate(JSON.parse(JSON.parse(localStorage.getItem('connectState'))).keypair.privateKey)
+    const data = JSON.stringify(this.state.value);
+    const encryptedData = await encryptContent(data, {publicKey: publicKey})
+    const params = {
+      content: encryptedData,
+      filePath: '/documents/index.json',
+      provider: JSON.parse(localStorage.getItem('storageProvider')),
+      token: JSON.parse(localStorage.getItem('oauthData')).data.access_token
+    }
+
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+  } else if(authProvider === 'blockstack') {
+    putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt:true})
+      .then(() => {
+        // this.saveNewSingleDoc();
+        console.log("Saved Collection!");
+        setTimeout(this.saveNewSingleDoc, 200);
+      })
+      .catch(e => {
+        console.log("e");
+        console.log(e);
+        this.setState({ loading: false })
+        alert("Trouble saving");
+      });
+  }
 }
 
 export function saveNewSingleDoc() {

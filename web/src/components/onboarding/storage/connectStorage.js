@@ -48,6 +48,7 @@ export async function handleStorage() {
 
       // //Need to conditionally set the storage provider so we can add it to the profile.
       let storageProvider = await window.location.href.split('state=')[1].split('&')[0];
+      localStorage.setItem('storageProvider', JSON.stringify(storageProvider))
 
       // //Access to the did and profile depends on authProvider.
       if (authProvider === "uPort") {
@@ -60,7 +61,8 @@ export async function handleStorage() {
         profile: didProfile,
         storageProvider: storageProvider,
         refreshToken: encryptedRefreshToken,
-        profileLastUpdated: Date.now()
+        profileLastUpdated: Date.now(),
+        create: true
       };
       this.makeProfile(profile);
     })

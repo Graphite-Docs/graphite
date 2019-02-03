@@ -17,6 +17,7 @@ import {
 import { Grid, Icon, Container, Card, Table } from "semantic-ui-react";
 import PropTypes from "prop-types";
 import Joyride from "react-joyride";
+
 let profileFound;
 
 export default class AppPage extends Component {
@@ -32,7 +33,8 @@ export default class AppPage extends Component {
   };
 
   componentDidMount() {
-    profileFound = foundProfile();
+    this.checkProfiles();
+
     getFile("appPageOnboarding.json", { decrypt: true })
       .then(fileContents => {
         if (fileContents) {
@@ -108,6 +110,11 @@ export default class AppPage extends Component {
     //   }
     // }
   };
+
+  checkProfiles = async () => {
+    profileFound = await foundProfile()
+    console.log(`profile found: ${profileFound}`)
+  }
 
   render() {
     const steps = [
@@ -211,7 +218,6 @@ export default class AppPage extends Component {
         return a.lastUpdate - b.lastUpdate;
       })
       .slice(0, 15);
-    console.log(recentFiles);
     //Docs variables
 
     let docTags = value.map(a => a.tags);
@@ -265,11 +271,10 @@ export default class AppPage extends Component {
     });
     let mergedContactsTypes = [].concat.apply([], newContactsTypes).length;
 
-    if (!loading) {
+
+    if (!loading && JSON.parse(localStorage.getItem('profileFound'))) {
       return (
         <div>
-          <Header graphitePro={graphitePro} />
-
           <div className="site-wrapper">
             <div className="site-wrapper-inner">
               {!isSignedIn() ? (
@@ -278,7 +283,9 @@ export default class AppPage extends Component {
                   handleAuth={this.props.handleAuth}
                   handleStorage={this.props.handleStorage}
                 />
-              ) : profileFound ? (
+              ) : (
+                <div>
+                <Header graphitePro={graphitePro} />
                 <Container>
                   <Joyride
                     continuous
@@ -519,15 +526,28 @@ export default class AppPage extends Component {
                     </Table.Body>
                   </Table>
                 </Container>
-              ) : (
-                <Onboarding
-                handleStorage={this.props.handleStorage}
-                open={true} />
+                </div>
               )}
             </div>
           </div>
         </div>
       );
+    } else if(!loading) {
+      return (
+        <div>
+          {!isSignedIn() ? (
+            <Signin
+              handleSignIn={this.handleSignIn}
+              handleAuth={this.props.handleAuth}
+              handleStorage={this.props.handleStorage}
+            />
+          ) : (
+            <Onboarding
+            handleStorage={this.props.handleStorage}
+            open={true} />
+        )}
+        </div>
+      )
     } else {
       return <Loading />;
     }

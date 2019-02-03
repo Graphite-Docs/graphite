@@ -2,8 +2,7 @@ import axios from "axios";
 const keys = require('../../helpers/keys');
 
 export async function makeProfile(profile) {
-  // Start the IPFS process here.
-  // postToIPFS(profile);
+
   // Post the mongo db
   const post = await axios
     .post(
@@ -13,12 +12,23 @@ export async function makeProfile(profile) {
     .then((res) => {
       console.log(res)
       if(res.data.length > 0) {
+        localStorage.setItem('profileFound', JSON.stringify(true))
         return true;
+      } else {
+        // Start the IPFS process here.
+        if(profile.create) {
+          postToIPFS(profile);
+          localStorage.setItem('profileFound', JSON.stringify(true))
+          return true;
+        }
       }
     })
-    .catch(error => console.log(error));
+    .catch((error) => {
+      console.log(error)}
+      //TODO: Here we should fall back on an IPFS Pinata query.
+    );
 
-    console.log(post);
+    return post;
 }
 
 export async function postToIPFS(profile) {
@@ -49,6 +59,7 @@ export async function postToIPFS(profile) {
   .then((response) => {
     console.log("Saved to the distributed web!")
     console.log(response)
+    window.location.replace('/')
   })
   .catch(error => console.log(error))
 }

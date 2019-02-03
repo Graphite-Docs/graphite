@@ -1,32 +1,67 @@
 import {
-  getFile
+  getFile, decryptContent
 } from "blockstack";
+import { fetchFromProvider } from './storageProviders/fetch';
 
-export function loadDocs() {
-  this.setState({ loading: true });
-    getFile("documentscollection.json", {decrypt: true})
-     .then((fileContents) => {
-       if(fileContents) {
-         if(JSON.parse(fileContents).value) {
-           this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
-         } else {
-           this.setState({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents) });
-         }
-         if(JSON.parse(fileContents).countFilesDone) {
-          this.setState({ countFilesDone: true });
-        }  else {
-          this.setState({ countFilesDone: false });
+const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+
+export async function loadDocs() {
+  if(authProvider === 'blockstack') {
+    this.setState({ loading: true });
+      getFile("documentscollection.json", {decrypt: true})
+       .then((fileContents) => {
+         if(fileContents) {
+           if(JSON.parse(fileContents).value) {
+             this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
+           } else {
+             this.setState({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents) });
+           }
+           if(JSON.parse(fileContents).countFilesDone) {
+            this.setState({ countFilesDone: true });
+          }  else {
+            this.setState({ countFilesDone: false });
+          }
+        } else {
+          this.setState({ value: [], filteredValue: [], countFilesDone: true });
         }
-      } else {
-        this.setState({ value: [], filteredValue: [], countFilesDone: true });
-      }
-     })
-      .then(() => {
+       })
+        .then(() => {
+          this.loadSheets();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+  } else if(authProvider === 'uPort') {
+    //Create the params to send to the fetchFromProvider function.
+    const object = {
+      provider: JSON.parse(localStorage.getItem('storageProvider')),
+      token: JSON.parse(localStorage.getItem('oauthData')).data.access_token,
+      filePath: '/documents/index.json'
+    }
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile)
+    //Load up a new file reader and convert response to JSON.
+    const reader = await new FileReader();
+    var blob = fetchFile.fileBlob;
+    reader.onloadend = async (evt) => {
+      console.log("read success");
+      const thisKey = await JSON.parse(JSON.parse(localStorage.getItem('connectState'))).keypair.privateKey;
+      const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+      this.setState({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true })
+    };
+    await console.log(reader.readAsText(blob));
+
+    //TODO: Move this somewhere else. 
+    if(fetchFile.includes('error')) {
+      this.setState({value: [], filteredValue: [], countFilesDone: true}, () => {
         this.loadSheets();
       })
-      .catch(error => {
-        console.log(error);
-      });
+    }
+
+    //Now call load sheets.
+    this.loadSheets();
+  }
 }
 
 export function loadSheets() {

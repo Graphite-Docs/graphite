@@ -23,8 +23,7 @@ let didProfile;
 export function handleAuth(provider) {
   if (provider === "uPort") {
     const reqObj = {
-      requested: ["name"],
-      verified: ["ORBIT"],
+      requested: ["name", "email", "image"],
       notifications: true
     };
     uport.requestDisclosure(reqObj);
@@ -34,11 +33,13 @@ export function handleAuth(provider) {
         console.log(res);
         localStorage.setItem("authProvider", JSON.stringify("uPort"));
         localStorage.setItem("uPortUser", JSON.stringify(res));
+        this.setState({ loading: true });
       })
       .then(() => {
-        window.location.reload();
-      });
+        foundProfile(true)
+      })
   } else if (provider === "Blockstack") {
+    localStorage.setItem('storageProvider', JSON.stringify("blockstack"));
     const origin = window.location.origin;
     const authRequest = makeAuthRequest(
       generateAndStoreTransitKey(),
@@ -56,13 +57,20 @@ export function handleAuth(provider) {
 }
 
 export function signOut() {
-  if(isUserSignedIn()) {
-    //Handle Blockstack sign out
-    signUserOut(window.location.origin);
-  } else if(JSON.parse(localStorage.getItem('authProvider') === 'uPort')) {
+  let authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  console.log(authProvider)
+  if(authProvider === "uPort") {
     localStorage.removeItem('authProvider')
     localStorage.removeItem('uPortUser')
+    localStorage.removeItem('connectState')
+    localStorage.removeItem('profileFound')
     window.location.reload();
+  } else if(authProvider === "blockstack") {
+    if(isUserSignedIn()) {
+      //Handle Blockstack sign out
+      console.log("blockstack")
+      signUserOut(window.location.origin);
+    }
   }
 }
 
@@ -76,34 +84,44 @@ export function isSignedIn() {
   }
 }
 
-export async function foundProfile() {
+export async function foundProfile(initialSignIn) {
   //Here we will query the Graphite DB for the profile and fallback to IPFS if Graphite is inaccessible.
-  if(isSignedIn()) {
-    const authType = await JSON.parse(localStorage.getItem('authProvider'))
-    let fullProfile;
-    if(authType === 'uPort') {
-      did = await JSON.parse(localStorage.getItem("uPortUser")).payload.did;
-      didProfile = await JSON.parse(localStorage.getItem("uPortUser")).payload;
-      fullProfile = await {
-        did: did,
-        profile: didProfile,
-        profileLastUpdated: Date.now(),
-        create: false
-      };
-    } else {
-      did = await JSON.parse(localStorage.getItem("blockstackUser")).decentralizedID;
-      didProfile = await JSON.parse(localStorage.getItem("blockstackUser")).username;
-      fullProfile = await {
-        did: did,
-        profile: didProfile,
-        profileLastUpdated: Date.now(),
-        create: true
-      };
-    }
-    const response = await profileCheck(fullProfile);
-    return response;
+  if(JSON.parse(localStorage.getItem('profileFound'))) {
+    return true
   } else {
-    return false;
+    if(isSignedIn()) {
+      const authType = await JSON.parse(localStorage.getItem('authProvider'))
+      let fullProfile;
+      if(authType === 'uPort') {
+        did = await JSON.parse(localStorage.getItem("uPortUser")).payload.did;
+        didProfile = await JSON.parse(localStorage.getItem("uPortUser")).payload;
+        fullProfile = await {
+          did: did,
+          profile: didProfile,
+          profileLastUpdated: Date.now(),
+          create: false
+        };
+      } else {
+        did = await JSON.parse(localStorage.getItem("blockstackUser")).decentralizedID;
+        didProfile = await JSON.parse(localStorage.getItem("blockstackUser")).username;
+        fullProfile = await {
+          did: did,
+          profile: didProfile,
+          profileLastUpdated: Date.now(),
+          create: true
+        };
+      }
+      const response = await profileCheck(fullProfile);
+      // return response;
+      console.log(response);
+      if(initialSignIn) {
+        window.location.reload()
+      } else {
+        return response;
+      }
+    } else {
+      return false;
+    }
   }
 }
 

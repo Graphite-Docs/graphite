@@ -449,7 +449,8 @@ import {
 } from '../enterpriseModel/shared';
 import {
   handleAuth,
-  signOut
+  signOut,
+  isSignedIn
 } from './helpers/authentication';
 import {
   makeProfile
@@ -695,7 +696,8 @@ export default class App extends Component {
       timelineEventStartYear: "",
       timelineEventTextHeadline: "",
       timelineEventTextText: "",
-      peopleList: []
+      peopleList: [],
+      profileFound: false
     }
     this.launchWorker = this.launchWorker.bind(this);
   } //constructor
@@ -1081,12 +1083,13 @@ export default class App extends Component {
     this.signOut = signOut.bind(this);
     this.makeProfile = makeProfile.bind(this);
     this.handleStorage = handleStorage.bind(this);
+    this.isSignedIn = isSignedIn.bind(this);
 
     this.handleTagChange = handleTagChange.bind(this);
   }
 
   componentDidMount() {
-    isUserSignedIn() ?  this.loadDocs() : loadUserData();
+    isSignedIn() ?  this.loadDocs() : loadUserData();
     const isIos = () => {
       const userAgent = window.navigator.userAgent.toLowerCase();
       return /iphone|ipad|ipod/.test( userAgent );
@@ -1130,7 +1133,6 @@ export default class App extends Component {
   }
 
   render() {
-
     const {
       value, sheets, contacts, files, pubKey, appliedFilter, dateList, tagList, collaboratorsModal, singleDocTags,
       contactDisplay, loadingTwo, confirmAdd, shareModal, tagModal, currentPage, docsPerPage, loading, redirect, tempDocId,
@@ -1149,12 +1151,12 @@ export default class App extends Component {
       pubVaultShared, teams, teamName, myTimeline, timelineTitle, timelineEvents, timelineTitleMediaUrl, timelineTitleMediaCaption,
       timelineTitleMediaCredit, timelineTitleTextHeadline, timelineTitleTextText, timelineEventMediaUrl, timelineEventMediaCaption,
       timelineEventMediaCredit, timelineEventStartMonth, timelineEventStartDay, timelineEventStartYear, timelineEventTextHeadline,
-      timelineEventTextText, peopleList
+      timelineEventTextText, peopleList, profileFound
     } = this.state;
     return (
       <div>
       {
-        !isUserSignedIn() && !window.location.pathname.indexOf("shared") ?
+        !isSignedIn() && !window.location.pathname.indexOf("shared") ?
         <Signin handleSignIn={ this.handleSignIn } />
         :
         <BrowserRouter>
@@ -1172,6 +1174,8 @@ export default class App extends Component {
                     signInRedirect={this.signInRedirect}
                     handleAuth={this.handleAuth}
                     handleStorage={this.handleStorage}
+                    makeProfile={this.makeProfile}
+                    profileFound={profileFound}
                     loading={loading}
                     value={value}
                     sheets={sheets}

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import {
-  isUserSignedIn,
   loadUserData,
   Person,
 } from 'blockstack';
+import { isSignedIn } from "./helpers/authentication";
 import {
   signOut,
   blockstackSignIn
@@ -33,17 +33,21 @@ export default class Header extends Component {
 
   componentDidMount() {
     this.blockstackSignIn = blockstackSignIn.bind(this);
-    this.signOut = signOut.bind(this);
   }
 
   renderHeader() {
-    if (isUserSignedIn() ) {
+    if (isSignedIn() ) {
       const userData = loadUserData();
+      let person;
+      if(userData) {
+        person = new Person(userData.profile);
+      } else {
+        person = ""
+      }
 
-      const person = new Person(userData.profile);
       const trigger = (
         <span>
-          <Image src={person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage} avatar style={{ width: "40px", height: "40px", marginRight: "15px" }} />
+          <Image src={person ? person.avatarUrl() ? person.avatarUrl() : avatarFallbackImage : avatarFallbackImage} avatar style={{ width: "40px", height: "40px", marginRight: "15px" }} />
         </span>
       )
       return (
@@ -73,13 +77,13 @@ export default class Header extends Component {
                 <Dropdown.Item><Link to={'/teams'}>Team Management</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>
                 <Dropdown.Divider />
-                <Dropdown.Item><a onClick={this.signOut}>Sign Out</a></Dropdown.Item>
+                <Dropdown.Item><a onClick={signOut}>Sign Out</a></Dropdown.Item>
               </Dropdown.Menu>
           </Dropdown>
           </Menu.Item>
         </Menu>
       );
-    } else if(!isUserSignedIn) {
+    } else {
       return(
         <Menu style={{ borderRadius: "0", background: "#282828", border: "none" }}>
           <Menu.Item>
