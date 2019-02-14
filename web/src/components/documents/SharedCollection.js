@@ -12,7 +12,7 @@ import {
 } from 'blockstack';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 import {Menu as MainMenu, Icon, Container, Table} from 'semantic-ui-react';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 const { getPublicKeyFromPrivate } = require('blockstack');
 const { decryptECIES } = require('blockstack/lib/encryption');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';

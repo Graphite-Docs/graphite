@@ -9,7 +9,6 @@ import {
   loadUserData
 } from 'blockstack'
 import { Card, Button } from 'semantic-ui-react';
-// import Header from './Header';
 
 // const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 

@@ -1,10 +1,10 @@
 import React, { Component } from "react";
-import Header from "../Header";
+import Header from "../shared/Header";
 import {
   isSignInPending,
   handlePendingSignIn
 } from 'blockstack';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Container, Button } from 'semantic-ui-react';
 
 export default class DeleteDoc extends Component {

@@ -8,8 +8,8 @@ import {
   lookupProfile,
   signUserOut
 } from 'blockstack';
-import Loading from '../Loading';
-import Header from '../Header';
+import Loading from '../shared/Loading';
+import Header from '../shared/Header';
 import { Grid, Item } from 'semantic-ui-react';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';

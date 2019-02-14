@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {
@@ -15,7 +15,7 @@ import {
 import {
   analyticsRun
 } from '../helpers/analytics';
-import Header from '../Header';
+import Header from '../shared/Header';
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
 import Joyride from "react-joyride";

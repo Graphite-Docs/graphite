@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
-import Header from '../Header';
+import Header from '../shared/Header';
 export default class Forms extends Component {
   constructor(props) {
     super(props);

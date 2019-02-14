@@ -1,849 +1,1505 @@
+import { setGlobal, getGlobal } from 'reactn';
+import { loadDocs, loadContacts } from './helpers';
+import { postToSlack, postToWebhook } from './traditionalIntegrations';
+import { loadCollection } from './documents';
 import {
   getFile,
   putFile,
   loadUserData,
-  lookupProfile
-} from 'blockstack'
-import axios from 'axios';
-import {
-  getMonthDayYear
-} from './getMonthDayYear';
-import update from 'immutability-helper';
-// import TurndownService from 'turndown';
-import { isKeyHotkey } from 'is-hotkey';
-import { Value } from 'slate'
-import Html from 'slate-html-serializer';
-import myTimeline from '../documents/editor/initialTimeline.json';
+  lookupProfile,
+  decryptContent,
+  encryptContent
+} from "blockstack";
+import axios from "axios";
+import { getMonthDayYear } from "./getMonthDayYear";
+import update from "immutability-helper";
+import { isKeyHotkey } from "is-hotkey";
+import { Value } from "slate";
+import Html from "slate-html-serializer";
+import myTimeline from "../documents/editor/initialTimeline.json";
+import { fetchFromProvider } from "./storageProviders/fetch";
+import { postToStorageProvider } from "./storageProviders/post";
 const wordcount = require("wordcount");
-const FileSaver = require('file-saver');
-const uuidv4 = require('uuid/v4');
-const htmlDocx = require('html-docx-js/dist/html-docx');
-const lzjs = require('lzjs');
-const { encryptECIES } = require('blockstack/lib/encryption');
-// const showdown  = require('showdown');
-const html2pdf = require('html2pdf.js')
-// const turndownService = new TurndownService()
-const isBoldHotkey = isKeyHotkey('mod+b')
-const isItalicHotkey = isKeyHotkey('mod+i')
-const isUnderlinedHotkey = isKeyHotkey('mod+u')
-const isCodeHotkey = isKeyHotkey('mod+`')
+const FileSaver = require("file-saver");
+const uuidv4 = require("uuid/v4");
+const htmlDocx = require("html-docx-js/dist/html-docx");
+const lzjs = require("lzjs");
+const { encryptECIES } = require("blockstack/lib/encryption");
+const html2pdf = require("html2pdf.js");
+const isBoldHotkey = isKeyHotkey("mod+b");
+const isItalicHotkey = isKeyHotkey("mod+i");
+const isUnderlinedHotkey = isKeyHotkey("mod+u");
+const isCodeHotkey = isKeyHotkey("mod+`");
+
+const authProvider = JSON.parse(localStorage.getItem("authProvider"));
 
 let htmlContent;
 let versionID;
-// const canvas = require('html2canvas')
 
 const BLOCK_TAGS = {
-  p: 'paragraph',
-  li: 'list-item',
-  ul: 'bulleted-list',
-  ol: 'numbered-list',
-  blockquote: 'quote',
-  pre: 'code',
-  h1: 'heading-one',
-  h2: 'heading-two',
-  h3: 'heading-three',
-  h4: 'heading-four',
-  h5: 'heading-five',
-  h6: 'heading-six',
-}
+  p: "paragraph",
+  li: "list-item",
+  ul: "bulleted-list",
+  ol: "numbered-list",
+  blockquote: "quote",
+  pre: "code",
+  h1: "heading-one",
+  h2: "heading-two",
+  h3: "heading-three",
+  h4: "heading-four",
+  h5: "heading-five",
+  h6: "heading-six"
+};
 
 const MARK_TAGS = {
-  strong: 'bold',
-  em: 'italic',
-  u: 'underline',
-  s: 'strikethrough',
-  code: 'code',
-}
+  strong: "bold",
+  em: "italic",
+  u: "underline",
+  s: "strikethrough",
+  code: "code"
+};
 
 const RULES = [
   {
     deserialize(el, next) {
-      const block = BLOCK_TAGS[el.tagName.toLowerCase()]
+      const block = BLOCK_TAGS[el.tagName.toLowerCase()];
 
       if (block) {
         return {
-          object: 'block',
+          object: "block",
           type: block,
-          nodes: next(el.childNodes),
-        }
+          nodes: next(el.childNodes)
+        };
       }
-    },
+    }
   },
   {
     deserialize(el, next) {
-      const mark = MARK_TAGS[el.tagName.toLowerCase()]
+      const mark = MARK_TAGS[el.tagName.toLowerCase()];
 
       if (mark) {
         return {
-          object: 'mark',
+          object: "mark",
           type: mark,
-          nodes: next(el.childNodes),
-        }
+          nodes: next(el.childNodes)
+        };
       }
-    },
+    }
   },
   {
     // Special case for code blocks, which need to grab the nested childNodes.
     deserialize(el, next) {
-      if (el.tagName.toLowerCase() === 'pre') {
-        const code = el.childNodes[0]
+      if (el.tagName.toLowerCase() === "pre") {
+        const code = el.childNodes[0];
         const childNodes =
-          code && code.tagName.toLowerCase() === 'code'
+          code && code.tagName.toLowerCase() === "code"
             ? code.childNodes
-            : el.childNodes
+            : el.childNodes;
 
         return {
-          object: 'block',
-          type: 'code',
-          nodes: next(childNodes),
-        }
+          object: "block",
+          type: "code",
+          nodes: next(childNodes)
+        };
       }
-    },
+    }
   },
   {
     // Special case for images, to grab their src.
     deserialize(el, next) {
-      if (el.tagName.toLowerCase() === 'img') {
+      if (el.tagName.toLowerCase() === "img") {
         return {
-          object: 'block',
-          type: 'image',
+          object: "block",
+          type: "image",
           nodes: next(el.childNodes),
           data: {
-            src: el.getAttribute('src'),
-          },
-        }
+            src: el.getAttribute("src")
+          }
+        };
       }
-    },
+    }
   },
   {
     // Special case for links, to grab their href.
     deserialize(el, next) {
-      if (el.tagName.toLowerCase() === 'a') {
+      if (el.tagName.toLowerCase() === "a") {
         return {
-          object: 'inline',
-          type: 'link',
+          object: "inline",
+          type: "link",
           nodes: next(el.childNodes),
           data: {
-            href: el.getAttribute('href'),
-          },
-        }
+            href: el.getAttribute("href")
+          }
+        };
       }
-    },
-  },
-]
+    }
+  }
+];
 
-const html = new Html({ rules: RULES })
+const html = new Html({ rules: RULES });
 
-export function initialDocLoad() {
-  this.setState({ loading: true})
-  this.setState({
+export async function initialDocLoad() {
+  const global = getGlobal();
+  setGlobal({ loading: true });
+  setGlobal({
     myTimeline: myTimeline,
     timelineTitle: myTimeline.title,
     timelineEvents: myTimeline.events
-  })
-  const thisFile = window.location.href.split('doc/')[1];
-  const fullFile = '/documents/' + thisFile + '.json';
+  });
+  const thisFile = window.location.href.split("doc/")[1].includes("#")
+    ? window.location.href.split("doc/")[1].split("#")[0]
+    : window.location.href.split("doc/")[1];
+  const fullFile = "/documents/" + thisFile + ".json";
 
-  getFile("documentscollection.json", {decrypt: true})
-   .then((fileContents) => {
-     if(fileContents) {
-       if(JSON.parse(fileContents)) {
-         if(JSON.parse(fileContents).value) {
-           this.setState({ value: JSON.parse(fileContents).value, filteredValue: JSON.parse(fileContents).value }, () => {
-             let value = this.state.value;
-             const thisDoc = value.find((doc) => {
-               if(typeof doc.id === "string") {
-                 if(doc.id) {
-                   return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
-                 }
-               } else {
-                 if(doc.id) {
-                   return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
-                 }
-               }
-               return null;
-
-             });
-             let index = thisDoc && thisDoc.id;
-             function findObjectIndex(doc) {
-               return doc.id === index; //this is comparing a number to a number
-             }
-             this.setState({index: value.findIndex(findObjectIndex)})
-           });
-         } else {
-           this.setState({ value: JSON.parse(fileContents), filteredValue: JSON.parse(fileContents) }, () => {
-             let value = this.state.value;
-             const thisDoc = value.find((doc) => {
-               if(typeof doc.id === "string") {
-                 if(doc.id) {
-                   return doc.id === window.location.href.split('doc/')[1] //this is comparing a string to a string
-                 }
-               } else {
-                 if(doc.id) {
-                   return doc.id.toString() === window.location.href.split('doc/')[1] //this is comparing a string to a string
-                 }
-               }
-               return null;
-
-             });
-             let index = thisDoc && thisDoc.id;
-             function findObjectIndex(doc) {
-               return doc.id === index; //this is comparing a number to a number
-             }
-             this.setState({index: value.findIndex(findObjectIndex)})
-           });
-         }
-       }
+  if (authProvider === "uPort") {
+    const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    //Create the params to send to the fetchFromProvider function.
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem('oauthData'))
     } else {
-      this.setState({ value: [], filteredValue: [] });
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
     }
-   })
-   .then(() => {
-     getFile(fullFile, {decrypt: true})
-     .then((fileContents) => {
-       console.log(JSON.parse(fileContents))
-       let thisContent;
-
-       if(JSON.parse(fileContents).compressed === true) {
-         console.log("compressed doc")
-         this.setState({
-           content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)),
-           title: JSON.parse(fileContents || '{}').title,
-           tags: JSON.parse(fileContents || '{}').tags,
-           idToLoad: JSON.parse(fileContents || '{}').id,
-           singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-           docLoaded: true,
-           readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-           rtc: JSON.parse(fileContents || '{}').rtc || false,
-           sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-           teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-           compressed: JSON.parse(fileContents || '{}').compressed || false,
-           spacing: JSON.parse(fileContents || '{}').spacing,
-           lastUpdate: JSON.parse(fileContents).lastUpdate,
-           jsonContent: true,
-           versions: JSON.parse(fileContents).versions || []
-         })
-       } else {
-         console.log("Not compressed")
-         if(JSON.parse(fileContents).jsonContent) {
-           console.log("Json doc")
-           thisContent = JSON.parse(fileContents).content;
-           this.setState({
-             content: Value.fromJSON(thisContent),
-             title: JSON.parse(fileContents || '{}').title,
-             tags: JSON.parse(fileContents || '{}').tags,
-             idToLoad: JSON.parse(fileContents || '{}').id,
-             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-             docLoaded: true,
-             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-             rtc: JSON.parse(fileContents || '{}').rtc || false,
-             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-             compressed: JSON.parse(fileContents || '{}').compressed || false,
-             spacing: JSON.parse(fileContents || '{}').spacing,
-             lastUpdate: JSON.parse(fileContents).lastUpdate,
-             jsonContent: true,
-             versions: JSON.parse(fileContents).versions || []
-           })
-         } else {
-           console.log("html doc")
-           this.setState({
-             content: html.deserialize(JSON.parse(fileContents).content),
-             title: JSON.parse(fileContents || '{}').title,
-             tags: JSON.parse(fileContents || '{}').tags,
-             idToLoad: JSON.parse(fileContents || '{}').id,
-             singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-             docLoaded: true,
-             readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-             rtc: JSON.parse(fileContents || '{}').rtc || false,
-             sharedWith: JSON.parse(fileContents || '{}').sharedWith,
-             teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-             compressed: JSON.parse(fileContents || '{}').compressed || false,
-             spacing: JSON.parse(fileContents || '{}').spacing,
-             lastUpdate: JSON.parse(fileContents).lastUpdate,
-             versions: JSON.parse(fileContents).versions || []
-           })
-         }
-
-       }
-     })
-     .then(() => {
-       this.loadContacts()
-     })
-     .then(() => {
-       let timelineFile = 'timelines/' + window.location.href.split('doc/')[1] + '.json'
-       getFile(timelineFile, {decrypt: true})
-        .then((file) => {
-          if(file) {
-            this.setState({
-              myTimeline: JSON.parse(file),
-              timelineTitle: JSON.parse(file).title,
-              timelineEvents: JSON.parse(file).events
-            }, () => {
-              new window.TL.Timeline('timeline-embed',
-                    this.state.myTimeline);
-            })
-          } else {
-            this.setState({
-              myTimeline: myTimeline,
-              timelineTitle: myTimeline.title,
-              timelineEvents: myTimeline.events
-            })
-          }
+    const object = {
+      provider: storageProvider,
+      token: token,
+      filePath: `/documents/single/${thisFile}.json`
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile)
+    //Now we need to determine if the response was from indexedDB or an API call:
+    if (fetchFile.loadLocal) {
+      const decryptedContent = await JSON.parse(
+        decryptContent(JSON.parse(fetchFile.data.content), {
+          privateKey: thisKey
         })
-     })
-     .then(() => {
-       getFile(window.location.href.split('doc/')[1] + 'sharedwith.json', {decrypt: true})
-       .then((fileContents) => {
-         if(fileContents) {
-           this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
-         } else {
-           this.setState({ sharedWith: [] })
-         }
-       })
-       .catch(error => {
-         console.log("shared with doc error: ")
-         console.log(error);
-       });
-     })
-     .then(() => {
-       this.setState({ loading: false}, () => {
-         // document.getElementsByClassName('ql-editor')[0].style.lineHeight = this.state.spacing;
-         this.loadAvatars();
-       })
-     })
-     .catch(error => {
-       console.log(error);
-     });
-   })
-   .catch(error => {
-     console.log(error)
-   })
-
-
-  this.printPreview = () => {
-    if(this.state.printPreview === true) {
-      this.setState({printPreview: false});
+      );
+      setGlobal(
+        {
+          content: Value.fromJSON(decryptedContent.content),
+          title: decryptedContent.title,
+          tags: decryptedContent.tags,
+          idToLoad: decryptedContent.id,
+          singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
+          docLoaded: true,
+          readOnly: decryptedContent.readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+          rtc: decryptedContent.rtc || false,
+          sharedWith: decryptedContent.sharedWith,
+          teamDoc: decryptedContent.teamDoc,
+          compressed: decryptedContent.compressed || false,
+          spacing: decryptedContent.spacing,
+          lastUpdate: decryptedContent.lastUpdate,
+          jsonContent: true,
+          versions: decryptedContent.versions || [],
+          loading: false
+        },
+        async () => {
+          const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
+          let token;
+          if(storageProvider === 'dropbox') {
+            token = JSON.parse(localStorage.getItem('oauthData'))
+          } else {
+            token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+          }
+          const object = {
+            provider: storageProvider,
+            token: token,
+            filePath: '/documents/index.json'
+          }
+          //Call fetchFromProvider and wait for response.
+          const indexFile = await fetchFromProvider(object);
+          console.log(indexFile)
+          const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
+          setGlobal(
+            {
+              value: decryptedIndex,
+              filteredValue: decryptedIndex
+            },
+             async () => {
+              let value = decryptedIndex;
+              const thisDoc = await value.find(doc => {
+                if (typeof doc.id === "string") {
+                  if (doc.id) {
+                    if (window.location.href.split('doc/')[1].includes('#')) {
+                      return (
+                        doc.id ===
+                        window.location.href.split("doc/")[1].split("#")[0]
+                      );
+                    } else {
+                      return doc.id === window.location.href.split("doc/")[1];
+                    }
+                  }
+                } else {
+                  if (doc.id) {
+                    if (window.location.href.split('doc/')[1].includes('#')) {
+                      return (
+                        doc.id.toString() ===
+                        window.location.href.split("doc/")[1].split("#")[0]
+                      );
+                    } else {
+                      return doc.id.toString() === window.location.href.split("doc/")[1];
+                    }
+                  }
+                }
+                return null;
+              });
+              let index = thisDoc && thisDoc.id;
+              function findObjectIndex(doc) {
+                return doc.id === index; //this is comparing a number to a number
+              }
+              setGlobal({ index: value.findIndex(findObjectIndex) }, async () => {
+                //Here we are fetching the timeline file (if there is one)
+                const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
+                let token;
+                if(storageProvider === 'dropbox') {
+                  token = JSON.parse(localStorage.getItem('oauthData'))
+                } else {
+                  token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+                }
+                const object = {
+                  provider: storageProvider,
+                  token: token,
+                  filePath: `/timelines/${thisFile}.json`
+                }
+                const timelineFile = await fetchFromProvider(object);
+                console.log(timelineFile)
+                const decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
+                if(decryptedTimeline) {
+                  setGlobal({
+                    myTimeline: decryptedTimeline,
+                    timelineTitle: decryptedTimeline.title,
+                    timelineEvents: decryptedTimeline.events
+                  })
+                }
+              });
+            }
+          );
+        }
+      );
     } else {
-      this.setState({printPreview: true});
+      //No indexedDB data found, so we load and read from the API call.
+      //Load up a new file reader and convert response to JSON.
+      const reader = await new FileReader();
+      var blob = fetchFile.fileBlob;
+      reader.onloadend = async evt => {
+        console.log("read success");
+        const decryptedContent = await JSON.parse(
+          decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+        );
+        setGlobal(
+          {
+            content: Value.fromJSON(decryptedContent.content),
+            title: decryptedContent.title,
+            tags: decryptedContent.tags,
+            idToLoad: decryptedContent.id,
+            singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
+            docLoaded: true,
+            readOnly: decryptedContent.readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+            rtc: decryptedContent.rtc || false,
+            sharedWith: decryptedContent.sharedWith,
+            teamDoc: decryptedContent.teamDoc,
+            compressed: decryptedContent.compressed || false,
+            spacing: decryptedContent.spacing,
+            lastUpdate: decryptedContent.lastUpdate,
+            jsonContent: true,
+            versions: decryptedContent.versions || [],
+            loading: false
+          },
+          async () => {
+            const indexFile = await fetchFromProvider(object);
+            console.log(indexFile);
+            // var blob = indexFile.fileBlob;
+            const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+            const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+            setGlobal(
+              {
+                value: decryptedIndex,
+                filteredValue: decryptedIndex
+              },
+              () => {
+                let value = global.value;
+                const thisDoc = value.find(doc => {
+                  if (typeof doc.id === "string") {
+                    if (doc.id) {
+                      if (window.location.href.split("doc/")[1].includes("#")) {
+                        return (
+                          doc.id ===
+                          window.location.href.split("doc/")[1].split("#")[0]
+                        );
+                      } else {
+                        return doc.id === window.location.href.split("doc/")[1];
+                      }
+                    }
+                  } else {
+                    if (doc.id) {
+                      return (
+                        doc.id.toString() ===
+                        window.location.href.split("doc/")[1]
+                      ); //this is comparing a string to a string
+                    }
+                  }
+                  return null;
+                });
+                let index = thisDoc && thisDoc.id;
+                function findObjectIndex(doc) {
+                  return doc.id === index; //this is comparing a number to a number
+                }
+                setGlobal({ index: value.findIndex(findObjectIndex) }, async () => {
+                    //Here we are fetching the timeline file (if there is one)
+                const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
+                let token;
+                if(storageProvider === 'dropbox') {
+                  token = JSON.parse(localStorage.getItem('oauthData'))
+                } else {
+                  token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+                }
+                const object = {
+                  provider: storageProvider,
+                  token: token,
+                  filePath: `/timelines/${thisFile}.json`
+                }
+                const timelineFile = await fetchFromProvider(object);
+                console.log(timelineFile)
+                const decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+                if(decryptedTimeline) {
+                  setGlobal({
+                    myTimeline: decryptedTimeline,
+                    timelineTitle: decryptedTimeline.title,
+                    timelineEvents: decryptedTimeline.events
+                  })
+                }
+                });
+              }
+            );
+          }
+        );
+      };
+      await console.log(reader.readAsText(blob));
     }
+  } else if (authProvider === "blockstack") {
+    getFile("documentscollection.json", { decrypt: true })
+      .then(fileContents => {
+        if (fileContents) {
+          if (JSON.parse(fileContents)) {
+            if (JSON.parse(fileContents).value) {
+              setGlobal(
+                {
+                  value: JSON.parse(fileContents).value,
+                  filteredValue: JSON.parse(fileContents).value
+                },
+                () => {
+                  let value = global.value;
+                  const thisDoc = value.find(doc => {
+                    if (typeof doc.id === "string") {
+                      if (doc.id) {
+                        if (
+                          window.location.href.split("doc/")[1].includes("#")
+                        ) {
+                          return (
+                            doc.id ===
+                            window.location.href.split("doc/")[1].split("#")[0]
+                          );
+                        } else {
+                          return (
+                            doc.id === window.location.href.split("doc/")[1]
+                          );
+                        }
+                      }
+                    } else {
+                      if (doc.id) {
+                        return (
+                          doc.id.toString() ===
+                          window.location.href.split("doc/")[1]
+                        ); //this is comparing a string to a string
+                      }
+                    }
+                    return null;
+                  });
+                  let index = thisDoc && thisDoc.id;
+                  function findObjectIndex(doc) {
+                    return doc.id === index; //this is comparing a number to a number
+                  }
+                  setGlobal({ index: value.findIndex(findObjectIndex) });
+                }
+              );
+            } else {
+              setGlobal(
+                {
+                  value: JSON.parse(fileContents),
+                  filteredValue: JSON.parse(fileContents)
+                },
+                () => {
+                  let value = global.value;
+                  const thisDoc = value.find(doc => {
+                    if (typeof doc.id === "string") {
+                      if (doc.id) {
+                        return doc.id === window.location.href.split("doc/")[1]; //this is comparing a string to a string
+                      }
+                    } else {
+                      if (doc.id) {
+                        return (
+                          doc.id.toString() ===
+                          window.location.href.split("doc/")[1]
+                        ); //this is comparing a string to a string
+                      }
+                    }
+                    return null;
+                  });
+                  let index = thisDoc && thisDoc.id;
+                  function findObjectIndex(doc) {
+                    return doc.id === index; //this is comparing a number to a number
+                  }
+                  setGlobal({ index: value.findIndex(findObjectIndex) });
+                }
+              );
+            }
+          }
+        } else {
+          setGlobal({ value: [], filteredValue: [] });
+        }
+      })
+      .then(() => {
+        getFile(fullFile, { decrypt: true })
+          .then(fileContents => {
+            console.log(JSON.parse(fileContents));
+            let thisContent;
+
+            if (JSON.parse(fileContents).compressed === true) {
+              console.log("compressed doc");
+              setGlobal({
+                content: html.deserialize(
+                  lzjs.decompress(JSON.parse(fileContents).content)
+                ),
+                title: JSON.parse(fileContents || "{}").title,
+                tags: JSON.parse(fileContents || "{}").tags,
+                idToLoad: JSON.parse(fileContents || "{}").id,
+                singleDocIsPublic: JSON.parse(fileContents || "{}")
+                  .singleDocIsPublic, //adding this...
+                docLoaded: true,
+                readOnly: JSON.parse(fileContents || "{}").readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+                rtc: JSON.parse(fileContents || "{}").rtc || false,
+                sharedWith: JSON.parse(fileContents || "{}").sharedWith,
+                teamDoc: JSON.parse(fileContents || "{}").teamDoc,
+                compressed:
+                  JSON.parse(fileContents || "{}").compressed || false,
+                spacing: JSON.parse(fileContents || "{}").spacing,
+                lastUpdate: JSON.parse(fileContents).lastUpdate,
+                jsonContent: true,
+                versions: JSON.parse(fileContents).versions || []
+              });
+            } else {
+              console.log("Not compressed");
+              if (JSON.parse(fileContents).jsonContent) {
+                console.log("Json doc");
+                thisContent = JSON.parse(fileContents).content;
+                setGlobal({
+                  content: Value.fromJSON(thisContent),
+                  title: JSON.parse(fileContents || "{}").title,
+                  tags: JSON.parse(fileContents || "{}").tags,
+                  idToLoad: JSON.parse(fileContents || "{}").id,
+                  singleDocIsPublic: JSON.parse(fileContents || "{}")
+                    .singleDocIsPublic, //adding this...
+                  docLoaded: true,
+                  readOnly: JSON.parse(fileContents || "{}").readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+                  rtc: JSON.parse(fileContents || "{}").rtc || false,
+                  sharedWith: JSON.parse(fileContents || "{}").sharedWith,
+                  teamDoc: JSON.parse(fileContents || "{}").teamDoc,
+                  compressed:
+                    JSON.parse(fileContents || "{}").compressed || false,
+                  spacing: JSON.parse(fileContents || "{}").spacing,
+                  lastUpdate: JSON.parse(fileContents).lastUpdate,
+                  jsonContent: true,
+                  versions: JSON.parse(fileContents).versions || []
+                });
+              } else {
+                console.log("html doc");
+                setGlobal({
+                  content: html.deserialize(JSON.parse(fileContents).content),
+                  title: JSON.parse(fileContents || "{}").title,
+                  tags: JSON.parse(fileContents || "{}").tags,
+                  idToLoad: JSON.parse(fileContents || "{}").id,
+                  singleDocIsPublic: JSON.parse(fileContents || "{}")
+                    .singleDocIsPublic, //adding this...
+                  docLoaded: true,
+                  readOnly: JSON.parse(fileContents || "{}").readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+                  rtc: JSON.parse(fileContents || "{}").rtc || false,
+                  sharedWith: JSON.parse(fileContents || "{}").sharedWith,
+                  teamDoc: JSON.parse(fileContents || "{}").teamDoc,
+                  compressed:
+                    JSON.parse(fileContents || "{}").compressed || false,
+                  spacing: JSON.parse(fileContents || "{}").spacing,
+                  lastUpdate: JSON.parse(fileContents).lastUpdate,
+                  versions: JSON.parse(fileContents).versions || []
+                });
+              }
+            }
+          })
+          .then(() => {
+            loadContacts();
+          })
+          .then(() => {
+            let timelineFile =
+              "timelines/" + window.location.href.split("doc/")[1] + ".json";
+            getFile(timelineFile, { decrypt: true }).then(file => {
+              if (file) {
+                setGlobal(
+                  {
+                    myTimeline: JSON.parse(file),
+                    timelineTitle: JSON.parse(file).title,
+                    timelineEvents: JSON.parse(file).events
+                  },
+                  () => {
+                    new window.TL.Timeline(
+                      "timeline-embed",
+                      global.myTimeline
+                    );
+                  }
+                );
+              } else {
+                setGlobal({
+                  myTimeline: myTimeline,
+                  timelineTitle: myTimeline.title,
+                  timelineEvents: myTimeline.events
+                });
+              }
+            });
+          })
+          .then(() => {
+            getFile(window.location.href.split("doc/")[1] + "sharedwith.json", {
+              decrypt: true
+            })
+              .then(fileContents => {
+                if (fileContents) {
+                  setGlobal({
+                    sharedWith: JSON.parse(fileContents || "{}")
+                  });
+                } else {
+                  setGlobal({ sharedWith: [] });
+                }
+              })
+              .catch(error => {
+                console.log("shared with doc error: ");
+                console.log(error);
+              });
+          })
+          .then(() => {
+            setGlobal({ loading: false }, () => {
+              // document.getElementsByClassName('ql-editor')[0].style.lineHeight = global.spacing;
+              loadAvatars();
+            });
+          })
+          .catch(error => {
+            console.log(error);
+          });
+      })
+      .catch(error => {
+        console.log(error);
+      });
+
+    this.printPreview = () => {
+      if (global.printPreview === true) {
+        setGlobal({ printPreview: false });
+      } else {
+        setGlobal({ printPreview: true });
+      }
+    };
   }
 }
 
 export function noCollaboration() {
-  const thisFile = window.location.href.split('doc/')[1];
-  const fullFile = '/documents/' + thisFile + '.json';
-  if(this.state.content === "<p><br></p>") {
-    getFile(fullFile, {decrypt: true})
-    .then((fileContents) => {
-      this.setState({
-        title: JSON.parse(fileContents || '{}').title,
-        content: JSON.parse(fileContents || '{}').content,
-        tags: JSON.parse(fileContents || '{}').tags,
-        idToLoad: JSON.parse(fileContents || '{}').id,
-        singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-        docLoaded: true,
-        readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-        rtc: JSON.parse(fileContents || '{}').rtc || false,
-        sharedWith: JSON.parse(fileContents || '{}').sharedWith
+  const global = getGlobal();
+  const thisFile = window.location.href.split("doc/")[1];
+  const fullFile = "/documents/" + thisFile + ".json";
+  if (global.content === "<p><br></p>") {
+    getFile(fullFile, { decrypt: true })
+      .then(fileContents => {
+        setGlobal({
+          title: JSON.parse(fileContents || "{}").title,
+          content: JSON.parse(fileContents || "{}").content,
+          tags: JSON.parse(fileContents || "{}").tags,
+          idToLoad: JSON.parse(fileContents || "{}").id,
+          singleDocIsPublic: JSON.parse(fileContents || "{}").singleDocIsPublic, //adding this...
+          docLoaded: true,
+          readOnly: JSON.parse(fileContents || "{}").readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+          rtc: JSON.parse(fileContents || "{}").rtc || false,
+          sharedWith: JSON.parse(fileContents || "{}").sharedWith
+        });
       })
-    })
-    .catch(error => {
-      console.log(error)
-    })
+      .catch(error => {
+        console.log(error);
+      });
   }
 }
 
 export function loadAvatars() {
-  if(this.state.sharedWith) {
-    if (this.state.sharedWith.length > 0) {
-      this.state.sharedWith.forEach((name) => {
-        console.log(this.state.avatars);
+  const global = getGlobal();
+  if (global.sharedWith) {
+    if (global.sharedWith.length > 0) {
+      global.sharedWith.forEach(name => {
+        console.log(global.avatars);
         lookupProfile(name, "https://core.blockstack.org/v1/names")
-          .then((profile) => {
-            this.setState({ avatars: [...this.state.avatars, profile]});
+          .then(profile => {
+            setGlobal({ avatars: [...global.avatars, profile] });
           })
-          .catch((error) => {
-            console.log('could not resolve profile')
-          })
-      })
+          .catch(error => {
+            console.log("could not resolve profile");
+          });
+      });
     } else {
-      setTimeout(this.loadAvatars, 300);
+      setTimeout(loadAvatars, 300);
     }
   }
-
-
 }
 
 export function stealthyChat() {
-  this.setState({hideStealthy: !this.state.hideStealthy})
+  const global = getGlobal();
+  setGlobal({ hideStealthy: !global.hideStealthy });
 }
 
-
-export function toggleReadOnly() { //make this function toggleReadyOnly state instead, so user can press button again!!!!
-  this.setState(
-    prevState => ({ readOnly: !prevState.readOnly }) //setState of readOnly to the opposite of its previous state...
-  )
-  setTimeout(this.sharePublicly, 700); //call sharePublicly on a slight delay, so state has updated since calling setState above...
+export function toggleReadOnly() {
+  //make this function toggleReadyOnly state instead, so user can press button again
+  const global = getGlobal();
+  setGlobal({readOnly: !global.readOnly}, () => {
+    sharePublicly();
+  })
 }
 
 export function handleAutoSave(e) {
-  this.setState({ content: e.target.value });
+  setGlobal({ content: e.target.value });
   clearTimeout(this.timeout);
-  this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  this.timeout = setTimeout(handleAutoAdd, 1500);
 }
 
 export function sharePublicly() {
-  if(this.state.readOnly === undefined) {
-    this.setState({ readOnly: true }, () => {
-      const object = {};
-      object.title = this.state.title;
-      // object.content = html.serialize(this.state.content);
-      object.content = document.getElementsByClassName('editor')[0].innerHTML;
-      object.readOnly = true;
-      object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
-      object.shared = getMonthDayYear();
-      object.singleDocIsPublic = true;
-      this.setState({
-        singlePublic: object,
+  const global = getGlobal();
+  if (global.readOnly === undefined) {
+    setGlobal({ readOnly: true }, async () => {
+      const object = await {
+        title: global.title,
+        content: document.getElementsByClassName("editor")[0].innerHTML, 
+        readOnly: true,
+        words: wordcount(
+          document
+            .getElementsByClassName("editor")[0]
+            .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+        ), 
+        shared: getMonthDayYear(), 
         singleDocIsPublic: true
-      }, () => {
-        this.savePublic();
-      })
-    })
+      };
+      setGlobal(
+        {
+          singlePublic: object,
+          singleDocIsPublic: true
+        },
+        () => {
+          savePublic();
+        }
+      );
+    });
   } else {
     const object = {};
-    object.title = this.state.title;
-    if(this.state.readOnly) {
-      object.content = document.getElementsByClassName('editor')[0].innerHTML;
+    object.title = global.title;
+    if (global.readOnly) {
+      object.content = document.getElementsByClassName("editor")[0].innerHTML;
     } else {
-      let content = this.state.content;
+      let content = global.content;
       object.content = content.toJSON();
     }
-    object.readOnly = this.state.readOnly;
-    object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
+    object.readOnly = global.readOnly;
+    object.words = wordcount(
+      document
+        .getElementsByClassName("editor")[0]
+        .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+    );
     object.shared = getMonthDayYear();
     object.singleDocIsPublic = true;
-    this.setState({
-      singlePublic: object,
-      singleDocIsPublic: true
-    }, () => {
-      this.savePublic();
-    })
+    setGlobal(
+      {
+        singlePublic: object,
+        singleDocIsPublic: true
+      },
+      () => {
+        savePublic();
+      }
+    );
   }
 }
 
 export function stopSharing() {
-  this.setState({
+  setGlobal({
     singlePublic: {},
     singleDocIsPublic: false
-  })
-  setTimeout(this.saveStop, 700);
-}
-
-export function saveStop() {
-  const params = window.location.href.split('doc/')[1];
-  const directory = 'public/';
-  const file = directory + params + '.json'
-  putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
-  .then(() => {
-    this.handleAutoAdd();
-  })
-  .catch(e => {
-    console.log(e);
+  }, () => {
+    saveStop()
   });
 }
 
-export function savePublic() {
-  console.log("it's here")
-  const user = loadUserData().username;
-  const id = window.location.href.split('doc/')[1];
-  const link = window.location.origin + '/shared/docs/' + user + '-' + id;
-  const directory = 'public/';
-  const file = directory + id + '.json';
-  putFile(file, JSON.stringify(this.state.singlePublic), {encrypt: false})
-  .then(() => {
-    this.setState({gaiaLink: link, publicShare: "", shareModal: "hide"});
-    // this.handleAutoAdd() //call this every time savePublic is called, so this.state.singleDocIsPublic persists to database...
-  })
-  .catch(e => {
-    console.log(e);
-  });
+export async function saveStop() {
+  const global = getGlobal();
+  const params = window.location.href.split("doc/")[1];
+  const directory = "public/";
+  const file = directory + params + ".json";
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'uPort') {
+    const did = await JSON.parse(localStorage.getItem('uPortUser')).payload.did.split(':')[2];
+    const data = JSON.stringify(global.singlePublic);
+    const params = {
+      content: data,
+      provider: 'ipfs',
+      filePath: `/ipfs/${did}/${file}`,
+    };
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+    handleAutoAdd();
+  } else {
+    putFile(file, JSON.stringify(global.singlePublic), { encrypt: false })
+    .then(() => {
+      handleAutoAdd();
+    })
+    .catch(e => {
+      console.log(e);
+    });
+  }
+}
+
+export async function savePublic() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const global = getGlobal();
+  const id = window.location.href.split("doc/")[1].split('#')[0];
+  const directory = "public/";
+  const file = directory + id + ".json";
+  if(authProvider === 'uPort') {
+    const did = await JSON.parse(localStorage.getItem('uPortUser')).payload.did.split(':')[2];
+    const link = `${window.location.origin}/shared/docs/ipfs/${did}/${file}`;
+    const data = JSON.stringify(global.singlePublic);
+    const params = {
+      content: data,
+      provider: 'ipfs',
+      filePath: `/ipfs/${did}/${file}`,
+    };
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+    setGlobal({ gaiaLink: link, publicShare: "", shareModal: "hide" });
+  } else {
+    const user = loadUserData().username;
+    const link = window.location.origin + "/shared/docs/" + user + "-" + id;
+    putFile(file, JSON.stringify(global.singlePublic), { encrypt: false })
+    .then(() => {
+      setGlobal({ gaiaLink: link, publicShare: "", shareModal: "hide" });
+      // this.handleAutoAdd() //call this every time savePublic is called, so global.singleDocIsPublic persists to database...
+    })
+    .catch(e => {
+      console.log(e);
+    });
+  }
 }
 
 export function copyLink() {
-    var copyText = document.getElementById("gaia");
-    copyText.select();
-    document.execCommand("Copy");
-    window.Materialize.toast("Link copied to clipboard", 1000);
-  }
+  var copyText = document.getElementById("gaia");
+  copyText.select();
+  document.execCommand("Copy");
+  window.Materialize.toast("Link copied to clipboard", 1000);
+}
 
-export function sharedInfoSingleDocRTC(props){
-    this.setState({ receiverID: props, rtc: true, loading: true });
-    const user = props;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+export function sharedInfoSingleDocRTC(props) {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const global = getGlobal();
+  if(props.contact.includes('did:')) {
+    //This is a uPort contact. Need to grab the pubkey
+    setGlobal({ pubKey: props.pubKey, receiverID: props.contact.name, rtc: true }, () => {
+      loadMyFile();
+    })
+  } else {
+    setGlobal({ receiverID: props, rtc: true });
+    const user = props.contact;
+    const options = {
+      username: user,
+      zoneFileLookupURL: "https://core.blockstack.org/v1/names",
+      decrypt: false
+    };
 
-    getFile('key.json', options)
-      .then((file) => {
-        this.setState({ pubKey: JSON.parse(file)})
+    getFile("key.json", options)
+      .then(file => {
+        setGlobal({ pubKey: JSON.parse(file) });
         console.log("Step One: PubKey Loaded");
       })
       .then(() => {
-        getFile('graphiteprofile.json', options)
-          .then((fileContents) => {
-            if(JSON.parse(fileContents).emailOK) {
-              const object = {};
-              object.sharedBy = loadUserData().username;
-              object.title = this.state.title;
-              object.from_email = "contact@graphitedocs.com";
-              object.to_email = JSON.parse(fileContents).profileEmail;
-              if(window.location.href.includes('/documents')) {
-                object.subject = 'New Graphite document shared by ' + loadUserData().username;
-                object.link = window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1];
-                object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
-                axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
-                  .then((res) => {
-                    console.log(res);
-                  })
-                console.log(object);
-              }
-            } else {
-              console.log("you can't email this person")
+        getFile("graphiteprofile.json", options).then(fileContents => {
+          if (JSON.parse(fileContents).emailOK) {
+            const object = {};
+            object.sharedBy = authProvider === 'uPort' ? JSON.parse(localStorage.getItem('uPortUser')).payload.did : loadUserData().username;
+            object.title = global.title;
+            object.from_email = "contact@graphitedocs.com";
+            object.to_email = JSON.parse(fileContents).profileEmail;
+            if (window.location.href.includes("/documents")) {
+              object.subject =
+                "New Graphite document shared by " + loadUserData().username;
+              object.link =
+                window.location.origin +
+                "/documents/single/shared/" +
+                loadUserData().username +
+                "/" +
+                window.location.href.split("doc/")[1];
+              object.content =
+                "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" +
+                loadUserData().username +
+                " has shared a document with you.</h3><p>Access it here:</p><br><a href=" +
+                object.link +
+                ">" +
+                object.link +
+                "</a></div>";
+              axios
+                .post(
+                  "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared",
+                  object
+                )
+                .then(res => {
+                  console.log(res);
+                });
+              console.log(object);
             }
-          })
-      })
-        .then(() => {
-          this.loadMyFile();
-        })
-        .catch(error => {
-          console.log("No key: " + error);
-          this.setState({ loading: false, displayMessage: true, results: [] }, () => {
-            setTimeout(() => this.setState({displayMessage: false}), 3000);
-          });
+          } else {
+            console.log("you can't email this person");
+          }
         });
-}
-
-export function sharedInfoSingleDocStatic(props){
-  htmlContent = document.getElementsByClassName('editor')[0].innerHTML;
-  this.setState({ receiverID: props, rtc: false, loading: true });
-  const user = props;
-  const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  getFile('key.json', options)
-    .then((file) => {
-      this.setState({ pubKey: JSON.parse(file)})
-      console.log("Step One: PubKey Loaded");
-    })
-      .then(() => {
-        getFile('graphiteprofile.json', options)
-          .then((fileContents) => {
-            if(JSON.parse(fileContents).emailOK) {
-              const object = {};
-              object.sharedBy = loadUserData().username;
-              object.title = this.state.title;
-              object.from_email = "contact@graphitedocs.com";
-              object.to_email = JSON.parse(fileContents).profileEmail;
-              if(window.location.href.includes('/documents')) {
-                object.subject = 'New Graphite document shared by ' + loadUserData().username;
-                object.link = window.location.origin + '/documents/single/shared/' + loadUserData().username + '/' + window.location.href.split('doc/')[1];
-                object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a document with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
-                axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
-                  .then((res) => {
-                    console.log(res);
-                  })
-                console.log(object);
-              }
-            } else {
-              console.log("you can't email this person")
-            }
-          })
       })
       .then(() => {
-        this.loadMyFile();
+        loadMyFile();
       })
       .catch(error => {
         console.log("No key: " + error);
-        this.setState({ loading: false, displayMessage: true, results: [] }, () => {
-          setTimeout(() => this.setState({displayMessage: false}), 3000);
-        });
+        setGlobal(
+          { loading: false, displayMessage: true, results: [] },
+          () => {
+            setTimeout(() => setGlobal({ displayMessage: false }), 3000);
+          }
+        );
       });
+  }
 }
 
-export function loadMyFile() {
-  const pubKey = this.state.pubKey;
-  const fileName = 'shareddocs.json'
-  const file = 'mine/' + pubKey + '/' + fileName;
-  getFile(file, {decrypt: true})
-  .then((fileContents) => {
-    this.setState({ shareFile: JSON.parse(fileContents || '{}') })
-    this.setState({ show: "hide" });
-  })
-  .then(() => {
-    const object = {};
-    let content = this.state.content;
-    object.title = this.state.title;
-    object.compressed = false;
-    if(this.state.rtc) {
-      object.jsonContent = true;
-      object.content = content.toJSON();
-    } else {
-      object.jsonContent = false;
-      object.content = htmlContent;
-      object.fullContent = content.toJSON();
-    }
-    this.state.teamShare ? object.teamDoc = true : object.teamDoc = false;
-    object.id = window.location.href.split('doc/')[1];
-    object.receiverID = this.state.receiverID;
-    object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
-    object.sharedWith = [...this.state.sharedWith, this.state.receiverID];
-    object.shared = getMonthDayYear();
-    object.rtc = this.state.rtc;
-    object.user = loadUserData().username;
-    this.setState({ shareFile: [...this.state.shareFile, object], sharedWith: [...this.state.sharedWith, this.state.receiverID] });
-    setTimeout(this.shareDoc, 700);
-  })
-  .catch(error => {
-    console.log(error);
-    this.setState({ loading: "", show: "hide" });
-
-    const object = {};
-    let content = this.state.content;
-    object.title = this.state.title;
-    if(this.state.rtc) {
-      object.jsonContent = true;
-    } else {
-      object.jsonContent = false;
-    }
-    object.content = content.toJSON();
-    if(this.state.teamShare === true) {
-      object.teamDoc = true;
-    }
-    object.id = Date.now();
-    object.receiverID = this.state.receiverID;
-    object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''))
-    object.shared = getMonthDayYear();
-    object.rtc = this.state.rtc;
-    this.setState({ shareFile: [...this.state.shareFile, object] });
-    setTimeout(this.shareDoc, 700);
-  });
-}
-
-export function shareDoc() {
-  const fileName = 'shareddocs.json'
-  const pubKey = this.state.pubKey;
-  const file = 'mine/' + pubKey + '/' + fileName;
-  putFile(file, JSON.stringify(this.state.shareFile), {encrypt: true})
-  .catch(e => {
-    console.log("e");
-    console.log(e);
-  });
-
-  const data = this.state.shareFile;
-  const encryptedData = JSON.stringify(encryptECIES(pubKey, JSON.stringify(data)));
-  const directory = 'shared/' + pubKey + fileName;
-  putFile(directory, encryptedData, {encrypt: false})
-  .then(() => {
-    this.setState({ loading: false, displayMessageSuccess: true, results: [] }, () => {
-      console.log("Success")
+export async function sharedInfoSingleDocStatic(props) {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const global = await getGlobal();
+  htmlContent = document.getElementsByClassName("editor")[0].innerHTML;
+  if(props.contact.includes('did:')) {
+    //This is a uPort contact. Need to grab the pubkey
+    setGlobal({ pubKey: props.pubKey, receiverID: props.contact.name, rtc: false }, () => {
+      loadMyFile();
+    })
+  } else {
+    setGlobal({ receiverID: props.contact, rtc: false });
+  const user = props.contact;
+  const options = {
+    username: user,
+    zoneFileLookupURL: "https://core.blockstack.org/v1/names",
+    decrypt: false
+  };
+  getFile("key.json", options)
+    .then(file => {
+      setGlobal({ pubKey: JSON.parse(file) });
+      console.log("Step One: PubKey Loaded");
+    })
+    .then(() => {
+      getFile("graphiteprofile.json", options).then(fileContents => {
+        if (JSON.parse(fileContents).emailOK) {
+          const object = {};
+          object.sharedBy = authProvider === 'uPort' ? JSON.parse(localStorage.getItem('uPortUser')).payload.did : loadUserData().username;
+          object.title = global.title;
+          object.from_email = "contact@graphitedocs.com";
+          object.to_email = JSON.parse(fileContents).profileEmail;
+          if (window.location.href.includes("/documents")) {
+            object.subject =
+              "New Graphite document shared by " + object.sharedBy;
+            object.link =
+              window.location.origin +
+              "/documents/single/shared/" +
+              object.sharedBy +
+              "/" +
+              window.location.href.split("doc/")[1].split('#')[0];
+            object.content =
+              "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" +
+              object.sharedBy +
+              " has shared a document with you.</h3><p>Access it here:</p><br><a href=" +
+              object.link +
+              ">" +
+              object.link +
+              "</a></div>";
+            axios
+              .post(
+                "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared",
+                object
+              )
+              .then(res => {
+                console.log(res);
+              });
+            console.log(object);
+          }
+        } else {
+          console.log("you can't email this person");
+        }
+      });
+    })
+    .then(() => {
+      loadMyFile();
+    })
+    .catch(error => {
+      console.log("No key: " + error);
+      setGlobal(
+        { loading: false, displayMessage: true, results: [] },
+        () => {
+          setTimeout(() => setGlobal({ displayMessage: false }), 3000);
+        }
+      );
     });
-  })
-  .catch(e => {
-    console.log(e);
-  });
-  putFile(window.location.href.split('doc/')[1] + 'sharedwith.json', JSON.stringify(this.state.sharedWith), {encrypt: true})
-  .then(() => {
-    if(this.state.teamShare === true) {
-      this.setState({ count: this.state.count + 1 });
-      setTimeout(this.shareToTeam, 300);
+  }
+}
+
+export async function loadMyFile() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const global = await getGlobal();
+  const pubKey = global.pubKey;
+  if(authProvider === 'uPort') {
+    const fileName = "shareddocs.json";
+    const file = "/mine/" + pubKey + "/" + fileName;
+    const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    //Create the params to send to the fetchFromProvider function.
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem('oauthData'))
     } else {
-      this.handleAutoAdd();
-      this.loadAvatars();
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
     }
-  })
-  .catch(e => {
-    console.log(e);
-  });
+    const params = {
+      provider: storageProvider,
+      token: token,
+      filePath: file
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(params);
+    console.log(fetchFile)
+    if(fetchFile) {
+      if(fetchFile.loadLocal) {
+        console.log("Loading local instance first");
+        const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+        await setGlobal({ shareFile: decryptedContent })
+      } else {
+        //check if there is no file to load and set state appropriately.
+        if(typeof fetchFile === 'string') {
+          console.log("Nothing stored locally or in storage provider.")
+          if(fetchFile.includes('error')) {
+            console.log("Setting state appropriately")
+            await setGlobal({shareFile: []})
+          }
+        } else {
+          //No indexedDB data found, so we load and read from the API call.
+          //Load up a new file reader and convert response to JSON.
+          const reader = await new FileReader();
+          var blob = fetchFile.fileBlob;
+          reader.onloadend = async (evt) => {
+            console.log("read success");
+            const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+            await setGlobal({ shareFile: decryptedContent })
+          };
+          await console.log(reader.readAsText(blob));
+        }
+      }
+    } else {
+      await setGlobal({ shareFile: [] })
+    }
+    const object = {};
+        let content = global.content;
+        object.title = global.title;
+        object.compressed = false;
+        if (global.rtc) {
+          object.jsonContent = true;
+          object.content = content.toJSON();
+        } else {
+          object.jsonContent = false;
+          object.content = htmlContent;
+          object.fullContent = content.toJSON();
+        }
+        global.teamShare ? (object.teamDoc = true) : (object.teamDoc = false);
+        object.id = window.location.href.split("doc/")[1];
+        object.receiverID = global.receiverID;
+        object.words = wordcount(
+          document
+            .getElementsByClassName("editor")[0]
+            .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+        );
+        object.sharedWith = [...global.sharedWith, global.receiverID];
+        object.shared = getMonthDayYear();
+        object.rtc = global.rtc;
+        object.user = JSON.parse(localStorage.getItem('uPortUser')).payload.did;
+        await setGlobal({
+          shareFile: [...global.shareFile, object],
+          sharedWith: [...global.sharedWith, global.receiverID]
+        }, () => {
+          shareDoc();
+        });
+  } else {
+    const fileName = "shareddocs.json";
+    const file = "mine/" + pubKey + "/" + fileName;
+    getFile(file, { decrypt: true })
+      .then(fileContents => {
+        setGlobal({ shareFile: JSON.parse(fileContents || "{}") });
+        setGlobal({ show: "hide" });
+      })
+      .then(() => {
+        const object = {};
+        let content = global.content;
+        object.title = global.title;
+        object.compressed = false;
+        if (global.rtc) {
+          object.jsonContent = true;
+          object.content = content.toJSON();
+        } else {
+          object.jsonContent = false;
+          object.content = htmlContent;
+          object.fullContent = content.toJSON();
+        }
+        global.teamShare ? (object.teamDoc = true) : (object.teamDoc = false);
+        object.id = window.location.href.split("doc/")[1];
+        object.receiverID = global.receiverID;
+        object.words = wordcount(
+          document
+            .getElementsByClassName("editor")[0]
+            .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+        );
+        object.sharedWith = [...global.sharedWith, global.receiverID];
+        object.shared = getMonthDayYear();
+        object.rtc = global.rtc;
+        object.user = loadUserData().username;
+        setGlobal({
+          shareFile: [...global.shareFile, object],
+          sharedWith: [...global.sharedWith, global.receiverID]
+        });
+        setTimeout(shareDoc, 700);
+      })
+      .catch(error => {
+        console.log(error);
+        setGlobal({ loading: "", show: "hide" });
+  
+        const object = {};
+        let content = global.content;
+        object.title = global.title;
+        if (global.rtc) {
+          object.jsonContent = true;
+        } else {
+          object.jsonContent = false;
+        }
+        object.content = content.toJSON();
+        if (global.teamShare === true) {
+          object.teamDoc = true;
+        }
+        object.id = Date.now();
+        object.receiverID = global.receiverID;
+        object.words = wordcount(
+          document
+            .getElementsByClassName("editor")[0]
+            .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+        );
+        object.shared = getMonthDayYear();
+        object.rtc = global.rtc;
+        setGlobal({ shareFile: [...global.shareFile, object] });
+        setTimeout(shareDoc, 700);
+      });
+  }
+}
+
+export async function shareDoc() {
+  setGlobal({ loading: true })
+  const global = await getGlobal();
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'uPort') {
+    const fileName = "shareddocs.json";
+    const pubKey = global.pubKey;
+    const file = "/mine/" + pubKey + "/" + fileName;
+    const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+    const data = JSON.stringify(global.shareFile);
+    const encryptedData = await encryptContent(data, { publicKey: publicKey });
+    const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem("oauthData"));
+    } else {
+      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+    }
+    const params = {
+      content: encryptedData,
+      filePath: file,
+      provider: storageProvider,
+      token: token
+    };
+
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+
+    const file2 = "/shared/" + pubKey + "/" + fileName;
+    const data2 = JSON.stringify(global.shareFile);
+    const encryptedData2 = await encryptContent(data2, { publicKey: global.pubKey });
+    const params2 = {
+      content: encryptedData2,
+      filePath: file2,
+      provider: 'ipfs'
+    }
+
+    let postToStorage2 = await postToStorageProvider(params2);
+    console.log(postToStorage2);
+
+    const file3 = "/" + window.location.href.split("doc/")[1].split('#')[0] + "sharedwith.json";
+    const data3 = JSON.stringify(global.sharedWith);
+    const encryptedData3 = await encryptContent(data3, { publicKey: publicKey });
+    const params3 = {
+      content: encryptedData3,
+      filePath: file3,
+      provider: storageProvider, 
+      token: token
+    }
+
+    let postToStorage3 = await postToStorageProvider(params3);
+    console.log(postToStorage3);
+    setGlobal({ loading: false })
+  } else {
+    const fileName = "shareddocs.json";
+    const pubKey = global.pubKey;
+    const file = "mine/" + pubKey + "/" + fileName;
+    putFile(file, JSON.stringify(global.shareFile), {
+      encrypt: true
+    }).catch(e => {
+      console.log("e");
+      console.log(e);
+    });
+  
+    const data = global.shareFile;
+    const encryptedData = JSON.stringify(
+      encryptECIES(pubKey, JSON.stringify(data))
+    );
+    const directory = "shared/" + pubKey + fileName;
+    putFile(directory, encryptedData, { encrypt: false })
+      .then(() => {
+        setGlobal(
+          { loading: false, displayMessageSuccess: true, results: [] },
+          () => {
+            console.log("Success");
+          }
+        );
+      })
+      .catch(e => {
+        console.log(e);
+      });
+    putFile(
+      window.location.href.split("doc/")[1].split('#')[0] + "sharedwith.json",
+      JSON.stringify(global.sharedWith),
+      { encrypt: true }
+    )
+      .then(() => {
+        if (global.teamShare === true) {
+          setGlobal({ count: global.count + 1 });
+          setTimeout(shareToTeam, 300);
+        } else {
+          handleAutoAdd();
+          loadAvatars();
+        }
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
 }
 
 export function shareModal() {
-  this.setState({
+  setGlobal({
     shareModal: ""
   });
 }
 
 export function hideModal() {
-  this.setState({
+  setGlobal({
     shareModal: "hide",
     blogModal: "hide"
   });
 }
 
 export function handleTitleChange(e) {
-  this.setState({ title: e.target.value });
-  clearTimeout(this.timeout);
-  this.timeout = setTimeout(this.handleAutoAdd, 1500)
+  setGlobal({ title: e.target.value });
+  // clearTimeout(this.timeout);
+  // this.timeout = setTimeout(handleAutoAdd, 1500);
 }
 
 export function handleChange(change) {
-  this.setState({ content: change.value, wordCount: wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, '')) });
+  setGlobal({
+    content: change.value,
+    wordCount: wordcount(
+      document
+        .getElementsByClassName("editor")[0]
+        .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+    )
+  });
   clearTimeout(this.timeout);
-  this.timeout = setTimeout(this.handleAutoAdd, 3000)
+  this.timeout = setTimeout(handleAutoAdd, 3000);
 }
 
-export function handleMDChange(event) {
-}
+export function handleMDChange(event) {}
 
 export function handleIDChange(e) {
-  this.setState({ receiverID: e.target.value })
+  setGlobal({ receiverID: e.target.value });
 }
 
 export function handleBack() {
-  if(this.state.autoSave === "Saving") {
-    setTimeout(this.handleBack, 500);
+  const global = getGlobal();
+  if (global.autoSave === "Saving") {
+    setTimeout(handleBack, 500);
   } else {
     window.location.replace("/documents");
   }
 }
 
 export function handleAutoAdd() {
+  const global = getGlobal();
   versionID = uuidv4();
   // this.analyticsRun('documents');
-  let content = this.state.content;
+  let content = global.content;
   const object = {};
   const objectTwo = {};
   const versionObject = {};
   versionObject.createdAt = new Date();
   versionObject.id = versionID;
-  object.title = this.state.title;
+  object.title = global.title;
   object.content = content.toJSON();
-  object.versions = [...this.state.versions, versionObject]
+  object.versions = [...global.versions, versionObject];
   object.compressed = false;
   object.jsonContent = true;
-  this.state.teamDoc ? object.teamDoc = true : object.teamDoc = false;
-  if(window.location.href.includes('docs/')) {
-    console.log("Public Doc")
-    object.id = window.location.href.split('docs/')[1];
-    objectTwo.id = window.location.href.split('docs/')[1];
-  } else if(window.location.href.includes('shared/')) {
-    console.log("Shared Doc")
-    object.id = window.location.href.split('shared/')[1].split('/')[1];
-    objectTwo.id = window.location.href.split('shared/')[1].split('/')[1];
+  global.teamDoc ? (object.teamDoc = true) : (object.teamDoc = false);
+  if (window.location.href.includes("docs/")) {
+    console.log("Public Doc");
+    object.id = window.location.href.split("doc/")[1].includes("#")
+      ? window.location.href.split("doc/")[1].split("#")[0]
+      : window.location.href.split("doc/")[1];
+    objectTwo.id = window.location.href.split("doc/")[1].includes("#")
+      ? window.location.href.split("doc/")[1].split("#")[0]
+      : window.location.href.split("doc/")[1];
+  } else if (window.location.href.includes("shared/")) {
+    console.log("Shared Doc");
+    object.id = window.location.href.split("shared/")[1].split("/")[1];
+    objectTwo.id = window.location.href.split("shared/")[1].split("/")[1];
   } else {
-    console.log("My Doc")
-    object.id = window.location.href.split('doc/')[1];
-    objectTwo.id = window.location.href.split('doc/')[1];
+    object.id = window.location.href.split("doc/")[1].includes("#")
+      ? window.location.href.split("doc/")[1].split("#")[0]
+      : window.location.href.split("doc/")[1];
+    objectTwo.id = window.location.href.split("doc/")[1].includes("#")
+      ? window.location.href.split("doc/")[1].split("#")[0]
+      : window.location.href.split("doc/")[1];
   }
   object.updated = getMonthDayYear();
-  object.sharedWith = this.state.sharedWith;
-  object.singleDocIsPublic = this.state.singleDocIsPublic; //true or false...
-  object.readOnly = this.state.readOnly; //true or false...
-  object.rtc = this.state.rtc;
+  object.sharedWith = global.sharedWith;
+  object.singleDocIsPublic = global.singleDocIsPublic; //true or false...
+  object.readOnly = global.readOnly; //true or false...
+  object.rtc = global.rtc;
   // object.author = loadUserData().username;
-  object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, '')) || "";
-  object.singleDocTags = this.state.singleDocTags;
+  object.words =
+    wordcount(
+      document
+        .getElementsByClassName("editor")[0]
+        .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+    ) || "";
+  object.singleDocTags = global.singleDocTags;
   object.fileType = "documents";
-  object.spacing = this.state.spacing;
+  object.spacing = global.spacing;
   object.lastUpdate = Date.now();
-  objectTwo.title = this.state.title;
-  this.state.teamDoc ? objectTwo.teamDoc = true : objectTwo.teamDoc = false;
+  objectTwo.title = global.title;
+  global.teamDoc ? (objectTwo.teamDoc = true) : (objectTwo.teamDoc = false);
   objectTwo.id = object.id;
   objectTwo.updated = getMonthDayYear();
-  objectTwo.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''));
+  objectTwo.words = wordcount(
+    document
+      .getElementsByClassName("editor")[0]
+      .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+  );
   objectTwo.lastUpdate = Date.now();
-  objectTwo.sharedWith = this.state.sharedWith;
-  objectTwo.rtc = this.state.rtc;
-  objectTwo.singleDocIsPublic = this.state.singleDocIsPublic; //true or false...
-  objectTwo.readOnly = this.state.readOnly; //true or false...
+  objectTwo.sharedWith = global.sharedWith;
+  objectTwo.rtc = global.rtc;
+  objectTwo.singleDocIsPublic = global.singleDocIsPublic; //true or false...
+  objectTwo.readOnly = global.readOnly; //true or false...
   // objectTwo.author = loadUserData().username;
-  objectTwo.singleDocTags = this.state.singleDocTags;
+  objectTwo.singleDocTags = global.singleDocTags;
   objectTwo.fileType = "documents";
-  const index = this.state.index;
-  console.log(this.state.index)
-    if(this.state.newSharedDoc) {
-      console.log("new shared doc")
-      console.log(objectTwo)
-      this.setState({ versions: [...this.state.versions, versionObject], newSharedDoc: false, value: [...this.state.value, objectTwo], singleDoc: object, autoSave: "Saving..." }, () => {
-        this.setState({ filteredValue: this.state.value }, () => {
-          this.autoSave();
-        })
-        if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-          this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-        }
-      });
-    } else {
-      console.log("not a new shared doc")
-      if(index !== "" && index > -1) {
-        console.log("index already set")
-        const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
-        this.setState({versions: [...this.state.versions, versionObject], value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
-          this.autoSave();
-          if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-            this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-          }
+  const index = global.index;
+  console.log(global.index);
+  if (global.newSharedDoc) {
+    console.log("new shared doc");
+    console.log(objectTwo);
+    setGlobal(
+      {
+        versions: [...global.versions, versionObject],
+        newSharedDoc: false,
+        value: [...global.value, objectTwo],
+        singleDoc: object,
+        autoSave: "Saving..."
+      },
+      () => {
+        setGlobal({ filteredValue: global.value }, () => {
+          autoSave();
         });
-      } else {
-        let value = this.state.value;
-        console.log(value);
-        const thisDoc = value.find((doc) => {
-          if(typeof doc.id === "string") {
-            if(doc.id) {
-              return doc.id === window.location.href.split('shared/')[1].split('/')[1]
-            }
-          } else {
-            if(doc.id) {
-              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
-            }
-          }
-          return null;
-        });
-        let index = thisDoc && thisDoc.id;
-        function findObjectIndex(doc) {
-          return doc.id === index; //this is comparing a number to a number
+        if (global.singleDocIsPublic === true) {
+          //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+          sharePublicly(); //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
         }
-        this.setState({index: value.findIndex(findObjectIndex)}, () => {
-          const updatedDoc = update(this.state.value, {$splice: [[this.state.index, 1, objectTwo]]});
-          this.setState({versions: [...this.state.versions, versionObject], value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, autoSave: "Saving..." }, () => {
-            this.autoSave();
-            if (this.state.singleDocIsPublic === true) { //moved this conditional from handleAutoAdd, where it caused an infinite loop...
-              this.sharePublicly() //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
-            }
-          });
-        })
       }
+    );
+  } else {
+    console.log("not a new shared doc");
+    if (index !== "" && index > -1) {
+      console.log("index already set");
+      const updatedDoc = update(global.value, {
+        $splice: [[global.index, 1, objectTwo]]
+      });
+      setGlobal(
+        {
+          versions: [...global.versions, versionObject],
+          value: updatedDoc,
+          filteredValue: updatedDoc,
+          singleDoc: object,
+          autoSave: "Saving..."
+        },
+        () => {
+          autoSave();
+          if (global.singleDocIsPublic === true) {
+            //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+            sharePublicly(); //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+          }
+        }
+      );
+    } else {
+      let value = global.value;
+      console.log(value);
+      const thisDoc = value.find(doc => {
+        if (typeof doc.id === "string") {
+          if (doc.id) {
+            return (
+              doc.id === window.location.href.split("shared/")[1].split("/")[1]
+            );
+          }
+        } else {
+          if (doc.id) {
+            return (
+              doc.id.toString() ===
+              window.location.href.split("shared/")[1].split("/")[1]
+            );
+          }
+        }
+        return null;
+      });
+      let index = thisDoc && thisDoc.id;
+      function findObjectIndex(doc) {
+        return doc.id === index; //this is comparing a number to a number
+      }
+      setGlobal({ index: value.findIndex(findObjectIndex) }, () => {
+        const updatedDoc = update(global.value, {
+          $splice: [[global.index, 1, objectTwo]]
+        });
+        setGlobal(
+          {
+            versions: [...global.versions, versionObject],
+            value: updatedDoc,
+            filteredValue: updatedDoc,
+            singleDoc: object,
+            autoSave: "Saving..."
+          },
+          () => {
+            autoSave();
+            if (global.singleDocIsPublic === true) {
+              //moved this conditional from handleAutoAdd, where it caused an infinite loop...
+              sharePublicly(); //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
+            }
+          }
+        );
+      });
     }
+  }
 }
 
 export function setVersion(id) {
-  console.log('Fetching ' + id)
-  getFile(id + '.json', {decrypt: true})
-    .then((file) => {
-      this.setState({ content: Value.fromJSON(JSON.parse(file)), versionModal: false  })
+  console.log("Fetching " + id);
+  getFile(id + ".json", { decrypt: true })
+    .then(file => {
+      setGlobal({
+        content: Value.fromJSON(JSON.parse(file)),
+        versionModal: false
+      });
     })
-    .catch(error => console.log(error))
+    .catch(error => console.log(error));
 }
 
-export function autoSave() {
-  const file = window.location.href.split('doc/')[1] || this.state.tempDocId;
-  const fullFile = '/documents/' + file + '.json';
-  putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt: true})
-  .then(() => {
-    this.saveSingleDocCollection();
-  })
-  .catch(e => {
-    console.log(e);
-  });
+export async function autoSave() {
+  const global = getGlobal();
+  const file = window.location.href.split("doc/")[1].includes("#")
+    ? window.location.href.split("doc/")[1].split("#")[0]
+    : window.location.href.split("doc/")[1] || global.tempDocId;
+  const fullFile = "/documents/" + file + ".json";
+  if (authProvider === "uPort") {
+    const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+    const data = JSON.stringify(global.value);
+    const encryptedData = await encryptContent(data, { publicKey: publicKey });
+    const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem("oauthData"));
+    } else {
+      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+    }
+    const params = {
+      content: encryptedData,
+      filePath: "/documents/index.json",
+      provider: storageProvider,
+      token: token
+    };
+
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+    const singleData = JSON.stringify(global.singleDoc);
+    const singleEncrypted = await encryptContent(singleData, {
+      publicKey: publicKey
+    });
+    const singleParams = {
+      content: singleEncrypted,
+      filePath: `/documents/single/${file}.json`,
+      provider: storageProvider,
+      token: token
+    };
+    let postSingle = await postToStorageProvider(singleParams);
+    console.log(postSingle);
+    setGlobal({ autoSave: "Saved" });
+    loadDocs();
+  } else if (authProvider === "blockstack") {
+    putFile(fullFile, JSON.stringify(global.singleDoc), { encrypt: true })
+      .then(() => {
+        saveSingleDocCollection();
+      })
+      .catch(e => {
+        console.log(e);
+      });
+  }
 }
 
 export function saveSingleDocCollection() {
-  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt: true})
+  const global = getGlobal();
+  putFile("documentscollection.json", JSON.stringify(global.value), {
+    encrypt: true
+  })
     .then(() => {
-      let content = this.state.content;
-      this.setState({autoSave: "Saved"});
-      console.log( 'Saving ' + versionID);
-      putFile(versionID + '.json', JSON.stringify(content.toJSON()), {encrypt: true})
-        .then(() => {
-          console.log("Versions saved");
-          this.loadCollection()
-        })
+      let content = global.content;
+      setGlobal({ autoSave: "Saved" });
+      console.log("Saving " + versionID);
+      putFile(versionID + ".json", JSON.stringify(content.toJSON()), {
+        encrypt: true
+      }).then(() => {
+        console.log("Versions saved");
+        loadCollection();
+      });
     })
     .catch(e => {
       console.log(e);
@@ -851,70 +1507,74 @@ export function saveSingleDocCollection() {
 }
 
 export function componentDidMountData(props) {
-
-
+  const global = getGlobal();
   const thisFile = props;
-  const fullFile = '/documents/' + thisFile + '.json';
-  this.setState({ documentId: props });
+  const fullFile = "/documents/" + thisFile + ".json";
+  setGlobal({ documentId: props });
 
-  getFile(props + 'sharedwith.json', {decrypt: true})
-   .then((fileContents) => {
-     if(fileContents) {
-       this.setState({ sharedWith: JSON.parse(fileContents || '{}') })
-     } else {
-       this.setState({ sharedWith: [] })
-     }
-   })
+  getFile(props + "sharedwith.json", { decrypt: true })
+    .then(fileContents => {
+      if (fileContents) {
+        setGlobal({ sharedWith: JSON.parse(fileContents || "{}") });
+      } else {
+        setGlobal({ sharedWith: [] });
+      }
+    })
     .catch(error => {
-      console.log("shared with doc error: ")
+      console.log("shared with doc error: ");
       console.log(error);
     });
 
-  getFile("documentscollection.json", {decrypt: true})
-   .then((fileContents) => {
-      if(JSON.parse(fileContents).value) {
-        this.setState({ value: JSON.parse(fileContents || '{}').value })
+  getFile("documentscollection.json", { decrypt: true })
+    .then(fileContents => {
+      if (JSON.parse(fileContents).value) {
+        setGlobal({ value: JSON.parse(fileContents || "{}").value });
       } else {
-        this.setState({ value: JSON.parse(fileContents || '{}') })
+        setGlobal({ value: JSON.parse(fileContents || "{}") });
       }
 
-      let value = this.state.value;
-      const thisDoc = value.find((doc) => { return doc.id.toString() === props}); //comparing strings
+      let value = global.value;
+      const thisDoc = value.find(doc => {
+        return doc.id.toString() === props;
+      }); //comparing strings
       let index = thisDoc && thisDoc.id;
       console.log(index);
       function findObjectIndex(doc) {
-          return doc.id === index; //comparing numbers
+        return doc.id === index; //comparing numbers
       }
-      this.setState({index: value.findIndex(findObjectIndex)})
-   })
+      setGlobal({ index: value.findIndex(findObjectIndex) });
+    })
     .catch(error => {
       console.log(error);
     });
 
-getFile(fullFile, {decrypt: true})
- .then((fileContents) => {
-    this.setState({
-      title: JSON.parse(fileContents || '{}').title,
-      content: JSON.parse(fileContents || '{}').content,
-      tags: JSON.parse(fileContents || '{}').tags,
-      singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic,
-      idToLoad: window.location.href.split('doc/')[1],
-      docLoaded: true
-   })
- })
- .then(() => {
-   let markupStr = this.state.content;
-   if(markupStr !=="") {
-     window.$('.summernote').summernote('code', markupStr);
-   }
- })
-  .catch(error => {
-    console.log(error);
-  });
+  getFile(fullFile, { decrypt: true })
+    .then(fileContents => {
+      setGlobal({
+        title: JSON.parse(fileContents || "{}").title,
+        content: JSON.parse(fileContents || "{}").content,
+        tags: JSON.parse(fileContents || "{}").tags,
+        singleDocIsPublic: JSON.parse(fileContents || "{}").singleDocIsPublic,
+        idToLoad: window.location.href.split("doc/")[1].includes("#")
+          ? window.location.href.split("doc/")[1].split("#")[0]
+          : window.location.href.split("doc/")[1],
+        docLoaded: true
+      });
+    })
+    .then(() => {
+      let markupStr = global.content;
+      if (markupStr !== "") {
+        window.$(".summernote").summernote("code", markupStr);
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
 }
 
 export function handleStealthy() {
-  this.setState({hideStealthy: !this.state.hideStealthy})
+  const global = getGlobal();
+  setGlobal({ hideStealthy: !global.hideStealthy });
 }
 
 export function print() {
@@ -922,262 +1582,323 @@ export function print() {
 }
 
 export function shareToTeam() {
-
-  this.setState({ teamDoc: true, teamShare: true, loadingIndicator: true, action: "Shared document id " + window.location.href.split('doc/')[1] + " with team."})
-  const {team, count} = this.state;
-  if(team.length > count) {
-    this.setState({ auditThis: true });
-    if(team[count].blockstackId !== loadUserData().username) {
-      this.sharedInfoSingleDocRTC(team[count].blockstackId);
+  const global = getGlobal();
+  setGlobal({
+    teamDoc: true,
+    teamShare: true,
+    loadingIndicator: true,
+    action:
+      "Shared document id " +
+      window.location.href.split("doc/")[1] +
+      " with team."
+  });
+  const { team, count } = global;
+  if (team.length > count) {
+    setGlobal({ auditThis: true });
+    if (team[count].blockstackId !== loadUserData().username) {
+      sharedInfoSingleDocRTC(team[count].blockstackId);
     } else {
-      this.setState({ count: this.state.count + 1 });
-      setTimeout(this.shareToTeam, 300);
+      setGlobal({ count: global.count + 1 });
+      setTimeout(shareToTeam, 300);
     }
   } else {
-    this.setState({ teamShare: false, loadingIndicator: false })
-    window.$('#teamShare').modal('close');
-    if(this.state.slackConnected){
-      this.postToSlack();
+    setGlobal({ teamShare: false, loadingIndicator: false });
+    window.$("#teamShare").modal("close");
+    if (global.slackConnected) {
+      postToSlack();
     }
-    if(this.state.webhookConnected) {
+    if (global.webhookConnected) {
       const object = {};
-      let content = this.state.content;
-      object.title = this.state.title;
+      let content = global.content;
+      object.title = global.title;
       object.content = content.toJSON();
-      object.words = wordcount(document.getElementsByClassName('editor')[0].innerHTML.replace(/<(?:.|\n)*?>/gm, ''));
-      object.sharedWith = this.state.sharedWith;
-      this.postToWebhook(object);
+      object.words = wordcount(
+        document
+          .getElementsByClassName("editor")[0]
+          .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+      );
+      object.sharedWith = global.sharedWith;
+      postToWebhook(object);
     }
-    this.handleAutoAdd();
-    this.loadAvatars();
+    handleAutoAdd();
+    loadAvatars();
   }
 }
 
 export function sendArticle() {
-  this.setState({sentArticles: [...this.state.sentArticles, this.state.singleDoc]})
-  setTimeout(this.saveSend, 300);
-  this.setState({send: false})
+  const global = getGlobal();
+  setGlobal({
+    sentArticles: [...global.sentArticles, global.singleDoc]
+  });
+  // setTimeout(saveSend, 300);
+  setGlobal({ send: false });
 }
 
 export function downloadDoc(props) {
-  if(props === "word") {
-    var content = '<!DOCTYPE html>' + document.getElementsByClassName('editor')[0].innerHTML;
+  const global = getGlobal();
+  if (props === "word") {
+    var content =
+      "<!DOCTYPE html>" +
+      document.getElementsByClassName("editor")[0].innerHTML;
     var converted = htmlDocx.asBlob(content);
-    var blob = new Blob([converted], {type: "application/msword"});
-    FileSaver.saveAs(blob, this.state.title + '.docx');
-  } else if(props === "rtf") {
-    console.log("rtf")
-  } else if(props === 'pdf') {
+    var blob = new Blob([converted], { type: "application/msword" });
+    FileSaver.saveAs(blob, global.title + ".docx");
+  } else if (props === "rtf") {
+    console.log("rtf");
+  } else if (props === "pdf") {
     var opt = {
-      margin:       1,
-      filename:     'mypdf.pdf',
-      html2canvas:  { scale: 2 },
-      jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-      pagebreak: { mode: ['css'] }
-    }
+      margin: 1,
+      filename: "mypdf.pdf",
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+      pagebreak: { mode: ["css"] }
+    };
 
-
-    html2pdf('<div class="pdf" style="margin:45px;margin-bottom:20px;"}>' + document.getElementsByClassName('editor')[0].innerHTML + '</div>')
-    .set(opt)
-  } else if(props === 'txt') {
-    window.open("data:application/txt," + encodeURIComponent(document.getElementsByClassName('editor')[0].innerHTML.replace(/<[^>]+>/g, '')), "_self");
+    html2pdf(
+      '<div class="pdf" style="margin:45px;margin-bottom:20px;"}>' +
+        document.getElementsByClassName("editor")[0].innerHTML +
+        "</div>"
+    ).set(opt);
+  } else if (props === "txt") {
+    window.open(
+      "data:application/txt," +
+        encodeURIComponent(
+          document
+            .getElementsByClassName("editor")[0]
+            .innerHTML.replace(/<[^>]+>/g, "")
+        ),
+      "_self"
+    );
   }
-
 }
 
 export function formatSpacing(props) {
-  var nodes = document.getElementsByClassName('ql-editor')[0].childNodes;
-  var i=0;
-  if(props === 'single') {
-
-      for(i; i<nodes.length; i++) {
-          if (nodes[i].nodeName.toLowerCase() === 'p') {
-               nodes[i].style.lineHeight = 1;
-           }
+  var nodes = document.getElementsByClassName("ql-editor")[0].childNodes;
+  var i = 0;
+  if (props === "single") {
+    for (i; i < nodes.length; i++) {
+      if (nodes[i].nodeName.toLowerCase() === "p") {
+        nodes[i].style.lineHeight = 1;
       }
+    }
     // document.getElementsByClassName('ql-editor')[0].querySelectorAll("p").style.lineHeight = 1;
-    this.setState({spacing: 1}, () => {
-      this.handleAutoAdd();
-    })
-  } else if(props === 'double') {
-      for(i; i<nodes.length; i++) {
-          if (nodes[i].nodeName.toLowerCase() === 'p') {
-               nodes[i].style.lineHeight = 2;
-           }
+    setGlobal({ spacing: 1 }, () => {
+      handleAutoAdd();
+    });
+  } else if (props === "double") {
+    for (i; i < nodes.length; i++) {
+      if (nodes[i].nodeName.toLowerCase() === "p") {
+        nodes[i].style.lineHeight = 2;
       }
+    }
     // document.getElementsByClassName('ql-editor')[0].style.lineHeight = 2;
-    this.setState({spacing: 2}, () => {
-      this.handleAutoAdd();
-    })
+    setGlobal({ spacing: 2 }, () => {
+      handleAutoAdd();
+    });
   }
-
 }
 
 export function changeEditor() {
-  this.setState({ markdown: !this.state.markdown})
+  const global = getGlobal();
+  setGlobal({ markdown: !global.markdown });
 }
 
 export function applyOperations(operations) {
-  const { content } = this.state
-  const change = content.change().applyOperations(operations)
-  this.handleChange(change, { remote: true })
+  const global = getGlobal();
+  const { content } = global;
+  const change = content.change().applyOperations(operations);
+  handleChange(change, { remote: true });
 }
 
 export function hasMark(type) {
-  const { content } = this.state
-  return content.activeMarks.some(mark => mark.type === type)
+  const global = getGlobal();
+  const { content } = global;
+  return content.activeMarks.some(mark => mark.type === type);
 }
 
 export function onKeyDown(event, change) {
-  let mark
+  let mark;
 
   if (isBoldHotkey(event)) {
-    mark = 'bold'
+    mark = "bold";
   } else if (isItalicHotkey(event)) {
-    mark = 'italic'
+    mark = "italic";
   } else if (isUnderlinedHotkey(event)) {
-    mark = 'underlined'
+    mark = "underlined";
   } else if (isCodeHotkey(event)) {
-    mark = 'code'
+    mark = "code";
   } else {
-    return
+    return;
   }
 
-  event.preventDefault()
-  change.toggleMark(mark)
-  return true
+  event.preventDefault();
+  change.toggleMark(mark);
+  return true;
 }
 
 export function onClickMark(event, type) {
-  event.preventDefault()
-  const { content } = this.state
-  const change = content.change().toggleMark(type)
-  this.handleChange(change)
+  const global = getGlobal();
+  event.preventDefault();
+  const { content } = global;
+  const change = content.change().toggleMark(type);
+  handleChange(change);
 }
 
-export function doPDF() {
-
-}
+export function doPDF() {}
 
 //Timeline Stuff Here
 
 export function handleTimelineTitleMediaUrl(e) {
-  this.setState({ timelineTitleMediaUrl: e.target.value })
+  setGlobal({ timelineTitleMediaUrl: e.target.value });
 }
 
 export function handleTimelineTitleMediaCaption(e) {
-  this.setState({ timelineTitleMediaCaption: e.target.value })
+  setGlobal({ timelineTitleMediaCaption: e.target.value });
 }
 
 export function handleTimelineTitleMediaCredit(e) {
-  this.setState({ timelineTitleMediaCredit: e.target.value })
+  setGlobal({ timelineTitleMediaCredit: e.target.value });
 }
 
 export function handleTimelineTitleTextHeadline(e) {
-  this.setState({ timelineTitleTextHeadline: e.target.value })
+  console.log("doing it");
+  setGlobal({ timelineTitleTextHeadline: e.target.value });
 }
 
 export function handleTimelineTitleTextText(e) {
-  this.setState({ timelineTitleTextText: e.target.value })
+  setGlobal({ timelineTitleTextText: e.target.value });
 }
 
 export function handleTimelineEventMediaUrl(e) {
-  this.setState({ timelineEventMediaUrl: e.target.value })
+  setGlobal({ timelineEventMediaUrl: e.target.value });
 }
 
 export function handleTimelineEventMediaCaption(e) {
-  this.setState({ timelineEventMediaCaption: e.target.value })
+  setGlobal({ timelineEventMediaCaption: e.target.value });
 }
 
 export function handleTimelineEventMediaCredit(e) {
-  this.setState({ timelineEventMediaCredit: e.target.value })
+  setGlobal({ timelineEventMediaCredit: e.target.value });
 }
 
 export function handleTimelineEventStartMonth(e) {
-  this.setState({ timelineEventStartMonth: e.target.value })
+  setGlobal({ timelineEventStartMonth: e.target.value });
 }
 
 export function handleTimelineEventStartDay(e) {
-  this.setState({ timelineEventStartDay: e.target.value })
+  setGlobal({ timelineEventStartDay: e.target.value });
 }
 
 export function handleTimelineEventStartYear(e) {
-  this.setState({ timelineEventStartYear: e.target.value })
+  setGlobal({ timelineEventStartYear: e.target.value });
 }
 
 export function handleTimelineEventTextHeadline(e) {
-  this.setState({ timelineEventTextHeadline: e.target.value })
+  setGlobal({ timelineEventTextHeadline: e.target.value });
 }
 
 export function handleTimelineEventTextText(e) {
-  this.setState({ timelineEventTextText: e.target.value })
+  setGlobal({ timelineEventTextText: e.target.value });
 }
 
 export function handleUpdateTimelineTitle() {
+  const global = getGlobal();
   const object = {};
-  const media = {}
-  const text = {}
-  media.url = this.state.timelineTitleMediaUrl;
-  media.caption = this.state.timelineTitleMediaCaption;
-  media.credit = this.state.timelineTitleMediaCredit;
-  text.headline = this.state.timelineTitleTextHeadline;
-  text.text = this.state.timelineTitleTextText;
+  const media = {};
+  const text = {};
+  media.url = global.timelineTitleMediaUrl;
+  media.caption = global.timelineTitleMediaCaption;
+  media.credit = global.timelineTitleMediaCredit;
+  text.headline = global.timelineTitleTextHeadline;
+  text.text = global.timelineTitleTextText;
   object.media = media;
   object.text = text;
-  this.setState({ timelineTitle: object }, () => {
+  setGlobal({ timelineTitle: object }, () => {
     const timelineObj = {};
-    timelineObj.title = this.state.timelineTitle;
-    timelineObj.events = this.state.timelineEvents;
-    this.setState({ myTimeline: timelineObj });
-  })
+    timelineObj.title = global.timelineTitle;
+    timelineObj.events = global.timelineEvents;
+    setGlobal({ myTimeline: timelineObj });
+  });
 }
 
 export function handleAddNewTimelineEvent() {
+  const global = getGlobal();
   const object = {};
   const media = {};
   const start_date = {};
   const text = {};
-  media.url = this.state.timelineEventMediaUrl
-  media.caption = this.state.timelineEventMediaCaption
-  media.credit = this.state.timelineEventMediaCredit
-  start_date.month = this.state.timelineEventStartMonth
-  start_date.day = this.state.timelineEventStartDay
-  start_date.year = this.state.timelineEventStartYear
-  text.headline = this.state.timelineEventTextHeadline
-  text.text = this.state.timelineEventTextText
+  media.url = global.timelineEventMediaUrl;
+  media.caption = global.timelineEventMediaCaption;
+  media.credit = global.timelineEventMediaCredit;
+  start_date.month = global.timelineEventStartMonth;
+  start_date.day = global.timelineEventStartDay;
+  start_date.year = global.timelineEventStartYear;
+  text.headline = global.timelineEventTextHeadline;
+  text.text = global.timelineEventTextText;
   object.media = media;
   object.start_date = start_date;
   object.text = text;
-  object.unique_id = Date.now()
-  this.setState({ timelineEvents: [...this.state.timelineEvents, object] }, () => {
-    const timelineObj = {};
-    timelineObj.title = this.state.timelineTitle;
-    timelineObj.events = this.state.timelineEvents;
-    this.setState({ myTimeline: timelineObj });
-  })
+  object.unique_id = Date.now();
+  setGlobal(
+    { timelineEvents: [...global.timelineEvents, object] },
+    () => {
+      const timelineObj = {};
+      timelineObj.title = global.timelineTitle;
+      timelineObj.events = global.timelineEvents;
+      setGlobal({ myTimeline: timelineObj });
+    }
+  );
 }
 
-export function handleTimelineSave() {
+export async function handleTimelineSave() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const global = getGlobal();
   const object = {};
-  object.title = this.state.timelineTitle;
-  object.events = this.state.timelineEvents
-  this.setState({ myTimeline: object }, () => {
-    let timelineFile = 'timelines/' + window.location.href.split('doc/')[1] + '.json'
-    putFile(timelineFile, JSON.stringify(this.state.myTimeline), {encrypt: true})
-      .then(() => console.log("Timeline saved!"))
+  object.title = global.timelineTitle;
+  object.events = global.timelineEvents;
+  setGlobal({ myTimeline: object }, async () => {
+    if(authProvider === 'uPort') {
+      let timelineFile =
+      `/timelines/ + ${window.location.href.split("doc/")[1].split('#')[0]}.json`;
+      const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+      const data = JSON.stringify(global.myTimeline);
+      const encryptedData = await encryptContent(data, { publicKey: publicKey });
+      const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
+      let token;
+      if(storageProvider === 'dropbox') {
+        token = JSON.parse(localStorage.getItem("oauthData"));
+      } else {
+        token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+      }
+      const params = {
+        content: encryptedData,
+        filePath: timelineFile,
+        provider: storageProvider,
+        token: token
+      };
+
+      let postToStorage = await postToStorageProvider(params);
+      console.log(postToStorage);
+    } else {
+      let timelineFile =
+      `timelines/ + ${window.location.href.split("doc/")[1].split('#')[0]}.json`;
+    putFile(timelineFile, JSON.stringify(global.myTimeline), {
+      encrypt: true
+    }).then(() => console.log("Timeline saved!"));
+    }
   });
 }
 
 export function handleDeleteTimelineEvent(id) {
-  let events = this.state.timelineEvents;
-  console.log(events)
+  let events = global.timelineEvents;
+  console.log(events);
   let index = events.findIndex(a => a.unique_id === id);
   if (index > -1) {
     events.splice(index, 1);
   }
-  this.setState({ timelineEvents: events}, () => {
-    this.handleTimelineSave();
-  })
+  setGlobal({ timelineEvents: events }, () => {
+    handleTimelineSave();
+  });
 }
 
 //End of the Timeline Stuff

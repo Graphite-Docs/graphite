@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Signin from '../Signin';
+import Signin from '../shared/Signin';
 import SheetsCollections from './SheetsCollections';
 import {
   isSignInPending,

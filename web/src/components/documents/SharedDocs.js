@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '../Header';
+import Header from '../shared/Header';
 import { Grid, Item } from 'semantic-ui-react';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 

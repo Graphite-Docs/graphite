@@ -7,7 +7,7 @@ import {
   lookupProfile,
   signUserOut,
 } from 'blockstack';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import {Menu as MainMenu, Icon, Container, Table} from 'semantic-ui-react';
 
 const { decryptECIES } = require('blockstack/lib/encryption');

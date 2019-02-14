@@ -1,18 +1,19 @@
-import React, { Component } from "react";
+import React, { Component } from "reactn";
 import { Link } from "react-router-dom";
 import {
   loadUserData
 } from 'blockstack';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Image, Card, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
-import Header from '../Header';
+import Header from '../shared/Header';
 import Joyride from "react-joyride";
 import {
   getFile,
   putFile
 } from 'blockstack'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+const cx = require('../helpers/contacts');
 
 export default class Contacts extends Component {
 
@@ -23,13 +24,20 @@ export default class Contacts extends Component {
       open: false,
       contact: {},
       run: false,
-      onboarding: false
+      onboarding: false, 
+      blockstackUser: false, 
+      uPortUser: false
     }
   }
 
   componentDidMount() {
-    this.props.loadContactsCollection();
-    getFile('contactsPageOnboarding.json', {decrypt: true})
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    cx.loadContactsCollection();
+    //Handle onboarding
+    if(authProvider === 'uPort') {
+
+    } else {
+      getFile('contactsPageOnboarding.json', {decrypt: true})
       .then((fileContents) => {
         if(fileContents) {
           this.setState({ onboardingComplete: JSON.parse(fileContents)})
@@ -40,10 +48,11 @@ export default class Contacts extends Component {
       .then(() => {
         this.checkFiles();
       })
+    }
   }
 
   checkFiles = () => {
-    if(this.props.contacts < 1) {
+    if(this.global.contacts < 1) {
       if(!this.state.onboarding) {
         this.setState({ run: true, onboardingComplete: true }, () => {
           putFile('contactsPageOnboarding.json', JSON.stringify(this.state.onboardingComplete), {encrypt: true})
@@ -57,30 +66,29 @@ export default class Contacts extends Component {
   }
 
   componentDidUpdate() {
-    if(this.props.confirmAdd === true) {
-      this.props.handleAddContact();
+    if(this.global.confirmAdd === true) {
+      cx.handleAddContact();
     }
-    if(this.props.confirmManualAdd === true) {
-      this.props.handleManualAdd();
+    if(this.global.confirmManualAdd === true) {
+      cx.handleManualAdd();
     }
   }
 
   handleDelete = () => {
-    console.log(this.state.contact)
     this.setState({ open: false }, () => {
-      this.props.handleDeleteContact(this.state.contact)
+      cx.handleDeleteContact(this.state.contact)
     })
   }
 
   typeFilter = (tag) => {
     this.setState({ visible: false}, () => {
-      this.props.typeFilter(tag);
+      cx.typeFilter(tag);
     })
   }
 
   dateFilterContacts = (date) => {
     this.setState({ visible: false}, () => {
-      this.props.dateFilterContacts(date)
+      cx.dateFilterContacts(date)
     })
   }
 
@@ -159,20 +167,20 @@ export default class Contacts extends Component {
     ]
 
 
-    this.props.applyFilter === true ? this.props.applyContactsFilter() : loadUserData();
-    const { loading, filteredContacts, appliedFilter, deleteState, currentPage, contactsPerPage} = this.props;
+    this.global.applyFilter === true ? cx.applyContactsFilter() : null;
+    const { loading, filteredContacts, appliedFilter, deleteState, currentPage, contactsPerPage} = this.global;
     const { visible } = this.state;
     let contacts = filteredContacts;
     let results;
-    if(this.props.results !=null) {
-      results = this.props.results;
+    if(this.global.results !=null) {
+      results = this.global.results;
     } else {
       results = [];
     }
 
     let types;
-    if(this.props.types) {
-      types = this.props.types;
+    if(this.global.types) {
+      types = this.global.types;
     } else {
       types = [];
     }
@@ -184,11 +192,11 @@ export default class Contacts extends Component {
    }
    const renderPageNumbers = pageNumbers.map(number => {
           return (
-            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.props.currentPage.toString() === number.toString()} onClick={() => this.props.handleContactsPageChange(number)} />
+            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => cx.handleContactsPageChange(number)} />
           );
         });
 
-    deleteState === true ? this.props.deleteType() : loadUserData();
+    deleteState === true ? cx.deleteType() : null;
     const indexOfLastContact = currentPage * contactsPerPage;
     const indexOfFirstContact = indexOfLastContact - contactsPerPage;
     const currentContacts = contacts.slice(0).reverse();
@@ -229,10 +237,24 @@ export default class Contacts extends Component {
               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Add a New Contact</Modal.Header>
               <Modal.Content>
                 <Modal.Description>
+                  <p>First, choose the contact type</p>
+                  {
+                    this.state.blockstackUser ? 
+                    <div><Button secondary onClick={() => this.setState({ blockstackUser: true, uPortUser: false})}>Blockstack User</Button><Button onClick={() => this.setState({ blockstackUser: false, uPortUser: true})}>uPort User</Button></div> : 
+                    this.state.uPortUser ? 
+                    <div><Button onClick={() => this.setState({ blockstackUser: true, uPortUser: false})}>Blockstack User</Button><Button secondary onClick={() => this.setState({ blockstackUser: false, uPortUser: true})}>uPort User</Button></div> :
+                    <div><Button onClick={() => this.setState({ blockstackUser: true, uPortUser: false})}>Blockstack User</Button><Button onClick={() => this.setState({ blockstackUser: false, uPortUser: true})}>uPort User</Button></div>
+                  }
                   <h3>Search for a contact</h3>
-                  <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={this.props.handleNewContact} />
+                  {
+                    this.state.uPortUser ? 
+                    <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cx.handleNewUportContact} /> : 
+                    <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cx.handleNewContact} />
+                  }
                   <Item.Group divided>
-                  {results.map(result => {
+                  {
+                    this.state.blockstackUser ?
+                    results.map(result => {
                     let profile = result.profile;
                     let image = profile.image;
                     let imageLink;
@@ -247,24 +269,47 @@ export default class Contacts extends Component {
                     }
 
                       return (
-                          <Item className="contact-search" onClick={() => this.props.handleAddContact(result.fullyQualifiedName)} key={result.username}>
+                          <Item className="contact-search" onClick={() => cx.handleAddContact(result.fullyQualifiedName)} key={result.username}>
                           <Item.Image size='tiny' src={imageLink} />
                           <Item.Content verticalAlign='middle'>{result.username}</Item.Content>
                           </Item>
                           )
                         }
                       )
+                    : 
+                    results.map(result => {
+                      let profile = result.profile;
+                      let image = profile.image;
+                      let imageLink;
+                      if(image !=null) {
+                        if(image[0]){
+                          imageLink = image[0].contentUrl;
+                        } else {
+                          imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+                        }
+                      } else {
+                        imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
+                      }
+  
+                        return (
+                            <Item className="contact-search" onClick={() => cx.handleAddUPortContact(result)} key={result.did}>
+                            <Item.Image size='tiny' src={imageLink} />
+                            <Item.Content verticalAlign='middle'>{result.profile.name}</Item.Content>
+                            </Item>
+                            )
+                          }
+                        )
                   }
                   </Item.Group>
                 </Modal.Description>
               </Modal.Content>
             </Modal>
               {appliedFilter === false ? <span className="filter"><a onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer"}}>Filter<Icon name='caret down' /></a></span> : <span className="hide"><a>Filter</a></span>}
-              {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={this.props.clearContactsFilter}>Clear</Label></span> : <div />}
+              {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={cx.clearContactsFilter}>Clear</Label></span> : <div />}
             </h2>
           </Grid.Column>
           <Grid.Column>
-            <Input onChange={this.props.filterContactsList} icon='search' placeholder='Search...' />
+            <Input onChange={cx.filterContactsList} icon='search' placeholder='Search...' />
           </Grid.Column>
         </Grid>
         <Sidebar
@@ -370,24 +415,24 @@ export default class Contacts extends Component {
                   <Dropdown icon='ellipsis vertical' className='actions'>
                     <Dropdown.Menu>
                       <Dropdown.Item>
-                        <Modal closeIcon trigger={<Link onClick={() => this.props.loadSingleTypes(contact)} to={'/contacts'} style={{color: "#282828"}}><Icon name='tag'/>Type</Link>}>
+                        <Modal closeIcon trigger={<Link onClick={() => cx.loadSingleTypes(contact)} to={'/contacts'} style={{color: "#282828"}}><Icon name='tag'/>Type</Link>}>
                           <Modal.Header>Manage Types</Modal.Header>
                           <Modal.Content>
                             <Modal.Description>
-                            <Input placeholder='Enter a type...' value={this.props.type} onChange={this.props.setTypes} />
-                            <Button onClick={() => this.props.addTypeManual(contact, 'contact')} style={{borderRadius: "0"}}>Add Type</Button><br/>
+                            <Input placeholder='Enter a type...' value={this.global.type} onChange={cx.setTypes} />
+                            <Button onClick={() => cx.addTypeManual(contact, 'contact')} style={{borderRadius: "0"}}>Add Type</Button><br/>
                             {
                               types.slice(0).reverse().map(tag => {
                                 return (
                                   <Label style={{marginTop: "10px"}} key={tag} as='a' tag>
                                     {tag}
-                                    <Icon onClick={() => this.props.deleteType(tag, 'contact')} name='delete' />
+                                    <Icon onClick={() => cx.deleteType(tag, 'contact')} name='delete' />
                                   </Label>
                                 )
                               })
                             }
                             <div>
-                              <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => this.props.saveNewTypes(contact)}>Save Types</Button>
+                              <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => cx.saveNewTypes(contact)}>Save Types</Button>
                             </div>
                             </Modal.Description>
                           </Modal.Content>
@@ -443,7 +488,7 @@ export default class Contacts extends Component {
           }
             <div style={{float: "right", marginBottom: "25px"}}>
               <label>Contacts per page</label>
-              <select value={this.props.contactsPerPage} onChange={this.props.setContactsPerPage}>
+              <select value={this.global.contactsPerPage} onChange={cx.setContactsPerPage}>
                 <option value={10}>
                 10
                 </option>

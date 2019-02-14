@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
-import Header from './Header';
+import Header from './shared/Header';
 import {
   loadUserData
 } from 'blockstack';
 import { Container, Button, Modal, Card, Icon, Form } from 'semantic-ui-react';
-import Loading from './Loading';
+import Loading from './shared/Loading';
 
 // const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 

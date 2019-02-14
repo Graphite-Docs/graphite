@@ -7,7 +7,7 @@ import HotTable from "react-handsontable";
 import "video-react/dist/video-react.css";
 import { Pagination, Container, Image, Icon } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 
 
 

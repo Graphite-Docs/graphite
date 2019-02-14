@@ -3,8 +3,8 @@ import {
   isUserSignedIn
 } from "blockstack";
 import { Grid, Container, Segment, Image, Button, Modal, Input } from 'semantic-ui-react';
-import Header from './Header';
-import Loading from './Loading'
+import Header from './shared/Header';
+import Loading from './shared/Loading'
 import gdocs from '../images/logo_docs_128px.png';
 const uuidv4 = require('uuid/v4');
 const keys = require("./helpers/keys.js");

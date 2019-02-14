@@ -1,11 +1,12 @@
 import React, { Component } from "react";
 import { Container, Button, Image, Icon, Card, Modal } from "semantic-ui-react";
 import Loading from './Loading';
-import logo from "../assets/images/graphite_full.svg";
-import authProviders from "./onboarding/authProviders.json";
+import logo from "../../assets/images/graphite_full.svg";
+import authProviders from "../onboarding/authProviders.json";
 import {
-  blockstackSignIn
-} from './helpers/authentication';
+  blockstackSignIn,
+  handleAuth
+} from '../helpers/authentication';
 
 export default class Signin extends Component {
 
@@ -43,7 +44,7 @@ export default class Signin extends Component {
                     return (
                       <div key={provider.name}>
                         <Button
-                          onClick={() => this.props.handleAuth(provider.name)}
+                          onClick={() => handleAuth(provider.name)}
                           style={buttonStyle}
                         >
                           Continue With {provider.name}

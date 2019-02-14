@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Header from './Header';
+import Header from './shared/Header';
 import Pricing from './Pricing';
 import { Container, Button, Modal, Icon } from 'semantic-ui-react';
 

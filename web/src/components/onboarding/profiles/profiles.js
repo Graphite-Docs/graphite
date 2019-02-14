@@ -1,8 +1,10 @@
 import axios from "axios";
+import { loadUserData, decryptContent } from 'blockstack';
 const keys = require('../../helpers/keys');
 
 export async function makeProfile(profile) {
-
+  console.log(profile);
+  const authProvider = await JSON.parse(localStorage.getItem('authProvider'))
   // Post the mongo db
   const post = await axios
     .post(
@@ -10,10 +12,20 @@ export async function makeProfile(profile) {
       JSON.stringify(profile)
     )
     .then((res) => {
-      console.log(res)
       if(res.data.length > 0) {
+        console.log(res.data);
         localStorage.setItem('profileFound', JSON.stringify(true))
-        return true;
+        let privateKey;
+        if (authProvider === "uPort") {
+          privateKey = JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private
+        } else {
+          privateKey = loadUserData().appPrivateKey;
+        }
+        console.log(res.data)
+        const decryptedToken = decryptContent(res.data[0].refreshToken, { privateKey: privateKey })
+        localStorage.setItem('storageProvider', JSON.stringify(res.data[0].storageProvider));
+        localStorage.setItem('oauthData', decryptedToken);
+        // return true;
       } else {
         // Start the IPFS process here.
         if(profile.create) {

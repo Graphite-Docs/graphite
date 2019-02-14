@@ -7,9 +7,9 @@ import {
   isUserSignedIn,
   loadUserData
 } from 'blockstack';
-import Signin from './Signin';
-import Header from './Header';
-import Loading from './Loading';
+import Signin from './shared/Signin';
+import Header from './shared/Header';
+import Loading from './shared/Loading';
 
 export default class Invites extends Component {
 

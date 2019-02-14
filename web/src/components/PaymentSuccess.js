@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Header from './Header';
+import Header from './shared/Header';
 
 // const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 

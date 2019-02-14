@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import Header from './Header';
+import Header from './shared/Header';
 import Onboarding from './Onboarding';
 import Loading from './Loading';
 import RoleTable from './RoleTable';

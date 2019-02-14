@@ -5,7 +5,7 @@ import {
   getFile,
   putFile
 } from 'blockstack';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import {Menu as MainMenu, Icon} from 'semantic-ui-react';
 import HotTable from 'react-handsontable';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';

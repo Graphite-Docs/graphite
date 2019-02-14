@@ -1,7 +1,8 @@
 import React, { Component } from "react";
 import { Button, Icon, Modal, Image, Card } from "semantic-ui-react";
-import Loading from "../Loading";
+import Loading from "../shared/Loading";
 import storageOptions from "./storageOptions.json";
+import { handleStorage } from './storage/connectStorage';
 
 const keys = require("../helpers/keys.js");
 
@@ -14,10 +15,7 @@ export default class Onboarding extends Component {
   }
 
   componentDidMount() {
-    // if(window.location.href.includes('state')) {
-    //   this.props.handleStorage()
-    // }
-    this.props.handleStorage()
+    handleStorage()
   }
 
   handleOpen = () => this.setState({ modalOpen: true });

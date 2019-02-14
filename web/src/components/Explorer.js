@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
-import Header from './Header';
-import Loading from './Loading';
+import Header from './shared/Header';
+import Loading from './shared/Loading';
 import { Grid, Container, Input, List, Icon } from 'semantic-ui-react';
 import {
   listFiles

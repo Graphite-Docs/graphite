@@ -1,80 +1,113 @@
 import {
   getFile, decryptContent
 } from "blockstack";
+import React, { setGlobal } from 'reactn';
 import { fetchFromProvider } from './storageProviders/fetch';
-
-const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+import { loadContactsCollection } from './contacts';
 
 export async function loadDocs() {
-  if(authProvider === 'blockstack') {
-    this.setState({ loading: true });
-      getFile("documentscollection.json", {decrypt: true})
-       .then((fileContents) => {
-         if(fileContents) {
-           if(JSON.parse(fileContents).value) {
-             this.setState({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
-           } else {
-             this.setState({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents) });
-           }
-           if(JSON.parse(fileContents).countFilesDone) {
-            this.setState({ countFilesDone: true });
-          }  else {
-            this.setState({ countFilesDone: false });
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(window.location.href.includes('doc/')) {
+    //Don't do anything right now.
+  } else {
+    setGlobal({ loading: true })
+    if(authProvider === 'blockstack') {
+      setGlobal({ loading: true });
+        getFile("documentscollection.json", {decrypt: true})
+         .then((fileContents) => {
+           if(fileContents) {
+             if(JSON.parse(fileContents).value) {
+               setGlobal({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
+             } else {
+               setGlobal({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents) });
+             }
+             if(JSON.parse(fileContents).countFilesDone) {
+              setGlobal({ countFilesDone: true });
+            }  else {
+              setGlobal({ countFilesDone: false });
+            }
+          } else {
+            setGlobal({ value: [], filteredValue: [], countFilesDone: true });
           }
+         })
+          .then(() => {
+            this.loadSheets();
+          })
+          .catch(error => {
+            console.log(error);
+          });
+    } else if(authProvider === 'uPort') {
+      const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private
+
+      //Create the params to send to the fetchFromProvider function.
+
+      //The oauth token could be stored in two ways (for dropbox it's always a single access token)
+      let token;
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
+      const object = {
+        provider: JSON.parse(localStorage.getItem('storageProvider')),
+        token: token,
+        filePath: '/documents/index.json'
+      }
+      // //Call fetchFromProvider and wait for response.
+      let fetchFile = await fetchFromProvider(object);
+      
+      //Now we need to determine if the response was from indexedDB or an API call:
+      if(fetchFile) {
+        if(fetchFile.loadLocal) {
+          console.log("Loading local instance first");
+          const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+          setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
         } else {
-          this.setState({ value: [], filteredValue: [], countFilesDone: true });
+          //check if there is no file to load and set state appropriately.
+          if(typeof fetchFile === 'string') {
+            console.log("Nothing stored locally or in storage provider.")
+            if(fetchFile.includes('error')) {
+              console.log("Setting state appropriately")
+              setGlobal({value: [], filteredValue: [], countFilesDone: true, loading: false}, () => {
+                loadSheets();
+              })
+            }
+          } else {
+            //No indexedDB data found, so we load and read from the API call.
+            //Load up a new file reader and convert response to JSON.
+            const reader = await new FileReader();
+            var blob = fetchFile.fileBlob;
+            reader.onloadend = async (evt) => {
+              console.log("read success");
+              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+              setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true })
+            };
+            await console.log(reader.readAsText(blob));
+          }
         }
-       })
-        .then(() => {
-          this.loadSheets();
-        })
-        .catch(error => {
-          console.log(error);
-        });
-  } else if(authProvider === 'uPort') {
-    //Create the params to send to the fetchFromProvider function.
-    const object = {
-      provider: JSON.parse(localStorage.getItem('storageProvider')),
-      token: JSON.parse(localStorage.getItem('oauthData')).data.access_token,
-      filePath: '/documents/index.json'
+      } else {
+        setGlobal({ value: [], filteredValue: [], loading: false }) //temporarily set loading to false here.
+      }
+      //Now call load sheets.
+      // loadSheets();
+      loadContactsCollection();
     }
-    //Call fetchFromProvider and wait for response.
-    let fetchFile = await fetchFromProvider(object);
-    console.log(fetchFile)
-    //Load up a new file reader and convert response to JSON.
-    const reader = await new FileReader();
-    var blob = fetchFile.fileBlob;
-    reader.onloadend = async (evt) => {
-      console.log("read success");
-      const thisKey = await JSON.parse(JSON.parse(localStorage.getItem('connectState'))).keypair.privateKey;
-      const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
-      this.setState({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true })
-    };
-    await console.log(reader.readAsText(blob));
-
-    //TODO: Move this somewhere else. 
-    if(fetchFile.includes('error')) {
-      this.setState({value: [], filteredValue: [], countFilesDone: true}, () => {
-        this.loadSheets();
-      })
-    }
-
-    //Now call load sheets.
-    this.loadSheets();
   }
 }
 
 export function loadSheets() {
-  getFile("sheetscollection.json", {decrypt: true})
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'blockstack') {
+    getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
        if(JSON.parse(fileContents).sheets) {
-         this.setState({ sheets: JSON.parse(fileContents || '{}').sheets, filteredSheets: this.state.sheets });
+         setGlobal({ sheets: JSON.parse(fileContents || '{}').sheets, filteredSheets: this.state.sheets });
        } else {
-         this.setState({ sheets: [], filteredSheets: [] });
+         setGlobal({ sheets: [], filteredSheets: [] });
        }
      } else {
-       this.setState({ sheets: [], filteredSheets: [] });
+       setGlobal({ sheets: [], filteredSheets: [] });
      }
    })
     .then(() => {
@@ -83,15 +116,18 @@ export function loadSheets() {
     .catch(error => {
       console.log(error);
     });
+  }
 }
 
 export function loadContacts() {
-  getFile("contact.json", {decrypt: true})
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'blockstack') {
+    getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
-       this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
+       setGlobal({ contacts: JSON.parse(fileContents || '{}').contacts });
      } else {
-       this.setState({ contacts: [] });
+       setGlobal({ contacts: [] });
      }
    })
     .then(() => {
@@ -100,32 +136,33 @@ export function loadContacts() {
     .catch(error => {
       console.log(error);
     });
+  }
 }
 
 export function loadVault() {
   getFile("uploads.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents){
-       this.setState({ files: JSON.parse(fileContents || '{}'), filteredVault: JSON.parse(fileContents || '{}') });
+       setGlobal({ files: JSON.parse(fileContents || '{}'), filteredVault: JSON.parse(fileContents || '{}') });
      }else {
-       this.setState({ files: [] });
-       this.setState({filteredVault: []});
+       setGlobal({ files: [] });
+       setGlobal({filteredVault: []});
      }
    })
     .then(() => {
-      this.setState({ loading: false });
+      setGlobal({ loading: false });
       this.loadIntegrations();
     })
     .catch(error => {
       console.log(error);
-      this.setState({ files: [], filteredVault: [] });
+      setGlobal({ files: [], filteredVault: [] });
     });
 }
 
 export function signInRedirect() {
-  // this.setState({ loading: true });
+  // setGlobal({ loading: true });
   // handlePendingSignIn().then((userData) => {
   //   window.location = window.location.origin;
-  //   this.setState({ loading: false });
+  //   setGlobal({ loading: false });
   // });
 }

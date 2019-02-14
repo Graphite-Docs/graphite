@@ -4,7 +4,7 @@ import { Icon, Image } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import SocketEditor from './editor/SocketEditor';
 import MDEditor from '../MDEditor';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SingleRTCDoc extends Component {

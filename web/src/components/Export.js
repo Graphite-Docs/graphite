@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import Header from './Header';
-import Loading from './Loading';
+import Header from './shared/Header';
+import Loading from './shared/Loading';
 import { Grid, Container, Button } from 'semantic-ui-react';
 import {
   getFile,

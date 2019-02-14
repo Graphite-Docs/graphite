@@ -11,7 +11,7 @@ import {
   Button,
   Input
 } from "semantic-ui-react";
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Header as SemanticHeader } from "semantic-ui-react";
 
 export default class People extends Component {

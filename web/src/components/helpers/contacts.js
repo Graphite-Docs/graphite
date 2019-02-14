@@ -1,41 +1,101 @@
+import { setGlobal, getGlobal } from 'reactn';
 import {
   getFile,
   putFile,
-  lookupProfile
+  lookupProfile, 
+  encryptContent, 
+  decryptContent
 } from 'blockstack';
 import {
   getMonthDayYear
 } from './getMonthDayYear';
 import axios from 'axios';
 import update from 'immutability-helper';
+import { postToStorageProvider } from './storageProviders/post';
+import { fetchFromProvider } from './storageProviders/fetch';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
-export function loadContactsCollection() {
-  this.setState({ loading: true})
-  getFile("contact.json", {decrypt: true})
-   .then((fileContents) => {
-     if(fileContents) {
-       this.setState({ contacts: JSON.parse(fileContents || '{}').contacts, types: [] });
-       this.setState({ filteredContacts: this.state.contacts });
-     } else {
-       console.log("No contacts");
-     }
-   })
-   .then(() => {
-     this.setState({ loading: false})
-   })
-    .catch(error => {
-      console.log(error);
-      this.setState({ loading: false})
-    });
+export async function loadContactsCollection() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const global = getGlobal();
+  setGlobal({ loading: true})
+  if(authProvider === 'uPort') {
+    const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private
+
+      //Create the params to send to the fetchFromProvider function.
+
+      //The oauth token could be stored in two ways (for dropbox it's always a single access token)
+      let token;
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
+      const object = {
+        provider: JSON.parse(localStorage.getItem('storageProvider')),
+        token: token,
+        filePath: '/contacts/contact.json'
+      }
+      // //Call fetchFromProvider and wait for response.
+      let fetchFile = await fetchFromProvider(object);
+      
+      //Now we need to determine if the response was from indexedDB or an API call:
+      if(fetchFile) {
+        if(fetchFile.loadLocal) {
+          console.log("Loading local instance first");
+          const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+          setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
+        } else {
+          //check if there is no file to load and set state appropriately.
+          if(typeof fetchFile === 'string') {
+            console.log("Nothing stored locally or in storage provider.")
+            if(fetchFile.includes('error')) {
+              console.log("Setting state appropriately")
+              setGlobal({contacts: [], filteredContacts: [], loading: false})
+            }
+          } else {
+            //No indexedDB data found, so we load and read from the API call.
+            //Load up a new file reader and convert response to JSON.
+            const reader = await new FileReader();
+            var blob = fetchFile.fileBlob;
+            reader.onloadend = async (evt) => {
+              console.log("read success");
+              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+              setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
+            };
+            await console.log(reader.readAsText(blob));
+          }
+        }
+      } else {
+        setGlobal({ contacts: [], filteredContacts: [], loading: false }) //temporarily set loading to false here.
+      }
+  } else {
+    getFile("contact.json", {decrypt: true})
+    .then((fileContents) => {
+      if(fileContents) {
+        setGlobal({ contacts: JSON.parse(fileContents || '{}').contacts, types: [] });
+        setGlobal({ filteredContacts: global.contacts });
+      } else {
+        console.log("No contacts");
+      }
+    })
+    .then(() => {
+      setGlobal({ loading: false})
+    })
+     .catch(error => {
+       console.log(error);
+       setGlobal({ loading: false})
+     });
+  }
 }
 
 export function addNewContact() {
-  this.setState({ add: true});
+  setGlobal({ add: true});
 }
 
 export function handleAddContact(props) {
-  this.setState({loading: true})
+  const global = getGlobal();
+  setGlobal({loading: true})
   const object = {};
   lookupProfile(props, "https://core.blockstack.org/v1/names")
     .then((profile) => {
@@ -46,54 +106,94 @@ export function handleAddContact(props) {
       object.dateAdded = getMonthDayYear();
       object.types = [];
       object.fileType = "contacts";
-      this.setState({ showResults: "hide", loading: "", show: "hide", confirmAdd: false })
-      this.setState({ contacts: [...this.state.contacts, object], add: false });
-      this.setState({ filteredContacts: this.state.contacts });
-      setTimeout(this.saveNewContactsFile, 500);
+      setGlobal({ 
+        confirmAdd: false,
+        contacts: [...global.contacts, object],
+        filteredContacts: [...global.contacts, object],
+        add: false
+      }, () => {
+        saveNewContactsFile();
+      })
     })
     .catch((error) => {
       console.log(error)
-      this.setState({ loading: false })
+      setGlobal({ loading: false })
     })
 }
 
-export function saveNewContactsFile() {
-  putFile("contact.json", JSON.stringify(this.state), {encrypt: true})
+export function handleAddUPortContact(props) {
+  const global = getGlobal();
+  setGlobal({loading: true})
+  const object = {
+    contact: props.profile.did, 
+    name: props.profile.name, 
+    dateAdded: getMonthDayYear(),
+    types: [], 
+    img: props.profile.image ? props.profile.image : avatarFallbackImage,
+    fileType: "contacts", 
+    pubKey: props.publicKey
+  }
+  setGlobal({
+    confirmAdd: false, 
+    contacts: [...global.contacts, object], 
+    filteredContacts: [...global.contacts, object]
+  }, () => {
+    saveNewContactsFile();
+  })
+}
+
+export async function saveNewContactsFile() {
+  const global = getGlobal();
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'))
+  if(authProvider === 'uPort') {
+    const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+    const data = JSON.stringify(global.contacts);
+    const encryptedData = await encryptContent(data, { publicKey: publicKey });
+    const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem("oauthData"));
+    } else {
+      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+    }
+    const params = {
+      content: encryptedData,
+      filePath: "/contacts/contact.json",
+      provider: storageProvider,
+      token: token
+    };
+
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+    setGlobal({loading: false})
+  } else {
+    putFile("contact.json", JSON.stringify(global), {encrypt: true})
     .then(() => {
-      this.setState({loading: false });
-      this.loadContactsCollection();
+      setGlobal({loading: false });
+      loadContactsCollection();
     })
     .catch(e => {
       console.log(e);
     });
+  }
 }
 
 export function handleNewContact(e) {
-    this.setState({ newContact: e.target.value }, () => {
+  const global = getGlobal();
+    setGlobal({ newContact: e.target.value }, () => {
       let link = 'https://core.blockstack.org/v1/search?query=';
       axios
         .get(
-          link + this.state.newContact
+          link + global.newContact
         )
         .then(res => {
-          console.log('calling: ' + link + this.state.newContact)
+          console.log('calling: ' + link + global.newContact)
           console.log(res.data);
           if(res.data.results){
-            this.setState({ results: res.data.results });
-          // } else {
-          //   this.setState({ results: [] })
-          //   lookupProfile(this.state.newContact, "https://core.blockstack.org/v1/names")
-          //     .then((profile) => {
-          //       console.log(profile);
-          //       this.setState({ manualResults: profile });
-          //     })
-          //     .catch((error) => {
-          //       console.log('could not resolve profile')
-          //     })
-          // }
-        } else {
-          this.setState({ results: []})
-        }
+            setGlobal({ results: res.data.results });
+          } else {
+            setGlobal({ results: []})
+          }
         })
         .catch(error => {
           console.log(error);
@@ -101,13 +201,31 @@ export function handleNewContact(e) {
     })
   }
 
+  export async function handleNewUportContact(e) {
+    const global = getGlobal();
+    setGlobal({newContact: e.target.value})
+    //Need to query the mongo profile db and fall back to the IPFS database if necessary.
+    //We should not query on every keystroke, so we need to set a timeout ->
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(async () => {
+      const url = 'https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/contacts_lookup';
+      await axios.post(url, JSON.stringify(global.newContact))
+              .then((res) => {
+                let results = res.data.filter(a => a.profile.name.includes(global.newContact))
+                console.log(results)
+                setGlobal({ results })
+              }).catch(error => console.log(error));
+    }, 1500);
+  }
+
   export function handleManualAdd(e) {
-    this.setState({ showResults: "hide", loading: "", show: "hide", confirmManualAdd: false })
+    const global = getGlobal();
+    setGlobal({ showResults: "hide", loading: "", show: "hide", confirmManualAdd: false })
     console.log("adding...");
     const object = {};
-    object.contact = this.state.addContact;
-    object.img = this.state.newContactImg;
-    object.name = this.state.name;
+    object.contact = global.addContact;
+    object.img = global.newContactImg;
+    object.name = global.name;
     object.dateAdded = getMonthDayYear();
     object.types = [];
     let link = 'https://core.blockstack.org/v1/names/' + object.contact;
@@ -119,9 +237,9 @@ export function handleNewContact(e) {
         if(res.data.zonefile.indexOf('https://blockstack.s3.amazonaws.com/') >= 0){
           window.Materialize.toast(object.contact + " is a legacy Blockstack ID and cannot access Graphite.", 3000);
         } else {
-          this.setState({ contacts: [...this.state.contacts, object], add: false });
-          this.setState({ filteredContacts: this.state.contacts });
-          setTimeout(this.saveNewContactsFile, 500);
+          setGlobal({ contacts: [...global.contacts, object], add: false });
+          setGlobal({ filteredContacts: global.contacts });
+          setTimeout(saveNewContactsFile, 500);
         }
       })
       .catch(error => {
@@ -130,11 +248,12 @@ export function handleNewContact(e) {
   }
 
   export function manualAdd() {
-    lookupProfile(this.state.newContact, "https://core.blockstack.org/v1/names")
+    const global = getGlobal();
+    lookupProfile(global.newContact, "https://core.blockstack.org/v1/names")
       .then((profile) => {
           console.log(profile);
           const object = {};
-          object.contact = this.state.newContact;
+          object.contact = global.newContact;
           if(profile.image) {
             object.img = profile.image[0].contentUrl;
           } else {
@@ -147,9 +266,13 @@ export function handleNewContact(e) {
           }
           object.types = [];
           object.dateAdded = getMonthDayYear();
-          this.setState({ contacts: [...this.state.contacts, object], add: false });
-          this.setState({ filteredContacts: this.state.contacts });
-          setTimeout(this.saveNewFile, 500);
+          setGlobal({ 
+            contacts: [...global.contacts, object], 
+            add: false, 
+            filteredContacts: global.contacts
+          }, () => {
+            saveNewContactsFile();
+          });
       })
       .catch((error) => {
         console.log('could not resolve profile')
@@ -159,181 +282,217 @@ export function handleNewContact(e) {
   }
 
 export function filterContactsList(event){
-  var updatedList = this.state.contacts;
+  const global = getGlobal();
+  var updatedList = global.contacts;
   updatedList = updatedList.filter(function(item){
     return item.contact.toLowerCase().search(
       event.target.value.toLowerCase()) !== -1;
   });
-  this.setState({filteredContacts: updatedList});
+  setGlobal({filteredContacts: updatedList});
 }
 
 export function handleContactsCheckbox(event) {
-    let checkedArray = this.state.contactsSelected;
+  const global = getGlobal();
+    let checkedArray = global.contactsSelected;
       let selectedValue = event.target.value;
 
         if (event.target.checked === true) {
         	checkedArray.push(selectedValue);
-            this.setState({
+            setGlobal({
               contactsSelected: checkedArray
             });
           if(checkedArray.length === 1) {
-            this.setState({activeIndicator: true});
+            setGlobal({activeIndicator: true});
 
           } else {
-            this.setState({activeIndicator: false});
+            setGlobal({activeIndicator: false});
           }
         } else {
-          this.setState({activeIndicator: false});
+          setGlobal({activeIndicator: false});
         	let valueIndex = checkedArray.indexOf(selectedValue);
 			      checkedArray.splice(valueIndex, 1);
 
-            this.setState({
+            setGlobal({
               contactsSelected: checkedArray
             });
             if(checkedArray.length === 1) {
-              this.setState({activeIndicator: true});
+              setGlobal({activeIndicator: true});
             } else {
-              this.setState({activeIndicator: false});
+              setGlobal({activeIndicator: false});
             }
         }
   }
 
   export function setTypes(e) {
-    this.setState({ type: e.target.value});
+    setGlobal({ type: e.target.value});
   }
 
 export function handleContactsKeyPress(e) {
+  const global = getGlobal();
     if (e.key === 'Enter') {
-      this.setState({ types: [...this.state.types, this.state.type]});
-      this.setState({ type: "" });
+      setGlobal({ types: [...global.types, global.type]});
+      setGlobal({ type: "" });
     }
   }
 
   export function addTypeManual(){
-    this.setState({ types: [...this.state.types, this.state.type]}, () => {
-      this.setState({ type: "" });
+    const global = getGlobal();
+    setGlobal({ types: [...global.types, global.type]}, () => {
+      setGlobal({ type: "" });
     });
 
   }
 
-  export function loadSingleTypes(contact) {
-    this.setState({typeDownload: false});
-    getFile("contact.json", {decrypt: true})
-    .then((fileContents) => {
-      this.setState({ contacts: JSON.parse(fileContents || '{}').contacts });
-      this.setState({ filteredContacts: this.state.contacts });
-    }).then(() =>{
-      let contacts = this.state.contacts;
-      const thisContact = contacts.find((a) => { return a.contact === contact.contact});
+  export async function loadSingleTypes(contact) {
+    const global = getGlobal();
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    setGlobal({typeDownload: false});
+    if(authProvider === 'uPort') {
+      let contacts = global.contacts;
+      const thisContact = await contacts.find((a) => { return a.contact === contact.contact});
       let index = thisContact && thisContact.contact;
       function findObjectIndex(contact) {
           return contact.contact === index;
       }
       if(thisContact && thisContact.types) {
-        this.setState({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: thisContact && thisContact.types, name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
+        await setGlobal({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: thisContact && thisContact.types, name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
       } else {
-        this.setState({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: [], name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
+        await setGlobal({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: [], name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
       }
-
-    })
-     .then(() => {
-       this.setState({ typeModal: ""});
-     })
-      .catch(error => {
-        console.log(error);
-      });
+    } else {
+      getFile("contact.json", {decrypt: true})
+      .then((fileContents) => {
+        setGlobal({ contacts: JSON.parse(fileContents || '{}').contacts });
+        setGlobal({ filteredContacts: global.contacts });
+      }).then(() =>{
+        let contacts = global.contacts;
+        const thisContact = contacts.find((a) => { return a.contact === contact.contact});
+        let index = thisContact && thisContact.contact;
+        function findObjectIndex(contact) {
+            return contact.contact === index;
+        }
+        if(thisContact && thisContact.types) {
+          setGlobal({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: thisContact && thisContact.types, name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
+        } else {
+          setGlobal({index: contacts.findIndex(findObjectIndex), newContactImg: thisContact && thisContact.img, types: [], name: thisContact && thisContact.name, contact: thisContact && thisContact.contact, dateAdded: thisContact && thisContact.dateAdded });
+        }
+  
+      })
+       .then(() => {
+         setGlobal({ typeModal: ""});
+       })
+        .catch(error => {
+          console.log(error);
+        });
+    }
   }
 
   export function saveNewTypes() {
-    this.setState({ loading: true })
+    const global = getGlobal();
+    console.log(global.index);
+    setGlobal({ loading: true })
     const object = {};
-    object.contact = this.state.contact;
-    object.name = this.state.name;
-    object.dateAdded = this.state.dateAdded;
-    object.types = this.state.types;
-    object.img = this.state.newContactImg;
-    const index = this.state.index;
-    const updatedContact = update(this.state.contacts, {$splice: [[index, 1, object]]});
-    this.setState({contacts: updatedContact, filteredContacts: updatedContact });
-    setTimeout(this.saveFullCollectionTypes, 500);
+    object.contact = global.contact;
+    object.name = global.name;
+    object.dateAdded = global.dateAdded;
+    object.types = global.types;
+    object.img = global.newContactImg;
+    const index = global.index;
+    const updatedContact = update(global.contacts, {$splice: [[index, 1, object]]});
+    setGlobal({contacts: updatedContact, filteredContacts: updatedContact }, () => {
+      saveNewContactsFile();
+    });
+    // setTimeout(saveFullCollectionTypes, 500);
   }
 
   export function saveFullCollectionTypes() {
-    putFile("contact.json", JSON.stringify(this.state), {encrypt: true})
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    if(authProvider === 'uPort') {
+
+    } else {
+      putFile("contact.json", JSON.stringify(global), {encrypt: true})
       .then(() => {
         console.log("Saved");
-        this.setState({loading: false})
-        this.loadContactsCollection();
+        setGlobal({loading: false})
+        loadContactsCollection();
       })
       .catch(e => {
         console.log("e");
         console.log(e);
       });
+    }
   }
 
 export function handleContactsPageChange(event) {
-  this.setState({
+  setGlobal({
     currentPage: Number(event.target.id)
   });
 }
 
 export function deleteType(props) {
-  this.setState({ deleteState: false });
+  const global = getGlobal();
+  setGlobal({ deleteState: false });
 
-  let types = this.state.types;
+  let types = global.types;
   const thisType = types.find((type) => { return type === props});
   let typeIndex = thisType;
   function findObjectIndex(type) {
       return type === typeIndex;
   }
-  this.setState({ typeIndex: types.findIndex(findObjectIndex) }, () => {
-    const updatedTypes = update(this.state.types, {$splice: [[this.state.typeIndex, 1]]});
-    this.setState({types: updatedTypes });
+  setGlobal({ typeIndex: types.findIndex(findObjectIndex) }, () => {
+    const updatedTypes = update(global.types, {$splice: [[global.typeIndex, 1]]});
+    setGlobal({types: updatedTypes });
   });
 
 }
 
 export function applyContactsFilter() {
-    this.setState({ applyFilter: false });
-    setTimeout(this.filterNow, 500);
-    console.log(this.state.selectedType);
+    setGlobal({ applyFilter: false }, () => {
+      filterContactsNow();
+    });
   }
 
   export function dateFilterContacts(props) {
-    let contacts = this.state.contacts;
+    const global = getGlobal();
+    let contacts = global.contacts;
     let dateFilter = contacts.filter(x => x.dateAdded.includes(props));
-    this.setState({ filteredContacts: dateFilter, appliedFilter: true, visible: false});
+    setGlobal({ filteredContacts: dateFilter, appliedFilter: true, visible: false});
   }
 
   export function typeFilter(props) {
-    let contacts = this.state.contacts;
+    const global = getGlobal();
+    let contacts = global.contacts;
     let tagFilter = contacts.filter(x => typeof x.types !== 'undefined' ? x.types.includes(props) : console.log(""));
-    this.setState({ filteredContacts: tagFilter, appliedFilter: true, visible: false});
+    setGlobal({ filteredContacts: tagFilter, appliedFilter: true, visible: false});
   }
 
   export function clearContactsFilter() {
-    this.setState({ appliedFilter: false, filteredContacts: this.state.contacts});
+    const global = getGlobal();
+    setGlobal({ appliedFilter: false, filteredContacts: global.contacts});
   }
 
   export function filterContactsNow() {
-    let contacts = this.state.contacts;
+    const global = getGlobal();
+    let contacts = global.contacts;
 
-    if(this.state.selectedType !== "") {
-      let typeFilter = contacts.filter(x => typeof x.types !== 'undefined' ? x.types.includes(this.state.selectedType) : console.log("nada"));
-      // let typeFilter = contacts.filter(x => x.types.includes(this.state.selectedType));
-      this.setState({ filteredContacts: typeFilter, appliedFilter: true});
+    if(global.selectedType !== "") {
+      let typeFilter = contacts.filter(x => typeof x.types !== 'undefined' ? x.types.includes(global.selectedType) : console.log("nada"));
+      // let typeFilter = contacts.filter(x => x.types.includes(global.selectedType));
+      setGlobal({ filteredContacts: typeFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
-    } else if (this.state.selectedDate !== "") {
-      let dateFilter = contacts.filter(x => typeof x.dateAdded !== 'undefined' ? x.dateAdded.includes(this.state.selectedDate) : console.log("nada"));
-      // let dateFilter = contacts.filter(x => x.dateAdded.includes(this.state.selectedDate));
-      this.setState({ filteredContacts: dateFilter, appliedFilter: true});
+    } else if (global.selectedDate !== "") {
+      let dateFilter = contacts.filter(x => typeof x.dateAdded !== 'undefined' ? x.dateAdded.includes(global.selectedDate) : console.log("nada"));
+      // let dateFilter = contacts.filter(x => x.dateAdded.includes(global.selectedDate));
+      setGlobal({ filteredContacts: dateFilter, appliedFilter: true});
       window.$('.button-collapse').sideNav('hide');
     }
   }
 
 
-  export function handleDeleteContact(contact) {
-    let contacts = this.state.contacts;
+  export async function handleDeleteContact(contact) {
+    setGlobal({loading: true})
+    const global = getGlobal();
+    let contacts = global.contacts;
     const thisContact = contacts.find((a) => { return a.contact === contact.contact});
     let index = thisContact && thisContact.contact;
     function findObjectIndex(contact) {
@@ -341,19 +500,11 @@ export function applyContactsFilter() {
     }
     console.log(thisContact);
     console.log(contacts.findIndex(findObjectIndex))
-    this.setState({ index: contacts.findIndex(findObjectIndex) }, () => {
-      if(this.state.index > -1) {
-        contacts.splice(this.state.index,1);
-      } else {
-        console.log("Error with index")
-      }
-
-      this.setState({ contacts: contacts, loading: true,  action: "Deleted contact: " +  contact.contact}, () => {
-        this.saveNewContactsFile();
-      })
-    })
+    await contacts.splice(contacts.findIndex(findObjectIndex),1);
+    await setGlobal({contacts, filteredContacts: contacts, loading: false})
+    saveNewContactsFile();
   };
 
   export function setContactsPerPage(event) {
-    this.setState({ contactsPerPage: event.target.value})
+    setGlobal({ contactsPerPage: event.target.value})
   }

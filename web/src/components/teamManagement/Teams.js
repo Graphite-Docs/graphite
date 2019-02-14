@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import { loadUserData } from 'blockstack';
-import Header from '../Header';
-import Loading from '../Loading';
+import Header from '../shared/Header';
+import Loading from '../shared/Loading';
 import { Table, Dropdown, Container, Icon, Grid, Modal, Button, Input } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 let isAdmin = false;

@@ -1,31 +1,84 @@
 import {lookupProfile} from 'blockstack';
 import axios from 'axios';
 import { Value } from 'slate'
+import { fetchFromProvider } from './storageProviders/fetch';
+import { getGlobal, setGlobal } from 'reactn';
 
 export function loadInitial(props) {
 }
 
-export function pollData() {
-  const user = window.location.href.split('docs/')[1].split('-')[0]
-  lookupProfile(user, "https://core.blockstack.org/v1/names")
-  .then((profile) => {
-    this.setState({ url: profile.apps[window.location.origin]}, () => {
-      this.loadPublicState();
+export async function fetchData() {
+  if(window.location.href.includes('ipfs')) {
+    const object = {
+      provider: 'ipfs',
+      filePath: window.location.href.split('docs')[1].split('#')[0]
+    };
+    //Call fetchFromProvider and wait for response.
+    // let fetchFile = await fetchFromProvider(object);
+    fetchFromProvider(object)
+      .then((res) => {
+        const data = JSON.parse(res.data.pinataContent.content);
+        console.log(data)
+        setGlobal({
+          lastUpdated: data.lastUpdated,
+          singleDocIsPublic: data.singleDocIsPublic,
+          title: data.title,
+          readOnlyContent: data.content,
+          collabContent: Value.fromJSON(data.content),
+          readOnly: data.readOnly,
+          words: data.words,
+          wholeFile: data
+        }, 
+        () => {
+          setGlobal({ docLoaded: true, loading: false })
+        })
+      })
+  } else {
+    const user = window.location.href.split('docs/')[1].split('-')[0]
+    lookupProfile(user, "https://core.blockstack.org/v1/names")
+    .then((profile) => {
+      setGlobal({ url: profile.apps[window.location.origin]}, () => {
+        loadDoc();
+      })
     })
-  })
-  .catch((error) => {
-    console.log('could not resolve profile')
-  })
+    .catch((error) => {
+      console.log('could not resolve profile')
+    })
+  }
 }
 
-export function loadPublicState() {
+export async function pollData() {
+  if(window.location.href.includes('ipfs')) {
+    const object = {
+      provider: 'ipfs',
+      filePath: window.location.href.split('docs')[1].split('#')[0]
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile)
+  } else {
+    const user = window.location.href.split('docs/')[1].split('-')[0]
+    lookupProfile(user, "https://core.blockstack.org/v1/names")
+    .then((profile) => {
+      setGlobal({ url: profile.apps[window.location.origin]}, () => {
+        loadPublicState();
+      })
+    })
+    .catch((error) => {
+      console.log('could not resolve profile')
+    })
+  }
+}
+
+export async function loadPublicState() {
+  const global = getGlobal();
   const id = window.location.href.split('docs/')[1].split('-')[1]
-  axios.get(this.state.url + 'public/' + id+ '.json')
+  axios.get(global.url + 'public/' + id+ '.json')
   .then((response) => {
     var responseHeaders = response.headers
     var lastUpdated = responseHeaders[Object.keys(responseHeaders)[0]];
     if(Object.keys(response.data).length > 0) {
-      this.setState({
+      setGlobal({
         lastUpdated: lastUpdated,
         singleDocIsPublic: response.data.singleDocIsPublic,
         title: response.data.title,
@@ -35,40 +88,28 @@ export function loadPublicState() {
         wholeFile: response.data
       })
     } else {
-      this.setState({
+      setGlobal({
         singleDocIsPublic: false,
       })
     }
   })
   .then(() => {
-    this.setState({ docLoaded: true })
+    setGlobal({ docLoaded: true })
   })
   .catch((error) => {
     console.log('error:', error);
   });
 }
 
-export function fetchData() {
-  const user = window.location.href.split('docs/')[1].split('-')[0]
-  lookupProfile(user, "https://core.blockstack.org/v1/names")
-  .then((profile) => {
-    this.setState({ url: profile.apps[window.location.origin]}, () => {
-      this.loadDoc();
-    })
-  })
-  .catch((error) => {
-    console.log('could not resolve profile')
-  })
-}
-
 export function loadDoc() {
+  const global = getGlobal();
   const id = window.location.href.split('docs/')[1].split('-')[1]
-  axios.get(this.state.url + 'public/' + id+ '.json')
+  axios.get(global.url + 'public/' + id+ '.json')
   .then((response) => {
     var responseHeaders = response.headers
     var lastUpdated = responseHeaders[Object.keys(responseHeaders)[0]];
     if(Object.keys(response.data).length > 0) {
-      this.setState({
+      setGlobal({
         lastUpdated: lastUpdated,
         singleDocIsPublic: response.data.singleDocIsPublic,
         title: response.data.title,
@@ -79,13 +120,13 @@ export function loadDoc() {
         wholeFile: response.data
       })
     } else {
-      this.setState({
+      setGlobal({
         singleDocIsPublic: false,
       })
     }
   })
   .then(() => {
-    this.setState({ docLoaded: true })
+    setGlobal({ docLoaded: true })
   })
   .catch((error) => {
     console.log('error:', error);
@@ -94,13 +135,13 @@ export function loadDoc() {
 
 //this function is for TextEdit...
 export function handlePubChange(change) { //calling this on change in textarea...
-  this.setState({
+  setGlobal({
     collabContent: change.value
   });
 }
 
 export function handlePubTitleChange(e) {
-  this.setState({
+  setGlobal({
     title: e.target.value
   });
 }

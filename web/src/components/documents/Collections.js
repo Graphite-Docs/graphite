@@ -1,7 +1,7 @@
-import React, { Component } from "react";
+import React, { Component, setGlobal } from "reactn";
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {
@@ -10,9 +10,11 @@ import {
   putFile,
   getFile
 } from 'blockstack';
-// import { storeFile, loadFile } from '../gaiaFunctions/storage';
-import Header from '../Header';
+import Header from '../shared/Header';
 import Joyride from "react-joyride";
+const gdocs = require('../helpers/documents');
+const shared = require('../helpers/shared');
+const del = require('../helpers/deleteDoc');
 
 export default class Collections extends Component {
   constructor(props) {
@@ -28,70 +30,63 @@ export default class Collections extends Component {
     }
   }
 
-  componentWillMount() {
-    if (isSignInPending()) {
-      handlePendingSignIn().then(userData => {
-        window.location = window.location.origin;
-      });
-    }
-  }
-
   componentDidMount() {
-
-    getFile('docPageOnboarding.json', {decrypt: true})
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    if(authProvider === 'blockstack') {
+      getFile('docPageOnboarding.json', {decrypt: true})
       .then((fileContents) => {
         if(fileContents) {
-          this.setState({ onboarding: JSON.parse(fileContents)})
+          setGlobal({ onboarding: JSON.parse(fileContents)})
         } else {
-          this.setState({ onboarding: false });
+          setGlobal({ onboarding: false });
         }
       })
       .then(() => {
         this.checkFiles();
       })
+    }
   }
 
   checkFiles = () => {
-    if(this.props.value < 1) {
-      if(!this.state.onboarding) {
-        this.setState({ run: true, onboarding: true }, () => {
-          putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
+    const authProvider = JSON.parse(localStorage.getItem('blockstack'));
+    if(this.global.value < 1) {
+      if(!this.global.onboarding) {
+        setGlobal({ run: true, onboarding: true }, () => {
+          if(authProvider === 'blockstack') {
+            putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
+          }
         });
       }
     } else {
-      this.setState({ onboardingComplete: true }, () => {
-        putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
+      setGlobal({ onboardingComplete: true }, () => {
+        if(authProvider === 'blockstack') {
+          putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
+        }
       });
     }
   }
 
-  handleDeleteDoc = (props) => {
-    this.props.handleDeleteDoc(props);
-    this.setState({ loading: true })
-  }
-
   dateFilter = (props) => {
     this.setState({ visible: false}, () => {
-      this.props.dateFilter(props)
+      gdocs.dateFilter(props)
     })
   }
 
   tagFilter = (props) => {
     this.setState({ visible: false}, () => {
-      this.props.tagFilter(props)
+      gdocs.tagFilter(props)
     })
   }
 
   collabFilter = (props) => {
     this.setState({ visible: false}, () => {
-      this.props.collabFilter(props)
+      gdocs.collabFilter(props)
     })
   }
 
   handleDelete = () => {
-    console.log(this.state.doc)
     this.setState({ open: false }, () => {
-      this.props.handleDeleteDoc(this.state.doc)
+      del.handleDeleteDoc(this.state.doc)
     })
   }
 
@@ -169,11 +164,11 @@ export default class Collections extends Component {
       }
     ]
 
-    const { displayMessage, results, docs, graphitePro, filteredValue, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading } = this.props;
+    const { displayMessage, results, docs, graphitePro, filteredValue, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading } = this.global;
     const teamView = this.state.teamView;
     const {visible} = this.state;
-    const link = '/documents/doc/' + this.props.tempDocId;
-    if (this.props.redirect) {
+    const link = '/documents/doc/' + this.global.tempDocId;
+    if (this.global.redirect) {
       return <Redirect push to={link} />;
     }
     let teamDocs = docs.filter(doc => doc.teamDoc === true);
@@ -219,13 +214,13 @@ export default class Collections extends Component {
 
    const renderPageNumbers = pageNumbers.map(number => {
           return (
-            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.props.currentPage.toString() === number.toString()} onClick={() => this.props.handlePageChange(number)} />
+            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => this.global.handlePageChange(number)} />
           );
         });
 
         const renderTeamPageNumbers = pageNumbersTeam.map(number => {
                return (
-                 <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.props.currentPage.toString() === number.toString()} onClick={() => this.props.handlePageChange(number)} />
+                 <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => this.global.handlePageChange(number)} />
                );
              });
     if(teamView && !loading) {
@@ -242,7 +237,7 @@ export default class Collections extends Component {
                 <h2>Team Documents ({teamDocs.length})</h2>
               </Grid.Column>
               <Grid.Column>
-                <Input onChange={this.props.filterList} icon='search' placeholder='Search...' />
+                <Input onChange={gdocs.filterList} icon='search' placeholder='Search...' />
               </Grid.Column>
             </Grid>
 
@@ -284,7 +279,7 @@ export default class Collections extends Component {
             }
               <div style={{float: "right", marginBottom: "25px"}}>
                 <label>Docs per page</label>
-                <select value={this.props.docsPerPage} onChange={this.props.setDocsPerPage}>
+                <select value={this.global.docsPerPage} onChange={gdocs.setDocsPerPage}>
                   <option value={10}>
                   10
                   </option>
@@ -321,13 +316,13 @@ export default class Collections extends Component {
             <Grid stackable columns={2}>
               <Grid.Column>
                 <h2>Documents ({filteredValue.length})
-                  <Button onClick={this.props.handleaddItem} style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>
+                  <Button onClick={gdocs.handleaddItem} style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>
                   {appliedFilter === false ? <span className="filter"><a onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer"}}>Filter<Icon name='caret down' /></a></span> : <span className="hide"><a>Filter</a></span>}
-                  {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={this.props.clearFilter}>Clear</Label></span> : <div />}
+                  {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={gdocs.clearFilter}>Clear</Label></span> : <div />}
                 </h2>
               </Grid.Column>
               <Grid.Column>
-                <Input onChange={this.props.filterList} icon='search' placeholder='Search...' />
+                <Input onChange={gdocs.filterList} icon='search' placeholder='Search...' />
               </Grid.Column>
             </Grid>
 
@@ -438,7 +433,7 @@ export default class Collections extends Component {
                                 <Modal.Content>
                                   <Modal.Description>
                                     <h3>Search for a contact</h3>
-                                    <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={this.props.handleNewContact} />
+                                    <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={gdocs.handleNewContact} />
                                     <Item.Group divided>
                                     {results.map(result => {
                                       let profile = result.profile;
@@ -455,7 +450,7 @@ export default class Collections extends Component {
                                       }
 
                                         return (
-                                            <Item className="contact-search" onClick={() => this.props.sharedInfo(result.fullyQualifiedName, doc)} key={result.username}>
+                                            <Item className="contact-search" onClick={() => gdocs.sharedInfo(result.fullyQualifiedName, doc)} key={result.username}>
                                             <Item.Image size='tiny' src={imageLink} />
                                             <Item.Content verticalAlign='middle'>{result.username}</Item.Content>
                                             </Item>
@@ -469,7 +464,7 @@ export default class Collections extends Component {
                                     <h4>Your Contacts</h4>
                                     {contacts.slice(0).reverse().map(contact => {
                                       return (
-                                        <Item className="contact-search" onClick={() => this.props.sharedInfo(contact.contact, doc)} key={contact.contact}>
+                                        <Item className="contact-search" onClick={() => gdocs.sharedInfo(contact.contact, doc)} key={contact.contact}>
                                           <Item.Image size='tiny' src={contact.img} />
                                           <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
                                         </Item>
@@ -482,24 +477,24 @@ export default class Collections extends Component {
                               </Modal>
                             </Dropdown.Item>
                             <Dropdown.Item>
-                              <Modal closeIcon trigger={<Link onClick={() => this.props.loadSingleTags(doc)} to={'/documents'} style={{color: "#282828"}}><Icon name='tag'/>Tag</Link>}>
+                              <Modal closeIcon trigger={<Link onClick={() => gdocs.loadSingleTags(doc)} to={'/documents'} style={{color: "#282828"}}><Icon name='tag'/>Tag</Link>}>
                                 <Modal.Header>Manage Tags</Modal.Header>
                                 <Modal.Content>
                                   <Modal.Description>
-                                  <Input placeholder='Type a tag...' value={this.props.tag} onChange={this.props.handleTagChange} />
-                                  <Button onClick={() => this.props.addTagManual(doc, 'document')} style={{borderRadius: "0"}}>Add Tag</Button><br/>
+                                  <Input placeholder='Type a tag...' onChange={gdocs.handleTagChange} />
+                                  <Button onClick={() => gdocs.addTagManual(doc, 'document')} style={{borderRadius: "0"}}>Add Tag</Button><br/>
                                   {
                                     singleDocTags.slice(0).reverse().map(tag => {
                                       return (
                                         <Label style={{marginTop: "10px"}} key={tag} as='a' tag>
                                           {tag}
-                                          <Icon onClick={() => this.props.deleteTag(tag, 'document')} name='delete' />
+                                          <Icon onClick={() => gdocs.deleteTag(tag, 'document')} name='delete' />
                                         </Label>
                                       )
                                     })
                                   }
                                   <div>
-                                    <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => this.props.saveNewTags(doc)}>Save Tags</Button>
+                                    <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => gdocs.saveNewTags(doc)}>Save Tags</Button>
                                   </div>
                                   </Modal.Description>
                                 </Modal.Content>
@@ -555,7 +550,7 @@ export default class Collections extends Component {
             }
               <div style={{float: "right", marginBottom: "25px"}}>
                 <label>Docs per page</label>
-                <select value={this.props.docsPerPage} onChange={this.props.setDocsPerPage}>
+                <select value={this.global.docsPerPage} onChange={gdocs.setDocsPerPage}>
                   <option value={10}>
                   10
                   </option>

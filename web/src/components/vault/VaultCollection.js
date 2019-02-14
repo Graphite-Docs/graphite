@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
-import Header from '../Header';
-import Loading from '../Loading';
+import Header from '../shared/Header';
+import Loading from '../shared/Loading';
 import { Link } from 'react-router-dom';
 import Dropzone from 'react-dropzone';
 import Joyride from "react-joyride";

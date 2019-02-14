@@ -1,10 +1,13 @@
-import React, { Component } from "react";
+import React, { Component, setGlobal } from "reactn";
 import { Image, Icon, Modal, Input, Button, Message, List } from 'semantic-ui-react';
+import { Value } from 'slate';
 import {Menu as MainMenu} from 'semantic-ui-react';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import Menu from './Menu';
 import SocketEditor from './editor/SocketEditor';
-import MDEditor from '../MDEditor';
+import { loadContactsCollection } from '../helpers/contacts';
+const single = require('../helpers/singleDoc');
+
 // import Html from 'slate-html-serializer';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -15,29 +18,22 @@ export default class SingleDoc extends Component {
       contactToShareWith: "",
       modalOpen: false,
     }
+    setGlobal({ content: Value.fromJSON(global.content)})
   }
 
   componentDidMount() {
-    this.props.initialDocLoad();
+    single.initialDocLoad();
+    loadContactsCollection();
   } //end of componentDidMount
 
-  render() {
-    const { markdown, displayMessage, userRole, teamDoc, avatars, rtc, mediumConnected, graphitePro, loading, save, autoSave, contacts, hideStealthy, title, singleDocIsPublic, readOnly, gaiaLink, team} = this.props;
+  handleTitleSave = () => {
+    single.autoSave();
+    this.setState({ modalOpen: false })
+  }
 
-    let teamList;
-    if(team) {
-      teamList = team;
-    } else {
-      teamList = []
-    }
+  render() {
+    const { displayMessage, avatars, loading, save, autoSave, hideStealthy, title, singleDocIsPublic} = this.global;
     let uniqueAva = avatars.filter((thing, index, self) => self.findIndex(t => t.name === thing.name) === index)
-    // let words ;
-    // if(content) {
-    //   words = wordcount(html.serialize(content).replace(/<(?:.|\n)*?>/gm, ''));
-    // } else {
-    //   words = 0;
-    // }
-    // const stealthy = (hideStealthy) ? "hide" : "";
 
     let docFlex;
     if(hideStealthy === true) {
@@ -51,7 +47,7 @@ export default class SingleDoc extends Component {
         <div>
 
         <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
-          <MainMenu.Item onClick={this.props.handleBack}>
+          <MainMenu.Item onClick={single.handleBack}>
             <Icon name='arrow left' />
           </MainMenu.Item>
           <MainMenu.Item>
@@ -82,7 +78,7 @@ export default class SingleDoc extends Component {
                     placeholder="Give it a title"
                     type="text"
                     value=""
-                    onChange={this.props.handleTitleChange}
+                    onChange={single.handleTitleChange}
                   />
                   </div>
                   :
@@ -92,9 +88,9 @@ export default class SingleDoc extends Component {
                     placeholder="Title"
                     type="text"
                     value={title}
-                    onChange={this.props.handleTitleChange}
+                    onChange={single.handleTitleChange}
                   />
-                  <Button onClick={() => this.setState({ modalOpen: false })} style={{ borderRadius: "0"}} secondary>Save</Button>
+                  <Button onClick={this.handleTitleSave} style={{ borderRadius: "0"}} secondary>Save</Button>
                   </div>
                 }
               </Modal.Description>
@@ -128,43 +124,9 @@ export default class SingleDoc extends Component {
               }
               </ul>
             </MainMenu.Item>
-            {/*<MainMenu.Item>
-              <Image className="stealthylogo" src="https://www.stealthy.im/c475af8f31e17be88108057f30fa10f4.png" alt="open stealthy chat"/>
-            </MainMenu.Item>*/}
           </MainMenu.Menu>
           </MainMenu>
-          <Menu
-            downloadDoc={this.props.downloadDoc}
-            handleaddItem={this.props.handleaddItem}
-            formatSpacing={this.props.formatSpacing}
-            print={this.props.print}
-            modalOpen={this.state.modalOpen}
-            handleTitleChange={this.props.handleTitleChange}
-            handleNewContact={this.props.handleNewContact}
-            sharedInfoSingleDocRTC={this.props.sharedInfoSingleDocRTC}
-            sharedInfoSingleDocStatic={this.props.sharedInfoSingleDocStatic}
-            results={this.props.results}
-            shareToTeam={this.props.shareToTeam}
-            sharePublicly={this.props.sharePublicly}
-            toggleReadOnly={this.props.toggleReadOnly}
-            stopSharing={this.props.stopSharing}
-            changeEditor={this.props.changeEditor}
-            setVersion={this.props.setVersion}
-            markdown={markdown}
-            versions={this.props.versions}
-            versionModal={this.props.versionModal}
-            rtc={rtc}
-            singleDocIsPublic={singleDocIsPublic}
-            readOnly={readOnly}
-            gaiaLink={gaiaLink}
-            teamList={teamList}
-            contacts={contacts}
-            title={title}
-            graphitePro={graphitePro}
-            teamDoc={teamDoc}
-            userRole={userRole}
-            mediumConnected={mediumConnected}
-          />
+          <Menu />
 
           <div id='ava-modal'>
             <List>
@@ -213,73 +175,16 @@ export default class SingleDoc extends Component {
                 </p>
 
               <div>
-              {
-                markdown ?
-                <MDEditor
-                  markdownContent={this.props.markdownContent}
-                  handleMDChange={this.props.handleMDChange}
-                /> :
                 <div>
                   <div>
-                      <SocketEditor
-                        content={this.props.content}
-                        value={this.props.content}
-                        applyOperations={this.props.applyOperations}
-                        hasMark={this.props.hasMark}
-                        onKeyDown={this.props.onKeyDown}
-                        onClickMark={this.props.onClickMark}
-                        handleChange={this.props.handleChange}
-                        loadSingleVaultFile={this.props.loadSingleVaultFile}
-                        docLoaded={this.props.docLoaded}
-                        idToLoad={this.props.idToLoad}
-                        handleVaultDrop={this.props.handleVaultDrop}
-                        versions={this.props.versions}
-                        revertTo={this.props.revertTo}
-                        link={this.props.link}
-                        files={this.props.files}
-                        file={this.props.file}
-                        myTimeline={this.props.myTimeline}
-                        handleDeleteTimelineEvent={this.props.handleDeleteTimelineEvent}
-                        timelineTitle={this.props.timelineTitle}
-                        timelineEvents={this.props.timelineEvents}
-                        handleAddNewTimelineEvent={this.props.handleAddNewTimelineEvent}
-                        handleTimelineSave={this.props.handleTimelineSave}
-                        timelineTitleMediaUrl={this.props.timelineTitleMediaUrl}
-                        timelineTitleMediaCaption={this.props.timelineTitleMediaCaption}
-                        timelineTitleMediaCredit={this.props.timelineTitleMediaCredit}
-                        timelineTitleTextHeadline={this.props.timelineTitleTextHeadline}
-                        timelineTitleTextText={this.props.timelineTitleTextText}
-                        timelineEventMediaUrl={this.props.timelineEventMediaUrl}
-                        timelineEventMediaCaption={this.props.timelineEventMediaCaption}
-                        timelineEventMediaCredit={this.props.timelineEventMediaCredit}
-                        timelineEventStartMonth={this.props.timelineEventStartMonth}
-                        timelineEventStartDay={this.props.timelineEventStartDay}
-                        timelineEventStartYear={this.props.timelineEventStartYear}
-                        timelineEventTextHeadline={this.props.timelineEventTextHeadline}
-                        timelineEventTextText={this.props.timelineEventTextText}
-                        handleTimelineTitleTextText={this.props.handleTimelineTitleTextText}
-                        handleTimelineTitleTextHeadline={this.props.handleTimelineTitleTextHeadline}
-                        handleTimelineTitleMediaUrl={this.props.handleTimelineTitleMediaUrl}
-                        handleTimelineTitleMediaCredit={this.props.handleTimelineTitleMediaCredit}
-                        handleTimelineTitleMediaCaption={this.props.handleTimelineTitleMediaCaption}
-                        handleTimelineEventMediaUrl={this.props.handleTimelineEventMediaUrl}
-                        handleTimelineEventMediaCaption={this.props.handleTimelineEventMediaCaption}
-                        handleTimelineEventMediaCredit={this.props.handleTimelineEventMediaCredit}
-                        handleTimelineEventTextText={this.props.handleTimelineEventTextText}
-                        handleTimelineEventTextHeadline={this.props.handleTimelineEventTextHeadline}
-                        handleTimelineEventStartDay={this.props.handleTimelineEventStartDay}
-                        handleTimelineEventStartYear={this.props.handleTimelineEventStartYear}
-                        handleTimelineEventStartMonth={this.props.handleTimelineEventStartMonth}
-                        handleUpdateTimelineTitle={this.props.handleUpdateTimelineTitle}
-                      />
+                      <SocketEditor />
                   </div>
                 </div>
-              }
               </div>
 
               <div style={{ float: "right", margin: "40px"}} className="right-align wordcounter">
                 <p className="wordcount">
-                  {this.props.wordCount} words
+                  {this.global.wordCount} words
                 </p>
               </div>
               <div className={save}></div>

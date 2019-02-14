@@ -6,9 +6,9 @@ import {
   signUserOut,
   isUserSignedIn,
 } from 'blockstack';
-import Loading from './Loading';
-import Signin from './Signin';
-import Header from './Header';
+import Loading from './shared/Loading';
+import Signin from './shared/Signin';
+import Header from './shared/Header';
 
 export default class Acceptances extends Component {
 

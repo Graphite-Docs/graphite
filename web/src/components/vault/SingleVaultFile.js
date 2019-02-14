@@ -5,7 +5,7 @@ import { Player } from "video-react";
 import "video-react/dist/video-react.css";
 import HotTable from "react-handsontable";
 import {CSVLink} from 'react-csv';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Pagination, Container, Image, Icon, Modal, Button } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';

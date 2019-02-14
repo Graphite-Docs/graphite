@@ -13,7 +13,7 @@ import {
 import {Bar} from 'react-chartjs-2';
 import {Line} from 'react-chartjs-2';
 import {Doughnut} from 'react-chartjs-2';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import 'handsontable-pro/dist/handsontable.full.css';
 // import Handsontable from 'handsontable-pro';
 import update from 'immutability-helper';

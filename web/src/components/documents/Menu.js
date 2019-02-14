@@ -1,7 +1,11 @@
-import React, { Component } from "react";
+import React, { Component } from "reactn";
 import { Modal, Input, Button, Item, List } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import { loadUserData } from 'blockstack';
+import { handleaddItem } from '../helpers/documents';
+const single = require('../helpers/singleDoc');
+const cont = require('../helpers/contacts');
+
 
 export default class Menu extends Component {
 
@@ -26,7 +30,7 @@ export default class Menu extends Component {
   }
 
   handleShare = (props) => {
-    this.props.sharedInfoSingleDocRTC(props);
+    single.sharedInfoSingleDocRTC(props);
     this.setState({modalOpen: false})
   }
 
@@ -38,11 +42,11 @@ export default class Menu extends Component {
 
   handleVersionSelect = (id) => {
     this.setState({ versionModal: false })
-    this.props.setVersion(id)
+    single.setVersion(id)
   }
 
   render() {
-    const { versions, title, results, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.props;
+    const { versions, title, results, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.global;
     return (
 
               <div className="cm-e-menu">
@@ -50,7 +54,7 @@ export default class Menu extends Component {
                       <li className="topmenu">
                           <a>file</a>
                           <ul className="submenu">
-                              <li><a onClick={this.props.handleaddItem}>New document</a></li>
+                              <li><a onClick={handleaddItem}>New document</a></li>
                               {/*<li><a>Add tag</a></li>*/}
                               <li className="divider-menu"><hr /></li>
                               <li><Modal
@@ -73,7 +77,7 @@ export default class Menu extends Component {
                                         placeholder="Give it a title"
                                         type="text"
                                         value=""
-                                        onChange={this.props.handleTitleChange}
+                                        onChange={single.handleTitleChange}
                                       />
                                       </div>
                                       :
@@ -83,7 +87,7 @@ export default class Menu extends Component {
                                         placeholder="Title"
                                         type="text"
                                         value={title}
-                                        onChange={this.props.handleTitleChange}
+                                        onChange={single.handleTitleChange}
                                       />
                                       <Button onClick={() => this.setState({ modalOpen: false })} style={{ borderRadius: "0"}} secondary>Save</Button>
                                       </div>
@@ -96,18 +100,18 @@ export default class Menu extends Component {
                               <li>
                                   <a>Download</a>
                                   <ul className="submenu">
-                                      <li><a onClick={() => this.props.downloadDoc('word')}>Microsoft Word (.docx)</a></li>
+                                      <li><a onClick={() => single.downloadDoc('word')}>Microsoft Word (.docx)</a></li>
                                       {/*<li><a onClick={() => this.props.downloadDoc('odt')}>OpenDocument (.odt)</a></li>
                                       <li><a onClick={() => this.props.downloadDoc('rtf')}>Rich Text (.rtf)</a></li>*/}
-                                      <li><a onClick={() => this.props.downloadDoc('txt')}>Plain Text (.txt)</a></li>
-                                      <li><a onClick={() => this.props.downloadDoc('pdf')}>PDF (.pdf)</a></li>
+                                      <li><a onClick={() => single.downloadDoc('txt')}>Plain Text (.txt)</a></li>
+                                      <li><a onClick={() => single.downloadDoc('pdf')}>PDF (.pdf)</a></li>
 
                                   </ul>
                               </li>
-                              <li><a onClick={this.props.print}>Print</a></li>
+                              <li><a onClick={single.print}>Print</a></li>
                           </ul>
                       </li>
-                      { this.props.mediumConnected ? Object.keys(this.props.mediumConnected).length > 0 && this.props.graphitePro ?
+                      { this.global.mediumConnected ? Object.keys(this.global.mediumConnected).length > 0 && this.global.graphitePro ?
                         <li className="topmenu">
                           <a>Export</a>
                           <ul className="submenu">
@@ -134,14 +138,14 @@ export default class Menu extends Component {
                                     <div>
                                       <p style={{marginBottom: "15px"}}>This document is already being shared publicly.</p>
 
-                                      <Button style={{ borderRadius: "0" }} onClick={this.props.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
-                                      <Button style={{ borderRadius: "0" }} onClick={this.props.stopSharing} color="red">Stop Sharing Publicly</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={single.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={single.stopSharing} color="red">Stop Sharing Publicly</Button>
                                       <p style={{marginTop: "15px", marginBottom: "15px"}}>
                                         {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
                                       </p>
                                     </div>
                                     :
-                                    <Button style={{ borderRadius: "0" }} secondary onClick={this.props.sharePublicly}>Share Publicly</Button>
+                                    <Button style={{ borderRadius: "0" }} secondary onClick={single.sharePublicly}>Share Publicly</Button>
                                   }
 
                                   {
@@ -158,7 +162,7 @@ export default class Menu extends Component {
 
                           </li>
                           {
-                            this.props.graphitePro ? <li>
+                            this.global.graphitePro ? <li>
                             <Modal closeIcon style={{borderRadius: "0"}}
                               trigger={<a>Share with team</a>}>
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
@@ -181,7 +185,7 @@ export default class Menu extends Component {
                                       )
                                   }
                                   </Item.Group>
-                                  <Button secondary style={{borderRadius: "0"}} onClick={this.props.shareToTeam}>Share</Button>
+                                  <Button secondary style={{borderRadius: "0"}} onClick={single.shareToTeam}>Share</Button>
                                 </Modal.Description>
                               </Modal.Content>
                             </Modal>
@@ -189,7 +193,7 @@ export default class Menu extends Component {
                             <li className="hide"></li>
                           }
                           {
-                            this.props.teamDoc && this.props.userRole === "User" ?
+                            this.global.teamDoc && this.global.userRole === "User" ?
                             <li className="hide">Share</li> :
                             <li>
                             <Modal
@@ -205,7 +209,7 @@ export default class Menu extends Component {
                               <Modal.Content>
                                 <Modal.Description>
                                   <h3>Search for a contact</h3>
-                                  <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={this.props.handleNewContact} />
+                                  <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cont.handleNewContact} />
                                   <Item.Group divided>
                                   {results.map(result => {
                                     let profile = result.profile;
@@ -237,7 +241,7 @@ export default class Menu extends Component {
                                               </Modal.Content>
                                             </Modal>
                                             <Modal closeIcon style={{borderRadius: "0"}}
-                                              trigger={<Button onClick={() => this.props.sharedInfoSingleDocStatic(result.fullyQualifiedName) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button>}>
+                                              trigger={<Button onClick={() => single.sharedInfoSingleDocStatic(result.fullyQualifiedName) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button>}>
                                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
                                               <Modal.Content>
                                                 <Modal.Description>
@@ -262,7 +266,7 @@ export default class Menu extends Component {
                                     return (
                                       <Item className="contact-search" key={contact.contact}>
                                         <Item.Image size='tiny' src={contact.img} />
-                                        <Item.Content verticalAlign='middle'>{contact.contact} <br/> <Button onClick={() => this.props.sharedInfoSingleDocRTC(contact.contact) } color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => this.props.sharedInfoSingleDocStatic(contact.contact) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
+                                        <Item.Content verticalAlign='middle'>{contact.contact} <br/> <Button onClick={() => single.sharedInfoSingleDocRTC(contact) } color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => single.sharedInfoSingleDocStatic(contact) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
                                       </Item>
                                     )
                                   })

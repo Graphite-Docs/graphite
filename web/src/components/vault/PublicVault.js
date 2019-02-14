@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {Image, Container, Pagination} from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
 import "video-react/dist/video-react.css";
@@ -19,7 +19,7 @@ export default class PublicVault extends Component {
 
   loadAgain = () => {
     const { player } = this.refs.player.getState();
-  
+
     if(player.paused) {
       console.log("bingo")
       this.props.loadPublicVault()

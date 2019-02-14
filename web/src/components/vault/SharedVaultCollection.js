@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 import { Link } from 'react-router-dom';
 import {Menu as MainMenu, Icon, Container, Table} from 'semantic-ui-react';
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 
 export default class SharedVaultCollection extends Component {
 

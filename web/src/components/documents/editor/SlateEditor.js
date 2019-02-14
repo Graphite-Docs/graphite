@@ -1,15 +1,19 @@
 import { Editor, getEventTransfer } from 'slate-react'
-import React from 'react'
+import React from 'reactn'
+import { loadSingleVaultFile } from '../../helpers/singleVaultFile';
+import { handleVaultDrop } from '../../helpers/newVaultFile';
 import { isKeyHotkey } from 'is-hotkey'
 import Html from 'slate-html-serializer'
-import Loading from '../../Loading';
+import Loading from '../../shared/Loading';
 import { Block } from 'slate';
+import { handlePubChange } from '../../helpers/publicDoc';
 import { List, Image, Modal, Button, Table, Input, Grid } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 // import EditCode from 'slate-edit-code'
 import Toolbar from './Toolbar';
 // import DeepTable from 'slate-deep-table'
 import initialTimeline from './initialTimeline.json';
+const single = require('../../helpers/singleDoc');
 const PluginDeepTable = require('slate-deep-table/dist')
 
 const DEFAULT_NODE = 'paragraph'
@@ -281,7 +285,7 @@ componentDidMount() {
   setTimeout(() => {
     if(document.getElementById('timeline-embed')) {
       new window.TL.Timeline('timeline-embed',
-            this.props.myTimeline);
+            this.global.myTimeline);
     }
   }, 500)
 
@@ -321,7 +325,7 @@ getType = chars => {
 }
 
   hasLinks = () => {
-    const { content } = this.props;
+    const { content } = this.global;
     if(content.inlines) {
       return content.inlines.some(inline => inline.type === 'link')
     }
@@ -329,27 +333,27 @@ getType = chars => {
   }
 
   hasColor = () => {
-    const { content } = this.props;
+    const { content } = this.global;
     return content.marks.some(mark => mark.type === 'color')
   }
 
   hasHighlight = () => {
-    const { content } = this.props;
+    const { content } = this.global;
     return content.marks.some(mark => mark.type === 'highlight')
   }
 
   hasAlign = (foundAlign) => {
-    const {content} = this.props
+    const {content} = this.global
     return content.blocks.some(node => node.data.get('align') === foundAlign)
   }
 
   hasMark = type => {
-    const { content } = this.props;
+    const { content } = this.global;
     return content.activeMarks.some(mark => mark.type === type)
   }
 
   hasBlock = type => {
-    const { content } = this.props
+    const { content } = this.global
     return content.blocks.some(node => node.type === type)
   }
 
@@ -359,9 +363,9 @@ getType = chars => {
 
   onChange = (change, options={}) => {
     if(window.location.href.includes('shared/docs')) {
-      this.props.handlePubChange(change, this.state.versions)
+      handlePubChange(change, this.state.versions)
     } else {
-      this.props.handleChange(change, this.state.versions)
+      single.handleChange(change, this.state.versions)
     }
 
     if (!this.remote) {
@@ -512,18 +516,18 @@ onClickEmbed = (type, src) => {
 
 onClickImage = (props) => {
   // event.preventDefault()
-  this.props.loadSingleVaultFile(props)
+  loadSingleVaultFile(props)
   this.setState({ modalOpen: false });
   setTimeout(() => {
-    if(this.props.link) {
+    if(this.global.link) {
       console.log("Link is here")
-      const src = this.props.link;
+      const src = this.global.link;
       // const src = this.props.file.file["preview"];
       this.editor.command(insertImage, src)
     } else {
       console.log("no link, trying again")
       setTimeout(() => {
-        const src = this.props.link;
+        const src = this.global.link;
         // const src = this.props.file.file["preview"];
         if (!src) return
         this.editor.command(insertImage, src)
@@ -534,18 +538,18 @@ onClickImage = (props) => {
 }
 
 onImageUpload = (files) => {
-  this.props.handleVaultDrop(files)
+  handleVaultDrop(files)
   this.setState({ modalOpen: false });
   setTimeout(() => {
-    if(this.props.link) {
+    if(this.global.link) {
       console.log("Link is here")
-      const src = this.props.link;
+      const src = this.global.link;
       this.editor.command(insertImage, src)
     } else {
       console.log("no link, trying again")
       setTimeout(() => {
-        console.log('Link: ' + this.props.link)
-        const src = this.props.link;
+        console.log('Link: ' + this.global.link)
+        const src = this.global.link;
         if (!src) return
         this.editor.command(insertImage, src)
       }, 1000)
@@ -640,7 +644,6 @@ onClickAlign = (event, align) => {
 
   onClickBlock = (event, type) => {
     event.preventDefault()
-    console.log("click")
     console.log(type)
     const { editor } = this
     const { value } = editor
@@ -790,7 +793,7 @@ onClickAlign = (event, align) => {
 
   handleTimelineTitleUpdate = () => {
     this.close()
-    this.props.handleUpdateTimelineTitle()
+    single.handleUpdateTimelineTitle()
   }
 
   closeConfig2Show = (closeOnEscape, closeOnDimmerClick) => () => {
@@ -801,14 +804,14 @@ onClickAlign = (event, align) => {
 
   handleTimelineEventUpdate = () => {
     this.close2()
-    this.props.handleAddNewTimelineEvent()
+    single.handleAddNewTimelineEvent()
   }
 
   handleTimelineSave = () => {
     new window.TL.Timeline('timeline-embed',
-          this.props.myTimeline);
+          this.global.myTimeline);
     this.setState({timelineModal: false})
-    this.props.handleTimelineSave();
+    single.handleTimelineSave();
   }
 
   handleTimelineDeleteEvent = () => {
@@ -843,11 +846,12 @@ onClickAlign = (event, align) => {
       }
     }
 
-    const isTable = this.editor && this.editor.isSelectionInTable(this.props.content);
-    if(this.props.content) {
+    const isTable = this.editor && this.editor.isSelectionInTable(this.global.content);
+
+    if(this.global.content && !this.global.loading) {
       return (
         <div>
-          {this.props.readOnly ?
+          {this.global.readOnly ?
             <div className='hide' /> :
             <Toolbar
               onClickMark={this.onClickMark}
@@ -874,12 +878,12 @@ onClickAlign = (event, align) => {
               onClickRedo={this.onClickRedo}
               onClickUndo={this.onClickUndo}
               isTable={isTable}
-              files={this.props.files}
+              files={this.global.files}
               timelineEmbedded={timelineEmbedded}
             />
           }
           {
-            this.props.showCollab ?
+            this.global.showCollab ?
             <div className='authorship'>
               <div>
                 <h4 style={{color: "#fff", marginLeft: "15px"}}>{this.props.uniqueID}...</h4>
@@ -888,7 +892,7 @@ onClickAlign = (event, align) => {
             <div className="hide" />
           }
           <div className="ql-editor">
-          {this.props.collabContent ?
+          {this.global.collabContent ?
             <Editor
               className='editor'
               spellCheck
@@ -897,7 +901,7 @@ onClickAlign = (event, align) => {
               schema={schema}
               placeholder="Write something great..."
               ref={this.ref}
-              value={this.props.collabContent}
+              value={this.global.collabContent}
               onChange={this.onChange}
               onPaste={this.onPaste}
               onKeyDown={this.onKeyDown}
@@ -912,7 +916,7 @@ onClickAlign = (event, align) => {
               placeholder="Write something great..."
               schema={schema}
               ref={this.ref}
-              value={this.props.content}
+              value={this.global.content}
               onChange={this.onChange}
               onPaste={this.onPaste}
               onKeyDown={this.onKeyDown}
@@ -932,8 +936,7 @@ onClickAlign = (event, align) => {
   }
 
   renderNode = (props, editor, next) => {
-    const { myTimeline } = this.props;
-    console.log(myTimeline)
+    const { myTimeline } = this.global;
     const { attributes, children, node, isFocused } = props
     switch (node.type) {
       case 'block-quote':
@@ -1029,7 +1032,7 @@ onClickAlign = (event, align) => {
               <Modal
                 trigger={<Button secondary circular icon='add' style={{cursor: "pointer"}} onClick={this.handleOpen}></Button>}
                 open={this.state.timelineModal}
-                onClose={this.handleClose}
+                onClose={() => this.setState({ timelineModal: false})}
                 closeIcon
                 size='small'
                 >
@@ -1050,17 +1053,17 @@ onClickAlign = (event, align) => {
                         <Grid.Row>
                           <Grid.Column>
                             <p>Media URL</p>
-                            <Input onChange={this.props.handleTimelineTitleMediaUrl} placeholder='Enter a url to the media you want to use' /> <br/>
+                            <Input onChange={single.handleTimelineTitleMediaUrl} placeholder='Enter a url to the media you want to use' /> <br/>
                             <p>Media Caption</p>
-                            <Input onChange={this.props.handleTimelineTitleMediaCaption} placeholder='Enter a caption for the media you want to use' /> <br/>
+                            <Input onChange={single.handleTimelineTitleMediaCaption} placeholder='Enter a caption for the media you want to use' /> <br/>
                             <p>Media Credit</p>
-                            <Input onChange={this.props.handleTimelineTitleMediaCredit} placeholder='Give credit to the creator of the media' /> <br/>
+                            <Input onChange={single.handleTimelineTitleMediaCredit} placeholder='Give credit to the creator of the media' /> <br/>
                           </Grid.Column>
                           <Grid.Column>
                             <p>Title Headline</p>
-                            <Input onChange={this.props.handleTimelineTitleTextHeadline} placeholder='Enter a headline' /> <br/>
+                            <Input onChange={single.handleTimelineTitleTextHeadline} placeholder='Enter a headline' /> <br/>
                             <p>Title Sub-Text</p>
-                            <Input onChange={this.props.handleTimelineTitleTextText} placeholder='Enter some sub-text' /> <br/>
+                            <Input onChange={single.handleTimelineTitleTextText} placeholder='Enter some sub-text' /> <br/>
                           </Grid.Column>
                         </Grid.Row>
                       </Grid>
@@ -1091,23 +1094,23 @@ onClickAlign = (event, align) => {
                         <Grid.Row>
                           <Grid.Column>
                             <p>Media URL</p>
-                            <Input onChange={this.props.handleTimelineEventMediaUrl} placeholder='Enter a url to the media you want to use' /> <br/>
+                            <Input onChange={single.handleTimelineEventMediaUrl} placeholder='Enter a url to the media you want to use' /> <br/>
                             <p>Media Caption</p>
-                            <Input onChange={this.props.handleTimelineEventMediaCaption} placeholder='Enter a caption for the media you want to use' /> <br/>
+                            <Input onChange={single.handleTimelineEventMediaCaption} placeholder='Enter a caption for the media you want to use' /> <br/>
                             <p>Media Credit</p>
-                            <Input onChange={this.props.handleTimelineEventMediaCredit} placeholder='Give credit to the creator of the media' /> <br/>
+                            <Input onChange={single.handleTimelineEventMediaCredit} placeholder='Give credit to the creator of the media' /> <br/>
                           </Grid.Column>
                           <Grid.Column>
                             <p>Event Headline</p>
-                            <Input onChange={this.props.handleTimelineEventTextHeadline} placeholder='Enter a headline' /> <br/>
+                            <Input onChange={single.handleTimelineEventTextHeadline} placeholder='Enter a headline' /> <br/>
                             <p>Event Sub-Text</p>
-                            <Input onChange={this.props.handleTimelineEventTextText} placeholder='Enter some sub-text' /> <br/>
+                            <Input onChange={single.handleTimelineEventTextText} placeholder='Enter some sub-text' /> <br/>
                             <p>Event Month</p>
-                            <Input onChange={this.props.handleTimelineEventStartMonth} placeholder='Enter a headline' /> <br/>
+                            <Input onChange={single.handleTimelineEventStartMonth} placeholder='Enter a headline' /> <br/>
                             <p>Event Day</p>
-                            <Input onChange={this.props.handleTimelineEventStartDay} placeholder='Enter some sub-text' /> <br/>
+                            <Input onChange={single.handleTimelineEventStartDay} placeholder='Enter some sub-text' /> <br/>
                             <p>Event Year</p>
-                            <Input onChange={this.props.handleTimelineEventStartYear} placeholder='Enter some sub-text' /> <br/>
+                            <Input onChange={single.handleTimelineEventStartYear} placeholder='Enter some sub-text' /> <br/>
                           </Grid.Column>
                         </Grid.Row>
                       </Grid>
@@ -1139,7 +1142,7 @@ onClickAlign = (event, align) => {
                         return(
                           <Table.Row key={a.unique_id}>
                             <Table.Cell>{a.text.headline}</Table.Cell>
-                            <Table.Cell><a style={{cursor: "pointer", color: "red"}} onClick={() => this.props.handleDeleteTimelineEvent(a.unique_id)}>Delete</a></Table.Cell>
+                            <Table.Cell><a style={{cursor: "pointer", color: "red"}} onClick={() => single.handleDeleteTimelineEvent(a.unique_id)}>Delete</a></Table.Cell>
                           </Table.Row>
                         );
                         })

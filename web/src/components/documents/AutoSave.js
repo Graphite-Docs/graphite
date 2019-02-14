@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom';
 // import 'react-quill/dist/quill.snow.css';
 import Profile from "../Profile";
 import Signin from "../Signin";
-import Header from "../Header";
+import Header from "../shared/Header";
 import {
   isSignInPending,
   isUserSignedIn,

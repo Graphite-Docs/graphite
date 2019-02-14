@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import Loading from '../Loading';
+import Loading from '../shared/Loading';
 import { Container, Button, Grid, Input, Table } from 'semantic-ui-react';
 
 export default class GDocs extends Component {

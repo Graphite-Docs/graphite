@@ -3,14 +3,14 @@ import {
   loadUserData,
   Person,
 } from 'blockstack';
-import { isSignedIn } from "./helpers/authentication";
 import {
   signOut,
-  blockstackSignIn
-} from './helpers/authentication';
+  blockstackSignIn,
+  isSignedIn
+} from '../helpers/authentication';
 import { Link } from 'react-router-dom';
-import logo from '../assets/images/whitelogo.svg';
-import logoSquare from '../assets/images/graphite-mark.svg';
+import logo from '../../assets/images/whitelogo.svg';
+import logoSquare from '../../assets/images/graphite-mark.svg';
 import { Menu, Image, Icon, Dropdown } from 'semantic-ui-react'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
