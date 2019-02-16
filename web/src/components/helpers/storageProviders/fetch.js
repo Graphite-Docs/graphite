@@ -1,27 +1,41 @@
 import Dropbox from "dropbox";
 import Dexie from "dexie";
 import axios from 'axios';
-import {setGlobal} from 'reactn';
 const keys = require('../../helpers/keys');
 const fetch = require("isomorphic-fetch"); // or another library of choice.
 
 export async function fetchFromProvider(params) {
+  const online = navigator.onLine;
   let localData;
   let returnedObject;
   //First fetch data from indexedDB storage for speed. We should only make an API call if indexedDB fails.
   const db = new Dexie("graphite-docs");
-  db.version(1).stores({
-    documents: "id"
+  await db.version(1).stores({
+    documents: "id", contacts: "id"
   });
-  if (params.filePath.includes("documents")) {
-    localData = await db.documents.get(params.filePath);
-    returnedObject = await {
-      data: localData,
-      loadLocal: true
+
+  if(!online) {
+    if (params.filePath.includes("documents")) {
+      localData = await db.documents.get(params.filePath);
+      returnedObject = await {
+        data: localData,
+        loadLocal: true
+      }
+      returnedObject = {};
+    } else if(params.filePath.includes("contacts")) {
+      localData = await db.contacts.get(params.filePath);
+      returnedObject = await {
+        data: localData,
+        loadLocal: true
+      }
+      returnedObject = {};
+    } else {
+      returnedObject = {};
     }
   } else {
     returnedObject = {};
   }
+  
   //Now, if there is an error with fetching localData we need to do a few things:
   //1: Grab the accessToken for the storage provider and use that to make the request.
   //2: If the token is expire, we need to provide a refreshToken and get a new access & refresh token.
@@ -48,6 +62,7 @@ export async function fetchFromProvider(params) {
           return "error fetching file";
         });
     } else if(params.provider === 'ipfs') {
+      console.log(params)
       const url = `https://api.pinata.cloud/data/userPinList/hashContains/*/pinStart/*/pinEnd/*/unpinStart/*/unpinEnd/*/pinSizeMin/*/pinSizeMax/*/pinFilter/*/pageLimit/10/pageOffset/0?metadata[keyvalues][ID]={"value":${JSON.stringify(params.filePath)},"op":"eq"}`
       return  axios
           .get(url, {

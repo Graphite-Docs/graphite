@@ -1,15 +1,20 @@
-import React, { Component } from 'react';
+import React, { Component } from 'reactn';
 import { Link } from 'react-router-dom';
 import Header from '../shared/Header';
 import { Grid, Item } from 'semantic-ui-react';
 import Loading from '../shared/Loading';
+import { loadContactsCollection } from '../helpers/contacts';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedDocs extends Component {
 
+  componentDidMount() {
+    loadContactsCollection();
+  }
+
   render() {
-    const { loading, contacts } = this.props;
+    const { loading, contacts } = this.global;
     let contactsList;
     if(contacts) {
       contactsList = contacts;

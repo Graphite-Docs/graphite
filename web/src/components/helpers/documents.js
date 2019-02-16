@@ -343,9 +343,11 @@ export async function saveNewFile() {
     if(window.location.href.includes('vault')) {
       window.location.replace('/documents');
     } else if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/') && !window.location.href.includes('file-explorer')) {
-      setGlobal({ redirect: true });
+      setTimeout(() => {
+        setGlobal({ redirect: true });
+      }, 1500)
     } else if(window.location.href.includes('documents/doc/')) {
-      window.location.replace(window.location.origin + '/documents/doc/' + global.tempDocId);
+      window.location.replace(window.location.origin + '/documents/doc/' + global.tempDocId)
     } else if(window.location.href.includes('file-explorer')) {
       window.location.replace('/documents');
     }
@@ -354,7 +356,7 @@ export async function saveNewFile() {
       .then(() => {
         // this.saveNewSingleDoc();
         console.log("Saved Collection!");
-        setTimeout(this.saveNewSingleDoc, 200);
+        setTimeout(saveNewSingleDoc, 200);
       })
       .catch(e => {
         console.log("e");
@@ -794,6 +796,7 @@ export async function loadSingleTags(doc) {
               loading: false
             })
           }
+          console.log(blob);
         }
   } else {
     getFile(fullFile, {decrypt: true})

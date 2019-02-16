@@ -5,15 +5,12 @@ import Loading from '../shared/Loading';
 import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {
-  isSignInPending,
-  handlePendingSignIn,
   putFile,
   getFile
 } from 'blockstack';
 import Header from '../shared/Header';
 import Joyride from "react-joyride";
 const gdocs = require('../helpers/documents');
-const shared = require('../helpers/shared');
 const del = require('../helpers/deleteDoc');
 
 export default class Collections extends Component {

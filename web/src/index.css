@@ -228,7 +228,7 @@ code {
 
 
 .cm-e-menu {
-  background-color: #282828;
+  background-color: #000;
   position: fixed;
   top: 55px;
   z-index: 1000;

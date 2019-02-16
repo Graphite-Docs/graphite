@@ -1,13 +1,14 @@
 import {
   getFile, decryptContent
 } from "blockstack";
-import React, { setGlobal } from 'reactn';
+import { setGlobal, getGlobal } from 'reactn';
 import { fetchFromProvider } from './storageProviders/fetch';
 import { loadContactsCollection } from './contacts';
+import { loadIntegrations } from './integrations'; 
 
 export async function loadDocs() {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  if(window.location.href.includes('doc/')) {
+  if(window.location.href.includes('doc/') || window.location.href.includes('shared/')) {
     //Don't do anything right now.
   } else {
     setGlobal({ loading: true })
@@ -17,9 +18,9 @@ export async function loadDocs() {
          .then((fileContents) => {
            if(fileContents) {
              if(JSON.parse(fileContents).value) {
-               setGlobal({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value });
+               setGlobal({ value: JSON.parse(fileContents).value, countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents).value, loading: false });
              } else {
-               setGlobal({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents) });
+               setGlobal({ value: JSON.parse(fileContents), countFilesDone: JSON.parse(fileContents).countFilesDone, filteredValue: JSON.parse(fileContents), loading: false });
              }
              if(JSON.parse(fileContents).countFilesDone) {
               setGlobal({ countFilesDone: true });
@@ -31,7 +32,7 @@ export async function loadDocs() {
           }
          })
           .then(() => {
-            this.loadSheets();
+            loadSheets();
           })
           .catch(error => {
             console.log(error);
@@ -96,13 +97,16 @@ export async function loadDocs() {
 }
 
 export function loadSheets() {
+  const global = getGlobal();
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  if(authProvider === 'blockstack') {
+  if(authProvider === 'uPort') {
+    
+  } else {
     getFile("sheetscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
        if(JSON.parse(fileContents).sheets) {
-         setGlobal({ sheets: JSON.parse(fileContents || '{}').sheets, filteredSheets: this.state.sheets });
+         setGlobal({ sheets: JSON.parse(fileContents || '{}').sheets, filteredSheets: global.sheets });
        } else {
          setGlobal({ sheets: [], filteredSheets: [] });
        }
@@ -111,7 +115,7 @@ export function loadSheets() {
      }
    })
     .then(() => {
-      this.loadContacts();
+      loadContacts();
     })
     .catch(error => {
       console.log(error);
@@ -121,7 +125,9 @@ export function loadSheets() {
 
 export function loadContacts() {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  if(authProvider === 'blockstack') {
+  if(authProvider === 'blockuPortstack') {
+    
+  } else {
     getFile("contact.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents) {
@@ -131,7 +137,7 @@ export function loadContacts() {
      }
    })
     .then(() => {
-      this.loadVault();
+      loadVault();
     })
     .catch(error => {
       console.log(error);
@@ -140,7 +146,11 @@ export function loadContacts() {
 }
 
 export function loadVault() {
-  getFile("uploads.json", {decrypt: true})
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'uPort') {
+
+  } else {
+    getFile("uploads.json", {decrypt: true})
    .then((fileContents) => {
      if(fileContents){
        setGlobal({ files: JSON.parse(fileContents || '{}'), filteredVault: JSON.parse(fileContents || '{}') });
@@ -151,12 +161,13 @@ export function loadVault() {
    })
     .then(() => {
       setGlobal({ loading: false });
-      this.loadIntegrations();
+      loadIntegrations();
     })
     .catch(error => {
       console.log(error);
       setGlobal({ files: [], filteredVault: [] });
     });
+  }
 }
 
 export function signInRedirect() {

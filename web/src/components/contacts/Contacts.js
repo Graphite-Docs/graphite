@@ -1,8 +1,5 @@
 import React, { Component } from "reactn";
 import { Link } from "react-router-dom";
-import {
-  loadUserData
-} from 'blockstack';
 import Loading from '../shared/Loading';
 import { Image, Card, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
@@ -167,7 +164,7 @@ export default class Contacts extends Component {
     ]
 
 
-    this.global.applyFilter === true ? cx.applyContactsFilter() : null;
+    this.global.applyFilter === true ? cx.applyContactsFilter() : console.log("null");
     const { loading, filteredContacts, appliedFilter, deleteState, currentPage, contactsPerPage} = this.global;
     const { visible } = this.state;
     let contacts = filteredContacts;
@@ -196,7 +193,7 @@ export default class Contacts extends Component {
           );
         });
 
-    deleteState === true ? cx.deleteType() : null;
+    deleteState === true ? cx.deleteType() : console.log("null");
     const indexOfLastContact = currentPage * contactsPerPage;
     const indexOfFirstContact = indexOfLastContact - contactsPerPage;
     const currentContacts = contacts.slice(0).reverse();

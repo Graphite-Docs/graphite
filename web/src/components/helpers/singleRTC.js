@@ -1,7 +1,9 @@
 import {
   loadUserData,
   getFile,
-  putFile
+  putFile, 
+  decryptContent, 
+  encryptContent
 } from 'blockstack';
 import {
   getMonthDayYear
@@ -9,6 +11,10 @@ import {
 // import Plain from 'slate-plain-serializer';
 import Html from 'slate-html-serializer';
 import { Value } from 'slate'
+import { getGlobal, setGlobal } from 'reactn';
+import { fetchFromProvider } from './storageProviders/fetch';
+import { postToStorageProvider } from './storageProviders/post';
+import { loadDocs } from './helpers';
 const { decryptECIES } = require('blockstack/lib/encryption');
 const { getPublicKeyFromPrivate } = require('blockstack');
 const lzjs = require('lzjs');
@@ -114,64 +120,127 @@ const RULES = [
 
 const html = new Html({ rules: RULES })
 
-export function findDoc() {
-  getFile("documentscollection.json", {decrypt: true})
-  .then((fileContents) => {
-    let value;
-    if(JSON.parse(fileContents).value) {
-      value = JSON.parse(fileContents).value;
-    } else {
-      value = JSON.parse(fileContents);
-    }
+export async function findDoc() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  if(authProvider === 'uPort') {
+    await loadDocs();
+    console.log(getGlobal().value);
+    let value = getGlobal().value;
     const thisDoc = value.find((doc) => {
       if(typeof doc.id === "string") {
         if(doc.id) {
-          return doc.id === window.location.href.split('shared/')[1].split('/')[1]
+          if(window.location.href.includes('did:')) {
+            return doc.id === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+          } else {
+            return doc.id === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+          }
         }
       } else {
         if(doc.id) {
-          return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+          if(window.location.href.includes('did:')) {
+            return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+          } else {
+            return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+          }
         }
       }
       return null
     });
     if(thisDoc) {
       console.log('found in collection');
-      this.setState({ createRTC: false })
+      setGlobal({ createRTC: false })
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
         return doc.id === index; //this is comparing a number to a number
       }
-      this.setState({index: value.findIndex(findObjectIndex)}, () => {
-        this.loadSingleRTC();
+      setGlobal({index: value.findIndex(findObjectIndex)}, () => {
+        loadSingleRTC();
       })
     } else {
       console.log('not found in collection, need to create')
-      this.setState({ createRTC: true }, () => {
-        this.loadSharedRTC();
+      setGlobal({ createRTC: true }, () => {
+        loadSharedRTC();
       })
-
     }
-  })
-  .catch(error => {
-    console.log(error);
-  });
+  } else {
+    getFile("documentscollection.json", {decrypt: true})
+    .then((fileContents) => {
+      let value;
+      if(JSON.parse(fileContents).value) {
+        value = JSON.parse(fileContents).value;
+      } else {
+        value = JSON.parse(fileContents);
+      }
+      const thisDoc = value.find((doc) => {
+        if(typeof doc.id === "string") {
+          if(doc.id) {
+            if(window.location.href.includes('did:')) {
+              return doc.id === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+            } else {
+              return doc.id === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+            }
+          }
+        } else {
+          if(doc.id) {
+            if(window.location.href.includes('did:')) {
+              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+            } else {
+              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+            }
+          }
+        }
+        return null
+      });
+      if(thisDoc) {
+        console.log('found in collection');
+        setGlobal({ createRTC: false })
+        let index = thisDoc && thisDoc.id;
+        function findObjectIndex(doc) {
+          return doc.id === index; //this is comparing a number to a number
+        }
+        setGlobal({index: value.findIndex(findObjectIndex)}, () => {
+          loadSingleRTC();
+        })
+      } else {
+        console.log('not found in collection, need to create')
+        setGlobal({ createRTC: true }, () => {
+          loadSharedRTC();
+        })
+      }
+    })
+    .catch(error => {
+      console.log(error);
+    });
+  }
 }
 
-export function loadSharedRTC() {
-  let userToLoadFrom = window.location.href.split('shared/')[1].split('/')[0];
-  let fileString = 'shareddocs.json';
-  let file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + fileString;
-  const privateKey = loadUserData().appPrivateKey;
-  const directory = 'shared/' + file;
-  const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    getFile(directory, options)
-     .then((fileContents) => {
-        this.setState({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
-          let docs = this.state.sharedFile;
+export async function loadSharedRTC() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  let thisKey;
+  if(authProvider === 'uPort') {
+    thisKey = JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+  } else {
+    thisKey = loadUserData().appPrivateKey;
+  }
+  if(window.location.href.includes('did:')) {
+    let publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
+    let fileString = 'shareddocs.json'
+    //the sharer is a uPort user and thus shared using IPFS. Need to fetch from there. 
+    const params = {
+        provider: 'ipfs',
+        filePath: `/shared/${publicKey}/${fileString}`
+      };
+      //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(params);
+    console.log(fetchFile)
+    if(fetchFile) {
+        const decryptedContent = await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey }))
+        console.log(decryptedContent);
+        setGlobal({ sharedFile: decryptedContent }, () => {
+          let docs = decryptedContent;
           const thisDoc = docs.find((doc) => {
             if(doc.id){
-              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1]
+              return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
             }
             return null
           });
@@ -179,39 +248,39 @@ export function loadSharedRTC() {
             console.log("real-time")
             if(thisDoc && thisDoc.jsonContent) {
               let content = thisDoc && thisDoc.content;
-              this.setState({
+              setGlobal({
                 content: Value.fromJSON(content),
                 title: thisDoc && thisDoc.title,
                 newSharedDoc: true,
                 rtc: thisDoc && thisDoc.rtc,
                 docLoaded: true,
-                idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-                tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+                idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
                 teamDoc: thisDoc && thisDoc.teamDoc,
                 sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
-               })
+              })
           } else {
             if(thisDoc && thisDoc.compressed) {
-              this.setState({
+              setGlobal({
                 content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
                 title: thisDoc && thisDoc.title,
                 newSharedDoc: true,
                 rtc: thisDoc && thisDoc.rtc,
                 docLoaded: true,
-                idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-                tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+                idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
                 teamDoc: thisDoc && thisDoc.teamDoc,
                 sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
               })
             } else {
-              this.setState({
+              setGlobal({
                 content: thisDoc && html.deserialize(thisDoc.content),
                 title: thisDoc && thisDoc.title,
                 newSharedDoc: true,
                 rtc: thisDoc && thisDoc.rtc,
                 docLoaded: true,
-                idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-                tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+                idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
                 teamDoc: thisDoc && thisDoc.teamDoc,
                 sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
               })
@@ -219,104 +288,239 @@ export function loadSharedRTC() {
           }
         } else {
           console.log("static")
-          this.setState({
+          setGlobal({
             content: thisDoc && thisDoc.content,
             fullContent: thisDoc && thisDoc.fullContent,
             title: thisDoc && thisDoc.title,
             newSharedDoc: true,
             rtc: thisDoc && thisDoc.rtc,
             docLoaded: true,
-            idToLoad: window.location.href.split('shared/')[1].split('/')[1],
-            tempDocId: window.location.href.split('shared/')[1].split('/')[1],
+            idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+            tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
             teamDoc: thisDoc && thisDoc.teamDoc,
             sharedWith: thisDoc && thisDoc.sharedWith
           })
         }
-       })
-     })
-     .then(() => {
-       console.log(this.state.index)
-     })
+      })
+      } else {
+        await setGlobal({ docs: [], loading: false })
+      }
+  } else {
+    let userToLoadFrom = window.location.href.split('shared/')[1].split('/')[0].split('#')[0];
+    let fileString = 'shareddocs.json';
+    let file;
+    let privateKey;
+    if(authProvider === 'uPort') {
+      file = JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public + fileString;
+      privateKey = JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    } else {
+      file = getPublicKeyFromPrivate(loadUserData().appPrivateKey) + fileString;
+      privateKey = loadUserData().appPrivateKey;
+    }
+    const directory = 'shared/' + file;
+    const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+      getFile(directory, options)
+      .then((fileContents) => {
+          console.log(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))));
+          setGlobal({ sharedFile: JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents))) }, () => {
+            let docs = JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents)));
+            const thisDoc = docs.find((doc) => {
+              if(doc.id){
+                return doc.id.toString() === window.location.href.split('shared/')[1].split('/')[1].split('#')[0]
+              }
+              return null
+            });
+            if(thisDoc && thisDoc.rtc) {
+              console.log("real-time")
+              if(thisDoc && thisDoc.jsonContent) {
+                let content = thisDoc && thisDoc.content;
+                setGlobal({
+                  content: Value.fromJSON(content),
+                  title: thisDoc && thisDoc.title,
+                  newSharedDoc: true,
+                  rtc: thisDoc && thisDoc.rtc,
+                  docLoaded: true,
+                  idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                  tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                  teamDoc: thisDoc && thisDoc.teamDoc,
+                  sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user], 
+                  loading: false
+                })
+            } else {
+              if(thisDoc && thisDoc.compressed) {
+                setGlobal({
+                  content: thisDoc && html.deserialize(lzjs.decompress(thisDoc.content)),
+                  title: thisDoc && thisDoc.title,
+                  newSharedDoc: true,
+                  rtc: thisDoc && thisDoc.rtc,
+                  docLoaded: true,
+                  idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                  tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                  teamDoc: thisDoc && thisDoc.teamDoc,
+                  sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+                })
+              } else {
+                setGlobal({
+                  content: thisDoc && html.deserialize(thisDoc.content),
+                  title: thisDoc && thisDoc.title,
+                  newSharedDoc: true,
+                  rtc: thisDoc && thisDoc.rtc,
+                  docLoaded: true,
+                  idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                  tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+                  teamDoc: thisDoc && thisDoc.teamDoc,
+                  sharedWith: [...thisDoc && thisDoc.sharedWith, thisDoc && thisDoc.user]
+                })
+              }
+            }
+          } else {
+            console.log("static")
+            setGlobal({
+              content: thisDoc && thisDoc.content,
+              fullContent: thisDoc && thisDoc.fullContent,
+              title: thisDoc && thisDoc.title,
+              newSharedDoc: true,
+              rtc: thisDoc && thisDoc.rtc,
+              docLoaded: true,
+              idToLoad: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+              tempDocId: window.location.href.split('shared/')[1].split('/')[1].split('#')[0],
+              teamDoc: thisDoc && thisDoc.teamDoc,
+              sharedWith: thisDoc && thisDoc.sharedWith
+            })
+          }
+        })
+      })
+      .then(() => {
+        console.log(getGlobal().index)
+      })
+        .catch(error => {
+          console.log(error);
+        });
+  }
+}
+
+export async function loadSingleRTC() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const thisFile = window.location.href.split('shared/')[1].split('/')[1].split('#')[0];
+  const fullFile = '/documents/' + thisFile + '.json';
+  if(authProvider === 'uPort') {
+    const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    //Create the params to send to the fetchFromProvider function.
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem('oauthData'))
+    } else {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+    }
+    const object = {
+      provider: storageProvider,
+      token: token,
+      filePath: `/documents/single/${thisFile}.json`
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile)
+    //Now we need to determine if the response was from indexedDB or an API call:
+    if (fetchFile.loadLocal) {
+      const decryptedContent = await JSON.parse(
+        decryptContent(JSON.parse(fetchFile.data.content), {
+          privateKey: thisKey
+        })
+      );
+      setGlobal(
+        {
+          content: Value.fromJSON(decryptedContent.content),
+          title: decryptedContent.title,
+          tags: decryptedContent.tags,
+          idToLoad: decryptedContent.id,
+          singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
+          docLoaded: true,
+          readOnly: decryptedContent.readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+          rtc: decryptedContent.rtc || false,
+          sharedWith: decryptedContent.sharedWith,
+          teamDoc: decryptedContent.teamDoc,
+          compressed: decryptedContent.compressed || false,
+          spacing: decryptedContent.spacing,
+          lastUpdate: decryptedContent.lastUpdate,
+          jsonContent: true,
+          versions: decryptedContent.versions || [],
+          loading: false
+        })
+      }
+  } else {
+    getFile(fullFile, {decrypt: true})
+    .then((fileContents) => {
+      console.log(JSON.parse(fileContents))
+        if(JSON.parse(fileContents).compressed) {
+          setGlobal({ content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)) })
+        } else {
+          if(JSON.parse(fileContents).jsonContent) {
+            let content = JSON.parse(fileContents).content;
+            setGlobal({ content: Value.fromJSON(content) });
+          } else {
+            setGlobal({ content: html.deserialize(JSON.parse(fileContents).content) });
+          }
+        }
+        setGlobal({
+          title: JSON.parse(fileContents || '{}').title,
+          tags: JSON.parse(fileContents || '{}').tags,
+          compressed: JSON.parse(fileContents).compressed,
+          idToLoad: JSON.parse(fileContents || '{}').id,
+          singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
+          docLoaded: true,
+          readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+          rtc: JSON.parse(fileContents || '{}').rtc || false,
+          teamDoc: JSON.parse(fileContents || '{}').teamDoc,
+          sharedWith: JSON.parse(fileContents).sharedWith,
+          newSharedDoc: false,
+          lastUpdate: JSON.parse(fileContents).lastUpdate
+        })
+      })
+      .then(() => {
+        console.log(getGlobal().index)
+      })
       .catch(error => {
         console.log(error);
       });
+  }
 }
 
-export function loadSingleRTC() {
-
-  const thisFile = window.location.href.split('shared/')[1].split('/')[1];
-  const fullFile = '/documents/' + thisFile + '.json';
-  getFile(fullFile, {decrypt: true})
-  .then((fileContents) => {
-    console.log(JSON.parse(fileContents))
-      if(JSON.parse(fileContents).compressed) {
-        this.setState({ content: html.deserialize(lzjs.decompress(JSON.parse(fileContents).content)) })
-      } else {
-        if(JSON.parse(fileContents).jsonContent) {
-          let content = JSON.parse(fileContents).content;
-          this.setState({ content: Value.fromJSON(content) });
-        } else {
-          this.setState({ content: html.deserialize(JSON.parse(fileContents).content) });
-        }
-      }
-      this.setState({
-        title: JSON.parse(fileContents || '{}').title,
-        tags: JSON.parse(fileContents || '{}').tags,
-        compressed: JSON.parse(fileContents).compressed,
-        idToLoad: JSON.parse(fileContents || '{}').id,
-        singleDocIsPublic: JSON.parse(fileContents || '{}').singleDocIsPublic, //adding this...
-        docLoaded: true,
-        readOnly: JSON.parse(fileContents || '{}').readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-        rtc: JSON.parse(fileContents || '{}').rtc || false,
-        teamDoc: JSON.parse(fileContents || '{}').teamDoc,
-        sharedWith: JSON.parse(fileContents).sharedWith,
-        newSharedDoc: false,
-        lastUpdate: JSON.parse(fileContents).lastUpdate
-      })
-    })
-    .then(() => {
-      console.log(this.state.index)
-    })
-    .catch(error => {
-      console.log(error);
-    });
-}
-
-export function handleAddRTC() {
+export async function handleAddRTC() {
   const object = {};
-  object.title = this.state.title;
-  object.id = this.state.tempDocId;
+  object.title = getGlobal().title;
+  object.id = getGlobal().tempDocId;
   object.updated = getMonthDayYear();
   object.tags = [];
   object.sharedWith = [];
-  object.rtc = this.state.rtc;
-  object.teamDoc = this.state.teamDoc;
+  object.rtc = getGlobal().rtc;
+  object.teamDoc = getGlobal().teamDoc;
   object.compressed = true;
   const objectTwo = {}
   objectTwo.title = object.title;
   objectTwo.id = object.id;
   objectTwo.updated = object.created;
-  objectTwo.content = lzjs.compress(html.serialize(this.state.content));
+  objectTwo.content = lzjs.compress(html.serialize(getGlobal().content));
   objectTwo.tags = [];
   objectTwo.compressed = true;
   objectTwo.sharedWith = [];
-  objectTwo.rtc = this.state.rtc;
-  objectTwo.teamDoc = this.state.teamDoc;
+  objectTwo.rtc = getGlobal().rtc;
+  objectTwo.teamDoc = getGlobal().teamDoc;
 
-  this.setState({
-    value: [...this.state.value, object],
+  setGlobal({
+    value: [...getGlobal().value, object],
     createRTC: false,
      singleDoc: objectTwo
   }, () => {
-    this.saveNewSharedFile();
+    saveNewSharedFile();
   });
 }
 
-export function handleAddStatic() {
-  this.setState({ loading: true });
+export async function handleAddStatic() {
+  setGlobal({ loading: true });
   const object = {};
   const objectTwo = {}
-  object.title = this.state.title;
+  object.title = getGlobal().title;
   object.lastUpdate = Date.now();
   object.id = Date.now();
   object.updated = getMonthDayYear();
@@ -326,42 +530,78 @@ export function handleAddStatic() {
   objectTwo.title = object.title;
   objectTwo.id = object.id;
   objectTwo.updated = Date.now();
-  objectTwo.content = this.state.fullContent;
+  objectTwo.content = getGlobal().fullContent;
   objectTwo.compressed = false;
   objectTwo.jsonContent = true;
   objectTwo.singleDocTags = [];
   objectTwo.sharedWith = [];
 
-  this.setState({
-    value: [...this.state.value, object],
-    filteredValue: [...this.state.value, object],
+  setGlobal({
+    value: [...getGlobal().value, object],
+    filteredValue: [...getGlobal().value, object],
     singleDoc: objectTwo,
     tempDocId: object.id
   }, () => {
-    this.saveNewSharedFile();
+    saveNewSharedFile();
   });
 }
 
-export function saveNewSharedFile() {
-  this.setState({loading: true})
-  putFile("documentscollection.json", JSON.stringify(this.state.value), {encrypt:true})
+export async function saveNewSharedFile() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  setGlobal({loading: true})
+  if(authProvider === 'uPort') {
+    const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+    const data = JSON.stringify(getGlobal().value);
+    const encryptedData = await encryptContent(data, { publicKey: publicKey });
+    const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem("oauthData"));
+    } else {
+      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+    }
+    const params = {
+      content: encryptedData,
+      filePath: '/documents/index.json',
+      provider: storageProvider,
+      token: token
+    };
+
+    let postToStorage = await postToStorageProvider(params);
+    console.log(postToStorage);
+
+    const data2 = JSON.stringify(getGlobal().singleDoc);
+    const encryptedData2 = await encryptContent(data2, { publicKey: publicKey });
+    const params2 = {
+      content: encryptedData2,
+      filePath: `/documents/single/${getGlobal().tempDocId}.json`,
+      provider: storageProvider,
+      token: token
+    };
+
+   let postToStorage2 = await postToStorageProvider(params2);
+   console.log(postToStorage2);
+   window.location.replace("/documents");
+  } else {
+    putFile("documentscollection.json", JSON.stringify(getGlobal().value), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      this.saveNewSingleSharedDoc();
+      saveNewSingleSharedDoc();
     })
     .catch(e => {
       console.log("e");
       console.log(e);
     });
+  }
 }
 
-export function saveNewSingleSharedDoc() {
-  const file = this.state.tempDocId;
+export async function saveNewSingleSharedDoc() {
+  const file = getGlobal().tempDocId;
   const fullFile = '/documents/' + file + '.json'
-  putFile(fullFile, JSON.stringify(this.state.singleDoc), {encrypt:true})
+  putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      if(this.state.rtc !== true) {
+      if(getGlobal().rtc !== true) {
         window.location.replace("/documents");
       }
     })
@@ -371,14 +611,14 @@ export function saveNewSingleSharedDoc() {
     });
   }
 
-export function loadAllDocs() {
+export async function loadAllDocs() {
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
      if(JSON.parse(fileContents)) {
        if(JSON.parse(fileContents).value) {
-         this.setState({ value: JSON.parse(fileContents || '{}').value });
+         setGlobal({ value: JSON.parse(fileContents || '{}').value });
        } else {
-         this.setState({ value: JSON.parse(fileContents || '{}') });
+         setGlobal({ value: JSON.parse(fileContents || '{}') });
        }
      } else {
        console.log("No docs");

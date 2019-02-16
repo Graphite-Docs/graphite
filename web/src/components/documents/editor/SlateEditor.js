@@ -847,11 +847,11 @@ onClickAlign = (event, align) => {
     }
 
     const isTable = this.editor && this.editor.isSelectionInTable(this.global.content);
-
+    console.log(this.global.readOnly);
     if(this.global.content && !this.global.loading) {
       return (
         <div>
-          {this.global.readOnly ?
+          {!this.global.rtc && this.global.readOnly ?
             <div className='hide' /> :
             <Toolbar
               onClickMark={this.onClickMark}

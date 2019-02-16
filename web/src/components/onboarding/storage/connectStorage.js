@@ -1,7 +1,7 @@
 import axios from "axios";
 import { setGlobal } from 'reactn';
 import { makeProfile } from '../profiles/profiles';
-import { encryptContent, getPublicKeyFromPrivate } from "blockstack";
+import { encryptContent } from "blockstack";
 
 export async function handleStorage() {
   //first we connect to the selected storage provider.
@@ -32,11 +32,7 @@ export async function handleStorage() {
           .refresh_token ? res.data
             .refresh_token : res.data
               .access_token;
-        let privateKey;
         let authProvider = await JSON.parse(localStorage.getItem("authProvider"));
-        if (authProvider === "uPort") {
-          privateKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
-        }
         let publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
         let encryptedRefreshToken = await encryptContent(JSON.stringify(data), {
           publicKey: publicKey

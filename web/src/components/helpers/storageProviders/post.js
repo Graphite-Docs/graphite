@@ -11,12 +11,12 @@ export async function postToStorageProvider(params) {
   //3: If not valid, grab refresh token and use it to get a new access token and refresh token.
   //4: Post data.
 
-  const db = new Dexie('graphite-docs');
-  await db.version(1).stores({documents: 'id'});
-  await db.documents.put({
-    id: params.filePath,
-    content: JSON.stringify(params.content)
-  })
+  // const db = new Dexie('graphite-docs');
+  // await db.version(1).stores({documents: 'id'});
+  // await db.documents.put({
+  //   id: params.filePath,
+  //   content: JSON.stringify(params.content)
+  // })
 
   if (params.provider === "dropbox") {
     const dbx = new Dropbox({

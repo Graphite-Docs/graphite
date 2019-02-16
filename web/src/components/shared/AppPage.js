@@ -6,13 +6,8 @@ import Loading from "./Loading";
 import Onboarding from '../onboarding/Onboarding';
 import { foundProfile, isSignedIn } from "../helpers/authentication";
 import {
-  signUserOut,
   getFile,
-  putFile,
-  makeAuthRequest,
-  redirectToSignInWithAuthRequest,
-  generateAndStoreTransitKey,
-  nextHour
+  putFile
 } from "blockstack";
 import { Grid, Icon, Container, Card, Table } from "semantic-ui-react";
 import PropTypes from "prop-types";
@@ -85,13 +80,19 @@ export default class AppPage extends Component {
   };
 
   checkProfiles = async () => {
-    profileFound = await foundProfile()
-    console.log(`profile found: ${profileFound}`)
+    if(authProvider === 'uPort') {
+      profileFound = await foundProfile()
+      console.log(`profile found: ${profileFound}`)
+    } else {
+      profileFound = true;
+      console.log(`profile found: ${profileFound}`)
+    }
+    
     this.checkFiles();
   }
 
   render() {
-    const { signedIn, value, sheets, files, contacts, graphitePro, loading } = this.global;
+    const { value, sheets, files, contacts, graphitePro, loading } = this.global;
     const steps = [
       {
         content: <h2>Welcome to Graphite! Let'{/*'*/}s take a quick tour.</h2>,
@@ -247,7 +248,7 @@ export default class AppPage extends Component {
     if(loading) {
       return <Loading />;
     } else {
-      if(signedIn) {
+      if(isSignedIn()) {
         if(profileFound) {
           return (
             <div>

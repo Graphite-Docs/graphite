@@ -6,7 +6,6 @@ import {Menu as MainMenu} from 'semantic-ui-react';
 import logoSquare from '../../assets/images/graphite-mark.svg';
 import {
   fetchData,
-  pollData, 
   handlePubChange
 } from '../helpers/publicDoc'
 
@@ -22,7 +21,7 @@ export default class PublicDoc extends Component {
   }
 
   renderViews() {
-    const { readOnly, docLoaded, singleDocIsPublic, title, readOnlyContent, idToLoad, collabContent, link } = this.global;
+    const { readOnly, title, idToLoad, collabContent, link } = this.global;
     if(this.global.loading) {
       return (
         <Loading />

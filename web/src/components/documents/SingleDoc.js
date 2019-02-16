@@ -46,7 +46,7 @@ export default class SingleDoc extends Component {
       return (
         <div>
 
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#000", color: "#fff" }}>
           <MainMenu.Item onClick={single.handleBack}>
             <Icon name='arrow left' />
           </MainMenu.Item>
@@ -153,7 +153,7 @@ export default class SingleDoc extends Component {
 
           {displayMessage ?
             <Message
-              style={{borderRadius: "0", background: "#282828", bottom: "200px", color: "#fff"}}
+              style={{borderRadius: "0", background: "#000", bottom: "200px", color: "#fff"}}
               header='This user has not yet logged into Graphite'
               content='Ask them to log in first so that you can share encrypted files.'
             /> :

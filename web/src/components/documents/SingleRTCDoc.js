@@ -1,26 +1,28 @@
-import React, { Component } from "react";
+import React, { Component } from "reactn";
 import { Link } from 'react-router-dom';
 import { Icon, Image } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import SocketEditor from './editor/SocketEditor';
 import MDEditor from '../MDEditor';
 import Loading from '../shared/Loading';
+import { findDoc, handleAddStatic } from '../helpers/singleRTC';
+import { handleBack } from '../helpers/singleDoc';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SingleRTCDoc extends Component {
 
   componentDidMount() {
-    this.props.findDoc();
+    findDoc();
   }
 
   renderView() {
-    const { loading } = this.props;
+    const { loading } = this.global;
     let toolbar = window.document.getElementsByClassName('ql-toolbar');
     if(toolbar[0]) {
       toolbar[0].style.top = "63px";
     }
 
-    const { title, content, rtc, docLoaded, autoSave, markdown, avatars } = this.props;
+    const { title, content, rtc, docLoaded, autoSave, markdown, avatars } = this.global;
 
     let uniqueAva;
 
@@ -40,8 +42,8 @@ export default class SingleRTCDoc extends Component {
       <div>
       {
         rtc ?
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff", height: "100px", paddingBottom: "30px" }}>
-          <MainMenu.Item onClick={this.props.handleBack}>
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#000", color: "#fff", height: "100px", paddingBottom: "30px" }}>
+          <MainMenu.Item onClick={handleBack}>
             <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
           <MainMenu.Item>
@@ -83,8 +85,8 @@ export default class SingleRTCDoc extends Component {
           </MainMenu.Menu>
           </MainMenu> :
 
-          <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
-            <MainMenu.Item onClick={this.props.handleBack}>
+          <MainMenu style={{ borderRadius: "0", background: "#000", color: "#fff" }}>
+            <MainMenu.Item onClick={handleBack}>
               <Link style={{color: "#fff"}} to={'/documents'}><Icon name='arrow left' /></Link>
             </MainMenu.Item>
             <MainMenu.Item style={{color: "#fff"}}>
@@ -97,7 +99,7 @@ export default class SingleRTCDoc extends Component {
             }
             </MainMenu.Item>
             <MainMenu.Item>
-              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleAddStatic}>Add to Collection</a>
+              <a style={{color: "#fff", cursor: "pointer"}} onClick={handleAddStatic}>Add to Collection</a>
             </MainMenu.Item>
             </MainMenu>
       }

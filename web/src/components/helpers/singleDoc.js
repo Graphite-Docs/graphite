@@ -139,7 +139,6 @@ const RULES = [
 const html = new Html({ rules: RULES });
 
 export async function initialDocLoad() {
-  const global = getGlobal();
   setGlobal({ loading: true });
   setGlobal({
     myTimeline: myTimeline,
@@ -210,6 +209,7 @@ export async function initialDocLoad() {
           }
           //Call fetchFromProvider and wait for response.
           const indexFile = await fetchFromProvider(object);
+          console.log('indexFile')
           console.log(indexFile)
           const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
           setGlobal(
@@ -282,7 +282,7 @@ export async function initialDocLoad() {
       //No indexedDB data found, so we load and read from the API call.
       //Load up a new file reader and convert response to JSON.
       const reader = await new FileReader();
-      var blob = fetchFile.fileBlob;
+      var blob = await fetchFile.fileBlob;
       reader.onloadend = async evt => {
         console.log("read success");
         const decryptedContent = await JSON.parse(
@@ -306,77 +306,94 @@ export async function initialDocLoad() {
             jsonContent: true,
             versions: decryptedContent.versions || [],
             loading: false
-          },
-          async () => {
-            const indexFile = await fetchFromProvider(object);
-            console.log(indexFile);
-            // var blob = indexFile.fileBlob;
-            const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
-            const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
-            setGlobal(
-              {
-                value: decryptedIndex,
-                filteredValue: decryptedIndex
-              },
-              () => {
-                let value = global.value;
-                const thisDoc = value.find(doc => {
-                  if (typeof doc.id === "string") {
-                    if (doc.id) {
-                      if (window.location.href.split("doc/")[1].includes("#")) {
-                        return (
-                          doc.id ===
-                          window.location.href.split("doc/")[1].split("#")[0]
-                        );
-                      } else {
-                        return doc.id === window.location.href.split("doc/")[1];
-                      }
-                    }
-                  } else {
-                    if (doc.id) {
-                      return (
-                        doc.id.toString() ===
-                        window.location.href.split("doc/")[1]
-                      ); //this is comparing a string to a string
-                    }
-                  }
-                  return null;
-                });
-                let index = thisDoc && thisDoc.id;
-                function findObjectIndex(doc) {
-                  return doc.id === index; //this is comparing a number to a number
-                }
-                setGlobal({ index: value.findIndex(findObjectIndex) }, async () => {
-                    //Here we are fetching the timeline file (if there is one)
-                const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
-                let token;
-                if(storageProvider === 'dropbox') {
-                  token = JSON.parse(localStorage.getItem('oauthData'))
-                } else {
-                  token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
-                }
-                const object = {
-                  provider: storageProvider,
-                  token: token,
-                  filePath: `/timelines/${thisFile}.json`
-                }
-                const timelineFile = await fetchFromProvider(object);
-                console.log(timelineFile)
-                const decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
-                if(decryptedTimeline) {
-                  setGlobal({
-                    myTimeline: decryptedTimeline,
-                    timelineTitle: decryptedTimeline.title,
-                    timelineEvents: decryptedTimeline.events
-                  })
-                }
-                });
-              }
-            );
-          }
-        );
+          });
       };
       await console.log(reader.readAsText(blob));
+
+
+      const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
+      let token;
+      if(storageProvider === 'dropbox') {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      }
+      const object = {
+        provider: storageProvider,
+        token: token,
+        filePath: '/documents/index.json'
+      }
+      //Call fetchFromProvider and wait for response.
+      const indexFile = await fetchFromProvider(object);
+      console.log('indexFile')
+      console.log(indexFile)
+      var blob2 = indexFile.fileBlob;
+      reader.onloadend = async evt => {
+        const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+        const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+        console.log(decryptedIndex)
+        await setGlobal(
+        {
+          value: decryptedIndex,
+          filteredValue: decryptedIndex
+        },
+        async () => {
+          const thisDoc = await decryptedIndex.find(doc => {
+            if (typeof doc.id === "string") {
+              if (doc.id) {
+                if (window.location.href.split("doc/")[1].includes("#")) {
+                  return (
+                    doc.id ===
+                    window.location.href.split("doc/")[1].split("#")[0]
+                  );
+                } else {
+                  return doc.id === window.location.href.split("doc/")[1];
+                }
+              }
+            } else {
+              if (doc.id) {
+                return (
+                  doc.id.toString() ===
+                  window.location.href.split("doc/")[1].split('#')[0]
+                ); //this is comparing a string to a string
+              }
+            }
+            return null;
+          });
+          let index = thisDoc && thisDoc.id;
+          function findObjectIndex(doc) {
+            return doc.id === index; //this is comparing a number to a number
+          }
+          setGlobal({ index: decryptedIndex.findIndex(findObjectIndex) });
+        }
+      );
+      }
+
+      await console.log(reader.readAsText(blob2));
+
+      // //Here we are fetching the timeline file (if there is one)
+      // const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
+      // let token;
+      // if(storageProvider === 'dropbox') {
+      //   token = JSON.parse(localStorage.getItem('oauthData'))
+      // } else {
+      //   token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      // }
+      // const object = {
+      //   provider: storageProvider,
+      //   token: token,
+      //   filePath: `/timelines/${thisFile}.json`
+      // }
+      // const timelineFile = await fetchFromProvider(object);
+      // console.log(timelineFile)
+      // const decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+      // if(decryptedTimeline) {
+      //   setGlobal({
+      //     myTimeline: decryptedTimeline,
+      //     timelineTitle: decryptedTimeline.title,
+      //     timelineEvents: decryptedTimeline.events
+      //   })
+      // }
     }
   } else if (authProvider === "blockstack") {
     getFile("documentscollection.json", { decrypt: true })
@@ -390,7 +407,7 @@ export async function initialDocLoad() {
                   filteredValue: JSON.parse(fileContents).value
                 },
                 () => {
-                  let value = global.value;
+                  let value = getGlobal().value;
                   const thisDoc = value.find(doc => {
                     if (typeof doc.id === "string") {
                       if (doc.id) {
@@ -431,7 +448,7 @@ export async function initialDocLoad() {
                   filteredValue: JSON.parse(fileContents)
                 },
                 () => {
-                  let value = global.value;
+                  let value = getGlobal().value;
                   const thisDoc = value.find(doc => {
                     if (typeof doc.id === "string") {
                       if (doc.id) {
@@ -553,7 +570,7 @@ export async function initialDocLoad() {
                   () => {
                     new window.TL.Timeline(
                       "timeline-embed",
-                      global.myTimeline
+                      getGlobal().myTimeline
                     );
                   }
                 );
@@ -586,7 +603,7 @@ export async function initialDocLoad() {
           })
           .then(() => {
             setGlobal({ loading: false }, () => {
-              // document.getElementsByClassName('ql-editor')[0].style.lineHeight = global.spacing;
+              // document.getElementsByClassName('ql-editor')[0].style.lineHeight = getGlobal().spacing;
               loadAvatars();
             });
           })
@@ -599,7 +616,7 @@ export async function initialDocLoad() {
       });
 
     this.printPreview = () => {
-      if (global.printPreview === true) {
+      if (getGlobal().printPreview === true) {
         setGlobal({ printPreview: false });
       } else {
         setGlobal({ printPreview: true });
@@ -609,10 +626,9 @@ export async function initialDocLoad() {
 }
 
 export function noCollaboration() {
-  const global = getGlobal();
   const thisFile = window.location.href.split("doc/")[1];
   const fullFile = "/documents/" + thisFile + ".json";
-  if (global.content === "<p><br></p>") {
+  if (getGlobal().content === "<p><br></p>") {
     getFile(fullFile, { decrypt: true })
       .then(fileContents => {
         setGlobal({
@@ -634,14 +650,13 @@ export function noCollaboration() {
 }
 
 export function loadAvatars() {
-  const global = getGlobal();
-  if (global.sharedWith) {
-    if (global.sharedWith.length > 0) {
-      global.sharedWith.forEach(name => {
-        console.log(global.avatars);
+  if (getGlobal().sharedWith) {
+    if (getGlobal().sharedWith.length > 0) {
+      getGlobal().sharedWith.forEach(name => {
+        console.log(getGlobal().avatars);
         lookupProfile(name, "https://core.blockstack.org/v1/names")
           .then(profile => {
-            setGlobal({ avatars: [...global.avatars, profile] });
+            setGlobal({ avatars: [...getGlobal().avatars, profile] });
           })
           .catch(error => {
             console.log("could not resolve profile");
@@ -654,14 +669,12 @@ export function loadAvatars() {
 }
 
 export function stealthyChat() {
-  const global = getGlobal();
-  setGlobal({ hideStealthy: !global.hideStealthy });
+  setGlobal({ hideStealthy: !getGlobal().hideStealthy });
 }
 
 export function toggleReadOnly() {
   //make this function toggleReadyOnly state instead, so user can press button again
-  const global = getGlobal();
-  setGlobal({readOnly: !global.readOnly}, () => {
+  setGlobal({readOnly: !getGlobal().readOnly}, () => {
     sharePublicly();
   })
 }
@@ -673,11 +686,10 @@ export function handleAutoSave(e) {
 }
 
 export function sharePublicly() {
-  const global = getGlobal();
-  if (global.readOnly === undefined) {
+  if (getGlobal().readOnly === undefined) {
     setGlobal({ readOnly: true }, async () => {
       const object = await {
-        title: global.title,
+        title: getGlobal().title,
         content: document.getElementsByClassName("editor")[0].innerHTML, 
         readOnly: true,
         words: wordcount(
@@ -700,14 +712,14 @@ export function sharePublicly() {
     });
   } else {
     const object = {};
-    object.title = global.title;
-    if (global.readOnly) {
+    object.title = getGlobal().title;
+    if (getGlobal().readOnly) {
       object.content = document.getElementsByClassName("editor")[0].innerHTML;
     } else {
-      let content = global.content;
+      let content = getGlobal().content;
       object.content = content.toJSON();
     }
-    object.readOnly = global.readOnly;
+    object.readOnly = getGlobal().readOnly;
     object.words = wordcount(
       document
         .getElementsByClassName("editor")[0]
@@ -737,14 +749,13 @@ export function stopSharing() {
 }
 
 export async function saveStop() {
-  const global = getGlobal();
   const params = window.location.href.split("doc/")[1];
   const directory = "public/";
   const file = directory + params + ".json";
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
     const did = await JSON.parse(localStorage.getItem('uPortUser')).payload.did.split(':')[2];
-    const data = JSON.stringify(global.singlePublic);
+    const data = JSON.stringify(getGlobal().singlePublic);
     const params = {
       content: data,
       provider: 'ipfs',
@@ -754,7 +765,7 @@ export async function saveStop() {
     console.log(postToStorage);
     handleAutoAdd();
   } else {
-    putFile(file, JSON.stringify(global.singlePublic), { encrypt: false })
+    putFile(file, JSON.stringify(getGlobal().singlePublic), { encrypt: false })
     .then(() => {
       handleAutoAdd();
     })
@@ -766,14 +777,13 @@ export async function saveStop() {
 
 export async function savePublic() {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = getGlobal();
   const id = window.location.href.split("doc/")[1].split('#')[0];
   const directory = "public/";
   const file = directory + id + ".json";
   if(authProvider === 'uPort') {
     const did = await JSON.parse(localStorage.getItem('uPortUser')).payload.did.split(':')[2];
     const link = `${window.location.origin}/shared/docs/ipfs/${did}/${file}`;
-    const data = JSON.stringify(global.singlePublic);
+    const data = JSON.stringify(getGlobal().singlePublic);
     const params = {
       content: data,
       provider: 'ipfs',
@@ -785,10 +795,10 @@ export async function savePublic() {
   } else {
     const user = loadUserData().username;
     const link = window.location.origin + "/shared/docs/" + user + "-" + id;
-    putFile(file, JSON.stringify(global.singlePublic), { encrypt: false })
+    putFile(file, JSON.stringify(getGlobal().singlePublic), { encrypt: false })
     .then(() => {
       setGlobal({ gaiaLink: link, publicShare: "", shareModal: "hide" });
-      // this.handleAutoAdd() //call this every time savePublic is called, so global.singleDocIsPublic persists to database...
+      // this.handleAutoAdd() //call this every time savePublic is called, so getGlobal().singleDocIsPublic persists to database...
     })
     .catch(e => {
       console.log(e);
@@ -805,7 +815,6 @@ export function copyLink() {
 
 export function sharedInfoSingleDocRTC(props) {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = getGlobal();
   if(props.contact.includes('did:')) {
     //This is a uPort contact. Need to grab the pubkey
     setGlobal({ pubKey: props.pubKey, receiverID: props.contact.name, rtc: true }, () => {
@@ -830,7 +839,7 @@ export function sharedInfoSingleDocRTC(props) {
           if (JSON.parse(fileContents).emailOK) {
             const object = {};
             object.sharedBy = authProvider === 'uPort' ? JSON.parse(localStorage.getItem('uPortUser')).payload.did : loadUserData().username;
-            object.title = global.title;
+            object.title = getGlobal().title;
             object.from_email = "contact@graphitedocs.com";
             object.to_email = JSON.parse(fileContents).profileEmail;
             if (window.location.href.includes("/documents")) {
@@ -882,21 +891,20 @@ export function sharedInfoSingleDocRTC(props) {
 
 export async function sharedInfoSingleDocStatic(props) {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = await getGlobal();
   htmlContent = document.getElementsByClassName("editor")[0].innerHTML;
   if(props.contact.includes('did:')) {
     //This is a uPort contact. Need to grab the pubkey
-    setGlobal({ pubKey: props.pubKey, receiverID: props.contact.name, rtc: false }, () => {
+    setGlobal({ pubKey: props.pubKey, receiverID: props.name, rtc: false }, () => {
       loadMyFile();
     })
   } else {
     setGlobal({ receiverID: props.contact, rtc: false });
-  const user = props.contact;
-  const options = {
-    username: user,
-    zoneFileLookupURL: "https://core.blockstack.org/v1/names",
-    decrypt: false
-  };
+    const user = props.contact;
+    const options = {
+      username: user,
+      zoneFileLookupURL: "https://core.blockstack.org/v1/names",
+      decrypt: false
+    };
   getFile("key.json", options)
     .then(file => {
       setGlobal({ pubKey: JSON.parse(file) });
@@ -907,7 +915,7 @@ export async function sharedInfoSingleDocStatic(props) {
         if (JSON.parse(fileContents).emailOK) {
           const object = {};
           object.sharedBy = authProvider === 'uPort' ? JSON.parse(localStorage.getItem('uPortUser')).payload.did : loadUserData().username;
-          object.title = global.title;
+          object.title = getGlobal().title;
           object.from_email = "contact@graphitedocs.com";
           object.to_email = JSON.parse(fileContents).profileEmail;
           if (window.location.href.includes("/documents")) {
@@ -959,8 +967,7 @@ export async function sharedInfoSingleDocStatic(props) {
 
 export async function loadMyFile() {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = await getGlobal();
-  const pubKey = global.pubKey;
+  const pubKey = getGlobal().pubKey;
   if(authProvider === 'uPort') {
     const fileName = "shareddocs.json";
     const file = "/mine/" + pubKey + "/" + fileName;
@@ -1011,10 +1018,10 @@ export async function loadMyFile() {
       await setGlobal({ shareFile: [] })
     }
     const object = {};
-        let content = global.content;
-        object.title = global.title;
+        let content = getGlobal().content;
+        object.title = getGlobal().title;
         object.compressed = false;
-        if (global.rtc) {
+        if (getGlobal().rtc) {
           object.jsonContent = true;
           object.content = content.toJSON();
         } else {
@@ -1022,21 +1029,21 @@ export async function loadMyFile() {
           object.content = htmlContent;
           object.fullContent = content.toJSON();
         }
-        global.teamShare ? (object.teamDoc = true) : (object.teamDoc = false);
+        getGlobal().teamShare ? (object.teamDoc = true) : (object.teamDoc = false);
         object.id = window.location.href.split("doc/")[1];
-        object.receiverID = global.receiverID;
+        object.receiverID = getGlobal().receiverID;
         object.words = wordcount(
           document
             .getElementsByClassName("editor")[0]
             .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
         );
-        object.sharedWith = [...global.sharedWith, global.receiverID];
+        object.sharedWith = [...getGlobal().sharedWith, getGlobal().receiverID];
         object.shared = getMonthDayYear();
-        object.rtc = global.rtc;
+        object.rtc = getGlobal().rtc;
         object.user = JSON.parse(localStorage.getItem('uPortUser')).payload.did;
         await setGlobal({
-          shareFile: [...global.shareFile, object],
-          sharedWith: [...global.sharedWith, global.receiverID]
+          shareFile: [...getGlobal().shareFile, object],
+          sharedWith: [...getGlobal().sharedWith, getGlobal().receiverID]
         }, () => {
           shareDoc();
         });
@@ -1050,10 +1057,10 @@ export async function loadMyFile() {
       })
       .then(() => {
         const object = {};
-        let content = global.content;
-        object.title = global.title;
+        let content = getGlobal().content;
+        object.title = getGlobal().title;
         object.compressed = false;
-        if (global.rtc) {
+        if (getGlobal().rtc) {
           object.jsonContent = true;
           object.content = content.toJSON();
         } else {
@@ -1061,21 +1068,21 @@ export async function loadMyFile() {
           object.content = htmlContent;
           object.fullContent = content.toJSON();
         }
-        global.teamShare ? (object.teamDoc = true) : (object.teamDoc = false);
+        getGlobal().teamShare ? (object.teamDoc = true) : (object.teamDoc = false);
         object.id = window.location.href.split("doc/")[1];
-        object.receiverID = global.receiverID;
+        object.receiverID = getGlobal().receiverID;
         object.words = wordcount(
           document
             .getElementsByClassName("editor")[0]
             .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
         );
-        object.sharedWith = [...global.sharedWith, global.receiverID];
+        object.sharedWith = [...getGlobal().sharedWith, getGlobal().receiverID];
         object.shared = getMonthDayYear();
-        object.rtc = global.rtc;
+        object.rtc = getGlobal().rtc;
         object.user = loadUserData().username;
         setGlobal({
-          shareFile: [...global.shareFile, object],
-          sharedWith: [...global.sharedWith, global.receiverID]
+          shareFile: [...getGlobal().shareFile, object],
+          sharedWith: [...getGlobal().sharedWith, getGlobal().receiverID]
         });
         setTimeout(shareDoc, 700);
       })
@@ -1084,27 +1091,27 @@ export async function loadMyFile() {
         setGlobal({ loading: "", show: "hide" });
   
         const object = {};
-        let content = global.content;
-        object.title = global.title;
-        if (global.rtc) {
+        let content = getGlobal().content;
+        object.title = getGlobal().title;
+        if (getGlobal().rtc) {
           object.jsonContent = true;
         } else {
           object.jsonContent = false;
         }
         object.content = content.toJSON();
-        if (global.teamShare === true) {
+        if (getGlobal().teamShare === true) {
           object.teamDoc = true;
         }
         object.id = Date.now();
-        object.receiverID = global.receiverID;
+        object.receiverID = getGlobal().receiverID;
         object.words = wordcount(
           document
             .getElementsByClassName("editor")[0]
             .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
         );
         object.shared = getMonthDayYear();
-        object.rtc = global.rtc;
-        setGlobal({ shareFile: [...global.shareFile, object] });
+        object.rtc = getGlobal().rtc;
+        setGlobal({ shareFile: [...getGlobal().shareFile, object] });
         setTimeout(shareDoc, 700);
       });
   }
@@ -1112,14 +1119,13 @@ export async function loadMyFile() {
 
 export async function shareDoc() {
   setGlobal({ loading: true })
-  const global = await getGlobal();
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
     const fileName = "shareddocs.json";
-    const pubKey = global.pubKey;
+    const pubKey = getGlobal().pubKey;
     const file = "/mine/" + pubKey + "/" + fileName;
     const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
-    const data = JSON.stringify(global.shareFile);
+    const data = JSON.stringify(getGlobal().shareFile);
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
@@ -1139,8 +1145,8 @@ export async function shareDoc() {
     console.log(postToStorage);
 
     const file2 = "/shared/" + pubKey + "/" + fileName;
-    const data2 = JSON.stringify(global.shareFile);
-    const encryptedData2 = await encryptContent(data2, { publicKey: global.pubKey });
+    const data2 = JSON.stringify(getGlobal().shareFile);
+    const encryptedData2 = await encryptContent(data2, { publicKey: getGlobal().pubKey });
     const params2 = {
       content: encryptedData2,
       filePath: file2,
@@ -1151,7 +1157,7 @@ export async function shareDoc() {
     console.log(postToStorage2);
 
     const file3 = "/" + window.location.href.split("doc/")[1].split('#')[0] + "sharedwith.json";
-    const data3 = JSON.stringify(global.sharedWith);
+    const data3 = JSON.stringify(getGlobal().sharedWith);
     const encryptedData3 = await encryptContent(data3, { publicKey: publicKey });
     const params3 = {
       content: encryptedData3,
@@ -1165,16 +1171,16 @@ export async function shareDoc() {
     setGlobal({ loading: false })
   } else {
     const fileName = "shareddocs.json";
-    const pubKey = global.pubKey;
+    const pubKey = getGlobal().pubKey;
     const file = "mine/" + pubKey + "/" + fileName;
-    putFile(file, JSON.stringify(global.shareFile), {
+    putFile(file, JSON.stringify(getGlobal().shareFile), {
       encrypt: true
     }).catch(e => {
       console.log("e");
       console.log(e);
     });
   
-    const data = global.shareFile;
+    const data = getGlobal().shareFile;
     const encryptedData = JSON.stringify(
       encryptECIES(pubKey, JSON.stringify(data))
     );
@@ -1193,12 +1199,12 @@ export async function shareDoc() {
       });
     putFile(
       window.location.href.split("doc/")[1].split('#')[0] + "sharedwith.json",
-      JSON.stringify(global.sharedWith),
+      JSON.stringify(getGlobal().sharedWith),
       { encrypt: true }
     )
       .then(() => {
-        if (global.teamShare === true) {
-          setGlobal({ count: global.count + 1 });
+        if (getGlobal().teamShare === true) {
+          setGlobal({ count: getGlobal().count + 1 });
           setTimeout(shareToTeam, 300);
         } else {
           handleAutoAdd();
@@ -1250,8 +1256,7 @@ export function handleIDChange(e) {
 }
 
 export function handleBack() {
-  const global = getGlobal();
-  if (global.autoSave === "Saving") {
+  if (getGlobal().autoSave === "Saving") {
     setTimeout(handleBack, 500);
   } else {
     window.location.replace("/documents");
@@ -1259,21 +1264,20 @@ export function handleBack() {
 }
 
 export function handleAutoAdd() {
-  const global = getGlobal();
   versionID = uuidv4();
   // this.analyticsRun('documents');
-  let content = global.content;
+  let content = getGlobal().content;
   const object = {};
   const objectTwo = {};
   const versionObject = {};
   versionObject.createdAt = new Date();
   versionObject.id = versionID;
-  object.title = global.title;
+  object.title = getGlobal().title;
   object.content = content.toJSON();
-  object.versions = [...global.versions, versionObject];
+  object.versions = [...getGlobal().versions, versionObject];
   object.compressed = false;
   object.jsonContent = true;
-  global.teamDoc ? (object.teamDoc = true) : (object.teamDoc = false);
+  getGlobal().teamDoc ? (object.teamDoc = true) : (object.teamDoc = false);
   if (window.location.href.includes("docs/")) {
     console.log("Public Doc");
     object.id = window.location.href.split("doc/")[1].includes("#")
@@ -1284,8 +1288,8 @@ export function handleAutoAdd() {
       : window.location.href.split("doc/")[1];
   } else if (window.location.href.includes("shared/")) {
     console.log("Shared Doc");
-    object.id = window.location.href.split("shared/")[1].split("/")[1];
-    objectTwo.id = window.location.href.split("shared/")[1].split("/")[1];
+    object.id = window.location.href.split("shared/")[1].split("/")[1].split('#')[0];
+    objectTwo.id = window.location.href.split("shared/")[1].split("/")[1].split('#')[0];
   } else {
     object.id = window.location.href.split("doc/")[1].includes("#")
       ? window.location.href.split("doc/")[1].split("#")[0]
@@ -1295,10 +1299,10 @@ export function handleAutoAdd() {
       : window.location.href.split("doc/")[1];
   }
   object.updated = getMonthDayYear();
-  object.sharedWith = global.sharedWith;
-  object.singleDocIsPublic = global.singleDocIsPublic; //true or false...
-  object.readOnly = global.readOnly; //true or false...
-  object.rtc = global.rtc;
+  object.sharedWith = getGlobal().sharedWith;
+  object.singleDocIsPublic = getGlobal().singleDocIsPublic; //true or false...
+  object.readOnly = getGlobal().readOnly; //true or false...
+  object.rtc = getGlobal().rtc;
   // object.author = loadUserData().username;
   object.words =
     wordcount(
@@ -1306,12 +1310,12 @@ export function handleAutoAdd() {
         .getElementsByClassName("editor")[0]
         .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
     ) || "";
-  object.singleDocTags = global.singleDocTags;
+  object.singleDocTags = getGlobal().singleDocTags;
   object.fileType = "documents";
-  object.spacing = global.spacing;
+  object.spacing = getGlobal().spacing;
   object.lastUpdate = Date.now();
-  objectTwo.title = global.title;
-  global.teamDoc ? (objectTwo.teamDoc = true) : (objectTwo.teamDoc = false);
+  objectTwo.title = getGlobal().title;
+  getGlobal().teamDoc ? (objectTwo.teamDoc = true) : (objectTwo.teamDoc = false);
   objectTwo.id = object.id;
   objectTwo.updated = getMonthDayYear();
   objectTwo.words = wordcount(
@@ -1320,31 +1324,31 @@ export function handleAutoAdd() {
       .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
   );
   objectTwo.lastUpdate = Date.now();
-  objectTwo.sharedWith = global.sharedWith;
-  objectTwo.rtc = global.rtc;
-  objectTwo.singleDocIsPublic = global.singleDocIsPublic; //true or false...
-  objectTwo.readOnly = global.readOnly; //true or false...
+  objectTwo.sharedWith = getGlobal().sharedWith;
+  objectTwo.rtc = getGlobal().rtc;
+  objectTwo.singleDocIsPublic = getGlobal().singleDocIsPublic; //true or false...
+  objectTwo.readOnly = getGlobal().readOnly; //true or false...
   // objectTwo.author = loadUserData().username;
-  objectTwo.singleDocTags = global.singleDocTags;
+  objectTwo.singleDocTags = getGlobal().singleDocTags;
   objectTwo.fileType = "documents";
-  const index = global.index;
-  console.log(global.index);
-  if (global.newSharedDoc) {
+  const index = getGlobal().index;
+  console.log(getGlobal().index);
+  if (getGlobal().newSharedDoc) {
     console.log("new shared doc");
     console.log(objectTwo);
     setGlobal(
       {
-        versions: [...global.versions, versionObject],
+        versions: [...getGlobal().versions, versionObject],
         newSharedDoc: false,
-        value: [...global.value, objectTwo],
+        value: [...getGlobal().value, objectTwo],
         singleDoc: object,
         autoSave: "Saving..."
       },
       () => {
-        setGlobal({ filteredValue: global.value }, () => {
+        setGlobal({ filteredValue: getGlobal().value }, () => {
           autoSave();
         });
-        if (global.singleDocIsPublic === true) {
+        if (getGlobal().singleDocIsPublic === true) {
           //moved this conditional from handleAutoAdd, where it caused an infinite loop...
           sharePublicly(); //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
         }
@@ -1354,12 +1358,13 @@ export function handleAutoAdd() {
     console.log("not a new shared doc");
     if (index !== "" && index > -1) {
       console.log("index already set");
-      const updatedDoc = update(global.value, {
-        $splice: [[global.index, 1, objectTwo]]
+      console.log(getGlobal().value);
+      const updatedDoc = update(getGlobal().value, {
+        $splice: [[getGlobal().index, 1, objectTwo]]
       });
       setGlobal(
         {
-          versions: [...global.versions, versionObject],
+          versions: [...getGlobal().versions, versionObject],
           value: updatedDoc,
           filteredValue: updatedDoc,
           singleDoc: object,
@@ -1367,14 +1372,14 @@ export function handleAutoAdd() {
         },
         () => {
           autoSave();
-          if (global.singleDocIsPublic === true) {
+          if (getGlobal().singleDocIsPublic === true) {
             //moved this conditional from handleAutoAdd, where it caused an infinite loop...
             sharePublicly(); //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
           }
         }
       );
     } else {
-      let value = global.value;
+      let value = getGlobal().value;
       console.log(value);
       const thisDoc = value.find(doc => {
         if (typeof doc.id === "string") {
@@ -1398,12 +1403,12 @@ export function handleAutoAdd() {
         return doc.id === index; //this is comparing a number to a number
       }
       setGlobal({ index: value.findIndex(findObjectIndex) }, () => {
-        const updatedDoc = update(global.value, {
-          $splice: [[global.index, 1, objectTwo]]
+        const updatedDoc = update(getGlobal().value, {
+          $splice: [[getGlobal().index, 1, objectTwo]]
         });
         setGlobal(
           {
-            versions: [...global.versions, versionObject],
+            versions: [...getGlobal().versions, versionObject],
             value: updatedDoc,
             filteredValue: updatedDoc,
             singleDoc: object,
@@ -1411,7 +1416,7 @@ export function handleAutoAdd() {
           },
           () => {
             autoSave();
-            if (global.singleDocIsPublic === true) {
+            if (getGlobal().singleDocIsPublic === true) {
               //moved this conditional from handleAutoAdd, where it caused an infinite loop...
               sharePublicly(); //this will call savePublic, which will call handleAutoAdd, so we'll be calling handleAutoAdd twice, but it's at least it's not an infinite loop!
             }
@@ -1435,14 +1440,13 @@ export function setVersion(id) {
 }
 
 export async function autoSave() {
-  const global = getGlobal();
-  const file = window.location.href.split("doc/")[1].includes("#")
-    ? window.location.href.split("doc/")[1].split("#")[0]
-    : window.location.href.split("doc/")[1] || global.tempDocId;
+  const file = window.location.href.includes("shared/")
+    ? window.location.href.split("shared/")[1].split("/")[1].split("#")[0]
+    : window.location.href.split("doc/")[1].split('#')[0] || getGlobal().tempDocId;
   const fullFile = "/documents/" + file + ".json";
   if (authProvider === "uPort") {
     const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
-    const data = JSON.stringify(global.value);
+    const data = JSON.stringify(getGlobal().value);
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
@@ -1460,7 +1464,7 @@ export async function autoSave() {
 
     let postToStorage = await postToStorageProvider(params);
     console.log(postToStorage);
-    const singleData = JSON.stringify(global.singleDoc);
+    const singleData = JSON.stringify(getGlobal().singleDoc);
     const singleEncrypted = await encryptContent(singleData, {
       publicKey: publicKey
     });
@@ -1475,7 +1479,7 @@ export async function autoSave() {
     setGlobal({ autoSave: "Saved" });
     loadDocs();
   } else if (authProvider === "blockstack") {
-    putFile(fullFile, JSON.stringify(global.singleDoc), { encrypt: true })
+    putFile(fullFile, JSON.stringify(getGlobal().singleDoc), { encrypt: true })
       .then(() => {
         saveSingleDocCollection();
       })
@@ -1486,12 +1490,11 @@ export async function autoSave() {
 }
 
 export function saveSingleDocCollection() {
-  const global = getGlobal();
-  putFile("documentscollection.json", JSON.stringify(global.value), {
+  putFile("documentscollection.json", JSON.stringify(getGlobal().value), {
     encrypt: true
   })
     .then(() => {
-      let content = global.content;
+      let content = getGlobal().content;
       setGlobal({ autoSave: "Saved" });
       console.log("Saving " + versionID);
       putFile(versionID + ".json", JSON.stringify(content.toJSON()), {
@@ -1507,7 +1510,6 @@ export function saveSingleDocCollection() {
 }
 
 export function componentDidMountData(props) {
-  const global = getGlobal();
   const thisFile = props;
   const fullFile = "/documents/" + thisFile + ".json";
   setGlobal({ documentId: props });
@@ -1533,7 +1535,7 @@ export function componentDidMountData(props) {
         setGlobal({ value: JSON.parse(fileContents || "{}") });
       }
 
-      let value = global.value;
+      let value = getGlobal().value;
       const thisDoc = value.find(doc => {
         return doc.id.toString() === props;
       }); //comparing strings
@@ -1562,7 +1564,7 @@ export function componentDidMountData(props) {
       });
     })
     .then(() => {
-      let markupStr = global.content;
+      let markupStr = getGlobal().content;
       if (markupStr !== "") {
         window.$(".summernote").summernote("code", markupStr);
       }
@@ -1573,8 +1575,7 @@ export function componentDidMountData(props) {
 }
 
 export function handleStealthy() {
-  const global = getGlobal();
-  setGlobal({ hideStealthy: !global.hideStealthy });
+  setGlobal({ hideStealthy: !getGlobal().hideStealthy });
 }
 
 export function print() {
@@ -1582,7 +1583,6 @@ export function print() {
 }
 
 export function shareToTeam() {
-  const global = getGlobal();
   setGlobal({
     teamDoc: true,
     teamShare: true,
@@ -1598,26 +1598,26 @@ export function shareToTeam() {
     if (team[count].blockstackId !== loadUserData().username) {
       sharedInfoSingleDocRTC(team[count].blockstackId);
     } else {
-      setGlobal({ count: global.count + 1 });
+      setGlobal({ count: getGlobal().count + 1 });
       setTimeout(shareToTeam, 300);
     }
   } else {
     setGlobal({ teamShare: false, loadingIndicator: false });
     window.$("#teamShare").modal("close");
-    if (global.slackConnected) {
+    if (getGlobal().slackConnected) {
       postToSlack();
     }
-    if (global.webhookConnected) {
+    if (getGlobal().webhookConnected) {
       const object = {};
-      let content = global.content;
-      object.title = global.title;
+      let content = getGlobal().content;
+      object.title = getGlobal().title;
       object.content = content.toJSON();
       object.words = wordcount(
         document
           .getElementsByClassName("editor")[0]
           .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
       );
-      object.sharedWith = global.sharedWith;
+      object.sharedWith = getGlobal().sharedWith;
       postToWebhook(object);
     }
     handleAutoAdd();
@@ -1626,23 +1626,21 @@ export function shareToTeam() {
 }
 
 export function sendArticle() {
-  const global = getGlobal();
   setGlobal({
-    sentArticles: [...global.sentArticles, global.singleDoc]
+    sentArticles: [...getGlobal().sentArticles, getGlobal().singleDoc]
   });
   // setTimeout(saveSend, 300);
   setGlobal({ send: false });
 }
 
 export function downloadDoc(props) {
-  const global = getGlobal();
   if (props === "word") {
     var content =
       "<!DOCTYPE html>" +
       document.getElementsByClassName("editor")[0].innerHTML;
     var converted = htmlDocx.asBlob(content);
     var blob = new Blob([converted], { type: "application/msword" });
-    FileSaver.saveAs(blob, global.title + ".docx");
+    FileSaver.saveAs(blob, getGlobal().title + ".docx");
   } else if (props === "rtf") {
     console.log("rtf");
   } else if (props === "pdf") {
@@ -1699,19 +1697,16 @@ export function formatSpacing(props) {
 }
 
 export function changeEditor() {
-  const global = getGlobal();
-  setGlobal({ markdown: !global.markdown });
+  setGlobal({ markdown: !getGlobal().markdown });
 }
 
 export function applyOperations(operations) {
-  const global = getGlobal();
   const { content } = global;
   const change = content.change().applyOperations(operations);
   handleChange(change, { remote: true });
 }
 
 export function hasMark(type) {
-  const global = getGlobal();
   const { content } = global;
   return content.activeMarks.some(mark => mark.type === type);
 }
@@ -1737,7 +1732,6 @@ export function onKeyDown(event, change) {
 }
 
 export function onClickMark(event, type) {
-  const global = getGlobal();
   event.preventDefault();
   const { content } = global;
   const change = content.change().toggleMark(type);
@@ -1802,49 +1796,47 @@ export function handleTimelineEventTextText(e) {
 }
 
 export function handleUpdateTimelineTitle() {
-  const global = getGlobal();
   const object = {};
   const media = {};
   const text = {};
-  media.url = global.timelineTitleMediaUrl;
-  media.caption = global.timelineTitleMediaCaption;
-  media.credit = global.timelineTitleMediaCredit;
-  text.headline = global.timelineTitleTextHeadline;
-  text.text = global.timelineTitleTextText;
+  media.url = getGlobal().timelineTitleMediaUrl;
+  media.caption = getGlobal().timelineTitleMediaCaption;
+  media.credit = getGlobal().timelineTitleMediaCredit;
+  text.headline = getGlobal().timelineTitleTextHeadline;
+  text.text = getGlobal().timelineTitleTextText;
   object.media = media;
   object.text = text;
   setGlobal({ timelineTitle: object }, () => {
     const timelineObj = {};
-    timelineObj.title = global.timelineTitle;
-    timelineObj.events = global.timelineEvents;
+    timelineObj.title = getGlobal().timelineTitle;
+    timelineObj.events = getGlobal().timelineEvents;
     setGlobal({ myTimeline: timelineObj });
   });
 }
 
 export function handleAddNewTimelineEvent() {
-  const global = getGlobal();
   const object = {};
   const media = {};
   const start_date = {};
   const text = {};
-  media.url = global.timelineEventMediaUrl;
-  media.caption = global.timelineEventMediaCaption;
-  media.credit = global.timelineEventMediaCredit;
-  start_date.month = global.timelineEventStartMonth;
-  start_date.day = global.timelineEventStartDay;
-  start_date.year = global.timelineEventStartYear;
-  text.headline = global.timelineEventTextHeadline;
-  text.text = global.timelineEventTextText;
+  media.url = getGlobal().timelineEventMediaUrl;
+  media.caption = getGlobal().timelineEventMediaCaption;
+  media.credit = getGlobal().timelineEventMediaCredit;
+  start_date.month = getGlobal().timelineEventStartMonth;
+  start_date.day = getGlobal().timelineEventStartDay;
+  start_date.year = getGlobal().timelineEventStartYear;
+  text.headline = getGlobal().timelineEventTextHeadline;
+  text.text = getGlobal().timelineEventTextText;
   object.media = media;
   object.start_date = start_date;
   object.text = text;
   object.unique_id = Date.now();
   setGlobal(
-    { timelineEvents: [...global.timelineEvents, object] },
+    { timelineEvents: [...getGlobal().timelineEvents, object] },
     () => {
       const timelineObj = {};
-      timelineObj.title = global.timelineTitle;
-      timelineObj.events = global.timelineEvents;
+      timelineObj.title = getGlobal().timelineTitle;
+      timelineObj.events = getGlobal().timelineEvents;
       setGlobal({ myTimeline: timelineObj });
     }
   );
@@ -1852,16 +1844,15 @@ export function handleAddNewTimelineEvent() {
 
 export async function handleTimelineSave() {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = getGlobal();
   const object = {};
-  object.title = global.timelineTitle;
-  object.events = global.timelineEvents;
+  object.title = getGlobal().timelineTitle;
+  object.events = getGlobal().timelineEvents;
   setGlobal({ myTimeline: object }, async () => {
     if(authProvider === 'uPort') {
       let timelineFile =
       `/timelines/ + ${window.location.href.split("doc/")[1].split('#')[0]}.json`;
       const publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
-      const data = JSON.stringify(global.myTimeline);
+      const data = JSON.stringify(getGlobal().myTimeline);
       const encryptedData = await encryptContent(data, { publicKey: publicKey });
       const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
       let token;
@@ -1882,7 +1873,7 @@ export async function handleTimelineSave() {
     } else {
       let timelineFile =
       `timelines/ + ${window.location.href.split("doc/")[1].split('#')[0]}.json`;
-    putFile(timelineFile, JSON.stringify(global.myTimeline), {
+    putFile(timelineFile, JSON.stringify(getGlobal().myTimeline), {
       encrypt: true
     }).then(() => console.log("Timeline saved!"));
     }
@@ -1890,7 +1881,7 @@ export async function handleTimelineSave() {
 }
 
 export function handleDeleteTimelineEvent(id) {
-  let events = global.timelineEvents;
+  let events = getGlobal().timelineEvents;
   console.log(events);
   let index = events.findIndex(a => a.unique_id === id);
   if (index > -1) {
