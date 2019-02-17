@@ -8,7 +8,6 @@ import { deleteFromStorageProvider } from './storageProviders/delete';
 import { postToStorageProvider } from './storageProviders/post';
 
 export function loadDocToDelete() {
-  const global = getGlobal();
   getFile("documentscollection.json", {decrypt: true})
    .then((fileContents) => {
       if(JSON.parse(fileContents).value) {
@@ -19,7 +18,7 @@ export function loadDocToDelete() {
         console.log("loaded");
       }
    }).then(() =>{
-     let value = global.value;
+     let value = getGlobal().value;
      const thisDoc = value.find((doc) => { return doc.id.toString() === window.location.href.split('/documents/doc/delete/')[1]}); //comparing strings
      let index = thisDoc && thisDoc.id;
      console.log('index is ' + index)
@@ -46,17 +45,16 @@ export function loadDocToDelete() {
 }
 
 export function handleDeleteDoc(props) {
-  const global = getGlobal();
   setGlobal({loading: true});
-  let value = global.value;
+  let value = getGlobal().value;
   const thisDoc = value.find((doc) => { return doc.id === props.id});
   let index = thisDoc && thisDoc.id;
   function findObjectIndex(doc) {
       return doc.id === index; //comparing numbers
   }
   setGlobal({ content: thisDoc && thisDoc.content, title: thisDoc && thisDoc.title, index: value.findIndex(findObjectIndex) }, () => {
-    if(global.index > -1) {
-      value.splice(global.index,1);
+    if(getGlobal().index > -1) {
+      value.splice(getGlobal().index,1);
     } else {
       console.log("Error with index")
     }
@@ -69,10 +67,9 @@ export function handleDeleteDoc(props) {
 };
 
 export async function saveNewDocFile(props) {
-  const global = getGlobal();
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'blockstack') {
-    putFile("documentscollection.json", JSON.stringify(global.value), {encrypt: true})
+    putFile("documentscollection.json", JSON.stringify(getGlobal().value), {encrypt: true})
     .then(() => {
       this.saveDocFileTwo(props);
     })
@@ -82,7 +79,7 @@ export async function saveNewDocFile(props) {
     });
   } else {
     const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
-    const data = JSON.stringify(global.value);
+    const data = JSON.stringify(getGlobal().value);
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
@@ -102,7 +99,7 @@ export async function saveNewDocFile(props) {
     let postToStorage = await postToStorageProvider(params);
     await console.log(postToStorage);
     //Actually delete single doc file, don't just save empty object.
-    const singleData = await JSON.stringify(global.singleDoc);
+    const singleData = await JSON.stringify(getGlobal().singleDoc);
     const singleParams = await {
       content: singleData,
       filePath: `/documents/single/${props.id}.json`,
@@ -118,7 +115,7 @@ export async function saveNewDocFile(props) {
 export function saveDocFileTwo(props) {
   const file = props.id;
   const fullFile = '/documents/' + file + '.json';
-  putFile(fullFile, JSON.stringify(global.singleDoc), {encrypt:true})
+  putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       window.location.href = '/documents';
     })

@@ -119,21 +119,9 @@ export default class App extends Component {
               <Route exact path="/shared-docs" component={SharedDocs} />
               <Route exact path="/documents/shared/:id" component={SharedCollection} />
               <Route exact path="/documents/single/shared/:id/:id" component={SingleRTCDoc} />
+              <Route exact path="/vault" component={VaultCollection} />
+              <Route exact path="/vault/:id" component={SingleVaultFile} />
               {/*
-              <Route exact path="/documents/sent/:id" component={SentCollection} />
-              <Route exact path="/documents/single/shared/:id" component={SingleSharedDoc} />
-              <Route exact path="/admin-docs" component={Admin} />
-              <Route exact path="/profile" render={(props) =>
-                <Profile {...props}
-                    handleEmailSetting={this.handleEmailSetting}
-                    handleProfileEmail={this.handleProfileEmail}
-                    saveProfile={this.saveProfile}
-                    loadProfile={this.loadProfile}
-                    loading={loading}
-                    emailOK={emailOK}
-                    profileEmail={profileEmail}
-                  />
-              }/>
               <Route exact path="/sheets" render={(props) =>
                 <MainSheets {...props}
                     results={results}
@@ -151,121 +139,7 @@ export default class App extends Component {
               <Route exact path="/sheets/shared/:id" component={SharedSheetsCollection} />
               <Route exact path="/sheets/sent/:id" component={SentSheetsCollection} />
               <Route exact path="/sheets/single/shared/:id/:id" component={SingleSharedSheet} />
-              <Route exact path="/testsheet" component={TestSheet} />
               <Route exact path="/shared-sheets" component={SharedSheets} />
-              <Route exact path="/contacts/profile/:id" render={(location, match, props) =>
-                <ContactsProfile {...props}
-                  profileLoad={this.profileLoad}
-                  fetchContactData={this.fetchContactData}
-                  name={name}
-                  username={username}
-                  description={description}
-                  img={img}
-                  graphitePro={graphitePro}
-                />
-              }/>
-              <Route exact path="/contacts/delete/:id" component={DeleteContact} />
-              <Route exact path="/vault" render={(props) =>
-                <VaultCollection {...props}
-                  loadVaultFiles={this.loadVaultFiles}
-                  filterVaultList={this.filterVaultList}
-                  handleVaultPageChange={this.handleVaultPageChange}
-                  handleVaultCheckbox={this.handleVaultCheckbox}
-                  sharedVaultInfo={this.sharedVaultInfo}
-                  loadSharedVault={this.loadSharedVault}
-                  loadVaultSingle={this.loadVaultSingle}
-                  getVaultCollection={this.getVaultCollection}
-                  vaultShare={this.vaultShare}
-                  saveSharedVaultFile={this.saveSharedVaultFile}
-                  saveSingleVaultFile={this.saveSingleVaultFile}
-                  saveVaultCollection={this.saveVaultCollection}
-                  sendVaultFile={this.sendVaultFile}
-                  loadSingleVaultTags={this.loadSingleVaultTags}
-                  getVaultCollectionTags={this.getVaultCollectionTags}
-                  setVaultTags={this.setVaultTags}
-                  handleVaultKeyPress={this.handleVaultKeyPress}
-                  addVaultTagManual={this.addVaultTagManual}
-                  saveNewVaultTags={this.saveNewVaultTags}
-                  saveFullVaultCollectionTags={this.saveFullVaultCollectionTags}
-                  saveSingleVaultFileTags={this.saveSingleVaultFileTags}
-                  applyVaultFilter={this.applyVaultFilter}
-                  filterVaultNow={this.filterVaultNow}
-                  deleteVaultTag={this.deleteVaultTag}
-                  clearVaultFilter={this.clearVaultFilter}
-                  collabVaultFilter={this.collabVaultFilter}
-                  tagVaultFilter={this.tagVaultFilter}
-                  dateVaultFilter={this.dateVaultFilter}
-                  typeVaultFilter={this.typeVaultFilter}
-                  setPagination={this.setPagination}
-                  handleNewContact={this.handleNewContact}
-                  handleDeleteVaultItem={this.handleDeleteVaultItem}
-                  handleVaultDrop={this.handleVaultDrop}
-                  handleDropRejected={this.handleDropRejected}
-                  displayMessage={displayMessage}
-                  loading={loading}
-                  results={results}
-                  graphitePro={graphitePro}
-                  files={files}
-                  filteredVault={filteredVault}
-                  deleteState={deleteState}
-                  applyFilter={applyFilter}
-                  typeList={typeList}
-                  collaboratorsModal={collaboratorsModal}
-                  tagList={tagList}
-                  dateList={dateList}
-                  singleFileTags={singleFileTags}
-                  tagDownload={tagDownload}
-                  confirmAdd={confirmAdd}
-                  loadingTwo={loadingTwo}
-                  contacts={contacts}
-                  contactDisplay={contactDisplay}
-                  appliedFilter={appliedFilter}
-                  currentPage={currentPage}
-                  filesPerPage={filesPerPage}
-                  activeIndicator={activeIndicator}
-                  tag={tag}
-                  currentVaultPage={currentVaultPage}
-                />}
-              />
-              <Route exact path="/vault/new/file" render={(location, match, props) =>
-                <NewVaultFile
-                  loadFilesCollection={this.loadFilesCollection}
-                  handleVaultDrop={this.handleVaultDrop}
-                  files={files}
-                  show={show}
-                  loading={loading}
-                  graphitePro={graphitePro}
-                />
-              }/>
-              <Route exact path="/vault/:id" render={(location, match, props) =>
-                <SingleVaultFile {...props}
-                  loadSingleVaultFile={this.loadSingleVaultFile}
-                  onDocumentComplete={this.onDocumentComplete}
-                  onPageComplete={this.onPageComplete}
-                  handlePrevious={this.handlePrevious}
-                  handleNext={this.handleNext}
-                  downloadPDF={this.downloadPDF}
-                  handleToDocs={this.handleToDocs}
-                  handleaddSheet={this.handleaddSheet}
-                  handleaddItem={this.handleaddItem}
-                  signWithBlockusign={this.signWithBlockusign}
-                  shareVaultFile={this.shareVaultFile}
-                  stopSharingPubVaultFile={this.stopSharingPubVaultFile}
-                  publicVaultFile={publicVaultFile}
-                  page={page}
-                  type={type}
-                  loading={loading}
-                  show={show}
-                  shareModal={shareModal}
-                  contacts={contacts}
-                  pages={pages}
-                  name={name}
-                  link={link}
-                  content={content}
-                  grid={grid}
-                  graphitePro={graphitePro}
-                />
-              }/>
               <Route exact path="/vault/delete/:id" render={(location, match, props) =>
                 <DeleteVaultFile {...props}
                   initialDeleteLoad={this.initialDeleteLoad}

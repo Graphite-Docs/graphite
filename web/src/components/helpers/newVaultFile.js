@@ -1,6 +1,10 @@
+import { setGlobal, getGlobal } from 'reactn';
 import {
-  putFile
+  putFile, 
+  encryptContent
 } from 'blockstack';
+import { postToStorageProvider } from './storageProviders/post';
+import { loadVault } from './helpers';
 import {
   getMonthDayYear
 } from './getMonthDayYear';
@@ -10,9 +14,9 @@ const str2ab = require('string-to-arraybuffer');
 export function handleVaultDrop(files) {
   if(window.location.href.includes('doc/')) {
   } else {
-    this.setState({ loading: true });
+    setGlobal({ loading: true });
   }
-  this.analyticsRun('vault');
+  // this.analyticsRun('vault');
 
   var file = files[0]
   const reader = new FileReader();
@@ -24,8 +28,8 @@ export function handleVaultDrop(files) {
      object.name = file.name;
      object.size = file.size;
      object.type = file.type;
-     object.tags = this.state.tags;
-     object.sharedWithSingle = this.state.sharedWithSingle;
+     object.tags = getGlobal().tags;
+     object.sharedWithSingle = getGlobal().sharedWithSingle;
      object.lastModified = file.lastModified;
      object.lastModifiedDate = file.lastModifiedDate;
      object.id = Date.now();
@@ -36,26 +40,26 @@ export function handleVaultDrop(files) {
      objectTwo.lastUpdate = Date.now();
      objectTwo.name = object.name;
      objectTwo.type = object.type;
-     objectTwo.tags = this.state.tags;
-     objectTwo.sharedWithSingle = this.state.sharedWithSingle;
+     objectTwo.tags = getGlobal().tags;
+     objectTwo.sharedWithSingle = getGlobal().sharedWithSingle;
      objectTwo.lastModifiedDate = object.lastModifiedDate;
      objectTwo.fileType = "vault";
 
-     this.setState({id: objectTwo.id, name: objectTwo.name});
+     setGlobal({id: objectTwo.id, name: objectTwo.name});
      if(object.type.includes('sheet')) {
        var abuf4 = str2ab(object.link)
         var wb = XLSX.read(abuf4, {type:'buffer'});
-        this.setState({ grid: wb.Strings })
-        console.log(this.state.grid);
-        object.grid = this.state.grid;
+        setGlobal({ grid: wb.Strings })
+        console.log(getGlobal().grid);
+        object.grid = getGlobal().grid;
      } else {
        console.log("not a spreadsheet");
      }
      if(object.size > 111048576) {
-       this.handleDropRejected();
+       handleDropRejected();
      }else {
-       this.setState({singleFile: object, files: [...this.state.files, objectTwo], link: object.link, file: object.file }, () => {
-         this.saveNewVaultFile();
+       setGlobal({singleFile: object, files: [...getGlobal().files, objectTwo], link: object.link, file: object.file }, () => {
+         saveNewVaultFile();
        });
      }
  };
@@ -67,30 +71,66 @@ export function handleDropRejected(files) {
  // Materialize.toast('Sorry, your file is larger than 1mb', 4000) // 4000 is the duration of the toast
 }
 
-export function saveNewVaultFile() {
-    const file = this.state.id + '.json';
-    putFile(file, JSON.stringify(this.state.singleFile), {encrypt:true})
+export async function saveNewVaultFile() {
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    const file = getGlobal().id + '.json';
+    if(authProvider === 'uPort') {
+      const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+      const data = JSON.stringify(getGlobal().singleFile);
+      const encryptedData = await encryptContent(data, {publicKey: publicKey})
+      const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+      let token;
+      if(storageProvider === 'dropbox') {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      }
+      const params = {
+        content: encryptedData,
+        filePath: `/vault/${file}`,
+        provider: storageProvider,
+        token: token
+      }
+
+      let postToStorage = await postToStorageProvider(params);
+      await console.log(postToStorage);
+
+      //Now update vault index file.
+      const data2 = JSON.stringify(getGlobal().files);
+      const encryptedData2 = await encryptContent(data2, {publicKey: publicKey})
+      const params2 = {
+        content: encryptedData2,
+        filePath: `/vault/index.json`,
+        provider: storageProvider,
+        token: token
+      }
+
+      let postVaultIndex = await postToStorageProvider(params2);
+      await console.log(postVaultIndex);
+      await setTimeout(loadVault, 1000);
+    } else {
+      putFile(file, JSON.stringify(getGlobal().singleFile), {encrypt:true})
       .then(() => {
         console.log("Saved!");
-        this.saveNewVaultFileTwo();
+        saveNewVaultFileTwo();
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-        this.setState({ loading: false });
+        setGlobal({ loading: false });
       });
-
+    }
   }
 
   export function saveNewVaultFileTwo() {
-    putFile("uploads.json", JSON.stringify(this.state.files), {encrypt:true})
+    putFile("uploads.json", JSON.stringify(getGlobal().files), {encrypt:true})
       .then(() => {
-        this.loadVault();
-        this.setState({ loading: false })
+        loadVault();
+        setGlobal({ loading: false })
       })
       .catch(e => {
         console.log("e");
         console.log(e);
-        this.setState({ loading: false });
+        setGlobal({ loading: false });
       });
   }

@@ -1,6 +1,10 @@
-import React, { Component } from 'react';
+import React, { Component } from 'reactn';
+import { loadVault } from '../helpers/helpers';
 import { Container, Input, Grid, Button, Table, Message, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
+import { handleVaultDrop, handleDropRejected } from '../helpers/newVaultFile';
+import { handleDeleteVaultItem } from '../helpers/deleteVaultFile';
+import { handleNewContact } from '../helpers/contacts';
 import Header from '../shared/Header';
 import Loading from '../shared/Loading';
 import { Link } from 'react-router-dom';
@@ -10,6 +14,8 @@ import {
   getFile,
   putFile
 } from 'blockstack'
+
+const vault = require('../helpers/vaultFiles');
 
 export default class VaultCollection extends Component {
 
@@ -25,7 +31,12 @@ export default class VaultCollection extends Component {
   }
 
   componentDidMount() {
-    getFile('vaultPageOnboarding.json', {decrypt: true})
+    loadVault();
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    if(authProvider === 'uPort') {
+
+    } else {
+      getFile('vaultPageOnboarding.json', {decrypt: true})
       .then((fileContents) => {
         if(fileContents) {
           this.setState({ onboarding: JSON.parse(fileContents)})
@@ -36,10 +47,11 @@ export default class VaultCollection extends Component {
       .then(() => {
         this.checkFiles();
       })
+    }
   }
 
   checkFiles = () => {
-    if(this.props.files < 1) {
+    if(this.global.files < 1) {
       if(!this.state.onboarding) {
         this.setState({ run: true, onboarding: true }, () => {
           putFile('vaultPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
@@ -54,23 +66,23 @@ export default class VaultCollection extends Component {
 
   tagFilter = (tag, type) => {
     this.setState({ visible: false });
-    this.props.tagVaultFilter(tag, type);
+    vault.tagVaultFilter(tag, type);
   }
 
   dateFilter = (date, type) => {
     this.setState({ visible: false });
-    this.props.dateVaultFilter(date, type)
+    vault.dateVaultFilter(date, type)
   }
 
   collabVaultFilter = (collab, type) => {
     this.setState({ visible: false });
-    this.props.collabVaultFilter(collab, type)
+    vault.collabVaultFilter(collab, type)
   }
 
   handleDelete = () => {
     this.setState({ open: false });
     let file = this.state.file;
-    this.props.handleDeleteVaultItem(file)
+    handleDeleteVaultItem(file)
   }
 
   render() {
@@ -148,7 +160,7 @@ export default class VaultCollection extends Component {
     ]
 
 
-    const { displayMessage, results, loading, graphitePro, singleFileTags, contacts, appliedFilter, currentPage, filesPerPage, filteredVault } = this.props;
+    const { displayMessage, results, loading, graphitePro, singleFileTags, contacts, appliedFilter, currentPage, filesPerPage, filteredVault } = this.global;
     const { visible } = this.state;
     const dropzoneStyle = {
       width  : "100%",
@@ -217,7 +229,7 @@ export default class VaultCollection extends Component {
 
    const renderPageNumbers = pageNumbers.map(number => {
           return (
-            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.props.currentPage.toString() === number.toString()} onClick={() => this.props.handleVaultPageChange(number)} />
+            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => vault.handleVaultPageChange(number)} />
           );
         });
 
@@ -247,10 +259,10 @@ export default class VaultCollection extends Component {
                   <Modal.Description>
                     <Dropzone
                       style={dropzoneStyle}
-                      onDrop={ this.props.handleVaultDrop }
+                      onDrop={ handleVaultDrop }
                       accept="text/html, application/rtf, application/x-rtf, text/richtext, text/plain, application/rtf, application/x-rtf, text/rtf, application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, text/csv, video/quicktime, video/x-ms-wmv,video/mp4,application/pdf,image/png,image/jpeg,image/jpg,image/tiff,image/gif"
                       multiple={ false }
-                      onDropRejected={ this.props.handleDropRejected }>
+                      onDropRejected={ handleDropRejected }>
                       <div style={{marginTop: "45px"}}>
                         <h1 style={{textAlign: "center", color: "#fff"}} className="upload-cloud"><Icon style={{fontSize: "40px"}} name="cloud upload" /></h1>
                         <h3 style={{textAlign: "center", color: "#fff", fontSize: "40px"}} className="white-text">Drag files or click to upload</h3>
@@ -260,11 +272,11 @@ export default class VaultCollection extends Component {
                 </Modal.Content>
               </Modal>
               {appliedFilter === false ? <span className="filter"><a onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer"}}>Filter<Icon name='caret down' /></a></span> : <span className="hide"><a>Filter</a></span>}
-              {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={this.props.clearVaultFilter}>Clear</Label></span> : <div />}
+              {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={vault.clearVaultFilter}>Clear</Label></span> : <div />}
             </h2>
           </Grid.Column>
           <Grid.Column>
-            <Input onChange={this.props.filterVaultList} icon='search' placeholder='Search...' />
+            <Input onChange={vault.filterVaultList} icon='search' placeholder='Search...' />
           </Grid.Column>
         </Grid>
 
@@ -371,7 +383,7 @@ export default class VaultCollection extends Component {
                             <Modal.Content>
                               <Modal.Description>
                                 <h3>Search for a contact</h3>
-                                <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={this.props.handleNewContact} />
+                                <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={handleNewContact} />
                                 <Item.Group divided>
                                 {results.map(result => {
                                   let profile = result.profile;
@@ -388,7 +400,7 @@ export default class VaultCollection extends Component {
                                   }
 
                                     return (
-                                        <Item className="contact-search" onClick={() => this.props.sharedVaultInfo(result.fullyQualifiedName, file)} key={result.username}>
+                                        <Item className="contact-search" onClick={() => vault.sharedVaultInfo(result.fullyQualifiedName, file)} key={result.username}>
                                         <Item.Image size='tiny' src={imageLink} />
                                         <Item.Content verticalAlign='middle'>{result.username}</Item.Content>
                                         </Item>
@@ -402,7 +414,7 @@ export default class VaultCollection extends Component {
                                 <h4>Your Contacts</h4>
                                 {contacts.slice(0).reverse().map(contact => {
                                   return (
-                                    <Item className="contact-search" onClick={() => this.props.sharedVaultInfo(contact.contact, file)} key={contact.contact}>
+                                    <Item className="contact-search" onClick={() => vault.sharedVaultInfo(contact.contact, file)} key={contact.contact}>
                                       <Item.Image size='tiny' src={contact.img} />
                                       <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
                                     </Item>
@@ -415,24 +427,24 @@ export default class VaultCollection extends Component {
                           </Modal>
                         </Dropdown.Item>
                         <Dropdown.Item>
-                          <Modal closeIcon trigger={<Link onClick={() => this.props.loadSingleVaultTags(file)} to={'/vault'} style={{color: "#282828"}}><Icon name='tag'/>Tag</Link>}>
+                          <Modal closeIcon trigger={<Link onClick={() => vault.loadSingleVaultTags(file)} to={'/vault'} style={{color: "#282828"}}><Icon name='tag'/>Tag</Link>}>
                             <Modal.Header>Manage Tags</Modal.Header>
                             <Modal.Content>
                               <Modal.Description>
-                              <Input placeholder='Type a tag...' value={this.props.tag} onChange={this.props.setVaultTags} />
-                              <Button onClick={() => this.props.addVaultTagManual(file, 'vault')} style={{borderRadius: "0"}}>Add Tag</Button><br/>
+                              <Input placeholder='Type a tag...' value={this.global.tag} onChange={vault.setVaultTags} />
+                              <Button onClick={() => vault.addVaultTagManual(file, 'vault')} style={{borderRadius: "0"}}>Add Tag</Button><br/>
                               {
                                 vaultTags.slice(0).reverse().map(tag => {
                                   return (
                                     <Label style={{marginTop: "10px"}} key={tag} as='a' tag>
                                       {tag}
-                                      <Icon onClick={() => this.props.deleteVaultTag(tag, 'vault')} name='delete' />
+                                      <Icon onClick={() => vault.deleteVaultTag(tag, 'vault')} name='delete' />
                                     </Label>
                                   )
                                 })
                               }
                               <div>
-                                <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => this.props.saveNewVaultTags(file)}>Save Tags</Button>
+                                <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => vault.saveNewVaultTags(file)}>Save Tags</Button>
                               </div>
                               </Modal.Description>
                             </Modal.Content>
@@ -488,7 +500,7 @@ export default class VaultCollection extends Component {
           }
             <div style={{float: "right", marginBottom: "25px"}}>
               <label>Files per page</label>
-              <select value={filesPerPage} onChange={this.props.setPagination}>
+              <select value={filesPerPage} onChange={vault.setPagination}>
                 <option value={10}>
                 10
                 </option>

@@ -1,8 +1,13 @@
 import {
   getFile,
   putFile,
-  loadUserData
+  loadUserData, 
+  decryptContent
 } from 'blockstack';
+import { loadVault } from './helpers';
+import { saveNewVaultFile } from './newVaultFile';
+import { fetchFromProvider } from './storageProviders/fetch';
+import { getGlobal, setGlobal } from 'reactn';
 import axios from 'axios';
 import update from 'immutability-helper';
 const { encryptECIES } = require('blockstack/lib/encryption');
@@ -12,78 +17,78 @@ export function loadFilesCollection() {
    .then((fileContents) => {
      console.log(JSON.parse(fileContents || '{}'))
      if(fileContents){
-       this.setState({ files: JSON.parse(fileContents || '{}') });
-       this.setState({filteredVault: this.state.files});
+       setGlobal({ files: JSON.parse(fileContents || '{}') });
+       setGlobal({filteredVault: getGlobal().files});
      }else {
-       this.setState({ files: [] });
-       this.setState({ filteredVault: [] });
+       setGlobal({ files: [] });
+       setGlobal({ filteredVault: [] });
      }
    })
     .catch(error => {
       console.log(error);
-      this.setState({ files: [], filteredValue: [] });
+      setGlobal({ files: [], filteredValue: [] });
     });
 }
 
 export function filterVaultList(event){
-  var updatedList = this.state.files;
+  var updatedList = getGlobal().files;
   updatedList = updatedList.filter(function(item){
     return item.name.toLowerCase().search(
       event.target.value.toLowerCase()) !== -1;
   });
-  this.setState({filteredVault: updatedList});
+  setGlobal({filteredVault: updatedList});
 }
 
 export function handleVaultPageChange(event) {
-    this.setState({
+    setGlobal({
       currentVaultPage: Number(event.target.id)
     });
   }
 
 export function  handleVaultCheckbox(event) {
-    let checkedArray = this.state.filesSelected;
+    let checkedArray = getGlobal().filesSelected;
       let selectedValue = event.target.value;
 
         if (event.target.checked === true) {
           checkedArray.push(selectedValue);
-            this.setState({
+            setGlobal({
               filesSelected: checkedArray
             });
           if(checkedArray.length === 1) {
-            this.setState({activeIndicator: true});
+            setGlobal({activeIndicator: true});
 
           } else {
-            this.setState({activeIndicator: false});
+            setGlobal({activeIndicator: false});
           }
         } else {
-          this.setState({activeIndicator: false});
+          setGlobal({activeIndicator: false});
           let valueIndex = checkedArray.indexOf(selectedValue);
             checkedArray.splice(valueIndex, 1);
 
-            this.setState({
+            setGlobal({
               filesSelected: checkedArray
             });
             if(checkedArray.length === 1) {
-              this.setState({activeIndicator: true});
+              setGlobal({activeIndicator: true});
             } else {
-              this.setState({activeIndicator: false});
+              setGlobal({activeIndicator: false});
             }
         }
   }
 
 export function sharedVaultInfo(contact, file) {
-    this.setState({ confirmAdd: false, receiverID: contact });
+    setGlobal({ confirmAdd: false, receiverID: contact });
     const user = contact;
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    this.setState({ loading: true });
+    setGlobal({ loading: true });
     getFile('key.json', options)
       .then((file) => {
         if(file) {
-          this.setState({ pubKey: JSON.parse(file)})
+          setGlobal({ pubKey: JSON.parse(file)})
         } else {
           console.log("No key");
-          this.setState({ loading: false, displayMessage: true}, () => {
-            setTimeout(() => this.setState({ displayMessage: false}), 3000)
+          setGlobal({ loading: false, displayMessage: true}, () => {
+            setTimeout(() => setGlobal({ displayMessage: false}), 3000)
           })
         }
       })
@@ -98,7 +103,7 @@ export function sharedVaultInfo(contact, file) {
                 object.to_email = JSON.parse(fileContents).profileEmail;
                 if(window.location.href.includes('/vault')) {
                   object.subject = 'New Graphite Vault File Shared by ' + loadUserData().username;
-                  object.link = window.location.origin + '/vault/single/shared/' + loadUserData().username + '/' + this.state.filesSelected[0];
+                  object.link = window.location.origin + '/vault/single/shared/' + loadUserData().username + '/' + getGlobal().filesSelected[0];
                   object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
                   axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
                     .then((res) => {
@@ -111,35 +116,138 @@ export function sharedVaultInfo(contact, file) {
           })
         })
         .then(() => {
-          if(this.state.loading) {
-            this.loadSharedVaultCollection(contact, file);
+          if(getGlobal().loading) {
+            loadSharedVaultCollection(contact, file);
           }
         })
         .catch(error => {
           console.log("No key: " + error);
-          this.setState({ loading: false, displayMessage: true}, () => {
-            setTimeout(() => this.setState({ displayMessage: false}), 3000)
+          setGlobal({ loading: false, displayMessage: true}, () => {
+            setTimeout(() => setGlobal({ displayMessage: false}), 3000)
           })
         });
   }
 
-export function loadSharedVaultCollection(contact, file) {
+export async function loadSharedVaultCollection(contact, file) {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   const user = contact;
   const fileName = "sharedvault.json";
-  getFile(user + fileName, {decrypt: true})
+  if(authProvider === 'uPort') {
+    const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    //Create the params to send to the fetchFromProvider function.
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem('oauthData'))
+    } else {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+    }
+    const object = {
+      provider: storageProvider,
+      token: token,
+      filePath: `/${fileName}`
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile)
+    if (fetchFile.loadLocal) {
+      const decryptedContent = await JSON.parse(
+        decryptContent(JSON.parse(fetchFile.data.content), {
+          privateKey: thisKey
+        })
+      );
+      await setGlobal(
+        {
+          sharedCollection: decryptedContent
+        })
+      } else {
+        //No indexedDB data found, so we load and read from the API call.
+        //Load up a new file reader and convert response to JSON.
+        const reader = await new FileReader();
+        var blob = fetchFile.fileBlob;
+        reader.onloadend = async evt => {
+          console.log("read success");
+          const decryptedContent = await JSON.parse(
+            decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+          );
+          await setGlobal(
+            {
+              sharedCollection: decryptedContent
+            })
+          }
+          console.log(blob);
+        }
+
+        //Now fetch single file.
+        const params = {
+          provider: storageProvider,
+          token: token,
+          filePath: `/vault/${file.id}.json`
+        };
+        //Call fetchFromProvider and wait for response.
+        let singleFile = await fetchFromProvider(params);
+        console.log(singleFile)
+        if (fetchFile.loadLocal) {
+          const decryptedContent = await JSON.parse(
+            decryptContent(JSON.parse(fetchFile.data.content), {
+              privateKey: thisKey
+            })
+          );
+          await setGlobal(
+            {
+              file: decryptedContent.file,
+              name: decryptedContent.name,
+              lastModifiedDate: decryptedContent.lastModifiedDate,
+              size: decryptedContent.size,
+              link: decryptedContent.link,
+              type: decryptedContent.type,
+              id: decryptedContent.id,
+              sharedWithSingle: decryptedContent.sharedWith,
+              singleFileTags: decryptedContent.tags || [],
+              uploaded: decryptedContent.uploaded
+            })
+          } else {
+            //No indexedDB data found, so we load and read from the API call.
+            //Load up a new file reader and convert response to JSON.
+            const reader = await new FileReader();
+            var blob2 = fetchFile.fileBlob;
+            reader.onloadend = async evt => {
+              console.log("read success");
+              const decryptedContent = await JSON.parse(
+                decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+              );
+              await setGlobal(
+                {
+                  file: decryptedContent.file,
+                  name: decryptedContent.name,
+                  lastModifiedDate: decryptedContent.lastModifiedDate,
+                  size: decryptedContent.size,
+                  link: decryptedContent.link,
+                  type: decryptedContent.type,
+                  id: decryptedContent.id,
+                  sharedWithSingle: decryptedContent.sharedWith,
+                  singleFileTags: decryptedContent.tags || [],
+                  uploaded: decryptedContent.uploaded
+                })
+              }
+              console.log(blob2);
+            }
+  } else {
+    getFile(user + fileName, {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
-        this.setState({ sharedCollection: JSON.parse(fileContents || '{}') })
+        setGlobal({ sharedCollection: JSON.parse(fileContents || '{}') })
       } else {
-        this.setState({ sharedCollection: [] });
+        setGlobal({ sharedCollection: [] });
       }
     })
     .then(() => {
-      this.loadVaultSingle(contact, file);
+      loadVaultSingle(contact, file);
     })
     .catch((error) => {
       console.log(error)
     });
+  }
 }
 
 export function loadVaultSingle(contact, file) {
@@ -149,7 +257,7 @@ export function loadVaultSingle(contact, file) {
   getFile(fullFile, {decrypt: true})
    .then((fileContents) => {
      if(JSON.parse(fileContents || '{}').sharedWith) {
-       this.setState({
+       setGlobal({
          file: JSON.parse(fileContents || "{}").file,
          name: JSON.parse(fileContents || "{}").name,
          lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
@@ -162,7 +270,7 @@ export function loadVaultSingle(contact, file) {
          uploaded: JSON.parse(fileContents || "{}").uploaded
       });
     } else {
-      this.setState({
+      setGlobal({
         file: JSON.parse(fileContents || "{}").file,
         name: JSON.parse(fileContents || "{}").name,
         lastModifiedDate: JSON.parse(fileContents || "{}").lastModifiedDate,
@@ -178,8 +286,8 @@ export function loadVaultSingle(contact, file) {
 
    })
     .then(() => {
-      this.setState({ sharedWithSingle: [...this.state.sharedWithSingle, this.state.receiverID] }, () => {
-        this.getVaultCollection(contact, file);
+      setGlobal({ sharedWithSingle: [...getGlobal().sharedWithSingle, getGlobal().receiverID] }, () => {
+        getVaultCollection(contact, file);
       });
     })
     .catch(error => {
@@ -191,19 +299,19 @@ export function getVaultCollection(contact, file) {
   getFile("uploads.json", {decrypt: true})
   .then((fileContents) => {
     console.log(JSON.parse(fileContents || '{}'))
-     this.setState({ files: JSON.parse(fileContents || '{}') })
-     this.setState({ initialLoad: "hide" });
+     setGlobal({ files: JSON.parse(fileContents || '{}') })
+     setGlobal({ initialLoad: "hide" });
   }).then(() =>{
-    let files = this.state.files;
+    let files = getGlobal().files;
     const thisFile = files.find((a) => { return a.id.toString() === file.id.toString()}); //this is comparing strings
     let index = thisFile && thisFile.id;
     function findObjectIndex(file) {
         return file.id === index; //this is comparing numbers
     }
-    this.setState({index: files.findIndex(findObjectIndex) });
+    setGlobal({index: files.findIndex(findObjectIndex) });
   })
     .then(() => {
-      this.vaultShare(contact, file);
+      vaultShare(contact, file);
     })
     .catch(error => {
       console.log(error);
@@ -212,20 +320,20 @@ export function getVaultCollection(contact, file) {
 
 export function vaultShare(contact, file) {
   const object = {};
-  object.name = this.state.name;
-  object.file = this.state.file;
+  object.name = getGlobal().name;
+  object.file = getGlobal().file;
   object.id = file.id;
-  object.lastModifiedDate = this.state.lastModifiedDate;
-  object.sharedWith = this.state.sharedWithSingle;
-  object.size = this.state.size;
-  object.link = this.state.link;
-  object.type = this.state.type;
-  object.tags = this.state.singleFileTags;
-  object.uploaded = this.state.uploaded;
-  const index = this.state.index;
-  const updatedFiles = update(this.state.files, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-  this.setState({files: updatedFiles, singleFile: object, sharedCollection: [...this.state.sharedCollection, object]}, () => {
-    this.saveSharedVaultFile(contact, file);
+  object.lastModifiedDate = getGlobal().lastModifiedDate;
+  object.sharedWith = getGlobal().sharedWithSingle;
+  object.size = getGlobal().size;
+  object.link = getGlobal().link;
+  object.type = getGlobal().type;
+  object.tags = getGlobal().singleFileTags;
+  object.uploaded = getGlobal().uploaded;
+  const index = getGlobal().index;
+  const updatedFiles = update(getGlobal().files, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
+  setGlobal({files: updatedFiles, singleFile: object, sharedCollection: [...getGlobal().sharedCollection, object]}, () => {
+    saveSharedVaultFile(contact, file);
   });
 }
 
@@ -234,24 +342,24 @@ export function saveSharedVaultFile(contact, file) {
   const userShort = user.slice(0, -3);
   const fileName = "sharedvault.json";
 
-  putFile(userShort + fileName, JSON.stringify(this.state.sharedCollection), {encrypt: true})
+  putFile(userShort + fileName, JSON.stringify(getGlobal().sharedCollection), {encrypt: true})
     .then(() => {
       console.log("Shared Collection Saved");
-      this.saveSingleVaultFile(contact, file);
+      saveSingleVaultFile(contact, file);
     })
     .catch(error => {
       console.log("Error")
-      this.setState({ loading: false });
+      setGlobal({ loading: false });
     })
 }
 
 export function saveSingleVaultFile(contact, file) {
   const fileID = file.id;
   const fullFile = fileID + '.json'
-  putFile(fullFile, JSON.stringify(this.state.singleFile), {encrypt:true})
+  putFile(fullFile, JSON.stringify(getGlobal().singleFile), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      this.saveVaultCollection(contact, file);
+      saveVaultCollection(contact, file);
     })
     .catch(e => {
       console.log("e");
@@ -260,10 +368,10 @@ export function saveSingleVaultFile(contact, file) {
 }
 
 export function saveVaultCollection(contact, file) {
-    putFile("uploads.json", JSON.stringify(this.state.files), {encrypt: true})
+    putFile("uploads.json", JSON.stringify(getGlobal().files), {encrypt: true})
       .then(() => {
         console.log("Saved Collection");
-        this.sendVaultFile(contact, file);
+        sendVaultFile(contact, file);
       })
       .catch(e => {
         console.log("e");
@@ -276,15 +384,15 @@ export function sendVaultFile(contact, file) {
   const userShort = user.slice(0, -3);
   const fileName = 'sharedvault.json'
   const fileFull = userShort + fileName;
-  const publicKey = this.state.pubKey;
-  const data = this.state.sharedCollection;
+  const publicKey = getGlobal().pubKey;
+  const data = getGlobal().sharedCollection;
   const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
   const directory = '/shared/' + fileFull;
   putFile(directory, encryptedData, {encrypt: false})
     .then(() => {
       console.log("Shared encrypted file ");
-      this.loadVault();
-      this.setState({ loading: false });
+      loadVault();
+      setGlobal({ loading: false });
 
     })
     .catch(e => {
@@ -292,64 +400,139 @@ export function sendVaultFile(contact, file) {
     });
 }
 
-export function loadSingleVaultTags(file) {
-  this.setState({tagDownload: false});
+export async function loadSingleVaultTags(file) {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  setGlobal({tagDownload: false});
   const thisFile = file.id
   const fullFile = thisFile + '.json';
-  getFile(fullFile, {decrypt: true})
-   .then((fileContents) => {
-     console.log(JSON.parse(fileContents || '{}'))
-     if(JSON.parse(fileContents || '{}').singleFileTags) {
-       this.setState({
-         shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
+  if(authProvider === 'uPort') {
+    const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    //Create the params to send to the fetchFromProvider function.
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem('oauthData'))
+    } else {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+    }
+    const object = {
+      provider: storageProvider,
+      token: token,
+      filePath: `/vault/${fullFile}`
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile)
+    if (fetchFile.loadLocal) {
+      const decryptedContent = await JSON.parse(
+        decryptContent(JSON.parse(fetchFile.data.content), {
+          privateKey: thisKey
+        })
+      );
+      await setGlobal(
+        {
+          shareFile: [...getGlobal().shareFile, decryptedContent],
+          name: decryptedContent.name,
+          id: decryptedContent.id,
+          lastModifiedDate: decryptedContent.lastModifiedDate,
+          sharedWithSingle: decryptedContent.sharedWith || [],
+          singleFileTags: decryptedContent.singleFileTags,
+          file: decryptedContent.file,
+          size: decryptedContent.size,
+          link: decryptedContent.link,
+          type: decryptedContent.type,
+          uploaded: decryptedContent.uploaded
+        })
+      } else {
+        //No indexedDB data found, so we load and read from the API call.
+        //Load up a new file reader and convert response to JSON.
+        const reader = await new FileReader();
+        var blob = fetchFile.fileBlob;
+        reader.onloadend = async evt => {
+          console.log("read success");
+          const decryptedContent = await JSON.parse(
+            decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+          );
+          await setGlobal(
+            {
+              shareFile: [...getGlobal().shareFile, decryptedContent],
+              name: decryptedContent.name,
+              id: decryptedContent.id,
+              lastModifiedDate: decryptedContent.lastModifiedDate,
+              sharedWithSingle: decryptedContent.sharedWith || [],
+              singleFileTags: decryptedContent.singleFileTags || [],
+              file: decryptedContent.file,
+              size: decryptedContent.size,
+              link: decryptedContent.link,
+              type: decryptedContent.type,
+              uploaded: decryptedContent.uploaded
+            })
+          }
+          await console.log(reader.readAsText(blob));
+        }
+        let files = await getGlobal().files;
+        const thisFile = files.find((a) => {return a.id.toString() === file.id.toString()}); //this is comparing strings
+        let index = thisFile && thisFile.id;
+        function findObjectIndex(a) {
+            return a.id === index; //this is comparing numbers
+        }
+        setGlobal({index: files.findIndex(findObjectIndex) });
+  } else {
+    getFile(fullFile, {decrypt: true})
+    .then((fileContents) => {
+      console.log(JSON.parse(fileContents || '{}'))
+      if(JSON.parse(fileContents || '{}').singleFileTags) {
+        setGlobal({
+          shareFile: [...getGlobal().shareFile, JSON.parse(fileContents || '{}')],
+          name: JSON.parse(fileContents || '{}').name,
+          id: JSON.parse(fileContents || '{}').id,
+          lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
+          sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith || [],
+          singleFileTags: JSON.parse(fileContents || '{}').singleFileTags,
+          file: JSON.parse(fileContents || "{}").file,
+          size: JSON.parse(fileContents || "{}").size,
+          link: JSON.parse(fileContents || "{}").link,
+          type: JSON.parse(fileContents || "{}").type,
+          uploaded: JSON.parse(fileContents || "{}").uploaded
+       });
+     } else {
+       setGlobal({
+         shareFile: [...getGlobal().shareFile, JSON.parse(fileContents || '{}')],
          name: JSON.parse(fileContents || '{}').name,
          id: JSON.parse(fileContents || '{}').id,
          lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
          sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith || [],
-         singleFileTags: JSON.parse(fileContents || '{}').singleFileTags,
+         singleFileTags: [],
          file: JSON.parse(fileContents || "{}").file,
          size: JSON.parse(fileContents || "{}").size,
          link: JSON.parse(fileContents || "{}").link,
          type: JSON.parse(fileContents || "{}").type,
          uploaded: JSON.parse(fileContents || "{}").uploaded
       });
-    } else {
-      this.setState({
-        shareFile: [...this.state.shareFile, JSON.parse(fileContents || '{}')],
-        name: JSON.parse(fileContents || '{}').name,
-        id: JSON.parse(fileContents || '{}').id,
-        lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
-        sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith || [],
-        singleFileTags: [],
-        file: JSON.parse(fileContents || "{}").file,
-        size: JSON.parse(fileContents || "{}").size,
-        link: JSON.parse(fileContents || "{}").link,
-        type: JSON.parse(fileContents || "{}").type,
-        uploaded: JSON.parse(fileContents || "{}").uploaded
+     }
+    })
+    .then(() => {
+      getVaultCollectionTags(file);
+    })
+     .catch(error => {
+       console.log(error);
      });
-    }
-   })
-   .then(() => {
-     this.getVaultCollectionTags(file);
-   })
-    .catch(error => {
-      console.log(error);
-    });
+  }
 }
 
 export function getVaultCollectionTags(file) {
   getFile("uploads.json", {decrypt: true})
   .then((fileContents) => {
-     this.setState({ files: JSON.parse(fileContents || '{}') })
-     this.setState({ initialLoad: "hide" });
+     setGlobal({ files: JSON.parse(fileContents || '{}') })
+     setGlobal({ initialLoad: "hide" });
   }).then(() =>{
-    let files = this.state.files;
+    let files = getGlobal().files;
     const thisFile = files.find((a) => {return a.id.toString() === file.id.toString()}); //this is comparing strings
     let index = thisFile && thisFile.id;
     function findObjectIndex(a) {
         return a.id === index; //this is comparing numbers
     }
-    this.setState({index: files.findIndex(findObjectIndex) });
+    setGlobal({index: files.findIndex(findObjectIndex) });
   })
     .catch(error => {
       console.log(error);
@@ -357,58 +540,59 @@ export function getVaultCollectionTags(file) {
 }
 
 export function setVaultTags(e) {
-  this.setState({ tag: e.target.value});
+  setGlobal({ tag: e.target.value});
 }
 
 export function handleVaultKeyPress(e) {
     if (e.key === 'Enter') {
-      this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]}, () => {
-        this.setState({ tag: "" });
+      setGlobal({ singleFileTags: [...getGlobal().singleFileTags, getGlobal().tag]}, () => {
+        setGlobal({ tag: "" });
       });
 
     }
   }
 
 export function addVaultTagManual() {
-    this.setState({ singleFileTags: [...this.state.singleFileTags, this.state.tag]}, () => {
-      this.setState({ tag: "" });
+    setGlobal({ singleFileTags: [...getGlobal().singleFileTags, getGlobal().tag]}, () => {
+      setGlobal({ tag: "" });
     });
   }
 
 export function saveNewVaultTags(file) {
-    this.setState({ loading: true });
+    setGlobal({ loading: true });
     const object = {};
-    object.name = this.state.name;
-    object.file = this.state.file;
-    object.id = this.state.id;
-    object.lastModifiedDate = this.state.lastModifiedDate;
-    object.sharedWith = this.state.sharedWithSingle;
-    object.size = this.state.size;
-    object.link = this.state.link;
-    object.type = this.state.type;
-    object.singleFileTags = this.state.singleFileTags;
-    object.uploaded = this.state.uploaded;
-    const index = this.state.index;
+    object.name = getGlobal().name;
+    object.file = getGlobal().file;
+    object.id = getGlobal().id;
+    object.lastModifiedDate = getGlobal().lastModifiedDate;
+    object.sharedWith = getGlobal().sharedWithSingle;
+    object.size = getGlobal().size;
+    object.link = getGlobal().link;
+    object.type = getGlobal().type;
+    object.singleFileTags = getGlobal().singleFileTags;
+    object.uploaded = getGlobal().uploaded;
+    const index = getGlobal().index;
     const objectTwo = {};
-    objectTwo.name = this.state.name;
-    objectTwo.file = this.state.file;
-    objectTwo.id = this.state.id;
-    objectTwo.lastModifiedDate = this.state.lastModifiedDate;
-    objectTwo.sharedWith = this.state.sharedWithSingle;
-    objectTwo.singleFileTags = this.state.singleFileTags;
-    objectTwo.type = this.state.type;
-    objectTwo.uploaded = this.state.uploaded;
-    const updatedFile = update(this.state.files, {$splice: [[index, 1, objectTwo]]});
-    this.setState({files: updatedFile, filteredValue: updatedFile, singleFile: object }, () => {
-      this.saveFullVaultCollectionTags(file);
+    objectTwo.name = getGlobal().name;
+    objectTwo.file = getGlobal().file;
+    objectTwo.id = getGlobal().id;
+    objectTwo.lastModifiedDate = getGlobal().lastModifiedDate;
+    objectTwo.sharedWith = getGlobal().sharedWithSingle;
+    objectTwo.singleFileTags = getGlobal().singleFileTags;
+    objectTwo.type = getGlobal().type;
+    objectTwo.uploaded = getGlobal().uploaded;
+    const updatedFile = update(getGlobal().files, {$splice: [[index, 1, objectTwo]]});
+    setGlobal({files: updatedFile, filteredValue: updatedFile, singleFile: object }, () => {
+      // saveFullVaultCollectionTags(file);
+      saveNewVaultFile();
     });
   }
 
 export function  saveFullVaultCollectionTags(file) {
-    putFile("uploads.json", JSON.stringify(this.state.files), {encrypt: true})
+    putFile("uploads.json", JSON.stringify(getGlobal().files), {encrypt: true})
       .then(() => {
         console.log("Saved");
-        this.saveSingleVaultFileTags(file);
+        saveSingleVaultFileTags(file);
       })
       .catch(e => {
         console.log("e");
@@ -419,11 +603,11 @@ export function  saveFullVaultCollectionTags(file) {
   export function saveSingleVaultFileTags(file) {
       const thisFile = file.id;
       const fullFile = thisFile + '.json';
-      putFile(fullFile, JSON.stringify(this.state.singleFile), {encrypt:true})
+      putFile(fullFile, JSON.stringify(getGlobal().singleFile), {encrypt:true})
         .then(() => {
           console.log("Saved tags");
-          this.setState({ loading: false });
-          this.loadFilesCollection();
+          setGlobal({ loading: false });
+          loadFilesCollection();
         })
         .catch(e => {
           console.log("e");
@@ -432,74 +616,74 @@ export function  saveFullVaultCollectionTags(file) {
     }
 
 export function applyVaultFilter() {
-    this.setState({ applyFilter: false });
-    setTimeout(this.filterVaultNow, 500);
+    setGlobal({ applyFilter: false });
+    setTimeout(filterVaultNow, 500);
   }
 
 export function filterVaultNow() {
-    console.log(this.state.selectedCollab);
-    console.log(this.state.files);
-    let files = this.state.files;
-    if(this.state.selectedTag !== "") {
-      let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(this.state.selectedTag) : null);
-      // let tagFilter = files.filter(x => x.tags.includes(this.state.selectedTag));
-      this.setState({ filteredVault: tagFilter, appliedFilter: true});
-    } else if (this.state.selectedDate !== "") {
+    console.log(getGlobal().selectedCollab);
+    console.log(getGlobal().files);
+    let files = getGlobal().files;
+    if(getGlobal().selectedTag !== "") {
+      let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(getGlobal().selectedTag) : null);
+      // let tagFilter = files.filter(x => x.tags.includes(getGlobal().selectedTag));
+      setGlobal({ filteredVault: tagFilter, appliedFilter: true});
+    } else if (getGlobal().selectedDate !== "") {
       let definedDate = files.filter((val) => { return val.uploaded !==undefined });
       console.log(definedDate);
-      let dateFilter = definedDate.filter(x => x.uploaded.includes(this.state.selectedDate));
-      this.setState({ filteredVault: dateFilter, appliedFilter: true});
-    } else if (this.state.selectedCollab !== "") {
-      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(this.state.selectedCollab) : null);
-      // let collaboratorFilter = files.filter(x => x.sharedWith.includes(this.state.selectedCollab));
-      this.setState({ filteredVault: collaboratorFilter, appliedFilter: true});
-    } else if(this.state.selectedType) {
-      let typeFilter = files.filter(x => x.type.includes(this.state.selectedType));
-      this.setState({ filteredVault: typeFilter, appliedFilter: true});
+      let dateFilter = definedDate.filter(x => x.uploaded.includes(getGlobal().selectedDate));
+      setGlobal({ filteredVault: dateFilter, appliedFilter: true});
+    } else if (getGlobal().selectedCollab !== "") {
+      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(getGlobal().selectedCollab) : null);
+      // let collaboratorFilter = files.filter(x => x.sharedWith.includes(getGlobal().selectedCollab));
+      setGlobal({ filteredVault: collaboratorFilter, appliedFilter: true});
+    } else if(getGlobal().selectedType) {
+      let typeFilter = files.filter(x => x.type.includes(getGlobal().selectedType));
+      setGlobal({ filteredVault: typeFilter, appliedFilter: true});
     }
   }
 
 export function clearVaultFilter() {
-  this.setState({ appliedFilter: false, filteredVault: this.state.files });
+  setGlobal({ appliedFilter: false, filteredVault: getGlobal().files });
 }
 export function deleteVaultTag(props) {
-    this.setState({ deleteState: false, selectedTagId: props });
+    setGlobal({ deleteState: false, selectedTagId: props });
 
-    let tags = this.state.singleFileTags;
+    let tags = getGlobal().singleFileTags;
     const thisTag = tags.find((tag) => { return tag === props}); //this is comparing strings
     let index = thisTag;
     function findObjectIndex(tag) {
         return tag === index; //this is comparing numbers
     }
-    this.setState({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
-      const updatedTags = update(this.state.singleFileTags, {$splice: [[this.state.tagIndex, 1]]});
-      this.setState({singleFileTags: updatedTags });
+    setGlobal({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
+      const updatedTags = update(getGlobal().singleFileTags, {$splice: [[getGlobal().tagIndex, 1]]});
+      setGlobal({singleFileTags: updatedTags });
     });
   }
 
   export function collabVaultFilter(collab, type) {
-    this.setState({ selectedCollab: collab }, () => {
-      this.filterVaultNow(type);
+    setGlobal({ selectedCollab: collab }, () => {
+      filterVaultNow(type);
     });
   }
 
   export function tagVaultFilter(tag, type) {
-    this.setState({ selectedTag: tag }, () => {
-      this.filterVaultNow(type);
+    setGlobal({ selectedTag: tag }, () => {
+      filterVaultNow(type);
     });
   }
 
   export function dateVaultFilter(date, type) {
-    this.setState({ selectedDate: date }, () => {
-      this.filterVaultNow(type);
+    setGlobal({ selectedDate: date }, () => {
+      filterVaultNow(type);
     });
   }
 
   export function typeVaultFilter(props) {
-    this.setState({ selectedType: props });
-    setTimeout(this.filterVaultNow, 300);
+    setGlobal({ selectedType: props });
+    setTimeout(filterVaultNow, 300);
   }
 
   export function setPagination(e) {
-    this.setState({ filesPerPage: e.target.value });
+    setGlobal({ filesPerPage: e.target.value });
   }

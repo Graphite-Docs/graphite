@@ -9,7 +9,7 @@ export async function deleteFromStorageProvider(params) {
     // await db.documents.delete(params.filePath)
 
     //Now, we need to delete the file from the chosen storage provider
-    //If IPFS, we will simple stop pinning the file. 
+    //If IPFS, we will simply stop pinning the file. 
     if (params.provider === "dropbox") {
         const dbx = new Dropbox({
             accessToken: params.token,

@@ -221,8 +221,8 @@ export function setTags(e) {
 export function handleKeyPress(e) {
   let keycode = (e.keyCode ? e.keyCode : e.which);
     if (keycode === '13') {
-      if(global.tag !=="") {
-        setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+      if(getGlobal().tag !=="") {
+        setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
           setGlobal({ tag: "" });
         });
       }
@@ -235,11 +235,10 @@ export function handleTagChange(e) {
 }
 
 export async function addTagManual(doc) {
-  const global = await getGlobal();
-  console.log(global.tag)
-  if(global.tag !=="") {
-    setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
-      let value = global.value;
+  console.log(getGlobal().tag)
+  if(getGlobal().tag !=="") {
+    setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
+      let value = getGlobal().value;
       const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
@@ -252,14 +251,13 @@ export async function addTagManual(doc) {
 }
 
 export function handleaddItem() {
-  const global = getGlobal();
   setGlobal({loading: true})
   const rando = Date.now();
   const object = {};
   const objectTwo = {}
   if(window.location.href.includes('vault')) {
     setGlobal({ loading: true, })
-    object.title = global.name;
+    object.title = getGlobal().name;
     object.lastUpdate = Date.now();
     object.id = rando;
     object.updated = getMonthDayYear();
@@ -269,7 +267,7 @@ export function handleaddItem() {
     objectTwo.title = object.title;
     objectTwo.id = object.id;
     objectTwo.updated = object.created;
-    objectTwo.content = global.content;
+    objectTwo.content = getGlobal().content;
     objectTwo.tags = [];
     objectTwo.sharedWith = [];
   } else {
@@ -283,19 +281,18 @@ export function handleaddItem() {
     objectTwo.title = object.title;
     objectTwo.id = object.id;
     objectTwo.updated = object.created;
-    objectTwo.content = global.content;
+    objectTwo.content = getGlobal().content;
     objectTwo.tags = [];
     objectTwo.sharedWith = [];
   }
 
-  setGlobal({ value: [...global.value, object], filteredValue: [...global.filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
+  setGlobal({ value: [...getGlobal().value, object], filteredValue: [...getGlobal().filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
     saveNewFile();
   });
 }
 
 export function filterList(event){
-  const global = getGlobal();
-  var updatedList = global.value;
+  var updatedList = getGlobal().value;
   updatedList = updatedList.filter(function(item){
     if(item.title !== undefined) {
       return item.title.toLowerCase().search(
@@ -307,11 +304,10 @@ export function filterList(event){
 }
 
 export async function saveNewFile() {
-  const global = getGlobal();
   let authProvider = await JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
     const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
-    const data = JSON.stringify(global.value);
+    const data = JSON.stringify(getGlobal().value);
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
@@ -329,9 +325,9 @@ export async function saveNewFile() {
 
     let postToStorage = await postToStorageProvider(params);
     await console.log(postToStorage);
-    const singleData = await JSON.stringify(global.singleDoc);
+    const singleData = await JSON.stringify(getGlobal().singleDoc);
     const singleEncrypted = await encryptContent(singleData, {publicKey: publicKey})
-    const doc = await global.singleDoc;
+    const doc = await getGlobal().singleDoc;
     const singleParams = await {
       content: singleEncrypted,
       filePath: `/documents/single/${doc.id}.json`,
@@ -347,12 +343,12 @@ export async function saveNewFile() {
         setGlobal({ redirect: true });
       }, 1500)
     } else if(window.location.href.includes('documents/doc/')) {
-      window.location.replace(window.location.origin + '/documents/doc/' + global.tempDocId)
+      window.location.replace(window.location.origin + '/documents/doc/' + getGlobal().tempDocId)
     } else if(window.location.href.includes('file-explorer')) {
       window.location.replace('/documents');
     }
   } else if(authProvider === 'blockstack') {
-    putFile("documentscollection.json", JSON.stringify(global.value), {encrypt:true})
+    putFile("documentscollection.json", JSON.stringify(getGlobal().value), {encrypt:true})
       .then(() => {
         // this.saveNewSingleDoc();
         console.log("Saved Collection!");
@@ -368,26 +364,25 @@ export async function saveNewFile() {
 }
 
 export function saveNewSingleDoc() {
-  const global = getGlobal();
-  const file = global.tempDocId;
+  const file = getGlobal().tempDocId;
   const fullFile = '/documents/' + file + '.json'
-  putFile(fullFile, JSON.stringify(global.singleDoc), {encrypt:true})
+  putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       if(window.location.href.includes('vault')) {
         window.location.replace('/documents');
       } else if(!window.location.href.includes('google') && !window.location.href.includes('documents/doc/') && !window.location.href.includes('file-explorer')) {
         setGlobal({ redirect: true });
       } else if(window.location.href.includes('documents/doc/')) {
-        window.location.replace(window.location.origin + '/documents/doc/' + global.tempDocId);
+        window.location.replace(window.location.origin + '/documents/doc/' + getGlobal().tempDocId);
       } else if(window.location.href.includes('file-explorer')) {
         window.location.replace('/documents');
       }
-      if(global.importAll) {
-        setGlobal({ count: global.count + 1 });
+      if(getGlobal().importAll) {
+        setGlobal({ count: getGlobal().count + 1 });
       }
     })
     .then(() => {
-      if(global.importAll) {
+      if(getGlobal().importAll) {
         this.importAllGDocs();
       }
     })
@@ -406,8 +401,7 @@ export function handlePageChange(props) {
 }
 
 export function handleCheckbox(event) {
-  const global = getGlobal();
-  let checkedArray = global.docsSelected;
+  let checkedArray = getGlobal().docsSelected;
     let selectedValue = event.target.value;
 
       if (event.target.checked === true) {
@@ -475,11 +469,10 @@ export function sharedInfoStatic(props) {
 }
 
 export function loadSharedCollection (doc) {
-  const global = getGlobal();
-  // const user = global.receiverID;
+  // const user = getGlobal().receiverID;
   // const file = "shared.json";
   // getFile(user + file, {decrypt: true})
-  const pubKey = global.pubKey;
+  const pubKey = getGlobal().pubKey;
   const fileName = 'shareddocs.json'
   const file = 'mine/' + pubKey + '/' + fileName;
   getFile(file, {decrypt: true})
@@ -499,7 +492,6 @@ export function loadSharedCollection (doc) {
 }
 
 export function loadSingle(doc) {
-  const global = getGlobal();
     const thisFile = doc.id;
     const fullFile = '/documents/' + thisFile + '.json';
     let thisContent;
@@ -567,7 +559,7 @@ export function loadSingle(doc) {
 
      })
       .then(() => {
-        setGlobal({ sharedWithSingle: [...global.sharedWithSingle, global.receiverID] }, () => {
+        setGlobal({ sharedWithSingle: [...getGlobal().sharedWithSingle, getGlobal().receiverID] }, () => {
           this.getCollection(doc)
         });
       })
@@ -577,7 +569,6 @@ export function loadSingle(doc) {
 }
 
 export function getCollection(doc) {
-  const global = getGlobal();
   getFile("documentscollection.json", {decrypt: true})
   .then((fileContents) => {
     if(JSON.parse(fileContents).value) {
@@ -588,7 +579,7 @@ export function getCollection(doc) {
       setGlobal({ initialLoad: "hide" });
     }
   }).then(() =>{
-    let value = global.value;
+    let value = getGlobal().value;
     const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
     let index = thisDoc && thisDoc.id;
     function findObjectIndex(doc) {
@@ -605,43 +596,41 @@ export function getCollection(doc) {
 }
 
 export function share(doc) {
-  const global = getGlobal();
-  let thisContent = global.content;
+  let thisContent = getGlobal().content;
   const object = {};
-  object.title = global.title;
+  object.title = getGlobal().title;
   object.jsonContent = true;
   object.content = thisContent.toJSON();
   object.id = doc.id;
   object.updated = getMonthDayYear();
-  object.sharedWith = global.sharedWithSingle;
+  object.sharedWith = getGlobal().sharedWithSingle;
   object.lastUpdate = Date.now
-  object.singleDocTags = global.singleDocTags;
-  object.words = global.words;
-  object.rtc = global.rtc;
+  object.singleDocTags = getGlobal().singleDocTags;
+  object.words = getGlobal().words;
+  object.rtc = getGlobal().rtc;
   object.compressed = false;
-  const index = global.index;
-  const updatedDocs = update(global.value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
-  setGlobal({value: updatedDocs, singleDoc: object, sharedCollection: [...global.sharedCollection, object]});
+  const index = getGlobal().index;
+  const updatedDocs = update(getGlobal().value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
+  setGlobal({value: updatedDocs, singleDoc: object, sharedCollection: [...getGlobal().sharedCollection, object]});
 
   setTimeout(() => this.saveSharedFile(doc), 300);
 }
 
 export function saveSharedFile(doc) {
-  const global = getGlobal();
-  // const user = global.receiverID;
+  // const user = getGlobal().receiverID;
   // const file = "shared.json";
   //
-  // putFile(user + file, JSON.stringify(global.sharedCollection), {encrypt: true})
+  // putFile(user + file, JSON.stringify(getGlobal().sharedCollection), {encrypt: true})
   const fileName = 'shareddocs.json'
-  const pubKey = global.pubKey;
+  const pubKey = getGlobal().pubKey;
   const file = 'mine/' + pubKey + '/' + fileName;
-  putFile(file, JSON.stringify(global.sharedCollection), {encrypt: true})
+  putFile(file, JSON.stringify(getGlobal().sharedCollection), {encrypt: true})
     .then(() => {
       console.log("Shared Collection Saved");
 
     })
 
-    const data = global.sharedCollection;
+    const data = getGlobal().sharedCollection;
     const encryptedData = JSON.stringify(encryptECIES(pubKey, JSON.stringify(data)));
     const directory = 'shared/' + pubKey + fileName;
     putFile(directory, encryptedData, {encrypt: false})
@@ -651,7 +640,7 @@ export function saveSharedFile(doc) {
     .catch(e => {
       console.log(e);
     });
-    putFile(doc.id + 'sharedwith.json', JSON.stringify(global.sharedWith), {encrypt: true})
+    putFile(doc.id + 'sharedwith.json', JSON.stringify(getGlobal().sharedWith), {encrypt: true})
     .then(() => {
       // this.handleAutoAdd();
       // this.loadAvatars();
@@ -663,10 +652,9 @@ export function saveSharedFile(doc) {
 }
 
 export function saveSingleFile(doc) {
-  const global = getGlobal();
   const file = doc.id;
   const fullFile = '/documents/' + file + '.json'
-  putFile(fullFile, JSON.stringify(global.singleDoc), {encrypt:true})
+  putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved!");
       this.saveCollection();
@@ -678,8 +666,7 @@ export function saveSingleFile(doc) {
 }
 
 export function saveCollection() {
-  const global = getGlobal();
-  putFile("documentscollection.json", JSON.stringify(global.value), {encrypt: true})
+  putFile("documentscollection.json", JSON.stringify(getGlobal().value), {encrypt: true})
     .then(() => {
       console.log("Saved Collection");
       // this.sendFile();
@@ -695,19 +682,18 @@ export function saveCollection() {
 }
 
 export function sendFile() {
-  const global = getGlobal();
-  const user = global.receiverID;
+  const user = getGlobal().receiverID;
   const userShort = user.slice(0, -3);
   const fileName = 'shareddocs.json'
   const file = userShort + fileName;
-  const publicKey = global.pubKey;
-  const data = global.sharedCollection;
+  const publicKey = getGlobal().pubKey;
+  const data = getGlobal().sharedCollection;
   const encryptedData = JSON.stringify(encryptECIES(publicKey, JSON.stringify(data)));
   const directory = '/shared/' + file;
   putFile(directory, encryptedData, {encrypt: false})
     .then(() => {
       console.log("Shared encrypted file ");
-      window.Materialize.toast('Document shared with ' + global.receiverID, 4000);
+      window.Materialize.toast('Document shared with ' + getGlobal().receiverID, 4000);
       this.loadCollection();
       setGlobal({shareModal: "hide", loadingTwo: "hide", contactDisplay: ""});
     })
@@ -718,7 +704,6 @@ export function sendFile() {
 
 export async function loadSingleTags(doc) {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = getGlobal();
   const thisFile = doc.id;
   const fullFile = '/documents/' + thisFile + '.json';
 
@@ -822,8 +807,8 @@ export async function loadSingleTags(doc) {
             lastUpdate: JSON.parse(fileContents).lastUpdate,
             jsonContent: true
           }, () => {
-            if(global.tag !=="") {
-              setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+            if(getGlobal().tag !=="") {
+              setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
                 setGlobal({ tag: "" });
               });
             }
@@ -849,8 +834,8 @@ export async function loadSingleTags(doc) {
               lastUpdate: JSON.parse(fileContents).lastUpdate,
               jsonContent: true
             }, () => {
-              if(global.tag !=="") {
-                setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+              if(getGlobal().tag !=="") {
+                setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
                   setGlobal({ tag: "" });
                 });
               }
@@ -872,8 +857,8 @@ export async function loadSingleTags(doc) {
               spacing: JSON.parse(fileContents || '{}').spacing,
               lastUpdate: JSON.parse(fileContents).lastUpdate,
             }, () => {
-              if(global.tag !=="") {
-                setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+              if(getGlobal().tag !=="") {
+                setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
                   setGlobal({ tag: "" });
                 });
               }
@@ -899,8 +884,8 @@ export async function loadSingleTags(doc) {
            lastUpdate: JSON.parse(fileContents).lastUpdate,
            jsonContent: true
          }, () => {
-           if(global.tag !=="") {
-             setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+           if(getGlobal().tag !=="") {
+             setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
                setGlobal({ tag: "" });
              });
            }
@@ -926,8 +911,8 @@ export async function loadSingleTags(doc) {
              lastUpdate: JSON.parse(fileContents).lastUpdate,
              jsonContent: true
            }, () => {
-             if(global.tag !=="") {
-               setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+             if(getGlobal().tag !=="") {
+               setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
                  setGlobal({ tag: "" });
                });
              }
@@ -949,8 +934,8 @@ export async function loadSingleTags(doc) {
              spacing: JSON.parse(fileContents || '{}').spacing,
              lastUpdate: JSON.parse(fileContents).lastUpdate,
            }, () => {
-             if(global.tag !=="") {
-               setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+             if(getGlobal().tag !=="") {
+               setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
                  setGlobal({ tag: "" });
                });
              }
@@ -975,8 +960,8 @@ export async function loadSingleTags(doc) {
          spacing: JSON.parse(fileContents || '{}').spacing,
          lastUpdate: JSON.parse(fileContents).lastUpdate,
        }, () => {
-         if(global.tag !=="") {
-           setGlobal({ singleDocTags: [...global.singleDocTags, global.tag]}, () => {
+         if(getGlobal().tag !=="") {
+           setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
              setGlobal({ tag: "" });
            });
          }
@@ -994,9 +979,8 @@ export async function loadSingleTags(doc) {
 
 export async function getCollectionTags(doc) {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const global = getGlobal();
   if(authProvider === 'uPort') {
-    let value = global.value;
+    let value = getGlobal().value;
       const thisDoc = await value.find((document) => { return document.id.toString() === doc.id.toString()});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
@@ -1014,7 +998,7 @@ export async function getCollectionTags(doc) {
          setGlobal({ initialLoad: "hide" });
        }
     }).then(() =>{
-      let value = global.value;
+      let value = getGlobal().value;
       const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
@@ -1029,28 +1013,27 @@ export async function getCollectionTags(doc) {
 }
 
 export function saveNewTags(doc) {
-  const global = getGlobal();
   setGlobal({ loading: true });
-  let content = global.content;
+  let content = getGlobal().content;
   const object = {};
   object.id = doc.id;
-  object.title = global.title;
+  object.title = getGlobal().title;
   object.updated = getMonthDayYear();
-  object.singleDocTags = global.singleDocTags;
+  object.singleDocTags = getGlobal().singleDocTags;
   object.content = content.toJSON();
   object.jsonContent = true;
-  object.sharedWith = global.sharedWith;
+  object.sharedWith = getGlobal().sharedWith;
   object.lastUpdate = Date.now();
   object.compressed = false;
   const objectTwo = {};
-  objectTwo.title = global.title;
+  objectTwo.title = getGlobal().title;
   objectTwo.id = doc.id;
   objectTwo.updated = getMonthDayYear();
-  objectTwo.sharedWith = global.sharedWith;
-  objectTwo.singleDocTags = global.singleDocTags;
+  objectTwo.sharedWith = getGlobal().sharedWith;
+  objectTwo.singleDocTags = getGlobal().singleDocTags;
   objectTwo.lastUpdate = Date.now;
-  const index = global.index;
-  const updatedDoc = update(global.value, {$splice: [[index, 1, objectTwo]]});
+  const index = getGlobal().index;
+  const updatedDoc = update(getGlobal().value, {$splice: [[index, 1, objectTwo]]});
   setGlobal({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, loading: false }, () => {
     this.saveFullCollectionTags(doc);
   });
@@ -1058,11 +1041,10 @@ export function saveNewTags(doc) {
 }
 
 export async function saveFullCollectionTags(doc) {
-  const global = getGlobal();
   let authProvider = await JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
     const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
-    const data = JSON.stringify(global.value);
+    const data = JSON.stringify(getGlobal().value);
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
@@ -1080,9 +1062,9 @@ export async function saveFullCollectionTags(doc) {
 
     let postToStorage = await postToStorageProvider(params);
     await console.log(postToStorage);
-    const singleData = await JSON.stringify(global.singleDoc);
+    const singleData = await JSON.stringify(getGlobal().singleDoc);
     const singleEncrypted = await encryptContent(singleData, {publicKey: publicKey})
-    const doc = await global.singleDoc;
+    const doc = await getGlobal().singleDoc;
     const singleParams = await {
       content: singleEncrypted,
       filePath: `/documents/single/${doc.id}.json`,
@@ -1092,7 +1074,7 @@ export async function saveFullCollectionTags(doc) {
     let postSingle = await postToStorageProvider(singleParams)
     await console.log(postSingle);
     } else {
-    putFile("documentscollection.json", JSON.stringify(global.value), {encrypt: true})
+    putFile("documentscollection.json", JSON.stringify(getGlobal().value), {encrypt: true})
     .then(() => {
       console.log("Saved");
       this.saveSingleDocTags(doc);
@@ -1105,10 +1087,9 @@ export async function saveFullCollectionTags(doc) {
 }
 
 export function saveSingleDocTags(doc) {
-  const global = getGlobal();
   const thisFile = doc.id;
   const fullFile = '/documents/' + thisFile + '.json';
-  putFile(fullFile, JSON.stringify(global.singleDoc), {encrypt:true})
+  putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved tags");
       this.loadCollection();
@@ -1127,44 +1108,40 @@ export function deleteTag(tag, type) {
   //   tags = doc.tags;
   // }
   // setGlobal({ singleDocTags: tags}, () => {
-  //   let singleDocTags = global.singleDocTags;
+  //   let singleDocTags = getGlobal().singleDocTags;
   //   const thisTag = singleDocTags.find((a) => { return a === tag});
   //   let tagIndex = thisTag;
   //   function findObjectIndex(a) {
   //       return a === tagIndex; //this is comparing numbers
   //   }
   //   setGlobal({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
-  //     tags.splice(global.tagIndex, 1);
+  //     tags.splice(getGlobal().tagIndex, 1);
   //     setGlobal({singleDocTags: tags});
   //   });
   // })
 }
 
 export function collabFilter(props) {
-  const global = getGlobal();
-  let value = global.value;
+  let value = getGlobal().value;
   let collaboratorFilter = value.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(props) : console.log(""));
   setGlobal({ filteredValue: collaboratorFilter, appliedFilter: true});
 }
 
 export function tagFilter(props) {
-  const global = getGlobal();
-  let value = global.value;
+  let value = getGlobal().value;
   let tagFilter = value.filter(x => typeof x.singleDocTags !== 'undefined' ? x.singleDocTags.includes(props) : null);
   setGlobal({ filteredValue: tagFilter, appliedFilter: true});
 }
 
 export function dateFilter(props) {
-  const global = getGlobal();
-  let value = global.value;
+  let value = getGlobal().value;
   let definedDate = value.filter((val) => { return val.updated !==undefined });
   let dateFilter = definedDate.filter(x => x.updated.includes(props));
   setGlobal({ filteredValue: dateFilter, appliedFilter: true});
 }
 
 export function clearFilter() {
-  const global = getGlobal();
-  setGlobal({ appliedFilter: false, filteredValue: global.value});
+  setGlobal({ appliedFilter: false, filteredValue: getGlobal().value});
 }
 
 export function setDocsPerPage(e) {
@@ -1172,7 +1149,6 @@ export function setDocsPerPage(e) {
 }
 
 export function loadTeamDocs() {
-  const global = getGlobal();
   const { team, count } = global;
   if(team.length > count) {
     let publicKey = getPublicKeyFromPrivate(loadUserData().appPrivateKey);
@@ -1185,8 +1161,8 @@ export function loadTeamDocs() {
      .then((fileContents) => {
        let privateKey = loadUserData().appPrivateKey;
        setGlobal({
-         docs: global.docs.concat(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents)))),
-         count: global.count + 1
+         docs: getGlobal().docs.concat(JSON.parse(decryptECIES(privateKey, JSON.parse(fileContents)))),
+         count: getGlobal().count + 1
        })
      })
      .then(() => {
@@ -1194,7 +1170,7 @@ export function loadTeamDocs() {
      })
       .catch(error => {
         console.log(error);
-        setGlobal({ count: global.count + 1})
+        setGlobal({ count: getGlobal().count + 1})
         this.loadTeamDocs();
       });
   } else {
@@ -1203,7 +1179,6 @@ export function loadTeamDocs() {
 }
 
 export function handleRestore(file) {
-  const global = getGlobal();
   let content = file.content;
   console.log(file);
   setGlobal({loading: true})
@@ -1226,7 +1201,7 @@ export function handleRestore(file) {
   objectTwo.singleDocTags = object.singleDocTags;
   objectTwo.sharedWith = object.sharedWith;
 
-  setGlobal({ value: [...global.value, object], filteredValue: [...global.filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
+  setGlobal({ value: [...getGlobal().value, object], filteredValue: [...getGlobal().filteredValue, object], singleDoc: objectTwo, tempDocId: object.id  }, () => {
     this.saveNewFile();
   });
 }

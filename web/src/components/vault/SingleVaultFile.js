@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component } from "reactn";
 import { Link } from 'react-router-dom';
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
@@ -10,17 +10,20 @@ import { Pagination, Container, Image, Icon, Modal, Button } from 'semantic-ui-r
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import { loadUserData } from 'blockstack';
+import { handleaddItem } from '../helpers/documents';
+
+const single = require('../helpers/singleVaultFile');
 
 
 export default class SingleVaultFile extends Component {
   state = {activePage: 1}
 
   componentDidMount() {
-    this.props.loadSingleVaultFile();
+    single.loadSingleVaultFile();
   }
 
   handlePaginationChange = (e, { activePage }) => this.setState({ activePage }, () => {
-    this.props.handlePrevious(this.state.activePage)
+    single.handlePrevious(this.state.activePage)
   })
 
   renderPagination(page, pages) {
@@ -47,11 +50,11 @@ export default class SingleVaultFile extends Component {
   }
 
   render() {
-    const { publicVaultFile } = this.props;
+    const { publicVaultFile } = this.global;
     var thisStyle = {
       display: "none"
     };
-    const { type, loading, pages, page, name, link, content, grid } = this.props
+    const { type, loading, pages, page, name, link, content, grid } = this.global
     let pagination = null;
     if (pages) {
       pagination = this.renderPagination(page, pages);
@@ -88,19 +91,19 @@ export default class SingleVaultFile extends Component {
           ) : type.includes("application/pdf") ? (
             <MainMenu.Item>
               <a style={{cursor: 'pointer', color: "#fff"}}
-                onClick={this.props.downloadPDF}
+                onClick={single.downloadPDF}
                 title={name}
               >
                 <Icon style={{color:"#fff"}} name="cloud download" />
               </a>
-              <a onClick={() => this.props.signWithBlockusign(window.location.href.split('vault/')[1])} style={{marginLeft: "20px", cursor: "pointer"}}>
+              {JSON.parse(localStorage.getItem('authProvider')) === 'uPort' ? <li className='hide' /> : <a onClick={() => single.signWithBlockusign(window.location.href.split('vault/')[1])} style={{marginLeft: "20px", cursor: "pointer"}}>
                 <img style={{height: "30px"}} src='https://blockusign.co/assets/imgs/blockusignLogoSvg.svg' alt='blockusign' /><span style={{marginLeft: "5px", color: "#fff", position: "relative", top: "-7px"}}>Sign with Blockusign</span>
-              </a>
+              </a>}
             </MainMenu.Item>
           ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
             <MainMenu.Item>
               <a
-                onClick={this.props.downloadPDF}
+                onClick={single.downloadPDF}
                 title={name}
                 style={{color:"#fff"}}
               >
@@ -127,8 +130,8 @@ export default class SingleVaultFile extends Component {
                   <p>By generating a public link, you will be saving an unencrypted copy of your file. Only those will the link can access it.</p>
                   {
                     publicVaultFile ?
-                    <Button style={{ borderRadius: "0" }} onClick={this.props.stopSharingPubVaultFile} color="red">Stop Sharing Publicly</Button> :
-                    <Button style={{ borderRadius: "0" }} onClick={this.props.shareVaultFile} color="green">Generate Public Link</Button>
+                    <Button style={{ borderRadius: "0" }} onClick={single.stopSharingPubVaultFile} color="red">Stop Sharing Publicly</Button> :
+                    <Button style={{ borderRadius: "0" }} onClick={single.shareVaultFile} color="green">Generate Public Link</Button>
                   }
                   <div style={{marginTop: "15px"}}>
                     {
@@ -143,20 +146,8 @@ export default class SingleVaultFile extends Component {
           </MainMenu.Item>
           {type.includes("word") ? (
             <MainMenu.Item>
-              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddItem}>
+              <a style={{color: "#fff", cursor: "pointer"}} onClick={handleaddItem}>
                 Edit in Documents
-              </a>
-            </MainMenu.Item>
-          ) : type.includes("sheet") ? (
-            <MainMenu.Item>
-              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddSheet}>
-                Edit in Sheets
-              </a>
-            </MainMenu.Item>
-          ) : type.includes("csv") ? (
-            <MainMenu.Item>
-              <a style={{color: "#fff", cursor: "pointer"}} onClick={this.props.handleaddSheet}>
-                Edit in Sheets
               </a>
             </MainMenu.Item>
           ) :  (
@@ -178,8 +169,8 @@ export default class SingleVaultFile extends Component {
                         <PDF
                           className="card"
                           file={link}
-                          onDocumentComplete={this.props.onDocumentComplete}
-                          onPageComplete={this.props.onPageComplete}
+                          onDocumentComplete={single.onDocumentComplete}
+                          onPageComplete={single.onPageComplete}
                           page={page}
                           style={{marginBottom: "45px"}}
                         />
