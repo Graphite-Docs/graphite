@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component } from "reactn";
 import { Link } from 'react-router-dom';
 import {CSVLink} from 'react-csv';
 import PDF from "react-pdf-js";
@@ -8,18 +8,20 @@ import "video-react/dist/video-react.css";
 import { Pagination, Container, Image, Icon } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import Loading from '../shared/Loading';
+import { loadSingleSharedVault, handleAddToVault } from '../helpers/sharedVaultFiles';
+const single = require('../helpers/singleVaultFile');
 
 
 
 export default class SingleSharedFile extends Component {
 
   componentDidMount() {
-    this.props.loadSingleSharedVault();
+    loadSingleSharedVault();
   }
 
 
   handlePaginationChange = (e, { activePage }) => this.setState({ activePage }, () => {
-    this.props.handlePrevious(this.state.activePage)
+    single.handlePrevious(this.state.activePage)
   })
 
   renderPagination(page, pages) {
@@ -33,7 +35,7 @@ export default class SingleSharedFile extends Component {
   }
 
   render() {
-    const { type, loading, pages, page, link, content, grid, name} = this.props;
+    const { type, loading, pages, page, link, content, grid, name} = this.global;
     var thisStyle = {
       display: "none"
     };
@@ -45,7 +47,7 @@ export default class SingleSharedFile extends Component {
     if(!loading) {
       return (
         <div>
-        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu className='item-menu' style={{ borderRadius: "0", background: "#000", color: "#fff" }}>
           <MainMenu.Item>
             <Link style={{color: "#fff"}} to={'/shared-vault'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
@@ -56,47 +58,47 @@ export default class SingleSharedFile extends Component {
           {type.includes("image") ? (
             <MainMenu.Item>
               <a href={link} download={name}>
-                <i className="material-icons">cloud_download</i>
+                <Icon style={{color:"#fff", cursor: "pointer"}} name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("video") ? (
             <MainMenu.Item>
               <a href={link} download={name}>
-                <i className="material-icons">cloud_download</i>
+              <Icon style={{color:"#fff", cursor: "pointer"}} name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("application/pdf") ? (
             <MainMenu.Item>
               <a
-                onClick={this.props.downloadPDF}
+                onClick={single.downloadPDF}
                 title={name}
               >
-                <i className="material-icons">cloud_download</i>
+                <Icon style={{color:"#fff", cursor: "pointer"}} name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
             <MainMenu.Item>
               <a
-                onClick={this.props.downloadPDF}
+                onClick={single.downloadPDF}
                 title={name}
               >
-                <i className="material-icons">cloud_download</i>
+                <Icon style={{color:"#fff", cursor: "pointer"}} name="cloud download" />
               </a>
             </MainMenu.Item>
           ) : type.includes("sheet")|| type.includes("csv") ? (
             <MainMenu.Item>
-              <CSVLink data={grid} filename={name + '.csv'} ><i className="material-icons">cloud_download</i></CSVLink>
+              <CSVLink data={grid} filename={name + '.csv'} ><Icon style={{color:"#fff", cursor: "pointer"}} name="cloud download" /></CSVLink>
             </MainMenu.Item>
           ) : (
             <MainMenu.Item />
           )}
           <MainMenu.Item>
-          <a style={{color: "#fff"}} onClick={this.props.handleAddToVault}>
+          <a style={{color: "#fff", cursor: "pointer"}} onClick={handleAddToVault}>
             Add to Vault
           </a>
           </MainMenu.Item>
           </MainMenu>
-          <div style={{marginTop: "75px"}}>
+          <div style={{marginTop: "105px"}}>
             <div className="">
               <div>
                 {type.includes("image") ? (
@@ -110,8 +112,8 @@ export default class SingleSharedFile extends Component {
                       <PDF
                         className="card"
                         file={link}
-                        onDocumentComplete={this.props.onDocumentComplete}
-                        onPageComplete={this.props.onPageComplete}
+                        onDocumentComplete={single.onDocumentComplete}
+                        onPageComplete={single.onPageComplete}
                         page={page}
                         style={{marginBottom: "45px"}}
                       />

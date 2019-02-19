@@ -1,51 +1,26 @@
 import React, { Component, setGlobal } from 'reactn';
 import { BrowserRouter, Route } from 'react-router-dom';
-import Profile from './Profile';
 import AppPage from './shared/AppPage';
 import Signin from './shared/Signin';
-import SSO from './SSO';
 import Collections from './documents/Collections';
 import SingleDoc from './documents/SingleDoc';
 import SingleRTCDoc from './documents/SingleRTCDoc';
 import SharedCollection from './documents/SharedCollection';
-import SentCollection from './documents/SentCollection';
-import SingleSharedDoc from './documents/SingleSharedDoc';
-import Admin from './documents/Admin';
 import SharedDocs from './documents/SharedDocs';
 import SharedSheets from './sheets/SharedSheets';
 import MainSheets from './sheets/MainSheets';
 import SingleSheet from './sheets/SingleSheet';
-import TestSheet from './sheets/TestSheet';
-import DeleteSheet from './sheets/DeleteSheet';
 import SharedSheetsCollection from './sheets/SharedSheetsCollection';
 import SentSheetsCollection from './sheets/SentSheetsCollection';
 import SingleSharedSheet from './sheets/SingleSharedSheet';
 import Contacts from './contacts/Contacts';
-import ContactsProfile from './contacts/ContactsProfile';
-import DeleteContact from './contacts/DeleteContact';
 import VaultCollection from './vault/VaultCollection';
 import PublicVault from './vault/PublicVault';
 import SingleVaultFile from './vault/SingleVaultFile';
-import NewVaultFile from './vault/NewVaultFile';
-import DeleteVaultFile from './vault/DeleteVaultFile';
 import SharedVault from './vault/SharedVault';
 import SharedVaultCollection from './vault/SharedVaultCollection';
 import SingleSharedFile from './vault/SingleSharedFile';
-import Export from './Export';
 import PublicDoc from './documents/PublicDoc';
-import Integrations from './Integrations';
-// import Settings from './Settings';
-import Teams from './teamManagement/Teams'
-import SubTeams from './teamManagement/SubTeams'
-import PaymentSuccess from './PaymentSuccess';
-import Invites from './Invites';
-import Acceptances from './Acceptances';
-import OAUTH from './OAUTH';
-import Forms from './forms/Forms';
-import SingleForm from './forms/SingleForm';
-import PublicForm from './forms/PublicForm';
-import Explorer from './Explorer';
-import SingleExplorerFile from './SingleExplorerFile';
 import ios from '../images/ios.png';
 import {
   savePubKey
@@ -59,9 +34,6 @@ import {
 const Config = require('Config');
 
 export default class App extends Component {
-  constructor(props) {
-    super(props);
-  } //constructor
 
   componentDidMount() {
     if(JSON.parse(localStorage.getItem('authProvider'))) {
@@ -69,7 +41,8 @@ export default class App extends Component {
     }
 
     const { signedIn } = this.global;
-    signedIn && localStorage.getItem('profileFound') ? loadDocs() : null;
+    console.log(signedIn);
+    signedIn && localStorage.getItem('storageProvider') ? loadDocs() : console.log("not logged in");
     const isIos = () => {
       const userAgent = window.navigator.userAgent.toLowerCase();
       return /iphone|ipad|ipod/.test( userAgent );
@@ -86,7 +59,7 @@ export default class App extends Component {
 
     console.log('Build Date: ', Config.BUILD_DATE_STAMP)
     console.log('Build Time: ', Config.BUILD_TIME_STAMP)
-    isUserSignedIn() ? savePubKey() : null;
+    isUserSignedIn() ? savePubKey() : console.log('not blockstack user');
   }
 
   dismiss = () => {
@@ -121,91 +94,17 @@ export default class App extends Component {
               <Route exact path="/documents/single/shared/:id/:id" component={SingleRTCDoc} />
               <Route exact path="/vault" component={VaultCollection} />
               <Route exact path="/vault/:id" component={SingleVaultFile} />
-              {/*
-              <Route exact path="/sheets" render={(props) =>
-                <MainSheets {...props}
-                    results={results}
-                    loading={loading}
-                    handleNewContact={this.handleNewContact}
-                    handleTagChange={this.handleTagChange}
-                    addTagManual={this.addTagManual}
-                    deleteTag={this.deleteTag}
-                    displayMessage={displayMessage}
-                    tag={tag}
-                  />
-              }/>
+              <Route exact path="/shared-vault" component={SharedVault} />
+              <Route exact path="/vault/shared/:id" component={SharedVaultCollection} />
+              <Route exact path="/vault/single/shared/:id/:id" component={SingleSharedFile} />
+              <Route exact path="/public/vault/:id/:id" component={PublicVault} />
+              <Route exact path="/sheets" component={MainSheets} />
               <Route exact path="/sheets/sheet/:id" component={SingleSheet} />
-              <Route exact path="/sheets/sheet/delete/:id" component={DeleteSheet} />
               <Route exact path="/sheets/shared/:id" component={SharedSheetsCollection} />
               <Route exact path="/sheets/sent/:id" component={SentSheetsCollection} />
               <Route exact path="/sheets/single/shared/:id/:id" component={SingleSharedSheet} />
               <Route exact path="/shared-sheets" component={SharedSheets} />
-              <Route exact path="/vault/delete/:id" render={(location, match, props) =>
-                <DeleteVaultFile {...props}
-                  initialDeleteLoad={this.initialDeleteLoad}
-                  handleDeleteVaultItem={this.handleDeleteVaultItem}
-                  name={name}
-                  loading={loading}
-                  save={save}
-                />
-              }/>
-
-              <Route exact path="/public/vault/:id/:id" render={(location, match, props) =>
-                <PublicVault {...props}
-                  loadPublicVault={this.loadPublicVault}
-                  loading={loading}
-                  page={page}
-                  type={type}
-                  show={show}
-                  shareModal={shareModal}
-                  contacts={contacts}
-                  pages={pages}
-                  name={name}
-                  link={link}
-                  content={content}
-                  grid={grid}
-                  pubVaultShared={pubVaultShared}
-                />
-              }/>
-              <Route exact path="/shared-vault" render={(location, match, props) =>
-                <SharedVault {...props}
-                  loadVaultContacts={this.loadVaultContacts}
-                  handleIDChangeVault={this.handleIDChangeVault}
-                  loading={loading}
-                  show={show}
-                  contacts={contacts}
-                  sharedWithMe={sharedWithMe}
-                />
-              }/>
-              <Route exact path="/vault/shared/:id" render={(location, match, props) =>
-                <SharedVaultCollection {...props}
-                  loadSharedVault={this.loadSharedVault}
-                  loading={loading}
-                  user={user}
-                  shareFileIndex={shareFileIndex}
-                />
-              }/>
-              <Route exact path="/vault/single/shared/:id/:id" render={(location, match, props) =>
-                <SingleSharedFile {...props}
-                  loadSingleSharedVault={this.loadSingleSharedVault}
-                  onDocumentComplete={this.onDocumentComplete}
-                  onPageComplete={this.onPageComplete}
-                  handlePrevious={this.handlePrevious}
-                  handleNext={this.handleNext}
-                  downloadPDF={this.downloadPDF}
-                  handleAddToVault={this.handleAddToVault}
-                  user={user}
-                  type={type}
-                  loading={loading}
-                  show={show}
-                  pages={pages}
-                  page ={page}
-                  link={link}
-                  content={content}
-                  grid={grid}
-                  name={name}
-                />
-              }/>
+              {/*
               <Route exact path="/integrations" render={(location, match, props) =>
                 <Integrations {...props}
                   loadIntegrations={this.loadIntegrations}

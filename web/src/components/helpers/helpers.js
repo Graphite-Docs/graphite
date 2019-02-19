@@ -7,6 +7,7 @@ import { loadContactsCollection } from './contacts';
 import { loadIntegrations } from './integrations'; 
 
 export async function loadDocs() {
+  console.log("loading docs...")
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(window.location.href.includes('doc/') || window.location.href.includes('shared/')) {
     //Don't do anything right now.
@@ -90,13 +91,13 @@ export async function loadDocs() {
         setGlobal({ value: [], filteredValue: [], loading: false }) //temporarily set loading to false here.
       }
       //Now call load sheets.
-      // loadSheets();
-      loadContactsCollection();
+      loadSheets();
     }
   }
 }
 
 export function loadSheets() {
+  console.log("loading sheets...")
   const global = getGlobal();
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
@@ -123,9 +124,11 @@ export function loadSheets() {
   }
 }
 
-export function loadContacts() {
+export async function loadContacts() {
+  console.log("loading contacts...")
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
+    await loadContactsCollection();
     loadVault();
   } else {
     getFile("contact.json", {decrypt: true})
@@ -148,7 +151,7 @@ export function loadContacts() {
 export async function loadVault() {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
-    console.log("loading vault")
+    console.log("loading vault...")
     const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private
 
       //Create the params to send to the fetchFromProvider function.

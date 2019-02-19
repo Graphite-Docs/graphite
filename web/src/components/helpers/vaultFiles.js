@@ -2,11 +2,14 @@ import {
   getFile,
   putFile,
   loadUserData, 
-  decryptContent
+  decryptContent, 
+  encryptContent
 } from 'blockstack';
 import { loadVault } from './helpers';
 import { saveNewVaultFile } from './newVaultFile';
 import { fetchFromProvider } from './storageProviders/fetch';
+import { postToStorageProvider } from './storageProviders/post';
+import { loadDocs } from './helpers';
 import { getGlobal, setGlobal } from 'reactn';
 import axios from 'axios';
 import update from 'immutability-helper';
@@ -39,9 +42,9 @@ export function filterVaultList(event){
   setGlobal({filteredVault: updatedList});
 }
 
-export function handleVaultPageChange(event) {
+export function handleVaultPageChange(number) {
     setGlobal({
-      currentVaultPage: Number(event.target.id)
+      currentVaultPage: number
     });
   }
 
@@ -77,60 +80,68 @@ export function  handleVaultCheckbox(event) {
   }
 
 export function sharedVaultInfo(contact, file) {
-    setGlobal({ confirmAdd: false, receiverID: contact });
-    const user = contact;
-    const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    setGlobal({ loading: true });
-    getFile('key.json', options)
-      .then((file) => {
-        if(file) {
-          setGlobal({ pubKey: JSON.parse(file)})
-        } else {
-          console.log("No key");
-          setGlobal({ loading: false, displayMessage: true}, () => {
-            setTimeout(() => setGlobal({ displayMessage: false}), 3000)
-          })
-        }
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    const sharedBy = authProvider === 'uPort' ? JSON.parse(localStorage.getItem('uPortUser')).payload.did : loadUserData().username;
+    setGlobal({ confirmAdd: false, receiverID: contact.contact });
+    const user = contact.contact;
+    if(user.includes('did:')) {
+      setGlobal({ pubKey: contact.pubKey, receiverID: contact.contact.name, loading: true }, () => {
+        loadSharedVaultCollection(contact, file);
       })
-      .then(() => {
-        getFile('graphiteprofile.json', options)
-          .then((fileContents) => {
-            if(fileContents) {
-              if(JSON.parse(fileContents).emailOK) {
-                const object = {};
-                object.sharedBy = loadUserData().username;
-                object.from_email = "contact@graphitedocs.com";
-                object.to_email = JSON.parse(fileContents).profileEmail;
-                if(window.location.href.includes('/vault')) {
-                  object.subject = 'New Graphite Vault File Shared by ' + loadUserData().username;
-                  object.link = window.location.origin + '/vault/single/shared/' + loadUserData().username + '/' + getGlobal().filesSelected[0];
-                  object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + loadUserData().username + " has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
-                  axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
-                    .then((res) => {
-                      console.log(res);
-                    })
-                  console.log(object);
-                }
-              }
-            }
-          })
-        })
-        .then(() => {
-          if(getGlobal().loading) {
-            loadSharedVaultCollection(contact, file);
+    } else {
+      const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+      setGlobal({ loading: true });
+      getFile('key.json', options)
+        .then((fileContents) => {
+          if(fileContents) {
+            setGlobal({ pubKey: JSON.parse(fileContents)})
+          } else {
+            console.log("No key");
+            setGlobal({ loading: false, displayMessage: true}, () => {
+              setTimeout(() => setGlobal({ displayMessage: false}), 3000)
+            })
           }
         })
-        .catch(error => {
-          console.log("No key: " + error);
-          setGlobal({ loading: false, displayMessage: true}, () => {
-            setTimeout(() => setGlobal({ displayMessage: false}), 3000)
+        .then(() => {
+          getFile('graphiteprofile.json', options)
+            .then((fileContents) => {
+              if(fileContents) {
+                if(JSON.parse(fileContents).emailOK) {
+                  const object = {};
+                  object.sharedBy = sharedBy
+                  object.from_email = "contact@graphitedocs.com";
+                  object.to_email = JSON.parse(fileContents).profileEmail;
+                  if(window.location.href.includes('/vault')) {
+                    object.subject = 'New Graphite Vault File Shared by ' + sharedBy;
+                    object.link = window.location.origin + '/vault/single/shared/' + sharedBy + '/' + getGlobal().filesSelected[0];
+                    object.content = "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" + sharedBy + " has shared a file with you.</h3><p>Access it here:</p><br><a href=" + object.link + ">" + object.link + "</a></div>"
+                    axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/file-shared', object)
+                      .then((res) => {
+                        console.log(res);
+                      })
+                    console.log(object);
+                  }
+                }
+              }
+            })
           })
-        });
+          .then(() => {
+            if(getGlobal().loading) {
+              loadSharedVaultCollection(contact, file);
+            }
+          })
+          .catch(error => {
+            console.log("No key: " + error);
+            setGlobal({ loading: false, displayMessage: true}, () => {
+              setTimeout(() => setGlobal({ displayMessage: false}), 3000)
+            })
+          });
+      }
   }
 
 export async function loadSharedVaultCollection(contact, file) {
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
-  const user = contact;
+  const user = contact.contact.replace('.', '_');
   const fileName = "sharedvault.json";
   if(authProvider === 'uPort') {
     const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
@@ -145,7 +156,7 @@ export async function loadSharedVaultCollection(contact, file) {
     const object = {
       provider: storageProvider,
       token: token,
-      filePath: `/${fileName}`
+      filePath: `/vault/${user}${fileName}`
     };
     //Call fetchFromProvider and wait for response.
     let fetchFile = await fetchFromProvider(object);
@@ -175,7 +186,7 @@ export async function loadSharedVaultCollection(contact, file) {
               sharedCollection: decryptedContent
             })
           }
-          console.log(blob);
+          await console.log(reader.readAsText(blob));
         }
 
         //Now fetch single file.
@@ -185,9 +196,10 @@ export async function loadSharedVaultCollection(contact, file) {
           filePath: `/vault/${file.id}.json`
         };
         //Call fetchFromProvider and wait for response.
+        console.log(file.id)
         let singleFile = await fetchFromProvider(params);
         console.log(singleFile)
-        if (fetchFile.loadLocal) {
+        if (singleFile.loadLocal) {
           const decryptedContent = await JSON.parse(
             decryptContent(JSON.parse(fetchFile.data.content), {
               privateKey: thisKey
@@ -210,12 +222,13 @@ export async function loadSharedVaultCollection(contact, file) {
             //No indexedDB data found, so we load and read from the API call.
             //Load up a new file reader and convert response to JSON.
             const reader = await new FileReader();
-            var blob2 = fetchFile.fileBlob;
+            var blob2 = singleFile.fileBlob;
             reader.onloadend = async evt => {
               console.log("read success");
               const decryptedContent = await JSON.parse(
                 decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
               );
+              console.log(decryptedContent);
               await setGlobal(
                 {
                   file: decryptedContent.file,
@@ -225,12 +238,24 @@ export async function loadSharedVaultCollection(contact, file) {
                   link: decryptedContent.link,
                   type: decryptedContent.type,
                   id: decryptedContent.id,
-                  sharedWithSingle: decryptedContent.sharedWith,
+                  sharedWithSingle: decryptedContent.sharedWith || [],
                   singleFileTags: decryptedContent.tags || [],
                   uploaded: decryptedContent.uploaded
+                }, async () => {
+                  let files = await getGlobal().files;
+                  const thisFile = await files.find((a) => { return a.id.toString() === file.id.toString()}); //this is comparing strings
+                  let index = thisFile && thisFile.id;
+                  function findObjectIndex(file) {
+                      return file.id === index; //this is comparing numbers
+                  }
+                  await setGlobal({index: files.findIndex(findObjectIndex) }, () => {
+                    if(contact) {
+                      vaultShare(contact, file);
+                    }
+                  });
                 })
               }
-              console.log(blob2);
+              await console.log(reader.readAsText(blob2));
             }
   } else {
     getFile(user + fileName, {decrypt: true})
@@ -318,13 +343,14 @@ export function getVaultCollection(contact, file) {
     });
 }
 
-export function vaultShare(contact, file) {
+export async function vaultShare(contact, file) {
+  const sharedWith = await getGlobal().sharedWithSingle
   const object = {};
   object.name = getGlobal().name;
   object.file = getGlobal().file;
   object.id = file.id;
   object.lastModifiedDate = getGlobal().lastModifiedDate;
-  object.sharedWith = getGlobal().sharedWithSingle;
+  object.sharedWith = [...sharedWith, contact.contact];
   object.size = getGlobal().size;
   object.link = getGlobal().link;
   object.type = getGlobal().type;
@@ -337,12 +363,76 @@ export function vaultShare(contact, file) {
   });
 }
 
-export function saveSharedVaultFile(contact, file) {
-  const user = contact;
-  const userShort = user.slice(0, -3);
+export async function saveSharedVaultFile(contact, file) {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  const user = contact.contact;
+  const userShort = user.replace('.', '_');
   const fileName = "sharedvault.json";
+  if(authProvider === 'uPort') {
+    //Save the shared collection
+    const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+    const data = JSON.stringify(getGlobal().sharedCollection);
+    const encryptedData = await encryptContent(data, {publicKey: publicKey})
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(storageProvider === 'dropbox') {
+      token = JSON.parse(localStorage.getItem('oauthData'))
+    } else {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+    }
+    const params = {
+      content: encryptedData,
+      filePath: `/vault/${userShort + fileName}`,
+      provider: storageProvider,
+      token: token
+    }
 
-  putFile(userShort + fileName, JSON.stringify(getGlobal().sharedCollection), {encrypt: true})
+    let postToStorage = await postToStorageProvider(params);
+    await console.log(postToStorage);
+
+    //Save the individual shared file.
+    const fileID = file.id;
+    const fullFile = fileID + '.json'
+    const data2 = JSON.stringify(getGlobal().singleFile);
+    const encryptedData2 = await encryptContent(data2, {publicKey: publicKey})  
+    const params2 = {
+      content: encryptedData2,
+      filePath: `/vault/${fullFile}`,
+      provider: storageProvider,
+      token: token
+    }
+
+    let postToStorage2 = await postToStorageProvider(params2);
+    await console.log(postToStorage2);  
+
+    //Now update vault index file.
+    const data3 = JSON.stringify(getGlobal().files);
+    const encryptedData3 = await encryptContent(data3, {publicKey: publicKey})
+    const params3 = {
+      content: encryptedData3,
+      filePath: `/vault/index.json`,
+      provider: storageProvider,
+      token: token
+    }
+
+    let postVaultIndex = await postToStorageProvider(params3);
+    await console.log(postVaultIndex);
+
+    //Finally, share the file for access by recipient.
+    const fileFull = userShort + fileName;
+    const data4 = JSON.stringify(getGlobal().sharedCollection);
+    const encryptedData4 = await encryptContent(data4, { publicKey: getGlobal().pubKey });
+    const params4 = {
+      content: encryptedData4,
+      filePath: fileFull,
+      provider: 'ipfs'
+    }
+
+    let postToStorage3 = await postToStorageProvider(params4);
+    console.log(postToStorage3);
+    setTimeout(loadDocs, 1000);
+  } else {
+    putFile(userShort + fileName, JSON.stringify(getGlobal().sharedCollection), {encrypt: true})
     .then(() => {
       console.log("Shared Collection Saved");
       saveSingleVaultFile(contact, file);
@@ -351,6 +441,7 @@ export function saveSharedVaultFile(contact, file) {
       console.log("Error")
       setGlobal({ loading: false });
     })
+  }
 }
 
 export function saveSingleVaultFile(contact, file) {
@@ -371,7 +462,12 @@ export function saveVaultCollection(contact, file) {
     putFile("uploads.json", JSON.stringify(getGlobal().files), {encrypt: true})
       .then(() => {
         console.log("Saved Collection");
-        sendVaultFile(contact, file);
+        if(contact) {
+          console.log("sending");
+          sendVaultFile(contact, file);
+        } else {
+          window.location.replace('/vault');
+        }
       })
       .catch(e => {
         console.log("e");
@@ -380,8 +476,8 @@ export function saveVaultCollection(contact, file) {
   }
 
 export function sendVaultFile(contact, file) {
-  const user = contact;
-  const userShort = user.slice(0, -3);
+  const user = contact.contact;
+  const userShort = user.replace('.', '_');
   const fileName = 'sharedvault.json'
   const fileFull = userShort + fileName;
   const publicKey = getGlobal().pubKey;

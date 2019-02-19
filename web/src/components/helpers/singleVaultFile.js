@@ -6,6 +6,7 @@ import {
   decryptContent
 } from 'blockstack';
 import { fetchFromProvider } from './storageProviders/fetch';
+import { postToStorageProvider } from './storageProviders/post';
 import { setGlobal, getGlobal } from 'reactn';
 import { handleaddItem } from './documents';
 import {
@@ -649,8 +650,9 @@ export function signWithBlockusign(fileId) {
     })
 }
 
-export function shareVaultFile() {
-  let fileName = 'public/vault/' + window.location.href.split('vault/')[1];
+export async function shareVaultFile() {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+  let fileName = 'public/vault/' + window.location.href.split('vault/')[1].split('#')[0] + '.json';
   const object = {};
   object.file = getGlobal().file;
   object.uploaded = getGlobal().lastModifiedDate;
@@ -664,16 +666,48 @@ export function shareVaultFile() {
   object.id = window.location.href.split('vault/')[1];
   object.vault = "vault";
   object.publicVaultFile = true;
-  setGlobal({ singleVaultFile: object, publicVaultFile: true }, () => {
-    putFile(fileName, JSON.stringify(getGlobal().singleVaultFile), {encrypt: false})
+  setGlobal({ singleVaultFile: object, publicVaultFile: true }, async () => {
+    if(authProvider === 'uPort') {
+      const data = JSON.stringify(getGlobal().singleVaultFile);
+      const params = {
+        content: data,
+        filePath: `/${fileName}`,
+        provider: 'ipfs'
+      }
+
+      let postToStorage = await postToStorageProvider(params);
+      await console.log(postToStorage);
+
+      const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+      const data2 = JSON.stringify(getGlobal().singleVaultFile);
+      const encryptedData = await encryptContent(data2, {publicKey: publicKey})
+      const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+      let token;
+      if(storageProvider === 'dropbox') {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      }
+      const params2 = {
+        content: encryptedData,
+        filePath: `/vault/${window.location.href.split('vault/')[1].split('#')[0]}.json`,
+        provider: storageProvider,
+        token: token
+      }
+
+      let postToStorage2 = await postToStorageProvider(params2);
+      await console.log(postToStorage2);
+    } else {
+      putFile(fileName, JSON.stringify(getGlobal().singleVaultFile), {encrypt: false})
       .then(() => {
         console.log('Saved: ' + window.location.origin + '/public/' + loadUserData().username + '/' + window.location.href.split('vault/')[1]);
-        putFile(window.location.href.split('vault/')[1] + '.json', JSON.stringify(getGlobal().singleVaultFile), {encrypt: true})
+        putFile(window.location.href.split('vault/')[1].split('#')[0] + '.json', JSON.stringify(getGlobal().singleVaultFile), {encrypt: true})
           .then(() => {
             console.log("saved single vault file")
           })
       })
       .catch(error => console.log(error))
+    }
   })
 }
 

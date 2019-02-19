@@ -55,6 +55,16 @@ export default class SingleVaultFile extends Component {
       display: "none"
     };
     const { type, loading, pages, page, name, link, content, grid } = this.global
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
+    let sharedBy;
+    if(authProvider === 'uPort') {
+      sharedBy = JSON.parse(localStorage.getItem('uPortUser')).payload.did;
+    } else {
+      sharedBy = loadUserData().username
+    }
+    console.log(sharedBy);
+    console.log(window.location.origin + '/public/vault/' + sharedBy + '/' + window.location.href.split('vault/')[1].split('#')[0])
+
     let pagination = null;
     if (pages) {
       pagination = this.renderPagination(page, pages);
@@ -135,8 +145,8 @@ export default class SingleVaultFile extends Component {
                   }
                   <div style={{marginTop: "15px"}}>
                     {
-                      publicVaultFile ?
-                      <div><a id='shared-vault-link' href={window.location.origin + '/public/vault/' + loadUserData().username + '/' + window.location.href.split('vault/')[1]} target='_blank' style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/vault/' + loadUserData().username + '/' + window.location.href.split('vault/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
+                      publicVaultFile && sharedBy ?
+                      <div><a id='shared-vault-link' href={window.location.origin + '/public/vault/' + sharedBy + '/' + window.location.href.split('vault/')[1].split('#')[0]} target='_blank' style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/vault/' + sharedBy + '/' + window.location.href.split('vault/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
                       <div className='hide' />
                     }
                   </div>

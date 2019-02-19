@@ -1,18 +1,19 @@
-import React, { Component } from 'react';
+import React, { Component } from 'reactn';
 import { Link } from 'react-router-dom';
 import Header from '../shared/Header';
 import { Container, Grid, Item } from 'semantic-ui-react';
 import Loading from '../shared/Loading';
+import { loadContacts } from '../helpers/helpers';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class SharedVault extends Component {
 
   componentDidMount() {
-    this.props.loadVaultContacts();
+    loadContacts();
   }
 
   renderView() {
-    const { contacts, loading } = this.props;
+    const { contacts, loading } = this.global;
 
     if(!loading) {
       return(

@@ -1,18 +1,19 @@
-import React, { Component } from "react";
+import React, { Component } from "reactn";
 import { Link } from 'react-router-dom';
 import {Menu as MainMenu, Icon, Container, Table} from 'semantic-ui-react';
 import Loading from '../shared/Loading';
+import { loadSharedVault } from '../helpers/sharedVaultFiles';
 
 export default class SharedVaultCollection extends Component {
 
   componentDidMount() {
-    this.props.loadSharedVault()
+    loadSharedVault()
   }
 
 
   render() {
-    const { loading } = this.props;
-    let files = this.props.shareFileIndex;
+    const { loading } = this.global;
+    let files = this.global.shareFileIndex;
     if(!loading) {
       return (
         <div>
@@ -21,12 +22,12 @@ export default class SharedVaultCollection extends Component {
             <Link style={{color: "#fff"}} to={'/shared-vault'}><Icon name='arrow left' /></Link>
           </MainMenu.Item>
           <MainMenu.Item style={{color: "#fff"}}>
-            Files shared by {this.props.user}
+            Files shared by {this.global.user}
           </MainMenu.Item>
           </MainMenu>
           <Container>
           <div style={{marginTop: "65px", textAlign: "center"}}>
-            <h3 className="center-align">Files {this.props.user} shared with you</h3>
+            <h3 className="center-align">Files {this.global.user} shared with you</h3>
             <Table unstackable style={{borderRadius: "0"}}>
               <Table.Header>
                 <Table.Row>
@@ -43,7 +44,7 @@ export default class SharedVaultCollection extends Component {
                     return(
                       <Table.Row key={file.id} style={{ marginTop: "35px"}}>
                         <Table.Cell><Link to={'/vault/single/shared/' + window.location.href.split('shared/')[1] + '/' + file.id}>{file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name}</Link></Table.Cell>
-                        <Table.Cell>{this.props.user}</Table.Cell>
+                        <Table.Cell>{this.global.user}</Table.Cell>
                         <Table.Cell>{file.uploaded}</Table.Cell>
                       </Table.Row>
                     );

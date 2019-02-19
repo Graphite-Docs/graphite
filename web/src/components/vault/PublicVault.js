@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from 'reactn';
 import {Image, Container, Pagination} from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import Loading from '../shared/Loading';
@@ -8,12 +8,13 @@ import "video-react/dist/video-react.css";
 import HotTable from "react-handsontable";
 import {CSVLink} from 'react-csv';
 import logoSquare from '../../assets/images/gIcon.png';
-// import Loading from './Loading';
+import { loadPublicVault } from '../helpers/publicVault';
+const single = require('../helpers/singleVaultFile');
 
 export default class PublicVault extends Component {
 
   componentDidMount() {
-    this.props.loadPublicVault();
+    loadPublicVault();
     setInterval(this.loadAgain, 3000)
   }
 
@@ -21,8 +22,7 @@ export default class PublicVault extends Component {
     const { player } = this.refs.player.getState();
 
     if(player.paused) {
-      console.log("bingo")
-      this.props.loadPublicVault()
+      loadPublicVault()
     }
 
   }
@@ -38,8 +38,7 @@ export default class PublicVault extends Component {
   }
 
   render() {
-    const { type, loading, pages, page, name, link, content, grid, pubVaultShared } = this.props;
-
+    const { type, loading, pages, page, name, link, content, grid, pubVaultShared } = this.global;
     var thisStyle = {
       display: "none"
     };
@@ -82,19 +81,16 @@ export default class PublicVault extends Component {
               ) : type.includes("application/pdf") ? (
                 <MainMenu.Item>
                   <a style={{cursor: 'pointer', color: "#fff"}}
-                    onClick={this.props.downloadPDF}
+                    onClick={single.downloadPDF}
                     title={name}
                   >
                     Download
-                  </a>
-                  <a onClick={() => this.props.signWithBlockusign(window.location.href.split('vault/')[1])} style={{marginLeft: "20px", cursor: "pointer"}}>
-                    <img style={{height: "30px"}} src='https://blockusign.co/assets/imgs/blockusignLogoSvg.svg' alt='blockusign' /><span style={{marginLeft: "5px", color: "#fff", position: "relative", top: "-7px"}}>Sign with Blockusign</span>
                   </a>
                 </MainMenu.Item>
               ) : type.includes("word") || type.includes("rtf") || type.includes("text/plain") ? (
                 <MainMenu.Item>
                   <a
-                    onClick={this.props.downloadPDF}
+                    onClick={single.downloadPDF}
                     title={name}
                     style={{color:"#fff"}}
                   >
@@ -132,8 +128,8 @@ export default class PublicVault extends Component {
                         <PDF
                           className="card"
                           file={link}
-                          onDocumentComplete={this.props.onDocumentComplete}
-                          onPageComplete={this.props.onPageComplete}
+                          onDocumentComplete={single.onDocumentComplete}
+                          onPageComplete={single.onPageComplete}
                           page={page}
                           style={{marginBottom: "45px"}}
                         />
