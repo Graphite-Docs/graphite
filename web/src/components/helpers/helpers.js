@@ -4,7 +4,6 @@ import {
 import { setGlobal, getGlobal } from 'reactn';
 import { fetchFromProvider } from './storageProviders/fetch';
 import { loadContactsCollection } from './contacts';
-import { loadIntegrations } from './integrations'; 
 
 export async function loadDocs() {
   console.log("loading docs...")
@@ -57,34 +56,40 @@ export async function loadDocs() {
       }
       // //Call fetchFromProvider and wait for response.
       let fetchFile = await fetchFromProvider(object);
-      
-      //Now we need to determine if the response was from indexedDB or an API call:
+      //If the storage provider is Google, we already have our data
+        //Now we need to determine if the response was from indexedDB or an API call:
       if(fetchFile) {
-        if(fetchFile.loadLocal) {
-          console.log("Loading local instance first");
-          const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+        if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+          console.log(fetchFile);
+          const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
           setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
         } else {
-          //check if there is no file to load and set state appropriately.
-          if(typeof fetchFile === 'string') {
-            console.log("Nothing stored locally or in storage provider.")
-            if(fetchFile.includes('error')) {
-              console.log("Setting state appropriately")
-              setGlobal({value: [], filteredValue: [], countFilesDone: true, loading: false}, () => {
-                loadSheets();
-              })
-            }
+          if(fetchFile.loadLocal) {
+            console.log("Loading local instance first");
+            const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+            setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
           } else {
-            //No indexedDB data found, so we load and read from the API call.
-            //Load up a new file reader and convert response to JSON.
-            const reader = await new FileReader();
-            var blob = fetchFile.fileBlob;
-            reader.onloadend = async (evt) => {
-              console.log("read success");
-              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
-              setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true })
-            };
-            await console.log(reader.readAsText(blob));
+            //check if there is no file to load and set state appropriately.
+            if(typeof fetchFile === 'string') {
+              console.log("Nothing stored locally or in storage provider.")
+              if(fetchFile.includes('error')) {
+                console.log("Setting state appropriately")
+                setGlobal({value: [], filteredValue: [], countFilesDone: true, loading: false}, () => {
+                  loadSheets();
+                })
+              }
+            } else {
+              //No indexedDB data found, so we load and read from the API call.
+              //Load up a new file reader and convert response to JSON.
+              const reader = await new FileReader();
+              var blob = fetchFile.fileBlob;
+              reader.onloadend = async (evt) => {
+                console.log("read success");
+                const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+                setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true })
+              };
+              await console.log(reader.readAsText(blob));
+            }
           }
         }
       } else {
@@ -170,39 +175,43 @@ export async function loadVault() {
       }
       // //Call fetchFromProvider and wait for response.
       let fetchFile = await fetchFromProvider(object);
-      
-      //Now we need to determine if the response was from indexedDB or an API call:
-      if(fetchFile) {
-        if(fetchFile.loadLocal) {
-          console.log("Loading local instance first");
-          const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
-          setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
-        } else {
-          //check if there is no file to load and set state appropriately.
-          if(typeof fetchFile === 'string') {
-            console.log("Nothing stored locally or in storage provider.")
-            if(fetchFile.includes('error')) {
-              console.log("Setting state appropriately")
-              setGlobal({files: [], filteredVault: [], loading: false}, () => {
-                console.log("No files found");
-              })
-            }
+        //Now we need to determine if the response was from indexedDB or an API call:
+        if(fetchFile) {
+          if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+            const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+            setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
           } else {
-            //No indexedDB data found, so we load and read from the API call.
-            //Load up a new file reader and convert response to JSON.
-            const reader = await new FileReader();
-            var blob = fetchFile.fileBlob;
-            reader.onloadend = async (evt) => {
-              console.log("read success");
-              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+            if(fetchFile.loadLocal) {
+              console.log("Loading local instance first");
+              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
               setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
-            };
-            await console.log(reader.readAsText(blob));
+            } else {
+              //check if there is no file to load and set state appropriately.
+              if(typeof fetchFile === 'string') {
+                console.log("Nothing stored locally or in storage provider.")
+                if(fetchFile.includes('error')) {
+                  console.log("Setting state appropriately")
+                  setGlobal({files: [], filteredVault: [], loading: false}, () => {
+                    console.log("No files found");
+                  })
+                }
+              } else {
+                //No indexedDB data found, so we load and read from the API call.
+                //Load up a new file reader and convert response to JSON.
+                const reader = await new FileReader();
+                var blob = fetchFile.fileBlob;
+                reader.onloadend = async (evt) => {
+                  console.log("read success");
+                  const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+                  setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
+                };
+                await console.log(reader.readAsText(blob));
+              }
+            }
           }
+        } else {
+          setGlobal({ files: [], filteredVault: [], loading: false }) //temporarily set loading to false here.
         }
-      } else {
-        setGlobal({ files: [], filteredVault: [], loading: false }) //temporarily set loading to false here.
-      }
   } else {
     getFile("uploads.json", {decrypt: true})
    .then((fileContents) => {
@@ -215,7 +224,7 @@ export async function loadVault() {
    })
     .then(() => {
       setGlobal({ loading: false });
-      loadIntegrations();
+      // loadIntegrations();
     })
     .catch(error => {
       console.log(error);

@@ -408,10 +408,10 @@ export async function loadSingleRTC() {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const object = {
       provider: storageProvider,
@@ -422,12 +422,18 @@ export async function loadSingleRTC() {
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
     //Now we need to determine if the response was from indexedDB or an API call:
-    if (fetchFile.loadLocal) {
-      const decryptedContent = await JSON.parse(
-        decryptContent(JSON.parse(fetchFile.data.content), {
-          privateKey: thisKey
-        })
-      );
+    if (fetchFile.loadLocal || storageProvider === 'google') {
+      let decryptedContent;
+      if(storageProvider === 'google') {
+        decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+      } else {
+        decryptedContent = await JSON.parse(
+          decryptContent(JSON.parse(fetchFile.data.content), {
+            privateKey: thisKey
+          })
+        );
+      }
+      
       setGlobal(
         {
           content: Value.fromJSON(decryptedContent.content),
@@ -555,16 +561,17 @@ export async function saveNewSharedFile() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem("oauthData"));
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
       filePath: '/documents/index.json',
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     };
 
     let postToStorage = await postToStorageProvider(params);
@@ -576,7 +583,8 @@ export async function saveNewSharedFile() {
       content: encryptedData2,
       filePath: `/documents/single/${getGlobal().tempDocId}.json`,
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     };
 
    let postToStorage2 = await postToStorageProvider(params2);

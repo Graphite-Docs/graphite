@@ -126,9 +126,7 @@ export function sharedVaultInfo(contact, file) {
             })
           })
           .then(() => {
-            if(getGlobal().loading) {
-              loadSharedVaultCollection(contact, file);
-            }
+            loadSharedVaultCollection(contact, file);
           })
           .catch(error => {
             console.log("No key: " + error);
@@ -148,10 +146,10 @@ export async function loadSharedVaultCollection(contact, file) {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const object = {
       provider: storageProvider,
@@ -161,34 +159,38 @@ export async function loadSharedVaultCollection(contact, file) {
     //Call fetchFromProvider and wait for response.
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
-    if (fetchFile.loadLocal) {
-      const decryptedContent = await JSON.parse(
-        decryptContent(JSON.parse(fetchFile.data.content), {
-          privateKey: thisKey
-        })
-      );
-      await setGlobal(
-        {
-          sharedCollection: decryptedContent
-        })
-      } else {
-        //No indexedDB data found, so we load and read from the API call.
-        //Load up a new file reader and convert response to JSON.
-        const reader = await new FileReader();
-        var blob = fetchFile.fileBlob;
-        reader.onloadend = async evt => {
-          console.log("read success");
-          const decryptedContent = await JSON.parse(
-            decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
-          );
-          await setGlobal(
-            {
-              sharedCollection: decryptedContent
-            })
+    if(fetchFile) {
+      if (fetchFile.loadLocal || storageProvider === 'google') {
+        let decryptedContent;
+          if(storageProvider === 'google') {
+            decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+          } else {
+            decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
           }
-          await console.log(reader.readAsText(blob));
-        }
-
+        await setGlobal(
+          {
+            sharedCollection: decryptedContent
+          })
+        } else {
+          //No indexedDB data found, so we load and read from the API call.
+          //Load up a new file reader and convert response to JSON.
+          const reader = await new FileReader();
+          var blob = fetchFile.fileBlob;
+          reader.onloadend = async evt => {
+            console.log("read success");
+            const decryptedContent = await JSON.parse(
+              decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+            );
+            await setGlobal(
+              {
+                sharedCollection: decryptedContent
+              })
+            }
+            await console.log(reader.readAsText(blob));
+          }
+    } else {
+      setGlobal({ sharedCollection: [] });
+    }
         //Now fetch single file.
         const params = {
           provider: storageProvider,
@@ -199,12 +201,14 @@ export async function loadSharedVaultCollection(contact, file) {
         console.log(file.id)
         let singleFile = await fetchFromProvider(params);
         console.log(singleFile)
-        if (singleFile.loadLocal) {
-          const decryptedContent = await JSON.parse(
-            decryptContent(JSON.parse(fetchFile.data.content), {
-              privateKey: thisKey
-            })
-          );
+        
+        if (singleFile.loadLocal || storageProvider === 'google') {
+          let decryptedContent;
+          if(storageProvider === 'google') {
+            decryptedContent = await JSON.parse(decryptContent(singleFile, { privateKey: thisKey }))
+          } else {
+            decryptedContent = await JSON.parse(decryptContent(JSON.parse(singleFile.data.content), { privateKey: thisKey }))
+          }
           await setGlobal(
             {
               file: decryptedContent.file,
@@ -214,9 +218,21 @@ export async function loadSharedVaultCollection(contact, file) {
               link: decryptedContent.link,
               type: decryptedContent.type,
               id: decryptedContent.id,
-              sharedWithSingle: decryptedContent.sharedWith,
+              sharedWithSingle: decryptedContent.sharedWith || [],
               singleFileTags: decryptedContent.tags || [],
-              uploaded: decryptedContent.uploaded
+              uploaded: decryptedContent.uploaded, 
+            }, async () => {
+              let files = await getGlobal().files;
+                  const thisFile = await files.find((a) => { return a.id.toString() === file.id.toString()}); //this is comparing strings
+                  let index = thisFile && thisFile.id;
+                  function findObjectIndex(file) {
+                      return file.id === index; //this is comparing numbers
+                  }
+                  await setGlobal({index: files.findIndex(findObjectIndex) }, () => {
+                    if(contact) {
+                      vaultShare(contact, file);
+                    }
+                  });
             })
           } else {
             //No indexedDB data found, so we load and read from the API call.
@@ -240,7 +256,7 @@ export async function loadSharedVaultCollection(contact, file) {
                   id: decryptedContent.id,
                   sharedWithSingle: decryptedContent.sharedWith || [],
                   singleFileTags: decryptedContent.tags || [],
-                  uploaded: decryptedContent.uploaded
+                  uploaded: decryptedContent.uploaded, 
                 }, async () => {
                   let files = await getGlobal().files;
                   const thisFile = await files.find((a) => { return a.id.toString() === file.id.toString()}); //this is comparing strings
@@ -375,10 +391,10 @@ export async function saveSharedVaultFile(contact, file) {
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
@@ -399,7 +415,8 @@ export async function saveSharedVaultFile(contact, file) {
       content: encryptedData2,
       filePath: `/vault/${fullFile}`,
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     }
 
     let postToStorage2 = await postToStorageProvider(params2);
@@ -412,7 +429,8 @@ export async function saveSharedVaultFile(contact, file) {
       content: encryptedData3,
       filePath: `/vault/index.json`,
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     }
 
     let postVaultIndex = await postToStorageProvider(params3);
@@ -506,10 +524,10 @@ export async function loadSingleVaultTags(file) {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const object = {
       provider: storageProvider,
@@ -519,12 +537,13 @@ export async function loadSingleVaultTags(file) {
     //Call fetchFromProvider and wait for response.
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
-    if (fetchFile.loadLocal) {
-      const decryptedContent = await JSON.parse(
-        decryptContent(JSON.parse(fetchFile.data.content), {
-          privateKey: thisKey
-        })
-      );
+    if (fetchFile.loadLocal || storageProvider === 'google') {
+      let decryptedContent;
+        if(storageProvider === 'google') {
+          decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        } else {
+          decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+        }
       await setGlobal(
         {
           shareFile: [...getGlobal().shareFile, decryptedContent],

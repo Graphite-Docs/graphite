@@ -6,6 +6,7 @@ import { encryptContent } from "blockstack";
 export async function handleStorage() {
   //first we connect to the selected storage provider.
   if(window.location.href.includes('code')) {
+    console.log("yep")
     setGlobal({ loading: true });
     let code;
     let link;
@@ -16,6 +17,7 @@ export async function handleStorage() {
       code = await window.location.href.split("code=")[1].split("#")[0];
       link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/dropboxAuthDev";
     } else if(window.location.href.includes('box-1')) {
+      console.log("boom")
       code = await window.location.href.split("code=")[1].split("#")[0];
       link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/boxAuthDev"
     }
@@ -26,7 +28,7 @@ export async function handleStorage() {
         code
       )
       .then(async res => {
-        console.log(res);
+        console.log(res.data);
         //then we encrypt the refreshToken;
         let data = await res.data
           .refresh_token ? res.data

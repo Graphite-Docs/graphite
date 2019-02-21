@@ -211,13 +211,13 @@ export default class Collections extends Component {
 
    const renderPageNumbers = pageNumbers.map(number => {
           return (
-            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => this.global.handlePageChange(number)} />
+            <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => gdocs.handlePageChange(number)} />
           );
         });
 
         const renderTeamPageNumbers = pageNumbersTeam.map(number => {
                return (
-                 <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => this.global.handlePageChange(number)} />
+                 <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => gdocs.handlePageChange(number)} />
                );
              });
     if(teamView && !loading) {
@@ -397,6 +397,7 @@ export default class Collections extends Component {
               <Table.Body>
                 {
                   currentDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
+                    console.log(doc.sharedWith);
                     var tags;
                     var collabs;
                     let uniqueCollaborators;

@@ -38,8 +38,15 @@ export async function loadContactsCollection() {
       }
       // //Call fetchFromProvider and wait for response.
       let fetchFile = await fetchFromProvider(object);
-      
-      //Now we need to determine if the response was from indexedDB or an API call:
+      if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+        if(fetchFile) {
+          const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+          setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
+        } else {
+          setGlobal({ loading: false })
+        }
+      } else {
+        //Now we need to determine if the response was from indexedDB or an API call:
       if(fetchFile) {
         if(fetchFile.loadLocal) {
           console.log("Loading local instance first");
@@ -68,6 +75,7 @@ export async function loadContactsCollection() {
         }
       } else {
         setGlobal({ contacts: [], filteredContacts: [], loading: false }) //temporarily set loading to false here.
+      }
       }
   } else {
     getFile("contact.json", {decrypt: true})
@@ -151,16 +159,17 @@ export async function saveNewContactsFile() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem("oauthData"));
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
       filePath: "/contacts/contact.json",
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: getGlobal().contacts.length > 0 ? true : false
     };
 
     let postToStorage = await postToStorageProvider(params);

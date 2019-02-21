@@ -61,8 +61,117 @@ export async function fetchFromProvider(params) {
           console.log(error);
           return "error fetching file";
         });
-    } else if(params.provider === 'ipfs') {
+    } else if(params.provider === 'google') {
+      //First we need to use the refreshToken to get a new access token.
+      //If the refresh token fails, we need to re-authenticate the user. 
+      const refreshToken = params.token;
+      let fileData;
+      let token;
+      let fileId;
+      return await axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/google-refresh-access-token', refreshToken)
+        .then(async (res) => {
+          console.log(res)
+          token = res.data.access_token;
+          var settings = {
+            "async": true,
+            "crossDomain": true,
+            "url": `https://www.googleapis.com/drive/v3/files?q=name=%22${params.filePath}%22`,
+            "method": "GET",
+            "headers": {
+              "Authorization": `Bearer ${token}`,
+              "Cache-Control": "no-cache",
+              "Postman-Token": "ea40b72a-e688-318f-4c57-d5f8a93a487c"
+            }
+          }
+          
+          await window.$.ajax(settings).done(async function (response) {
+            console.log(response)
+            if(response.files.length > 0) {
+              fileId = response.files[0].id;
+            }
+          });
+
+          if(fileId) {
+            var settings2 = {
+              "async": true,
+              "crossDomain": true,
+              "url": `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+              "method": "GET",
+              "headers": {
+                "Authorization": `Bearer ${token}`,
+                "Cache-Control": "no-cache",
+                "Postman-Token": "c881eec8-7f68-c2e4-80ae-c62a5144ca39"
+              }
+            }
+            
+            return await window.$.ajax(settings2).done(async function (response2) {
+              fileData = await response2;
+              return fileData;
+            });
+          } else {
+            console.log("No file found")
+          }
+        })
+        .catch(error => {
+          console.log(`${error}: Refresh token no longer valid. Let's re-authenticate`)
+          //This is where we should give off the re-authentication flow.
+        });
+
+    } else if(params.provider === 'box-1') {
       console.log(params)
+            //First we need to use the refreshToken to get a new access token.
+      //If the refresh token fails, we need to re-authenticate the user. 
+      const refreshToken = params.token;
+      let fileData;
+      let token;
+      let fileId;
+      return await axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/box-refresh-access-token', refreshToken)
+        .then(async (res) => {
+          console.log(res)
+          token = res.data.access_token;
+          var settings = {
+            "async": true,
+            "crossDomain": true,
+            "url": `https://api.box.com/2.0/search?query=%22${params.filePath}%22`,
+            "method": "GET",
+            "headers": {
+              "Authorization": `Bearer ${token}`,
+              "Cache-Control": "no-cache",
+              "Postman-Token": "66572b11-51a7-abc9-ae87-ed3aafe71aff"
+            }
+          }
+          
+          window.$.ajax(settings).done(function (response) {
+            console.log(response);
+            
+          });
+
+          // if(fileId) {
+          //   var settings2 = {
+          //     "async": true,
+          //     "crossDomain": true,
+          //     "url": `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+          //     "method": "GET",
+          //     "headers": {
+          //       "Authorization": `Bearer ${token}`,
+          //       "Cache-Control": "no-cache",
+          //       "Postman-Token": "c881eec8-7f68-c2e4-80ae-c62a5144ca39"
+          //     }
+          //   }
+            
+          //   return await window.$.ajax(settings2).done(async function (response2) {
+          //     fileData = await response2;
+          //     return fileData;
+          //   });
+          // } else {
+          //   console.log("No file found")
+          // }
+        })
+        .catch(error => {
+          console.log(`${error}: Refresh token no longer valid. Let's re-authenticate`)
+          //This is where we should give off the re-authentication flow.
+        });
+    } else if(params.provider === 'ipfs') {
       const url = `https://api.pinata.cloud/data/userPinList/hashContains/*/pinStart/*/pinEnd/*/unpinStart/*/unpinEnd/*/pinSizeMin/*/pinSizeMax/*/pinFilter/*/pageLimit/10/pageOffset/0?metadata[keyvalues][ID]={"value":${JSON.stringify(params.filePath)},"op":"eq"}`
       return  axios
           .get(url, {

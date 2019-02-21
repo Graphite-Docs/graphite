@@ -155,10 +155,10 @@ export async function initialDocLoad() {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const object = {
       provider: storageProvider,
@@ -169,12 +169,16 @@ export async function initialDocLoad() {
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
     //Now we need to determine if the response was from indexedDB or an API call:
-    if (fetchFile.loadLocal) {
-      const decryptedContent = await JSON.parse(
-        decryptContent(JSON.parse(fetchFile.data.content), {
-          privateKey: thisKey
-        })
-      );
+    if (fetchFile.loadLocal || storageProvider === 'google') {
+      let decryptedContent;
+      if(storageProvider === 'google') {
+        decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+      } else {
+        decryptedContent = await JSON.parse(
+          decryptContent(JSON.parse(fetchFile.data.content), {
+            privateKey: thisKey
+          }));
+      }
       setGlobal(
         {
           content: Value.fromJSON(decryptedContent.content),
@@ -197,10 +201,10 @@ export async function initialDocLoad() {
         async () => {
           const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
           let token;
-          if(storageProvider === 'dropbox') {
-            token = JSON.parse(localStorage.getItem('oauthData'))
-          } else {
+          if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
             token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+          } else {
+            token = JSON.parse(localStorage.getItem('oauthData'))
           }
           const object = {
             provider: storageProvider,
@@ -211,13 +215,20 @@ export async function initialDocLoad() {
           const indexFile = await fetchFromProvider(object);
           console.log('indexFile')
           console.log(indexFile)
-          const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
+          let decryptedIndex;
+          if(storageProvider === 'google') {
+            decryptedIndex = await JSON.parse(decryptContent(indexFile, { privateKey: thisKey }));
+          } else {
+            decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
+          }
+           
           setGlobal(
             {
               value: decryptedIndex,
               filteredValue: decryptedIndex
             },
              async () => {
+              console.log(decryptedIndex)
               let value = decryptedIndex;
               const thisDoc = await value.find(doc => {
                 if (typeof doc.id === "string") {
@@ -253,10 +264,10 @@ export async function initialDocLoad() {
                 //Here we are fetching the timeline file (if there is one)
                 const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
                 let token;
-                if(storageProvider === 'dropbox') {
-                  token = JSON.parse(localStorage.getItem('oauthData'))
-                } else {
+                if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
                   token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+                } else {
+                  token = JSON.parse(localStorage.getItem('oauthData'))
                 }
                 const object = {
                   provider: storageProvider,
@@ -265,7 +276,12 @@ export async function initialDocLoad() {
                 }
                 const timelineFile = await fetchFromProvider(object);
                 console.log(timelineFile)
-                const decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
+                let decryptedTimeline;
+                if(storageProvider === 'google') {
+                  decryptedTimeline = await JSON.parse(decryptContent(timelineFile, { privateKey: thisKey }))
+                } else {
+                  decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
+                }
                 if(decryptedTimeline) {
                   setGlobal({
                     myTimeline: decryptedTimeline,
@@ -284,10 +300,15 @@ export async function initialDocLoad() {
       const reader = await new FileReader();
       var blob = await fetchFile.fileBlob;
       reader.onloadend = async evt => {
+        let decryptedContent;
         console.log("read success");
-        const decryptedContent = await JSON.parse(
-          decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
-        );
+        if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+          decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        } else {
+          decryptedContent = await JSON.parse(
+            decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+          );
+        }
         setGlobal(
           {
             content: Value.fromJSON(decryptedContent.content),
@@ -313,10 +334,10 @@ export async function initialDocLoad() {
 
       const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
       let token;
-      if(storageProvider === 'dropbox') {
-        token = JSON.parse(localStorage.getItem('oauthData'))
-      } else {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
         token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
       }
       const object = {
         provider: storageProvider,
@@ -329,8 +350,13 @@ export async function initialDocLoad() {
       console.log(indexFile)
       var blob2 = indexFile.fileBlob;
       reader.onloadend = async evt => {
+        let decryptedIndex;
         const thisKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
-        const decryptedIndex = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+        if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+          decryptedIndex = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        } else {
+          decryptedIndex = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+        }
         console.log(decryptedIndex)
         await setGlobal(
         {
@@ -531,9 +557,10 @@ export async function initialDocLoad() {
                   versions: JSON.parse(fileContents).versions || []
                 });
               } else {
+                thisContent = JSON.parse(fileContents).content;
                 console.log("html doc");
                 setGlobal({
-                  content: html.deserialize(JSON.parse(fileContents).content),
+                  content: Value.fromJSON(thisContent),
                   title: JSON.parse(fileContents || "{}").title,
                   tags: JSON.parse(fileContents || "{}").tags,
                   idToLoad: JSON.parse(fileContents || "{}").id,
@@ -791,7 +818,7 @@ export async function savePublic() {
     };
     let postToStorage = await postToStorageProvider(params);
     console.log(postToStorage);
-    setGlobal({ gaiaLink: link, publicShare: "", shareModal: "hide" });
+    await setGlobal({ gaiaLink: link, publicShare: "", shareModal: "hide" });
   } else {
     const user = loadUserData().username;
     const link = window.location.origin + "/shared/docs/" + user + "-" + id;
@@ -821,7 +848,7 @@ export function sharedInfoSingleDocRTC(props) {
       loadMyFile();
     })
   } else {
-    setGlobal({ receiverID: props, rtc: true });
+    setGlobal({ receiverID: props.contact, rtc: true });
     const user = props.contact;
     const options = {
       username: user,
@@ -848,12 +875,12 @@ export function sharedInfoSingleDocRTC(props) {
               object.link =
                 window.location.origin +
                 "/documents/single/shared/" +
-                loadUserData().username +
+                object.sharedBy +
                 "/" +
                 window.location.href.split("doc/")[1];
               object.content =
                 "<div style='text-align:center;'><div style='background:#282828;width:100%;height:auto;margin-bottom:40px;'><h3 style='margin:15px;color:#fff;'>Graphite</h3></div><h3>" +
-                loadUserData().username +
+                object.sharedBy +
                 " has shared a document with you.</h3><p>Access it here:</p><br><a href=" +
                 object.link +
                 ">" +
@@ -894,7 +921,7 @@ export async function sharedInfoSingleDocStatic(props) {
   htmlContent = document.getElementsByClassName("editor")[0].innerHTML;
   if(props.contact.includes('did:')) {
     //This is a uPort contact. Need to grab the pubkey
-    setGlobal({ pubKey: props.pubKey, receiverID: props.name, rtc: false }, () => {
+    setGlobal({ pubKey: props.pubKey, receiverID: props.contact.name, rtc: false }, () => {
       loadMyFile();
     })
   } else {
@@ -966,6 +993,7 @@ export async function sharedInfoSingleDocStatic(props) {
 }
 
 export async function loadMyFile() {
+  console.log(getGlobal().receiverID)
   const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   const pubKey = getGlobal().pubKey;
   if(authProvider === 'uPort') {
@@ -975,10 +1003,10 @@ export async function loadMyFile() {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       provider: storageProvider,
@@ -989,9 +1017,13 @@ export async function loadMyFile() {
     let fetchFile = await fetchFromProvider(params);
     console.log(fetchFile)
     if(fetchFile) {
-      if(fetchFile.loadLocal) {
-        console.log("Loading local instance first");
-        const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+      if(fetchFile.loadLocal || storageProvider === 'google') {
+        let decryptedContent;
+        if(storageProvider === 'google') {
+          decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        } else {
+          decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+        }
         await setGlobal({ shareFile: decryptedContent })
       } else {
         //check if there is no file to load and set state appropriately.
@@ -1129,10 +1161,10 @@ export async function shareDoc() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem("oauthData"));
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
@@ -1450,16 +1482,17 @@ export async function autoSave() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem("oauthData"));
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
       filePath: "/documents/index.json",
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     };
 
     let postToStorage = await postToStorageProvider(params);
@@ -1472,7 +1505,8 @@ export async function autoSave() {
       content: singleEncrypted,
       filePath: `/documents/single/${file}.json`,
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     };
     let postSingle = await postToStorageProvider(singleParams);
     console.log(postSingle);
@@ -1856,10 +1890,10 @@ export async function handleTimelineSave() {
       const encryptedData = await encryptContent(data, { publicKey: publicKey });
       const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
       let token;
-      if(storageProvider === 'dropbox') {
-        token = JSON.parse(localStorage.getItem("oauthData"));
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
       } else {
-        token = JSON.parse(localStorage.getItem("oauthData")).data.access_token;
+        token = JSON.parse(localStorage.getItem('oauthData'))
       }
       const params = {
         content: encryptedData,

@@ -31,10 +31,10 @@ export async function loadSingleVaultFile(props) {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       provider: storageProvider,
@@ -45,9 +45,14 @@ export async function loadSingleVaultFile(props) {
     let fetchFile = await fetchFromProvider(params);
     console.log(fetchFile)
     if(fetchFile) {
-      if(fetchFile.loadLocal) {
-        console.log("Loading local instance first");
-        const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+      if(fetchFile.loadLocal || storageProvider === 'google') {
+        let decryptedContent;
+        if(storageProvider === 'google') {
+          decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        } else {
+          decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+        }
+  
         await setGlobal({ 
           file: decryptedContent,
           name: decryptedContent.name,
@@ -124,10 +129,10 @@ export async function loadSingleVaultFile(props) {
       //Create the params to send to the fetchFromProvider function.
       const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
       let token;
-      if(storageProvider === 'dropbox') {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+        token = JSON.parse(localStorage.getItem('oauthData'))
       }
       const params = {
         provider: storageProvider,
@@ -138,9 +143,14 @@ export async function loadSingleVaultFile(props) {
       let fetchFile = await fetchFromProvider(params);
       console.log(fetchFile)
       if(fetchFile) {
-        if(fetchFile.loadLocal) {
-          console.log("Loading local instance first");
-          const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+          if(fetchFile.loadLocal || storageProvider === 'google') {
+            let decryptedContent;
+          if(storageProvider === 'google') {
+            decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+          } else {
+            decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+          }
+          
           await setGlobal({ 
             file: decryptedContent,
             name: decryptedContent.name,
@@ -683,16 +693,17 @@ export async function shareVaultFile() {
       const encryptedData = await encryptContent(data2, {publicKey: publicKey})
       const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
       let token;
-      if(storageProvider === 'dropbox') {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+        token = JSON.parse(localStorage.getItem('oauthData'))
       }
       const params2 = {
         content: encryptedData,
         filePath: `/vault/${window.location.href.split('vault/')[1].split('#')[0]}.json`,
         provider: storageProvider,
-        token: token
+        token: token, 
+        update: true
       }
 
       let postToStorage2 = await postToStorageProvider(params2);

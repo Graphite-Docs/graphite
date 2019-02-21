@@ -311,16 +311,17 @@ export async function saveNewFile() {
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
       filePath: '/documents/index.json',
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: getGlobal().value.length > 0 ? true : false
     }
 
     let postToStorage = await postToStorageProvider(params);
@@ -332,7 +333,8 @@ export async function saveNewFile() {
       content: singleEncrypted,
       filePath: `/documents/single/${doc.id}.json`,
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: false
     }
     let postSingle = await postToStorageProvider(singleParams)
     await console.log(postSingle);
@@ -712,10 +714,10 @@ export async function loadSingleTags(doc) {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const object = {
       provider: storageProvider,
@@ -725,15 +727,10 @@ export async function loadSingleTags(doc) {
     //Call fetchFromProvider and wait for response.
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
-    //Now we need to determine if the response was from indexedDB or an API call:
-    if (fetchFile.loadLocal) {
-      const decryptedContent = await JSON.parse(
-        decryptContent(JSON.parse(fetchFile.data.content), {
-          privateKey: thisKey
-        })
-      );
-      setGlobal(
-        {
+    if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+      if(fetchFile) {
+        const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        setGlobal({ 
           content: Value.fromJSON(decryptedContent.content),
           title: decryptedContent.title,
           tags: decryptedContent.tags,
@@ -750,39 +747,68 @@ export async function loadSingleTags(doc) {
           jsonContent: true,
           versions: decryptedContent.versions || [],
           loading: false
-        })
-      } else {
-        //No indexedDB data found, so we load and read from the API call.
-        //Load up a new file reader and convert response to JSON.
-        const reader = await new FileReader();
-        var blob = fetchFile.fileBlob;
-        reader.onloadend = async evt => {
-          console.log("read success");
-          const decryptedContent = await JSON.parse(
-            decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
-          );
-          setGlobal(
-            {
-              content: Value.fromJSON(decryptedContent.content),
-              title: decryptedContent.title,
-              tags: decryptedContent.tags,
-              idToLoad: decryptedContent.id,
-              singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
-              docLoaded: true,
-              readOnly: decryptedContent.readOnly, //NOTE: adding this, to setState of readOnly from getFile...
-              rtc: decryptedContent.rtc || false,
-              sharedWith: decryptedContent.sharedWith,
-              teamDoc: decryptedContent.teamDoc,
-              compressed: decryptedContent.compressed || false,
-              spacing: decryptedContent.spacing,
-              lastUpdate: decryptedContent.lastUpdate,
-              jsonContent: true,
-              versions: decryptedContent.versions || [],
-              loading: false
-            })
+         })
+      }
+    } else {
+      if (fetchFile.loadLocal) {
+        const decryptedContent = await JSON.parse(
+          decryptContent(JSON.parse(fetchFile.data.content), {
+            privateKey: thisKey
+          })
+        );
+        setGlobal(
+          {
+            content: Value.fromJSON(decryptedContent.content),
+            title: decryptedContent.title,
+            tags: decryptedContent.tags,
+            idToLoad: decryptedContent.id,
+            singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
+            docLoaded: true,
+            readOnly: decryptedContent.readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+            rtc: decryptedContent.rtc || false,
+            sharedWith: decryptedContent.sharedWith,
+            teamDoc: decryptedContent.teamDoc,
+            compressed: decryptedContent.compressed || false,
+            spacing: decryptedContent.spacing,
+            lastUpdate: decryptedContent.lastUpdate,
+            jsonContent: true,
+            versions: decryptedContent.versions || [],
+            loading: false
+          })
+        } else {
+          //No indexedDB data found, so we load and read from the API call.
+          //Load up a new file reader and convert response to JSON.
+          const reader = await new FileReader();
+          var blob = fetchFile.fileBlob;
+          reader.onloadend = async evt => {
+            console.log("read success");
+            const decryptedContent = await JSON.parse(
+              decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+            );
+            setGlobal(
+              {
+                content: Value.fromJSON(decryptedContent.content),
+                title: decryptedContent.title,
+                tags: decryptedContent.tags,
+                idToLoad: decryptedContent.id,
+                singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
+                docLoaded: true,
+                readOnly: decryptedContent.readOnly, //NOTE: adding this, to setState of readOnly from getFile...
+                rtc: decryptedContent.rtc || false,
+                sharedWith: decryptedContent.sharedWith,
+                teamDoc: decryptedContent.teamDoc,
+                compressed: decryptedContent.compressed || false,
+                spacing: decryptedContent.spacing,
+                lastUpdate: decryptedContent.lastUpdate,
+                jsonContent: true,
+                versions: decryptedContent.versions || [],
+                loading: false
+              })
+            }
+            console.log(blob);
           }
-          console.log(blob);
-        }
+    }
+    //Now we need to determine if the response was from indexedDB or an API call:
   } else {
     getFile(fullFile, {decrypt: true})
     .then((fileContents) => {
@@ -1048,16 +1074,17 @@ export async function saveFullCollectionTags(doc) {
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(storageProvider === 'dropbox') {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+      token = JSON.parse(localStorage.getItem('oauthData'))
     }
     const params = {
       content: encryptedData,
       filePath: '/documents/index.json',
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     }
 
     let postToStorage = await postToStorageProvider(params);
@@ -1069,7 +1096,8 @@ export async function saveFullCollectionTags(doc) {
       content: singleEncrypted,
       filePath: `/documents/single/${doc.id}.json`,
       provider: storageProvider,
-      token: token
+      token: token, 
+      update: true
     }
     let postSingle = await postToStorageProvider(singleParams)
     await console.log(postSingle);

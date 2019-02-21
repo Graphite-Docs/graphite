@@ -372,16 +372,17 @@ export async function handleAddToVaultTwo() {
       const encryptedData = await encryptContent(data, {publicKey: publicKey})
       const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
       let token;
-      if(storageProvider === 'dropbox') {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token
+        token = JSON.parse(localStorage.getItem('oauthData'))
       }
       const params = {
         content: encryptedData,
         filePath: `/vault/index.json`,
         provider: storageProvider,
-        token: token
+        token: token, 
+        update: true
       }
 
       let postToStorage = await postToStorageProvider(params);
@@ -395,7 +396,8 @@ export async function handleAddToVaultTwo() {
         content: encryptedData2,
         filePath: `/vault/${object.id}`,
         provider: storageProvider,
-        token: token
+        token: token, 
+        update: false
       }
 
       let postToStorage2 = await postToStorageProvider(params2);
