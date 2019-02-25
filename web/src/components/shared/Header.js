@@ -59,7 +59,7 @@ export default class Header extends Component {
           <Dropdown icon='th' className="app-switcher" style={{ color: "#fff", marginRight: "15px" }}>
             <Dropdown.Menu>
               <Dropdown.Item><Link to={'/documents'}><Icon name='file alternate outline'/>Documents</Link></Dropdown.Item>
-              <Dropdown.Item><Link to={'/sheets'}><Icon name='table' />Sheets</Link></Dropdown.Item>
+              {/*<Dropdown.Item><Link to={'/sheets'}><Icon name='table' />Sheets</Link></Dropdown.Item>*/}
               <Dropdown.Item><Link to={'/vault'}><Icon name='shield alternate' />Vault</Link></Dropdown.Item>
               <Dropdown.Item><Link to={'/contacts'}><Icon name='address book outline' />Contacts</Link></Dropdown.Item>
             </Dropdown.Menu>
@@ -72,9 +72,9 @@ export default class Header extends Component {
                   window.location.pathname === '/vault' ? <Dropdown.Item><Link to={'/shared-vault'}>Shared Vault</Link></Dropdown.Item> :
                   null
                 }
-                <Dropdown.Item><Link to={'/profile'}>Profile</Link></Dropdown.Item>
+                {/*<Dropdown.Item><Link to={'/profile'}>Profile</Link></Dropdown.Item>
                 <Dropdown.Item><Link to={'/integrations'}>Integrations</Link></Dropdown.Item>
-                <Dropdown.Item><Link to={'/teams'}>Team Management</Link></Dropdown.Item>
+                <Dropdown.Item><Link to={'/teams'}>Team Management</Link></Dropdown.Item>*/}
                 <Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item><a onClick={signOut}>Sign Out</a></Dropdown.Item>

@@ -2,6 +2,7 @@ import React, { Component, setGlobal } from "reactn";
 import { Link } from "react-router-dom";
 import Signin from "./Signin";
 import Header from "./Header";
+import SheetsNotification from './SheetsNotification';
 import Loading from "./Loading";
 import Onboarding from '../onboarding/Onboarding';
 import { foundProfile, isSignedIn } from "../helpers/authentication";
@@ -12,7 +13,6 @@ import {
 import { Grid, Icon, Container, Card, Table } from "semantic-ui-react";
 import PropTypes from "prop-types";
 import Joyride from "react-joyride";
-const authProvider = JSON.parse(localStorage.getItem('authProvider'));
 
 let profileFound;
 
@@ -29,6 +29,7 @@ export default class AppPage extends Component {
   };
 
   componentDidMount() {
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
     //Need to move this code elsewhere
     if(authProvider === 'blockstack') {
       getFile("appPageOnboarding.json", { decrypt: true })
@@ -44,6 +45,7 @@ export default class AppPage extends Component {
   }
 
   checkFiles = () => {
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
     const { value, sheets, files, contacts } = this.global
     if (
       value < 1 &&
@@ -51,7 +53,7 @@ export default class AppPage extends Component {
       files < 1 &&
       contacts < 1
     ) {
-      if (!this.global.onboarding) {
+      if (!this.global.onboarding || !JSON.parse(localStorage.getItem('skipOnboardingAppPage'))) {
         this.setState({ run: true, onboarding: true }, () => {
           if(authProvider === 'blockstack') {
             putFile(
@@ -59,8 +61,12 @@ export default class AppPage extends Component {
               JSON.stringify(this.state.onboarding),
               { encrypt: true }
             );
+          } else {
+            localStorage.setItem('skipOnboardingAppPage', JSON.stringify(true))
           }
         });
+      } else {
+        this.setState({onboarding: true, run: false})
       }
     } else {
       this.setState({ onboarding: true }, () => {
@@ -70,6 +76,8 @@ export default class AppPage extends Component {
             JSON.stringify(this.state.onboarding),
             { encrypt: true }
           );
+        } else {
+          localStorage.setItem('skipOnboardingAppPage', JSON.stringify(true))
         }
       });
     }
@@ -80,6 +88,7 @@ export default class AppPage extends Component {
   };
 
   checkProfiles = async () => {
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
     if(authProvider === 'uPort') {
       profileFound = await foundProfile()
       console.log(`profile found: ${profileFound}`)
@@ -87,11 +96,12 @@ export default class AppPage extends Component {
       profileFound = true;
       console.log(`profile found: ${profileFound}`)
     }
-    
-    this.checkFiles();
+    setTimeout(this.checkFiles, 1000)
+    // this.checkFiles();
   }
 
   render() {
+    const authProvider = JSON.parse(localStorage.getItem('authProvider'));
     const { value, sheets, files, contacts, graphitePro, loading } = this.global;
     const steps = [
       {
@@ -151,7 +161,7 @@ export default class AppPage extends Component {
         content: (
           <p>
             This icon is the quick switcher between Graphite components. Use it
-            to access Documents, Sheets, Vault, and Contacts.
+            to access Documents, Vault, and Contacts.
           </p>
         ),
         placement: "bottom",
@@ -205,17 +215,7 @@ export default class AppPage extends Component {
       return n !== undefined;
     });
     let mergedDocCollabs = [].concat.apply([], newDocCollabs).length;
-    //Sheets variables
-    let sheetsTags = sheets.map(a => a.tags);
-    let newSheetsTags = sheetsTags.filter(function(n) {
-      return n !== undefined;
-    });
-    let mergedSheetsTags = [].concat.apply([], newSheetsTags).length;
-    let sheetsCollabs = sheets.map(a => a.sharedWith);
-    let newSheetsCollabs = sheetsCollabs.filter(function(n) {
-      return n !== undefined;
-    });
-    let mergedSheetsCollabs = [].concat.apply([], newSheetsCollabs).length;
+    
     //Files variables
     let filesTags = files.map(a => a.tags);
     let newFilesTags = filesTags.filter(function(n) {
@@ -256,6 +256,7 @@ export default class AppPage extends Component {
                 <div className="site-wrapper-inner">
                   <div>
                     <Header graphitePro={graphitePro} />
+                    {authProvider === 'blockstack' && sheets.length > 0 && !JSON.parse(localStorage.getItem('sheetsNotificationSeen')) ? <SheetsNotification /> : <div className="hide" />}
                     <Container>
                       <Joyride
                         continuous
@@ -267,9 +268,9 @@ export default class AppPage extends Component {
                         callback={this.handleJoyrideCallback}
                       />
                       <Grid
-                        style={{ marginTop: "65px", marginBottom: "35px" }}
+                        style={{ maxWidth: "85%", margin: "auto", marginTop: "65px", marginBottom: "35px" }}
                         stackable
-                        columns={4}
+                        columns={3}
                       >
                         <Grid.Row>
                           <Card.Group centered>
@@ -311,7 +312,7 @@ export default class AppPage extends Component {
                                 </Card>
                               </Link>
                             </Grid.Column>
-                            <Grid.Column>
+                            {/*<Grid.Column>
                               <Link to={"/sheets"} style={{ color: "#282828" }}>
                                 <Card className="appPageCard">
                                   <Card.Content>
@@ -350,7 +351,7 @@ export default class AppPage extends Component {
                                   </Card.Content>
                                 </Card>
                               </Link>
-                            </Grid.Column>
+                            </Grid.Column>*/}
                             <Grid.Column>
                               <Link to={"/vault"} style={{ color: "#282828" }}>
                                 <Card className="appPageCard">

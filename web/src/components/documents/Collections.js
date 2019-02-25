@@ -39,7 +39,8 @@ export default class Collections extends Component {
         }
       })
       .then(() => {
-        this.checkFiles();
+        // this.checkFiles();
+        setTimeout(this.checkFiles, 500)
       })
     }
   }
@@ -47,17 +48,23 @@ export default class Collections extends Component {
   checkFiles = () => {
     const authProvider = JSON.parse(localStorage.getItem('blockstack'));
     if(this.global.value < 1) {
-      if(!this.global.onboarding) {
+      if(!this.global.onboarding || !JSON.parse(localStorage.getItem('skipOnboardingDocsPage'))) {
         setGlobal({ run: true, onboarding: true }, () => {
           if(authProvider === 'blockstack') {
             putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
+          } else {
+            localStorage.setItem('skipOnboardingDocsPage', JSON.stringify(true))
           }
         });
+      } else {
+        this.setState({ run: false })
       }
     } else {
       setGlobal({ onboardingComplete: true }, () => {
         if(authProvider === 'blockstack') {
           putFile('docPageOnboarding.json', JSON.stringify(this.state.onboarding), {encrypt: true})
+        } else {
+          localStorage.setItem('skipOnboardingDocsPage', JSON.stringify(true))
         }
       });
     }

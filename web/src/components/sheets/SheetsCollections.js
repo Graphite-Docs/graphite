@@ -18,7 +18,6 @@ import {
 import Header from '../shared/Header';
 import update from 'immutability-helper';
 import { getMonthDayYear } from '../helpers/getMonthDayYear';
-import Joyride from "react-joyride";
 
 const { encryptECIES } = require('blockstack/lib/encryption');
 // const { getPublicKeyFromPrivate } = require('blockstack');
@@ -829,78 +828,6 @@ handlePageChange = (props) => {
 
 
   render() {
-    const steps = [
-      {
-        content: <h2>This is where you will create and manage your sheets.</h2>,
-        placement: "center",
-        disableBeacon: true,
-        styles: {
-          options: {
-            zIndex: 100000
-          }
-        },
-        locale: {
-          skip: "Skip tour"
-        },
-        target: "body"
-      },
-      {
-        content: <p>This is the sheets grid. Your existing sheets will be displayed here and can be accessed by clicking the sheet title.</p>,
-        placement: "bottom",
-        disableBeacon: true,
-        styles: {
-          options: {
-            zIndex: 100000
-          }
-        },
-        locale: {
-          skip: "Skip tour"
-        },
-        target: "table.table"
-      },
-      {
-        content: <p>By clicking new, you will create a new sheet and be redirected into that sheet.</p>,
-        placement: "top",
-        disableBeacon: true,
-        styles: {
-          options: {
-            zIndex: 100000
-          }
-        },
-        locale: {
-          skip: "Skip tour"
-        },
-        target: ".column button.secondary"
-      },
-      {
-        content: <p>You can filter by the creation date of your sheets, tags you have applied to your sheets, or the people you have shared with.</p>,
-        placement: "bottom",
-        disableBeacon: true,
-        styles: {
-          options: {
-            zIndex: 100000
-          }
-        },
-        locale: {
-          skip: "Skip tour"
-        },
-        target: ".filter a"
-      },
-      {
-        content: <p>The search box lets you search across all your sheets. Just start typing the title you are looking for.</p>,
-        placement: "bottom",
-        disableBeacon: true,
-        styles: {
-          options: {
-            zIndex: 100000
-          }
-        },
-        locale: {
-          skip: "Skip tour"
-        },
-        target: ".input input"
-      }
-    ]
 
 
     this.state.deleteState === true ? this.deleteTag() : loadUserData();
@@ -971,19 +898,10 @@ handlePageChange = (props) => {
         <div>
           <Header />
           <Container style={{marginTop:"65px"}}>
-          <Joyride
-            continuous
-            scrollToFirstStep
-            showProgress
-            showSkipButton
-            run={this.state.run}
-            steps={steps}
-            callback={this.handleJoyrideCallback}
-          />
           <Grid stackable style={{marginBottom: "25px"}} columns={2}>
             <Grid.Column>
               <h2>Sheets ({currentSheets.length})
-                <Button onClick={this.handleaddItem} style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>
+                
                 {appliedFilter === false ? <span className="filter"><a onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer"}}>Filter<Icon name='caret down' /></a></span> : <span className="hide"><a>Filter</a></span>}
                 {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={() => this.setState({ appliedFilter: false, visible: false, filteredSheets: this.state.sheets})}>Clear</Label></span> : <div />}
               </h2>
