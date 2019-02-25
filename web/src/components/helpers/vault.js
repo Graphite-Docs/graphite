@@ -3,8 +3,7 @@ import {
   loadUserData,
   Person,
   getFile,
-  putFile,
-  signUserOut,
+  putFile
 } from 'blockstack';
 import update from 'immutability-helper';
 const { getPublicKeyFromPrivate } = require('blockstack');

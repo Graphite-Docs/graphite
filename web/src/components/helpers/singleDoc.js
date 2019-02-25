@@ -155,11 +155,16 @@ export async function initialDocLoad() {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+    
     const object = {
       provider: storageProvider,
       token: token,
@@ -169,19 +174,35 @@ export async function initialDocLoad() {
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
     //Now we need to determine if the response was from indexedDB or an API call:
-    if (fetchFile.loadLocal || storageProvider === 'google') {
+    if (fetchFile.loadLocal || storageProvider === 'google' || storageProvider === 'ipfs' || storageProvider === 'ipfs') {
       let decryptedContent;
-      if(storageProvider === 'google') {
-        decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+      if(storageProvider === 'google' || storageProvider === 'ipfs') {
+        if(storageProvider === 'google') {
+          decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+        } else {
+          if(fetchFile.loadLocal) {
+            let content = fetchFile.data.content;
+            console.log(JSON.parse(content));
+            decryptedContent = await JSON.parse(decryptContent(JSON.parse(content), { privateKey: thisKey }))
+          } else {
+            let content = fetchFile.data.pinataContent;
+          console.log(content);
+          decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
+          }
+        }
       } else {
         decryptedContent = await JSON.parse(
           decryptContent(JSON.parse(fetchFile.data.content), {
             privateKey: thisKey
           }));
       }
+      try {
+        setGlobal({ content: Value.fromJSON(decryptedContent.content) })
+      } catch(err) {
+        setGlobal({ content: getGlobal().content });
+      }
       setGlobal(
         {
-          content: Value.fromJSON(decryptedContent.content),
           title: decryptedContent.title,
           tags: decryptedContent.tags,
           idToLoad: decryptedContent.id,
@@ -199,12 +220,17 @@ export async function initialDocLoad() {
           loading: false
         },
         async () => {
+          console.log(getGlobal().content)
           const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
           let token;
-          if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-            token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+          if(localStorage.getItem('oauthData')) {
+            if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+              token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+            } else {
+              token = JSON.parse(localStorage.getItem('oauthData'))
+            }
           } else {
-            token = JSON.parse(localStorage.getItem('oauthData'))
+            token = "";
           }
           const object = {
             provider: storageProvider,
@@ -218,6 +244,16 @@ export async function initialDocLoad() {
           let decryptedIndex;
           if(storageProvider === 'google') {
             decryptedIndex = await JSON.parse(decryptContent(indexFile, { privateKey: thisKey }));
+          } else if(storageProvider === 'ipfs') {
+            if(indexFile.loadLocal) {
+              let indexContent = indexFile.data.content;
+              console.log(indexContent);
+              decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexContent), { privateKey: thisKey }))
+            } else {
+              let indexContent = indexFile.data.pinataContent;
+              console.log(indexContent);
+              decryptedIndex = await JSON.parse(decryptContent(indexContent.content, { privateKey: thisKey }))
+            }
           } else {
             decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
           }
@@ -264,10 +300,14 @@ export async function initialDocLoad() {
                 //Here we are fetching the timeline file (if there is one)
                 const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
                 let token;
-                if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-                  token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+                if(localStorage.getItem('oauthData')) {
+                  if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+                    token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+                  } else {
+                    token = JSON.parse(localStorage.getItem('oauthData'))
+                  }
                 } else {
-                  token = JSON.parse(localStorage.getItem('oauthData'))
+                  token = "";
                 }
                 const object = {
                   provider: storageProvider,
@@ -279,6 +319,10 @@ export async function initialDocLoad() {
                 let decryptedTimeline;
                 if(storageProvider === 'google') {
                   decryptedTimeline = await JSON.parse(decryptContent(timelineFile, { privateKey: thisKey }))
+                } else if(storageProvider === 'ipfs') {
+                  let content = timelineFile.data.pinataContent;
+                  console.log(content);
+                  decryptedTimeline = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
                 } else {
                   decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(indexFile.data.content), { privateKey: thisKey }))
                 }
@@ -334,10 +378,14 @@ export async function initialDocLoad() {
 
       const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
       let token;
-      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      if(localStorage.getItem('oauthData')) {
+        if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+          token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+        } else {
+          token = JSON.parse(localStorage.getItem('oauthData'))
+        }
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+        token = "";
       }
       const object = {
         provider: storageProvider,
@@ -396,30 +444,6 @@ export async function initialDocLoad() {
       }
 
       await console.log(reader.readAsText(blob2));
-
-      // //Here we are fetching the timeline file (if there is one)
-      // const storageProvider = JSON.parse(localStorage.getItem('storageProvider'))
-      // let token;
-      // if(storageProvider === 'dropbox') {
-      //   token = JSON.parse(localStorage.getItem('oauthData'))
-      // } else {
-      //   token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
-      // }
-      // const object = {
-      //   provider: storageProvider,
-      //   token: token,
-      //   filePath: `/timelines/${thisFile}.json`
-      // }
-      // const timelineFile = await fetchFromProvider(object);
-      // console.log(timelineFile)
-      // const decryptedTimeline = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
-      // if(decryptedTimeline) {
-      //   setGlobal({
-      //     myTimeline: decryptedTimeline,
-      //     timelineTitle: decryptedTimeline.title,
-      //     timelineEvents: decryptedTimeline.events
-      //   })
-      // }
     }
   } else if (authProvider === "blockstack") {
     getFile("documentscollection.json", { decrypt: true })
@@ -1003,10 +1027,14 @@ export async function loadMyFile() {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
     const params = {
       provider: storageProvider,
@@ -1017,7 +1045,7 @@ export async function loadMyFile() {
     let fetchFile = await fetchFromProvider(params);
     console.log(fetchFile)
     if(fetchFile) {
-      if(fetchFile.loadLocal || storageProvider === 'google') {
+      if(fetchFile.loadLocal || storageProvider === 'google' || storageProvider === 'ipfs') {
         let decryptedContent;
         if(storageProvider === 'google') {
           decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
@@ -1161,10 +1189,14 @@ export async function shareDoc() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
     const params = {
       content: encryptedData,
@@ -1417,14 +1449,14 @@ export function handleAutoAdd() {
         if (typeof doc.id === "string") {
           if (doc.id) {
             return (
-              doc.id === window.location.href.split("shared/")[1].split("/")[1]
+              doc.id === window.location.href.split("shared/")[1].split("/")[1] || window.location.href.split('doc/')[1].split('#')[0]
             );
           }
         } else {
           if (doc.id) {
             return (
               doc.id.toString() ===
-              window.location.href.split("shared/")[1].split("/")[1]
+              window.location.href.split("shared/")[1].split("/")[1] || window.location.href.split('doc/')[1].split('#')[0]
             );
           }
         }
@@ -1482,10 +1514,14 @@ export async function autoSave() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
     const params = {
       content: encryptedData,
@@ -1890,10 +1926,14 @@ export async function handleTimelineSave() {
       const encryptedData = await encryptContent(data, { publicKey: publicKey });
       const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
       let token;
-      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      if(localStorage.getItem('oauthData')) {
+        if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+          token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+        } else {
+          token = JSON.parse(localStorage.getItem('oauthData'))
+        }
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+        token = "";
       }
       const params = {
         content: encryptedData,

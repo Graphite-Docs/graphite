@@ -262,7 +262,9 @@ setGlobal({
   timelineEventTextText: "",
   peopleList: [],
   profileFound: false, 
-  response: {}
+  response: {}, 
+  reAuth: false, 
+  provider: ""
 });
 
 ReactDOM.render(

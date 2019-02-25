@@ -24,7 +24,7 @@ export async function handleAuth(provider) {
   if (provider === "uPort") {
     //Create the requested authentication items. 
     const reqObj = await {
-      requested: ["name", "email", "image"],
+      requested: ["name", "image"],
       verified: ["GraphiteKeyPair"],
       notifications: true
     };
@@ -188,6 +188,8 @@ export function isSignedIn() {
 export async function foundProfile(initialSignIn) {
   //Here we will query the Graphite DB for the profile and fallback to IPFS if Graphite is inaccessible.
   if (JSON.parse(localStorage.getItem("oauthData"))) {
+    return true;
+  } else if(JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
     return true;
   } else {
     if (isSignedIn()) {

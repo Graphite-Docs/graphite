@@ -11,13 +11,6 @@ export async function postToStorageProvider(params) {
   //3: If not valid, grab refresh token and use it to get a new access token and refresh token.
   //4: Post data.
 
-  // const db = new Dexie('graphite-docs');
-  // await db.version(1).stores({documents: 'id'});
-  // await db.documents.put({
-  //   id: params.filePath,
-  //   content: JSON.stringify(params.content)
-  // })
-
   if (params.provider === "dropbox") {
     const dbx = new Dropbox({
       accessToken: params.token,
@@ -201,6 +194,33 @@ export async function postToStorageProvider(params) {
         });
   })
   .catch(error => console.log(error))
+  }
+
+  //Post to dexie first so we have offline capabilities.
+  const db = await new Dexie('graphite-docs');
+  if (params.filePath.includes('documents')) {
+    try {
+      await db.version(1).stores({documents: 'id'});
+      await db.documents.put({
+        id: params.filePath,
+        content: JSON.stringify(params.content)
+      })
+    } catch(err) {
+      console.log(err)
+      console.log("Error: You may be browsing in private mode.")
+    }
+  } else if(params.filePath.includes('vault')) {
+    await db.version(1).stores({documents: 'id'});
+    await db.documents.put({
+      id: params.filePath,
+      content: JSON.stringify(params.content)
+    })
+  } else if(params.filePath.includes('contacts')) {
+    await db.version(1).stores({documents: 'id'});
+    await db.documents.put({
+      id: params.filePath,
+      content: JSON.stringify(params.content)
+    })
   }
 }
 

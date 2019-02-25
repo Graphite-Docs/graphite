@@ -160,7 +160,7 @@ export async function loadSharedVaultCollection(contact, file) {
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
     if(fetchFile) {
-      if (fetchFile.loadLocal || storageProvider === 'google') {
+      if (fetchFile.loadLocal || storageProvider === 'google' || storageProvider === 'ipfs') {
         let decryptedContent;
           if(storageProvider === 'google') {
             decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
@@ -524,11 +524,16 @@ export async function loadSingleVaultTags(file) {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+    
     const object = {
       provider: storageProvider,
       token: token,
@@ -537,12 +542,16 @@ export async function loadSingleVaultTags(file) {
     //Call fetchFromProvider and wait for response.
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
-    if (fetchFile.loadLocal || storageProvider === 'google') {
+    if (fetchFile.loadLocal || storageProvider === 'google' || storageProvider === 'ipfs') {
       let decryptedContent;
         if(storageProvider === 'google') {
           decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
-        } else {
+        } else if(fetchFile.loadLocal) {
           decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+        } else {
+          let content = fetchFile.data.pinataContent;
+          console.log(content);
+          decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
         }
       await setGlobal(
         {
@@ -551,7 +560,7 @@ export async function loadSingleVaultTags(file) {
           id: decryptedContent.id,
           lastModifiedDate: decryptedContent.lastModifiedDate,
           sharedWithSingle: decryptedContent.sharedWith || [],
-          singleFileTags: decryptedContent.singleFileTags,
+          singleFileTags: decryptedContent.singleFileTags || [],
           file: decryptedContent.file,
           size: decryptedContent.size,
           link: decryptedContent.link,
@@ -603,7 +612,7 @@ export async function loadSingleVaultTags(file) {
           id: JSON.parse(fileContents || '{}').id,
           lastModifiedDate: JSON.parse(fileContents || '{}').lastModifiedDate,
           sharedWithSingle: JSON.parse(fileContents || '{}').sharedWith || [],
-          singleFileTags: JSON.parse(fileContents || '{}').singleFileTags,
+          singleFileTags: JSON.parse(fileContents || '{}').singleFileTags || [],
           file: JSON.parse(fileContents || "{}").file,
           size: JSON.parse(fileContents || "{}").size,
           link: JSON.parse(fileContents || "{}").link,
@@ -668,6 +677,7 @@ export function handleVaultKeyPress(e) {
   }
 
 export function addVaultTagManual() {
+  console.log(getGlobal().singleFileTags)
     setGlobal({ singleFileTags: [...getGlobal().singleFileTags, getGlobal().tag]}, () => {
       setGlobal({ tag: "" });
     });

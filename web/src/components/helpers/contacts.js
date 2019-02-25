@@ -26,11 +26,16 @@ export async function loadContactsCollection() {
 
       //The oauth token could be stored in two ways (for dropbox it's always a single access token)
       let token;
-      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      if(localStorage.getItem('oauthData')) {
+        if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+          token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+        } else {
+          token = JSON.parse(localStorage.getItem('oauthData'))
+        }
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+        token = "";
       }
+      
       const object = {
         provider: JSON.parse(localStorage.getItem('storageProvider')),
         token: token,
@@ -47,36 +52,42 @@ export async function loadContactsCollection() {
         }
       } else {
         //Now we need to determine if the response was from indexedDB or an API call:
-      if(fetchFile) {
-        if(fetchFile.loadLocal) {
-          console.log("Loading local instance first");
-          const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
-          setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
-        } else {
-          //check if there is no file to load and set state appropriately.
-          if(typeof fetchFile === 'string') {
-            console.log("Nothing stored locally or in storage provider.")
-            if(fetchFile.includes('error')) {
-              console.log("Setting state appropriately")
-              setGlobal({contacts: [], filteredContacts: [], loading: false})
+        if(fetchFile) {
+          if(fetchFile.loadLocal || JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
+            if(fetchFile.loadLocal) {
+              console.log("Loading local instance first");
+              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+              setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
+            } else {
+              let content = fetchFile.data.pinataContent;
+              const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
+              setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
             }
           } else {
-            //No indexedDB data found, so we load and read from the API call.
-            //Load up a new file reader and convert response to JSON.
-            const reader = await new FileReader();
-            var blob = fetchFile.fileBlob;
-            reader.onloadend = async (evt) => {
-              console.log("read success");
-              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
-              setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
-            };
-            await console.log(reader.readAsText(blob));
+            //check if there is no file to load and set state appropriately.
+            if(typeof fetchFile === 'string') {
+              console.log("Nothing stored locally or in storage provider.")
+              if(fetchFile.includes('error')) {
+                console.log("Setting state appropriately")
+                setGlobal({contacts: [], filteredContacts: [], loading: false})
+              }
+            } else {
+              //No indexedDB data found, so we load and read from the API call.
+              //Load up a new file reader and convert response to JSON.
+              const reader = await new FileReader();
+              var blob = fetchFile.fileBlob;
+              reader.onloadend = async (evt) => {
+                console.log("read success");
+                const decryptedContent = await JSON.parse(decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey }))
+                setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
+              };
+              await console.log(reader.readAsText(blob));
+            }
           }
-        }
       } else {
         setGlobal({ contacts: [], filteredContacts: [], loading: false }) //temporarily set loading to false here.
       }
-      }
+    }
   } else {
     getFile("contact.json", {decrypt: true})
     .then((fileContents) => {
@@ -159,11 +170,16 @@ export async function saveNewContactsFile() {
     const encryptedData = await encryptContent(data, { publicKey: publicKey });
     const storageProvider = JSON.parse(localStorage.getItem("storageProvider"));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+
     const params = {
       content: encryptedData,
       filePath: "/contacts/contact.json",

@@ -83,11 +83,16 @@ export async function saveNewDocFile(props) {
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+
     const params = {
       content: encryptedData,
       filePath: '/documents/index.json',

@@ -422,7 +422,7 @@ export async function loadSingleRTC() {
     let fetchFile = await fetchFromProvider(object);
     console.log(fetchFile)
     //Now we need to determine if the response was from indexedDB or an API call:
-    if (fetchFile.loadLocal || storageProvider === 'google') {
+    if (fetchFile.loadLocal || storageProvider === 'google' || storageProvider === 'ipfs') {
       let decryptedContent;
       if(storageProvider === 'google') {
         decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))

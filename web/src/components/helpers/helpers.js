@@ -44,10 +44,14 @@ export async function loadDocs() {
 
       //The oauth token could be stored in two ways (for dropbox it's always a single access token)
       let token;
-      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      if(localStorage.getItem('oauthData')) {
+        if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+          token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+        } else {
+          token = JSON.parse(localStorage.getItem('oauthData'))
+        }
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+        token = "";
       }
       const object = {
         provider: JSON.parse(localStorage.getItem('storageProvider')),
@@ -59,10 +63,24 @@ export async function loadDocs() {
       //If the storage provider is Google, we already have our data
         //Now we need to determine if the response was from indexedDB or an API call:
       if(fetchFile) {
-        if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
-          console.log(fetchFile);
-          const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
-          setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
+        if(JSON.parse(localStorage.getItem('storageProvider')) === 'google' || JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
+          if(JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
+            if(fetchFile.loadLocal) {
+              let content = fetchFile.data.content;
+              console.log(JSON.parse(content));
+              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(content), { privateKey: thisKey }))
+              setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
+            } else {
+              let content = fetchFile.data.pinataContent;
+              console.log(content);
+              const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
+              setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
+            }
+          } else {
+            console.log(fetchFile);
+            const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
+            setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
+          }
         } else {
           if(fetchFile.loadLocal) {
             console.log("Loading local instance first");
@@ -163,11 +181,16 @@ export async function loadVault() {
 
       //The oauth token could be stored in two ways (for dropbox it's always a single access token)
       let token;
-      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      if(localStorage.getItem('oauthData')) {
+        if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+          token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+        } else {
+          token = JSON.parse(localStorage.getItem('oauthData'))
+        }
       } else {
-        token = JSON.parse(localStorage.getItem('oauthData'))
+        token = "";
       }
+    
       const object = {
         provider: JSON.parse(localStorage.getItem('storageProvider')),
         token: token,
@@ -181,10 +204,17 @@ export async function loadVault() {
             const decryptedContent = await JSON.parse(decryptContent(fetchFile, { privateKey: thisKey }))
             setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
           } else {
-            if(fetchFile.loadLocal) {
-              console.log("Loading local instance first");
-              const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
-              setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
+            if(fetchFile.loadLocal || JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
+              if(JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
+                let content = fetchFile.data.pinataContent;
+                console.log(content);
+                const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
+                setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
+              } else {
+                console.log("Loading local instance first");
+                const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
+                setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
+              }
             } else {
               //check if there is no file to load and set state appropriately.
               if(typeof fetchFile === 'string') {

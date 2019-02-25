@@ -1,6 +1,9 @@
 import Dropbox from "dropbox";
 import Dexie from "dexie";
 import axios from 'axios';
+import { setGlobal } from 'reactn';
+import { makeProfile } from '../../onboarding/profiles/profiles';
+import { encryptContent } from 'blockstack';
 const keys = require('../../helpers/keys');
 const fetch = require("isomorphic-fetch"); // or another library of choice.
 
@@ -9,9 +12,9 @@ export async function fetchFromProvider(params) {
   let localData;
   let returnedObject;
   //First fetch data from indexedDB storage for speed. We should only make an API call if indexedDB fails.
-  const db = new Dexie("graphite-docs");
+  const db = await new Dexie("graphite-docs");
   await db.version(1).stores({
-    documents: "id", contacts: "id"
+    documents: "id", contacts: "id", vault: "id"
   });
 
   if(!online) {
@@ -122,56 +125,109 @@ export async function fetchFromProvider(params) {
             //First we need to use the refreshToken to get a new access token.
       //If the refresh token fails, we need to re-authenticate the user. 
       const refreshToken = params.token;
-      let fileData;
       let token;
-      let fileId;
+      // let fileId;
       return await axios.post('https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/box-refresh-access-token', refreshToken)
         .then(async (res) => {
           console.log(res)
-          token = res.data.access_token;
-          var settings = {
-            "async": true,
-            "crossDomain": true,
-            "url": `https://api.box.com/2.0/search?query=%22${params.filePath}%22`,
-            "method": "GET",
-            "headers": {
-              "Authorization": `Bearer ${token}`,
-              "Cache-Control": "no-cache",
-              "Postman-Token": "66572b11-51a7-abc9-ae87-ed3aafe71aff"
-            }
-          }
-          
-          window.$.ajax(settings).done(function (response) {
-            console.log(response);
-            
-          });
+          if(res.data.error === 'invalid_grant') {
+            //This is where we should kick off the re-authentication flow.
+            //Reauth should only ever happen on first login to the app, not in the middle of working.
+            await setGlobal({ reAuth: true, provider: "box" })
+          } else {
+            token = res.data.access_token;
+            let refreshToken = res.data.refresh_token;
 
-          // if(fileId) {
-          //   var settings2 = {
-          //     "async": true,
-          //     "crossDomain": true,
-          //     "url": `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-          //     "method": "GET",
-          //     "headers": {
-          //       "Authorization": `Bearer ${token}`,
-          //       "Cache-Control": "no-cache",
-          //       "Postman-Token": "c881eec8-7f68-c2e4-80ae-c62a5144ca39"
-          //     }
-          //   }
+            //Because Box's refresh tokens are one-time use, need to update user's profile with new refresh token: 
+            let publicKey = await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
+            let encryptedRefreshToken = await encryptContent(JSON.stringify(refreshToken), {
+              publicKey: publicKey
+            });
+            let did = JSON.parse(localStorage.getItem("uPortUser")).payload.did;
+            let didProfile = {
+              name: await JSON.parse(localStorage.getItem("uPortUser")).payload.name,
+              did: await JSON.parse(localStorage.getItem("uPortUser")).payload.did
+            }
+            let storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+
+            const profile = await {
+              did: did,
+              profile: didProfile,
+              storageProvider: storageProvider,
+              refreshToken: encryptedRefreshToken,
+              profileLastUpdated: Date.now(),
+              publicKey: publicKey,
+              create: false,
+              update: true 
+            };
+            await makeProfile(profile);
+
+            //Now we can move on and use the access token.
+
+            var settings = {
+              "async": true,
+              "crossDomain": true,
+              "url": `https://api.box.com/2.0/search?query=%22${params.filePath}%22`,
+              "method": "GET",
+              "headers": {
+                "Authorization": `Bearer ${token}`,
+                "Cache-Control": "no-cache",
+                "Postman-Token": "66572b11-51a7-abc9-ae87-ed3aafe71aff"
+              }
+            }
             
-          //   return await window.$.ajax(settings2).done(async function (response2) {
-          //     fileData = await response2;
-          //     return fileData;
-          //   });
-          // } else {
-          //   console.log("No file found")
-          // }
+            window.$.ajax(settings).done(function (response) {
+              console.log(response);
+              
+            });
+
+            // if(fileId) {
+            //   var settings2 = {
+            //     "async": true,
+            //     "crossDomain": true,
+            //     "url": `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+            //     "method": "GET",
+            //     "headers": {
+            //       "Authorization": `Bearer ${token}`,
+            //       "Cache-Control": "no-cache",
+            //       "Postman-Token": "c881eec8-7f68-c2e4-80ae-c62a5144ca39"
+            //     }
+            //   }
+              
+            //   return await window.$.ajax(settings2).done(async function (response2) {
+            //     fileData = await response2;
+            //     return fileData;
+            //   });
+            // } else {
+            //   console.log("No file found")
+            // }
+          }
         })
-        .catch(error => {
-          console.log(`${error}: Refresh token no longer valid. Let's re-authenticate`)
-          //This is where we should give off the re-authentication flow.
+        .catch(async  error => {
+          console.log(error)
         });
     } else if(params.provider === 'ipfs') {
+      if (params.filePath.includes("documents")) {
+        localData = await db.documents.get(params.filePath);
+        return returnedObject = await {
+          data: localData,
+          loadLocal: true
+        }
+      } else if(params.filePath.includes("contacts")) {
+        localData = await db.documents.get(params.filePath);
+        if(localData) {
+          return returnedObject = await {
+            data: localData,
+            loadLocal: true
+          }
+        } else {
+          returnedObject = {};
+        }
+      } else {
+        returnedObject = {};
+      }
+
+
       const url = `https://api.pinata.cloud/data/userPinList/hashContains/*/pinStart/*/pinEnd/*/unpinStart/*/unpinEnd/*/pinSizeMin/*/pinSizeMax/*/pinFilter/*/pageLimit/10/pageOffset/0?metadata[keyvalues][ID]={"value":${JSON.stringify(params.filePath)},"op":"eq"}`
       return  axios
           .get(url, {
@@ -181,15 +237,18 @@ export async function fetchFromProvider(params) {
               }
           })
           .then(async (response) => {
-            console.log(response.data.rows[0])
-            return axios.get(`https://gateway.pinata.cloud/ipfs/${response.data.rows[0].ipfs_pin_hash}`)
-              .then((res) => {
-                console.log("returning response...");
-                return res;
-              })
-              .catch(error => {
-                console.log(error);
-              })
+            if(response.data.rows.length > 0) {
+              console.log(response)
+              console.log(response.data.rows[0])
+              return axios.get(`https://gateway.pinata.cloud/ipfs/${response.data.rows[0].ipfs_pin_hash}`)
+                .then((res) => {
+                  console.log("returning response...");
+                  return res;
+                })
+                .catch(error => {
+                  console.log(error);
+                })
+            }
           })
           .catch(function (error) {
             console.log(error)

@@ -74,12 +74,20 @@ export default class Onboarding extends Component {
               } else if (option.name === "Box") {
                 key = "";
               }
+              let grayedOut;
+              if(option.comingSoon === true) {
+                grayedOut = {
+                  background: "#eee", 
+                  color: "#000", 
+                  cursor: "not-allowed"
+                }
+              }
               return (
-                <Card key={option.name}>
+                <Card style={grayedOut} key={option.name}>
                   <Button
-                    href={option.link + key}
+                    href={option.comingSoon ? "#" : option.name === 'IPFS' ? `${window.location.origin}/?code=ipfs?state=12345` : option.link + key}
                     labelPosition="left"
-                    style={{ margin: "10px" }}
+                    style={option.comingSoon ? {margin: "10px", cursor: "not-allowed"} : { margin: "10px" }}
                   >
                     <Image
                       style={{
@@ -100,6 +108,7 @@ export default class Onboarding extends Component {
                 Not sure which to choose? No problem! Click Skip to continue,
                 and we'll use IPFS until you tell us to change it.
               </p>
+              <p>Interested in a custom solution? Graphite Pro might be right for you. <a href='mailto: contact@graphitedocs.com'>Contact us</a> to learn more.</p>
               <Button style={{ borderRadius: "0" }}>Skip</Button>
             </div>
           </Modal.Content>

@@ -311,11 +311,16 @@ export async function saveNewFile() {
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(storageProvider !== 'ipfs') {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+
     const params = {
       content: encryptedData,
       filePath: '/documents/index.json',
@@ -434,15 +439,22 @@ export function handleCheckbox(event) {
 }
 
 export function sharedInfo(props, doc) {
-  const user = props;
+  console.log(props)
+  const user = props.contact;
   const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-  setGlobal({ receiverID: props, rtc: true, loading: true })
-  getFile('key.json', options)
+  setGlobal({ receiverID: props.contact, rtc: true, loading: true })
+  if(props.contact.includes('did:')) {
+    //This is a uPort contact. Need to grab the pubkey
+    setGlobal({ pubKey: props.pubKey, receiverID: props.contact.name, rtc: true }, () => {
+      loadSharedCollection(doc);
+    })
+  } else {
+    getFile('key.json', options)
     .then((file) => {
       setGlobal({ pubKey: JSON.parse(file)})
     })
       .then(() => {
-        this.loadSharedCollection(doc);
+        loadSharedCollection(doc);
       })
       .catch(error => {
         console.log("No key: " + error);
@@ -450,6 +462,7 @@ export function sharedInfo(props, doc) {
           setTimeout(() => setGlobal({displayMessage: false}), 3000);
         });
       });
+  }
 }
 
 export function sharedInfoStatic(props) {
@@ -461,7 +474,7 @@ export function sharedInfoStatic(props) {
       setGlobal({ pubKey: JSON.parse(file)})
     })
       .then(() => {
-        this.loadSharedCollection();
+        loadSharedCollection();
       })
       .catch(error => {
         console.log("No key: " + error);
@@ -470,14 +483,177 @@ export function sharedInfoStatic(props) {
       });
 }
 
-export function loadSharedCollection (doc) {
-  // const user = getGlobal().receiverID;
-  // const file = "shared.json";
-  // getFile(user + file, {decrypt: true})
+export async function loadSharedCollection (doc) {
+  const authProvider = JSON.parse(localStorage.getItem('authProvider'));
   const pubKey = getGlobal().pubKey;
   const fileName = 'shareddocs.json'
   const file = 'mine/' + pubKey + '/' + fileName;
-  getFile(file, {decrypt: true})
+  if(authProvider === 'uPort') {
+    const thisKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.private;
+    const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
+    let token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
+    } else {
+      token = "";
+    }
+
+    const object = {
+      provider: storageProvider,
+      token: token,
+      filePath: `/${file}`
+    };
+    //Call fetchFromProvider and wait for response.
+    let fetchFile = await fetchFromProvider(object);
+    console.log(fetchFile);
+
+    if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
+      if(fetchFile) {
+        if (fetchFile.loadLocal) {
+          const decryptedContent = await JSON.parse(
+            decryptContent(JSON.parse(fetchFile.data.content), {
+              privateKey: thisKey
+            })
+          );
+          console.log(decryptedContent)
+          setGlobal(
+            {
+              sharedCollection: decryptedContent
+            }, async () => {
+               //Loading single doc here.
+  
+             const params = {
+              provider: storageProvider,
+              token: token,
+              filePath: `/documents/${doc.id}.json`
+            };
+            
+            let fetchSingle = await fetchFromProvider(params);
+            const decryptedSingle = await JSON.parse(
+             decryptContent(JSON.parse(fetchSingle.data.content), {
+               privateKey: thisKey
+             })
+           );
+           
+           setGlobal(
+             {
+               content: Value.fromJSON(decryptedSingle.content),
+               title: decryptedSingle.title,
+               tags: decryptedSingle.tags || [],
+               singleDocTags: decryptedSingle.singleDocTags || [],
+               idToLoad: decryptedSingle.id,
+               singleDocIsPublic: decryptedSingle.singleDocIsPublic, //adding this...
+               docLoaded: true,
+               readOnly: decryptedSingle.readOnly, //NOTE: adding this, to setGlobal of readOnly from getFile...
+               rtc: decryptedSingle.rtc || false,
+               sharedWith: decryptedSingle.sharedWith || [],
+               teamDoc: decryptedSingle.teamDoc,
+               compressed: decryptedSingle.compressed || false,
+               spacing: decryptedSingle.spacing,
+               lastUpdate: decryptedSingle.lastUpdate,
+               jsonContent: true
+             })
+            })
+          } else if(storageProvider === 'ipfs') {
+            let content = fetchFile.data.pinataContent;
+                console.log(content);
+                const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
+                setGlobal({ sharedCollection: decryptedContent }, async () => {
+                   //Loading single doc here.
+  
+                  const params = {
+                    provider: storageProvider,
+                    token: token,
+                    filePath: `/documents/${doc.id}.json`
+                  };
+                  
+                  let fetchSingle = await fetchFromProvider(params);
+                  const decryptedSingle = await JSON.parse(
+                  decryptContent(JSON.parse(fetchSingle.data.pinataContent), {
+                    privateKey: thisKey
+                  })
+                );
+                
+                setGlobal(
+                  {
+                    content: Value.fromJSON(decryptedSingle.content),
+                    title: decryptedSingle.title,
+                    tags: decryptedSingle.tags || [],
+                    singleDocTags: decryptedSingle.singleDocTags || [],
+                    idToLoad: decryptedSingle.id,
+                    singleDocIsPublic: decryptedSingle.singleDocIsPublic, //adding this...
+                    docLoaded: true,
+                    readOnly: decryptedSingle.readOnly, //NOTE: adding this, to setGlobal of readOnly from getFile...
+                    rtc: decryptedSingle.rtc || false,
+                    sharedWith: decryptedSingle.sharedWith || [],
+                    teamDoc: decryptedSingle.teamDoc,
+                    compressed: decryptedSingle.compressed || false,
+                    spacing: decryptedSingle.spacing,
+                    lastUpdate: decryptedSingle.lastUpdate,
+                    jsonContent: true
+                  })
+                })
+          } else {
+            //No indexedDB data found, so we load and read from the API call.
+            //Load up a new file reader and convert response to JSON.
+            const reader = await new FileReader();
+            var blob = fetchFile.fileBlob;
+            reader.onloadend = async evt => {
+              console.log("read success");
+              const decryptedContent = await JSON.parse(
+                decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+              );
+              setGlobal(
+                {
+                  sharedCollection: decryptedContent
+                }, async () => {
+                  await console.log(reader.readAsText(blob));
+                  //Loading single doc here.
+  
+                  const params = {
+                  provider: storageProvider,
+                  token: token,
+                  filePath: `/documents/${doc.id}.json`
+                };
+                
+                let fetchSingle = await fetchFromProvider(params);
+                var blob2 = fetchSingle.fileBlob;
+                const decryptedSingle = await JSON.parse(
+                  decryptContent(JSON.parse(evt.target.result), { privateKey: thisKey })
+                );
+              
+              setGlobal(
+                {
+                  content: Value.fromJSON(decryptedSingle.content),
+                  title: decryptedSingle.title,
+                  tags: decryptedSingle.tags || [],
+                  singleDocTags: decryptedSingle.singleDocTags || [],
+                  idToLoad: decryptedSingle.id,
+                  singleDocIsPublic: decryptedSingle.singleDocIsPublic, //adding this...
+                  docLoaded: true,
+                  readOnly: decryptedSingle.readOnly, //NOTE: adding this, to setGlobal of readOnly from getFile...
+                  rtc: decryptedSingle.rtc || false,
+                  sharedWith: decryptedSingle.sharedWith || [],
+                  teamDoc: decryptedSingle.teamDoc,
+                  compressed: decryptedSingle.compressed || false,
+                  spacing: decryptedSingle.spacing,
+                  lastUpdate: decryptedSingle.lastUpdate,
+                  jsonContent: true
+                })
+                await console.log(reader.readAsText(blob2));
+              })
+            }
+          }
+      }
+    } else {
+      setGlobal({ sharedCollection: [] })
+    }
+  } else {
+    getFile(file, {decrypt: true})
     .then((fileContents) => {
       if(fileContents) {
         setGlobal({ sharedCollection: JSON.parse(fileContents || '{}') })
@@ -486,11 +662,12 @@ export function loadSharedCollection (doc) {
       }
     })
     .then(() => {
-      this.loadSingle(doc);
+      loadSingle(doc);
     })
     .catch((error) => {
       console.log(error)
     });
+  }
 }
 
 export function loadSingle(doc) {
@@ -562,7 +739,7 @@ export function loadSingle(doc) {
      })
       .then(() => {
         setGlobal({ sharedWithSingle: [...getGlobal().sharedWithSingle, getGlobal().receiverID] }, () => {
-          this.getCollection(doc)
+          getCollection(doc)
         });
       })
       .catch(error => {
@@ -590,7 +767,7 @@ export function getCollection(doc) {
     setGlobal({index: value.findIndex(findObjectIndex) });
   })
     .then(() => {
-      this.share(doc);
+      share(doc);
     })
     .catch(error => {
       console.log(error);
@@ -615,7 +792,7 @@ export function share(doc) {
   const updatedDocs = update(getGlobal().value, {$splice: [[index, 1, object]]});  // array.splice(start, deleteCount, item1)
   setGlobal({value: updatedDocs, singleDoc: object, sharedCollection: [...getGlobal().sharedCollection, object]});
 
-  setTimeout(() => this.saveSharedFile(doc), 300);
+  setTimeout(() => saveSharedFile(doc), 300);
 }
 
 export function saveSharedFile(doc) {
@@ -646,7 +823,7 @@ export function saveSharedFile(doc) {
     .then(() => {
       // this.handleAutoAdd();
       // this.loadAvatars();
-      this.saveSingleFile(doc);
+      saveSingleFile(doc);
     })
     .catch(e => {
       console.log(e);
@@ -659,7 +836,7 @@ export function saveSingleFile(doc) {
   putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved!");
-      this.saveCollection();
+      saveCollection();
     })
     .catch(e => {
       console.log("e");
@@ -714,11 +891,16 @@ export async function loadSingleTags(doc) {
     //Create the params to send to the fetchFromProvider function.
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+
     const object = {
       provider: storageProvider,
       token: token,
@@ -756,11 +938,13 @@ export async function loadSingleTags(doc) {
             privateKey: thisKey
           })
         );
+        console.log(decryptedContent)
         setGlobal(
           {
             content: Value.fromJSON(decryptedContent.content),
             title: decryptedContent.title,
             tags: decryptedContent.tags,
+            singleDocTags: decryptedContent.singleDocTags,
             idToLoad: decryptedContent.id,
             singleDocIsPublic: decryptedContent.singleDocIsPublic, //adding this...
             docLoaded: true,
@@ -1039,34 +1223,35 @@ export async function getCollectionTags(doc) {
 }
 
 export function saveNewTags(doc) {
-  setGlobal({ loading: true });
-  let content = getGlobal().content;
-  const object = {};
-  object.id = doc.id;
-  object.title = getGlobal().title;
-  object.updated = getMonthDayYear();
-  object.singleDocTags = getGlobal().singleDocTags;
-  object.content = content.toJSON();
-  object.jsonContent = true;
-  object.sharedWith = getGlobal().sharedWith;
-  object.lastUpdate = Date.now();
-  object.compressed = false;
-  const objectTwo = {};
-  objectTwo.title = getGlobal().title;
-  objectTwo.id = doc.id;
-  objectTwo.updated = getMonthDayYear();
-  objectTwo.sharedWith = getGlobal().sharedWith;
-  objectTwo.singleDocTags = getGlobal().singleDocTags;
-  objectTwo.lastUpdate = Date.now;
-  const index = getGlobal().index;
-  const updatedDoc = update(getGlobal().value, {$splice: [[index, 1, objectTwo]]});
-  setGlobal({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, loading: false }, () => {
-    this.saveFullCollectionTags(doc);
+  setGlobal({ loading: true }, () => {
+    let content = getGlobal().content;
+    const object = {};
+    object.id = doc.id;
+    object.title = getGlobal().title;
+    object.updated = getMonthDayYear();
+    object.singleDocTags = getGlobal().singleDocTags;
+    object.content = content.toJSON();
+    object.jsonContent = true;
+    object.sharedWith = getGlobal().sharedWith;
+    object.lastUpdate = Date.now();
+    object.compressed = false;
+    const objectTwo = {};
+    objectTwo.title = getGlobal().title;
+    objectTwo.id = doc.id;
+    objectTwo.updated = getMonthDayYear();
+    objectTwo.sharedWith = getGlobal().sharedWith;
+    objectTwo.singleDocTags = getGlobal().singleDocTags;
+    objectTwo.lastUpdate = Date.now;
+    const index = getGlobal().index;
+    const updatedDoc = update(getGlobal().value, {$splice: [[index, 1, objectTwo]]});
+    setGlobal({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, loading: false }, () => {
+      saveFullCollectionTags(doc);
+    });
   });
-
 }
 
 export async function saveFullCollectionTags(doc) {
+  setGlobal({ loading: true });
   let authProvider = await JSON.parse(localStorage.getItem('authProvider'));
   if(authProvider === 'uPort') {
     const publicKey =  await JSON.parse(localStorage.getItem('graphite_keys')).GraphiteKeyPair.public;
@@ -1074,11 +1259,16 @@ export async function saveFullCollectionTags(doc) {
     const encryptedData = await encryptContent(data, {publicKey: publicKey})
     const storageProvider = JSON.parse(localStorage.getItem('storageProvider'));
     let token;
-    if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
-      token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+    if(localStorage.getItem('oauthData')) {
+      if(typeof JSON.parse(localStorage.getItem('oauthData')) === 'object') {
+        token = JSON.parse(localStorage.getItem('oauthData')).data.access_token;
+      } else {
+        token = JSON.parse(localStorage.getItem('oauthData'))
+      }
     } else {
-      token = JSON.parse(localStorage.getItem('oauthData'))
+      token = "";
     }
+
     const params = {
       content: encryptedData,
       filePath: '/documents/index.json',
@@ -1101,11 +1291,12 @@ export async function saveFullCollectionTags(doc) {
     }
     let postSingle = await postToStorageProvider(singleParams)
     await console.log(postSingle);
+    setGlobal({ loading: false });
     } else {
     putFile("documentscollection.json", JSON.stringify(getGlobal().value), {encrypt: true})
     .then(() => {
       console.log("Saved");
-      this.saveSingleDocTags(doc);
+      saveSingleDocTags(doc);
     })
     .catch(e => {
       console.log("e");
@@ -1129,24 +1320,24 @@ export function saveSingleDocTags(doc) {
 }
 
 export function deleteTag(tag, type) {
-  // let tags;
-  // if(doc.singleDocTags) {
-  //   tags = doc.singleDocTags;
-  // } else if(doc.tags) {
-  //   tags = doc.tags;
-  // }
-  // setGlobal({ singleDocTags: tags}, () => {
-  //   let singleDocTags = getGlobal().singleDocTags;
-  //   const thisTag = singleDocTags.find((a) => { return a === tag});
-  //   let tagIndex = thisTag;
-  //   function findObjectIndex(a) {
-  //       return a === tagIndex; //this is comparing numbers
-  //   }
-  //   setGlobal({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
-  //     tags.splice(getGlobal().tagIndex, 1);
-  //     setGlobal({singleDocTags: tags});
-  //   });
-  // })
+  let tags;
+  if(getGlobal().singleDocTags) {
+    tags = getGlobal().singleDocTags;
+  } else if(getGlobal().tags) {
+    tags = getGlobal().tags;
+  }
+  setGlobal({ singleDocTags: tags}, () => {
+    let singleDocTags = getGlobal().singleDocTags;
+    const thisTag = singleDocTags.find((a) => { return a === tag});
+    let tagIndex = thisTag;
+    function findObjectIndex(a) {
+        return a === tagIndex; //this is comparing numbers
+    }
+    setGlobal({ tagIndex: tags.findIndex(findObjectIndex) }, () => {
+      tags.splice(getGlobal().tagIndex, 1);
+      setGlobal({singleDocTags: tags});
+    });
+  })
 }
 
 export function collabFilter(props) {

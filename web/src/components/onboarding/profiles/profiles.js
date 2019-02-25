@@ -22,9 +22,16 @@ export async function makeProfile(profile) {
           privateKey = loadUserData().appPrivateKey;
         }
         console.log(res.data)
-        const decryptedToken = decryptContent(res.data[0].refreshToken, { privateKey: privateKey })
-        localStorage.setItem('storageProvider', JSON.stringify(res.data[0].storageProvider));
-        localStorage.setItem('oauthData', decryptedToken);
+        let decryptedToken;
+        if(res.data[0].storageProvider === 'ipfs') {
+          localStorage.setItem('storageProvider', JSON.stringify(res.data[0].storageProvider));
+          localStorage.setItem('profileFound', JSON.stringify(true))
+        } else {
+          decryptedToken = decryptContent(res.data[0].refreshToken, { privateKey: privateKey })
+          localStorage.setItem('storageProvider', JSON.stringify(res.data[0].storageProvider));
+          localStorage.setItem('oauthData', decryptedToken);
+        }
+        
         // return true;
       } else {
         // Start the IPFS process here.

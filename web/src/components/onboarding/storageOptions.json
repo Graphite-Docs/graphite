@@ -9,19 +9,16 @@
     "icon": "http://radicalhub.com/wp-content/uploads/2015/06/dropbox.png",
     "link": "https://www.dropbox.com/oauth2/authorize?client_id=1cvmby684l61gvt&redirect_uri=http%3A%2F%2Flocalhost%3A3000&state=dropbox&response_type=code"
   },
-  {
-    "name": "Box",
-    "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Box%2C_Inc._logo.svg/1200px-Box%2C_Inc._logo.svg.png",
-    "link": "https://account.box.com/api/oauth2/authorize?response_type=code&client_id=08qnqggfcjhyka8oy5io4p3jb891ag17&redirect_uri=http%3A%2F%2Flocalhost%3A3000&state=box-1"
-  },
+
   {
     "name": "IPFS",
     "icon": "https://upload.wikimedia.org/wikipedia/commons/1/18/Ipfs-logo-1024-ice-text.png",
     "link": ""
   },
   {
-    "name": "Custom",
-    "icon": "",
-    "link": ""
+    "name": "NextCloud (Soon)", 
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/60/Nextcloud_Logo.svg/134px-Nextcloud_Logo.svg.png", 
+    "link": "", 
+    "comingSoon": true
   }
 ]
