@@ -4,7 +4,7 @@ const autoprefixer = require('autoprefixer');
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+// const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
@@ -268,23 +268,23 @@ module.exports = {
     // Otherwise React will be compiled in the very slow development mode.
     new webpack.DefinePlugin(env.stringified),
     // // Minify the code.
-    new UglifyJsPlugin({
-      uglifyOptions: {
-        mangle: {
-          reserved: [
-            'Buffer',
-            'BigInteger',
-            'Point',
-            'ECPubKey',
-            'ECKey',
-            'sha512_asm',
-            'asm',
-            'ECPair',
-            'HDNode',
-          ],
-        },
-      },
-    }),
+    // new UglifyJsPlugin({
+    //   uglifyOptions: {
+    //     mangle: {
+    //       reserved: [
+    //         'Buffer',
+    //         'BigInteger',
+    //         'Point',
+    //         'ECPubKey',
+    //         'ECKey',
+    //         'sha512_asm',
+    //         'asm',
+    //         'ECPair',
+    //         'HDNode',
+    //       ],
+    //     },
+    //   },
+    // }),
     // Note: this won't work without ExtractTextPlugin.extract(..) in `loaders`.
     new ExtractTextPlugin({
       filename: cssFilename,
