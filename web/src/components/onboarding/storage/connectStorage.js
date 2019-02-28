@@ -54,10 +54,22 @@ export async function handleStorage() {
     } else {
       if(window.location.href.includes('google')) {
         code = await window.location.href.split("code=")[1].split("&")[0];
-        link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGoogleAuthDev";
+        if(window.location.href.includes('localhost') || window.location.href.includes('127')) {
+          link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGoogleAuthDev"
+        } else if(window.location.href.includes('serene')) {
+          link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGoogleAuthStage";
+        } else {
+          link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/getGoogleAuthProd";
+        }        
       } else if(window.location.href.includes('dropbox')) {
         code = await window.location.href.split("code=")[1].split("#")[0];
-        link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/dropboxAuthDev";
+        if(window.location.href.includes('localhost') || window.location.href.includes('127')) {
+          link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/dropboxAuthDev";
+        } else if(window.location.href.includes('serene')) {
+          link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/dropboxAuthStage"
+        } else {
+          link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/dropboxAuthProd"
+        }
       } else if(window.location.href.includes('box-1')) {
         code = await window.location.href.split("code=")[1].split("#")[0];
         link = "https://wt-3fc6875d06541ef8d0e9ab2dfcf85d23-0.sandbox.auth0-extend.com/boxAuthDev"

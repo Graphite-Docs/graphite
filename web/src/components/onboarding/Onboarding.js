@@ -2,6 +2,8 @@ import React, { Component } from "react";
 import { Button, Icon, Modal, Image, Card } from "semantic-ui-react";
 import Loading from "../shared/Loading";
 import storageOptions from "./storageOptions.json";
+import storageOptionsStaging from './storageOptionsStaging.json';
+import storageOptionsProd from './storageOptionsProd.json';
 import { handleStorage } from './storage/connectStorage';
 
 const keys = require("../helpers/keys.js");
@@ -23,6 +25,15 @@ export default class Onboarding extends Component {
   handleClose = () => this.setState({ modalOpen: false });
 
   render() {
+    let providers;
+    if(window.location.href.includes('localhost') || window.location.href.includes('127')) {
+      providers = storageOptions;
+    } else if(window.location.href.includes('serene')) {
+      providers = storageOptionsStaging;
+    } else {
+      providers = storageOptionsProd;
+    }
+
     if (window.location.href.includes("code")) {
       return <Loading />;
     } else {
@@ -65,7 +76,7 @@ export default class Onboarding extends Component {
                 </Modal.Content>
               </Modal>
             </h3>
-            {storageOptions.map(option => {
+            {providers.map(option => {
               let key;
               if (option.name === "Google Drive") {
                 key = keys.GOOGLE_CLIENT_ID;
