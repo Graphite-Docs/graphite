@@ -113,7 +113,7 @@ export async function saveNewVaultFile() {
 
       let postVaultIndex = await postToStorageProvider(params2);
       await console.log(postVaultIndex);
-      await setTimeout(loadVault, 1000);
+      await setTimeout(loadVault, 1500);
     } else {
       putFile(file, JSON.stringify(getGlobal().singleFile), {encrypt:true})
       .then(() => {

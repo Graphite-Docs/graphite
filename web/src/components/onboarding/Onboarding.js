@@ -7,6 +7,14 @@ import storageOptionsProd from './storageOptionsProd.json';
 import { handleStorage } from './storage/connectStorage';
 
 const keys = require("../helpers/keys.js");
+let providers;
+if(window.location.href.includes('localhost') || window.location.href.includes('127')) {
+  providers = storageOptions;
+} else if(window.location.href.includes('serene')) {
+  providers = storageOptionsStaging;
+} else {
+  providers = storageOptionsProd;
+}
 
 export default class Onboarding extends Component {
   constructor(props) {
@@ -25,14 +33,6 @@ export default class Onboarding extends Component {
   handleClose = () => this.setState({ modalOpen: false });
 
   render() {
-    let providers;
-    if(window.location.href.includes('localhost') || window.location.href.includes('127')) {
-      providers = storageOptions;
-    } else if(window.location.href.includes('serene')) {
-      providers = storageOptionsStaging;
-    } else {
-      providers = storageOptionsProd;
-    }
 
     if (window.location.href.includes("code")) {
       return <Loading />;

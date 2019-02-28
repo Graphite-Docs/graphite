@@ -208,10 +208,11 @@ export default class Menu extends Component {
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Document</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
-                                  <h3>Search for a contact</h3>
+                                  {/*<h3>Search for a contact</h3>
+                                  
                                   <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cont.handleNewContact} />
                                   <Item.Group divided>
-                                  {results.map(result => {
+                                  {/*results.map(result => {
                                     let profile = result.profile;
                                     let image = profile.image;
                                     let imageLink;
@@ -257,10 +258,10 @@ export default class Menu extends Component {
                                           )
                                         }
                                       )
-                                  }
+                                      
                                   </Item.Group>
                                   <hr />
-                                  <Item.Group divided>
+                                  <Item.Group divided>*/}
                                   <h4>Your Contacts</h4>
                                   {contacts.slice(0).reverse().map(contact => {
                                     return (

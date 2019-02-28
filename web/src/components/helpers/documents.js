@@ -1230,7 +1230,7 @@ export function saveNewTags(doc) {
     object.title = getGlobal().title;
     object.updated = getMonthDayYear();
     object.singleDocTags = getGlobal().singleDocTags;
-    object.content = content.toJSON();
+    object.content = getGlobal().content;
     object.jsonContent = true;
     object.sharedWith = getGlobal().sharedWith;
     object.lastUpdate = Date.now();
