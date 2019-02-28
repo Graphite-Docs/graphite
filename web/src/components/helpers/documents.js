@@ -1224,7 +1224,7 @@ export async function getCollectionTags(doc) {
 
 export function saveNewTags(doc) {
   setGlobal({ loading: true }, () => {
-    let content = getGlobal().content;
+    // let content = getGlobal().content;
     const object = {};
     object.id = doc.id;
     object.title = getGlobal().title;

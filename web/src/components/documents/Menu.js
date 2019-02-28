@@ -1,10 +1,10 @@
 import React, { Component } from "reactn";
 import { Modal, Input, Button, Item, List } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
-import { loadUserData } from 'blockstack';
+// import { loadUserData } from 'blockstack';
 import { handleaddItem } from '../helpers/documents';
 const single = require('../helpers/singleDoc');
-const cont = require('../helpers/contacts');
+// const cont = require('../helpers/contacts');
 
 
 export default class Menu extends Component {
@@ -46,7 +46,7 @@ export default class Menu extends Component {
   }
 
   render() {
-    const { versions, title, results, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.global;
+    const { versions, title, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.global;
     return (
 
               <div className="cm-e-menu">
@@ -212,7 +212,7 @@ export default class Menu extends Component {
                                   
                                   <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cont.handleNewContact} />
                                   <Item.Group divided>
-                                  {/*results.map(result => {
+                                  {results.map(result => {
                                     let profile = result.profile;
                                     let image = profile.image;
                                     let imageLink;
@@ -258,10 +258,10 @@ export default class Menu extends Component {
                                           )
                                         }
                                       )
-                                      
+                                      }
                                   </Item.Group>
-                                  <hr />
-                                  <Item.Group divided>*/}
+                                    <hr />*/}
+                                  <Item.Group divided>
                                   <h4>Your Contacts</h4>
                                   {contacts.slice(0).reverse().map(contact => {
                                     return (
