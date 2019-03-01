@@ -239,7 +239,7 @@ export async function addTagManual(doc) {
   if(getGlobal().tag !=="") {
     setGlobal({ singleDocTags: [...getGlobal().singleDocTags, getGlobal().tag]}, () => {
       let value = getGlobal().value;
-      const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
+      const thisDoc = value.find((document) => { return document.id === doc.id.toString()});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
           return doc.id === index; //this is comparing numbers
@@ -989,7 +989,7 @@ export async function loadSingleTags(doc) {
                 loading: false
               })
             }
-            console.log(blob);
+            await console.log(reader.readAsText(blob));
           }
     }
     //Now we need to determine if the response was from indexedDB or an API call:
@@ -1179,7 +1179,7 @@ export async function loadSingleTags(doc) {
      }
     })
     .then(() => {
-      this.getCollectionTags(doc);
+      getCollectionTags(doc);
     })
      .catch(error => {
        console.log(error);
@@ -1207,9 +1207,9 @@ export async function getCollectionTags(doc) {
          setGlobal({ value: JSON.parse(fileContents || '{}') })
          setGlobal({ initialLoad: "hide" });
        }
-    }).then(() =>{
-      let value = getGlobal().value;
-      const thisDoc = value.find((document) => { return document.id.toString() === doc.id.toString()});
+    }).then(async () =>{
+      let value = await getGlobal().value;
+      const thisDoc = value.find((document) => { return document.id === doc.id.toString()});
       let index = thisDoc && thisDoc.id;
       function findObjectIndex(doc) {
           return doc.id === index; //this is comparing numbers
@@ -1243,10 +1243,14 @@ export function saveNewTags(doc) {
     objectTwo.singleDocTags = getGlobal().singleDocTags;
     objectTwo.lastUpdate = Date.now;
     const index = getGlobal().index;
-    const updatedDoc = update(getGlobal().value, {$splice: [[index, 1, objectTwo]]});
-    setGlobal({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, loading: false }, () => {
-      saveFullCollectionTags(doc);
-    });
+    if(index > -1) {
+      const updatedDoc = update(getGlobal().value, {$splice: [[index, 1, objectTwo]]});
+      setGlobal({value: updatedDoc, filteredValue: updatedDoc, singleDoc: object, loading: false }, () => {
+        saveFullCollectionTags(doc);
+      });
+    } else {
+      console.log("Error with index")
+    }
   });
 }
 
@@ -1311,7 +1315,7 @@ export function saveSingleDocTags(doc) {
   putFile(fullFile, JSON.stringify(getGlobal().singleDoc), {encrypt:true})
     .then(() => {
       console.log("Saved tags");
-      this.loadCollection();
+      loadCollection();
     })
     .catch(e => {
       console.log("e");
