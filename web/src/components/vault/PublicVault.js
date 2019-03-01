@@ -7,7 +7,7 @@ import { Player } from "video-react";
 import "video-react/dist/video-react.css";
 import HotTable from "react-handsontable";
 import {CSVLink} from 'react-csv';
-import logoSquare from '../../assets/images/gIcon.png';
+import logoSquare from '../../assets/images/graphite-mark.svg';
 import { loadPublicVault } from '../helpers/publicVault';
 const single = require('../helpers/singleVaultFile');
 
@@ -62,7 +62,7 @@ export default class PublicVault extends Component {
       if(pubVaultShared) {
         return (
           <div>
-            <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+            <MainMenu style={{ borderRadius: "0", background: "#000", color: "#fff" }}>
               <MainMenu.Item>
                 <Image src={logoSquare} style={{ maxHeight: "50px" }} />
               </MainMenu.Item>

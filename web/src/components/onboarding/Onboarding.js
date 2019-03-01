@@ -120,7 +120,7 @@ export default class Onboarding extends Component {
                 and we'll use IPFS until you tell us to change it.
               </p>
               <p>Interested in a custom solution? Graphite Pro might be right for you. <a href='mailto: contact@graphitedocs.com'>Contact us</a> to learn more.</p>
-              <Button style={{ borderRadius: "0" }}>Skip</Button>
+              <a href={`${window.location.origin}/?code=ipfs?state=12345`}><Button style={{ borderRadius: "0" }}>Skip</Button></a>
             </div>
           </Modal.Content>
         </Modal>
