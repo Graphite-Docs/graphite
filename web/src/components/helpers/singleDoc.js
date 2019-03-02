@@ -275,7 +275,7 @@ export async function initialDocLoad() {
                         window.location.href.split("doc/")[1].split("#")[0]
                       );
                     } else {
-                      return doc.id === window.location.href.split("doc/")[1];
+                      return doc.id === window.location.href.split("doc/")[1].split('#')[0];
                     }
                   }
                 } else {
@@ -478,7 +478,7 @@ export async function initialDocLoad() {
                       if (doc.id) {
                         return (
                           doc.id.toString() ===
-                          window.location.href.split("doc/")[1]
+                          window.location.href.split("doc/")[1].split('#')[0]
                         ); //this is comparing a string to a string
                       }
                     }
@@ -502,7 +502,7 @@ export async function initialDocLoad() {
                   const thisDoc = value.find(doc => {
                     if (typeof doc.id === "string") {
                       if (doc.id) {
-                        return doc.id === window.location.href.split("doc/")[1]; //this is comparing a string to a string
+                        return doc.id === window.location.href.split("doc/")[1].split('#')[0]; //this is comparing a string to a string
                       }
                     } else {
                       if (doc.id) {

@@ -39,6 +39,8 @@ export default class App extends Component {
   componentDidMount() {
     if(JSON.parse(localStorage.getItem('authProvider'))) {
       setGlobal({ signedIn: true })
+    } else {
+      setGlobal({ loading: false });
     }
 
     const { signedIn } = this.global;
@@ -70,7 +72,6 @@ export default class App extends Component {
 
   render() {
     const { signedIn, reAuth } = this.global;
-    console.log(reAuth);
     if(reAuth) {
       return(
         <div>

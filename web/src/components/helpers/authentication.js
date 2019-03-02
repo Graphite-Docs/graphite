@@ -165,7 +165,7 @@ export async function signOut() {
     await localStorage.removeItem("storageProvider");
     await localStorage.removeItem("graphite_keys");
     window.location.replace("/");
-  } else if (authProvider === "blockstack") {
+  } else {
     if (isUserSignedIn()) {
       //Handle Blockstack sign out
       await localStorage.removeItem("authProvider");

@@ -31,17 +31,24 @@ export default class AppPage extends Component {
   componentDidMount() {
     const authProvider = JSON.parse(localStorage.getItem('authProvider'));
     //Need to move this code elsewhere
-    if(authProvider === 'blockstack') {
-      getFile("appPageOnboarding.json", { decrypt: true })
-        .then(fileContents => {
-          if (fileContents) {
-            this.setState({ onboarding: JSON.parse(fileContents) });
-          } else {
-            this.setState({ onboarding: false });
-          }
-        })
+    if(authProvider) {
+      if(authProvider !== 'uPort') {
+        getFile("appPageOnboarding.json", { decrypt: true })
+          .then(fileContents => {
+            if (fileContents) {
+              this.setState({ onboarding: JSON.parse(fileContents) });
+            } else {
+              this.setState({ onboarding: false });
+            }
+          })
+      }
+      this.checkProfiles();
+    } else {
+      if(isSignedIn() && localStorage.getItem('blockstack')) {
+        localStorage.removeItem('blockstack');
+        window.location.reload();
+      }
     }
-    this.checkProfiles();
   }
 
   checkFiles = () => {
