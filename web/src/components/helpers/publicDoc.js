@@ -72,9 +72,10 @@ export async function pollData() {
 
 export async function loadPublicState() {
   const global = getGlobal();
-  const id = window.location.href.split('docs/')[1].split('-')[1]
+  const id = window.location.href.split('docs/')[1].split('-')[1].split('#')[0]
   axios.get(global.url + 'public/' + id+ '.json')
   .then((response) => {
+    console.log(response)
     var responseHeaders = response.headers
     var lastUpdated = responseHeaders[Object.keys(responseHeaders)[0]];
     if(Object.keys(response.data).length > 0) {
@@ -103,9 +104,10 @@ export async function loadPublicState() {
 
 export function loadDoc() {
   const global = getGlobal();
-  const id = window.location.href.split('docs/')[1].split('-')[1]
+  const id = window.location.href.split('docs/')[1].split('-')[1].split('#')[0]
   axios.get(global.url + 'public/' + id+ '.json')
   .then((response) => {
+    console.log(response)
     var responseHeaders = response.headers
     var lastUpdated = responseHeaders[Object.keys(responseHeaders)[0]];
     if(Object.keys(response.data).length > 0) {
@@ -126,7 +128,7 @@ export function loadDoc() {
     }
   })
   .then(() => {
-    setGlobal({ docLoaded: true })
+    setGlobal({ docLoaded: true, loading: false })
   })
   .catch((error) => {
     console.log('error:', error);

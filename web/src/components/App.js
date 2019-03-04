@@ -97,7 +97,7 @@ export default class App extends Component {
                 <Route exact path="/" component={AppPage} />
                 <Route exact path="/documents" component={Collections} />
                 <Route exact path="/documents/doc/:id" component={SingleDoc} />
-                <Route exact path="/shared/docs/:id/:id/:id/:id" component={PublicDoc} />
+                <Route exact path="/shared/docs/:id" component={PublicDoc} />
                 <Route exact path="/contacts" component={Contacts}/>
                 <Route exact path="/shared-docs" component={SharedDocs} />
                 <Route exact path="/documents/shared/:id" component={SharedCollection} />
