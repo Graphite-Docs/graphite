@@ -18,7 +18,7 @@ export default class SingleDoc extends Component {
       contactToShareWith: "",
       modalOpen: false,
     }
-    setGlobal({ content: Value.fromJSON(global.content)})
+    setGlobal({ content: Value.fromJSON(this.global.content)})
   }
 
   componentDidMount() {
