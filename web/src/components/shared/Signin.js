@@ -81,7 +81,7 @@ export default class Signin extends Component {
                       </Modal.Description>
                     </Modal.Content>
                   </Modal>
-                  for a breif rundown and suggestions based on your needs.
+                  for a brief rundown and suggestions based on your needs.
                 </p>
               </Card.Description>
             </Card.Content>
