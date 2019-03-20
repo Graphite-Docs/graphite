@@ -89,7 +89,7 @@ export function loadPublicVault() {
       })
   } else {
     const options = { username: user, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    getFile(fileName, options)
+    getFile(fileName + '.json', options)
       .then((file) => {
         if(JSON.parse(file).type) {
           setGlobal({ loading: true });
