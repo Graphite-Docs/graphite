@@ -140,11 +140,11 @@ const schema = {
       isVoid: true,
     }
   },
-  inlines: {
-    emoji: {
-      isVoid: true,
-    },
-  },
+  // inlines: {
+  //   emoji: {
+  //     isVoid: true,
+  //   },
+  // },
 }
 
 const BLOCK_TAGS = {
@@ -415,6 +415,9 @@ getType = chars => {
       this.onBackspace(event, editor, next)
     } else if(event.key === 'Enter') {
       this.onEnter(event, editor, next)
+    } else if((event.keyCode === 90 && event.ctrlKey) || (event.metaKey && event.keyCode === 90)) {
+      event.preventDefault()
+      // editor.undo() //This crashes the app.
     } else {
       return next()
     }
@@ -823,6 +826,7 @@ onClickAlign = (event, align) => {
 
 
   render() {
+    console.log(this.global.content)
     if(document.getElementById('timeline-embed')) {
       timelineEmbedded = true;
     } else {
@@ -847,11 +851,10 @@ onClickAlign = (event, align) => {
     }
 
     const isTable = this.editor && this.editor.isSelectionInTable(this.global.content);
-    console.log(this.global.readOnly);
     if(this.global.content && !this.global.loading) {
       return (
         <div>
-          {!this.global.rtc && this.global.readOnly ?
+          {!this.global.rtc && this.global.readOnly && window.location.href.includes('shared') ?
             <div className='hide' /> :
             <Toolbar
               onClickMark={this.onClickMark}

@@ -35,6 +35,7 @@ const authProvider = JSON.parse(localStorage.getItem("authProvider"));
 
 let htmlContent;
 let versionID;
+var timer = null;
 
 const BLOCK_TAGS = {
   p: "paragraph",
@@ -1309,8 +1310,10 @@ export function handleChange(change) {
         .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
     )
   });
-  clearTimeout(this.timeout);
-  this.timeout = setTimeout(handleAutoAdd, 3000);
+  clearTimeout(timer); 
+  timer = setTimeout(handleAutoAdd, 3000)
+  // clearTimeout(this.timeout);
+  // this.timeout = setTimeout(handleAutoAdd, 3000);
 }
 
 export function handleMDChange(event) {}

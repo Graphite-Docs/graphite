@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component } from 'reactn';
 import socketIOClient from 'socket.io-client';
 import SlateEditor from './SlateEditor';
 import { loadUserData, isUserSignedIn } from 'blockstack';
@@ -8,8 +8,7 @@ class SocketEditor extends Component {
     super(props);
 
     this.state = {
-      endpoint: process.env.REACT_APP_SERVER,
-      // endpoint: 'http://localhost:5000',
+      endpoint: "https://whispering-sands-47101.herokuapp.com",
       showCollab: false,
       uniqueID: ""
     }
@@ -20,9 +19,8 @@ class SocketEditor extends Component {
     } else {
       this.uniqueID = Math.round(Math.random() * 1000000000000);
     }
-
+    
     this.socket = socketIOClient(this.state.endpoint);
-
     this.socket.on('update content', data => {
       const content = JSON.parse(data)
       const { uniqueID, content: ops } = content;
@@ -40,6 +38,7 @@ class SocketEditor extends Component {
         this.timeout = setTimeout(this.removeAuthorship, 300)
       }
     });
+
   }
 
   componentDidMount() {
@@ -58,6 +57,7 @@ class SocketEditor extends Component {
     this.socket.on('connect', () => {
       this.socket.emit('room', room)
     })
+  
   }
 
   send = content => {

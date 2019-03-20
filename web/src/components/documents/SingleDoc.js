@@ -6,6 +6,7 @@ import Loading from '../shared/Loading';
 import Menu from './Menu';
 import SocketEditor from './editor/SocketEditor';
 import { loadContactsCollection } from '../helpers/contacts';
+import SlateEditor from "./editor/SlateEditor";
 const single = require('../helpers/singleDoc');
 
 // import Html from 'slate-html-serializer';
@@ -177,7 +178,12 @@ export default class SingleDoc extends Component {
               <div>
                 <div>
                   <div>
-                      <SocketEditor />
+                    {
+                      this.global.readOnly === false || this.global.rtc ? 
+                      <SocketEditor /> : 
+                      <SlateEditor />
+                    }
+                     
                   </div>
                 </div>
               </div>
