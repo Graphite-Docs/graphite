@@ -234,7 +234,7 @@ export async function loadSharedRTC() {
     let fetchFile = await fetchFromProvider(params);
     console.log(fetchFile)
     if(fetchFile) {
-        const decryptedContent = await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey }))
+        const decryptedContent = fetchFile.data.pinataContent ? await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey })) : await JSON.parse(decryptContent(fetchFile.data.content, { privateKey: thisKey }))
         console.log(decryptedContent);
         setGlobal({ sharedFile: decryptedContent }, () => {
           let docs = decryptedContent;

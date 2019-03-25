@@ -59,7 +59,7 @@ export async function loadContactsCollection() {
               const decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
               setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
             } else {
-              let content = fetchFile.data.pinataContent;
+              let content = fetchFile.data.pinataContent ? fetchFile.data.pinataContent : fetchFile.data;
               const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
               setGlobal({ contacts: decryptedContent, filteredContacts: decryptedContent, loading: false })
             }

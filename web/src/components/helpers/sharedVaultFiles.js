@@ -79,7 +79,7 @@ export async function loadSharedVault() {
     let fetchFile = await fetchFromProvider(params);
     console.log(fetchFile)
     if(fetchFile) {
-        const decryptedContent = await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: privateKey }))
+        const decryptedContent = fetchFile.data.pinataContent ? await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: privateKey })) : await JSON.parse(decryptContent(fetchFile.data.content, { privateKey: privateKey }))
         console.log(decryptedContent);
         await setGlobal({ shareFileIndex: decryptedContent, loading: false })
         } else {

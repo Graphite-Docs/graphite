@@ -155,7 +155,7 @@ export async function loadSingleVaultFile(props) {
           } else if(fetchFile.loadLocal) {
             decryptedContent = await JSON.parse(decryptContent(JSON.parse(fetchFile.data.content), { privateKey: thisKey }))
           } else {
-              let content = fetchFile.data.pinataContent;
+              let content = fetchFile.data.pinataContent ? fetchFile.data.pinataContent : fetchFile.data;
               console.log(content);
               decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
           }

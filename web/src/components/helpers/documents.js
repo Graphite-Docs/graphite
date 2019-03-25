@@ -559,7 +559,7 @@ export async function loadSharedCollection (doc) {
              })
             })
           } else if(storageProvider === 'ipfs') {
-            let content = fetchFile.data.pinataContent;
+            let content = fetchFile.data.pinataContent ? fetchFile.data.pinataContent : fetchFile.data;
                 console.log(content);
                 const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
                 setGlobal({ sharedCollection: decryptedContent }, async () => {

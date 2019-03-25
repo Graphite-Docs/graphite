@@ -21,7 +21,7 @@ export function loadPublicVault() {
     // let fetchFile = await fetchFromProvider(object);
     fetchFromProvider(object)
       .then((res) => {
-        const data = JSON.parse(res.data.pinataContent.content);
+        const data = res.data.pinataContent ? JSON.parse(res.data.pinataContent.content) : JSON.parse(res.data.content);
         console.log(data)
         setGlobal({
           file: data,

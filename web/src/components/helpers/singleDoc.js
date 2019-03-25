@@ -186,7 +186,7 @@ export async function initialDocLoad() {
             console.log(JSON.parse(content));
             decryptedContent = await JSON.parse(decryptContent(JSON.parse(content), { privateKey: thisKey }))
           } else {
-            let content = fetchFile.data.pinataContent;
+            let content = fetchFile.data.pinataContent ? fetchFile.data.pinataContent : fetchFile.data;
           console.log(content);
           decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
           }
@@ -251,7 +251,7 @@ export async function initialDocLoad() {
               console.log(indexContent);
               decryptedIndex = await JSON.parse(decryptContent(JSON.parse(indexContent), { privateKey: thisKey }))
             } else {
-              let indexContent = indexFile.data.pinataContent;
+              let indexContent = indexFile.data.pinataContent ? indexFile.data.pinataContent : indexFile.data;
               console.log(indexContent);
               decryptedIndex = await JSON.parse(decryptContent(indexContent.content, { privateKey: thisKey }))
             }
@@ -321,7 +321,7 @@ export async function initialDocLoad() {
                 if(storageProvider === 'google') {
                   decryptedTimeline = await JSON.parse(decryptContent(timelineFile, { privateKey: thisKey }))
                 } else if(storageProvider === 'ipfs') {
-                  let content = timelineFile.data.pinataContent;
+                  let content = timelineFile.data.pinataContent ? timelineFile.data.pinataContent : timelineFile.data;
                   console.log(content);
                   decryptedTimeline = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
                 } else {

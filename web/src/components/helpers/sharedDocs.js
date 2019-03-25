@@ -27,7 +27,7 @@ export async function initialShared() {
             let fetchFile = await fetchFromProvider(params);
             console.log(fetchFile)
             if(fetchFile) {
-                const decryptedContent = await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey }))
+                const decryptedContent = fetchFile.data.pinataContent ? await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey })) : await JSON.parse(decryptContent(fetchFile.data.content, { privateKey: thisKey })) 
                 console.log(decryptedContent);
                 await setGlobal({ docs: decryptedContent, loading: false })
                 } else {
@@ -90,7 +90,7 @@ export async function initialShared() {
                 let fetchFile = await fetchFromProvider(params);
                 console.log(fetchFile)
                 if(fetchFile) {
-                    const decryptedContent = await JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey }))
+                    const decryptedContent = fetchFile.data.pinataContent ? JSON.parse(decryptContent(fetchFile.data.pinataContent.content, { privateKey: thisKey })) : JSON.parse(decryptContent(fetchFile.data.content, { privateKey: thisKey })) 
                     console.log(decryptedContent);
                     await setGlobal({ docs: decryptedContent, loading: false })
                   } else {

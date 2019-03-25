@@ -71,7 +71,7 @@ export async function loadDocs() {
               const decryptedContent = await JSON.parse(decryptContent(JSON.parse(content), { privateKey: thisKey }))
               setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
             } else {
-              let content = fetchFile.data.pinataContent;
+              let content = fetchFile.data.pinataContent ? fetchFile.data.pinataContent : fetchFile.data;
               console.log(content);
               const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
               setGlobal({ value: decryptedContent, filteredValue: decryptedContent, countFilesDone: true, loading: false })
@@ -206,7 +206,7 @@ export async function loadVault() {
           } else {
             if(fetchFile.loadLocal || JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
               if(JSON.parse(localStorage.getItem('storageProvider')) === 'ipfs') {
-                let content = fetchFile.data.pinataContent;
+                let content = fetchFile.data.pinataContent ? fetchFile.data.pinataContent : fetchFile.data;
                 console.log(content);
                 const decryptedContent = await JSON.parse(decryptContent(content.content, { privateKey: thisKey }))
                 setGlobal({ files: decryptedContent, filteredVault: decryptedContent, loading: false })
