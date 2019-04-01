@@ -126,7 +126,6 @@ export async function postToStorageProvider(params) {
   } else if(params.provider === 'ipfs') {
     //post to IPFS and pin it using Pinata
     console.log("Saving to IPFS...")
-
     const jsonBody = {
       pinataMetadata: {
           name: 'Data',

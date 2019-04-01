@@ -209,10 +209,15 @@ export async function fetchFromProvider(params) {
     } else if(params.provider === 'ipfs') {
       if (params.filePath.includes("documents")) {
         localData = await db.documents.get(params.filePath);
-        return returnedObject = await {
-          data: localData,
-          loadLocal: true
+        if(localData) {
+          return returnedObject = await {
+            data: localData,
+            loadLocal: true
+          }
+        } else {
+          loadFromPinata(params);
         }
+        
       } else if(params.filePath.includes("contacts")) {
         localData = await db.documents.get(params.filePath);
         if(localData) {
@@ -221,38 +226,11 @@ export async function fetchFromProvider(params) {
             loadLocal: true
           }
         } else {
-          returnedObject = {};
+          loadFromPinata(params);
         }
       } else {
         returnedObject = {};
       }
-
-
-      const url = `https://api.pinata.cloud/data/userPinList/hashContains/*/pinStart/*/pinEnd/*/unpinStart/*/unpinEnd/*/pinSizeMin/*/pinSizeMax/*/pinFilter/*/pageLimit/10/pageOffset/0?metadata[keyvalues][ID]={"value":${JSON.stringify(params.filePath)},"op":"eq"}`
-      return  axios
-          .get(url, {
-              headers: {
-                  'pinata_api_key': keys.PINATA_API_KEY,
-                  'pinata_secret_api_key': keys.PINATA_SECRET_API_KEY
-              }
-          })
-          .then(async (response) => {
-            if(response.data.rows.length > 0) {
-              console.log(response)
-              console.log(response.data.rows[0])
-              return axios.get(`https://gateway.pinata.cloud/ipfs/${response.data.rows[0].ipfs_pin_hash}`)
-                .then((res) => {
-                  console.log("returning response...");
-                  return res;
-                })
-                .catch(error => {
-                  console.log(error);
-                })
-            }
-          })
-          .catch(function (error) {
-            console.log(error)
-          });
     }
 
     //Box
@@ -266,4 +244,33 @@ export async function fetchFromProvider(params) {
   } else {
     return returnedObject
   }
+}
+
+export function loadFromPinata(params) {
+  const url = `https://api.pinata.cloud/data/userPinList/hashContains/*/pinStart/*/pinEnd/*/unpinStart/*/unpinEnd/*/pinSizeMin/*/pinSizeMax/*/pinFilter/*/pageLimit/10/pageOffset/0?metadata[keyvalues][ID]={"value":${JSON.stringify(params.filePath)},"op":"eq"}`
+  return  axios
+      .get(url, {
+          headers: {
+              'pinata_api_key': keys.PINATA_API_KEY,
+              'pinata_secret_api_key': keys.PINATA_SECRET_API_KEY
+          }
+      })
+      .then(async (response) => {
+        console.log(response)
+        if(response.data.rows.length > 0) {
+          console.log(response)
+          console.log(response.data.rows[0])
+          return axios.get(`https://gateway.pinata.cloud/ipfs/${response.data.rows[0].ipfs_pin_hash}`)
+            .then((res) => {
+              console.log("returning response...");
+              return res;
+            })
+            .catch(error => {
+              console.log(error);
+            })
+        }
+      })
+      .catch(function (error) {
+        console.log(error)
+      });
 }

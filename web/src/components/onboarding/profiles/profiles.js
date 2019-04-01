@@ -51,6 +51,7 @@ export async function makeProfile(profile) {
 }
 
 export async function postToIPFS(profile) {
+  console.log()
   //post to IPFS and pin it using Pinata
   console.log("Saving profile to IPFS...")
 
@@ -72,7 +73,7 @@ export async function postToIPFS(profile) {
   await axios.post(url, jsonBody, {
     headers: {
       'pinata_api_key': keys.PINATA_API_KEY,
-      'pinata_secret_api_key': keys.PINATA_SECRET_API_KEY
+      'pinata_secret_api_key': keys.PINATA_API_SECRET
     }
   })
   .then((response) => {
