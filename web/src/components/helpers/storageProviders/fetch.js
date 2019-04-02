@@ -215,7 +215,7 @@ export async function fetchFromProvider(params) {
             loadLocal: true
           }
         } else {
-          loadFromPinata(params);
+          return loadFromPinata(params);
         }
         
       } else if(params.filePath.includes("contacts")) {
@@ -226,8 +226,10 @@ export async function fetchFromProvider(params) {
             loadLocal: true
           }
         } else {
-          loadFromPinata(params);
+          return loadFromPinata(params);
         }
+      } else if(params.filePath.includes("vault")) {
+        return loadFromPinata(params)
       } else {
         returnedObject = {};
       }
@@ -263,6 +265,7 @@ export function loadFromPinata(params) {
           return axios.get(`https://gateway.pinata.cloud/ipfs/${response.data.rows[0].ipfs_pin_hash}`)
             .then((res) => {
               console.log("returning response...");
+              console.log(res)
               return res;
             })
             .catch(error => {

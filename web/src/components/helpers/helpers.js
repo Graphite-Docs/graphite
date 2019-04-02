@@ -198,6 +198,7 @@ export async function loadVault() {
       }
       // //Call fetchFromProvider and wait for response.
       let fetchFile = await fetchFromProvider(object);
+        console.log(fetchFile)
         //Now we need to determine if the response was from indexedDB or an API call:
         if(fetchFile) {
           if(JSON.parse(localStorage.getItem('storageProvider')) === 'google') {
