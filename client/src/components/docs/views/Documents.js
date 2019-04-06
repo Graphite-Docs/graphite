@@ -6,7 +6,8 @@ import Loading from '../../shared/views/Loading';
 import Skeleton from './Skeleteon';
 import Nav from '../../shared/views/Nav';
 const gdocs = require('../helpers/documents');
-const del = require('../helpers/delete');
+const share = require('../helpers/docsCollectionShare')
+const colTags = require('../helpers/docsCollectionTags');
 
 class Documents extends Component {
     constructor(props) {
@@ -41,25 +42,23 @@ class Documents extends Component {
     }
 
     handleDelete = () => {
-        this.setState({ open: false }, () => {
-            del.handleDeleteDoc(this.state.doc)
-        })
-    }
-
-    saveTags = (doc) => {
-        this.setGlobal({ loading: true }, () => {
-            gdocs.saveNewTags(doc)
-        })
+        const {selectedDoc} = this.global;
+        gdocs.deleteDoc(selectedDoc)
     }
 
     shareDoc = (contact) => {
-        const { docToShare } = this.global;
-        gdocs.sharedInfo(contact, docToShare);
+        const { selectedDoc } = this.global;
+        share.sharedInfo(contact, selectedDoc);
+    }
+
+    handleTagModal = (doc) => {
+        setGlobal({tagModalOpen: true})
+        colTags.loadSingleDoc(doc)
     }
   render() {
     const { visible } = this.state;
-    const { shareModalOpen, results, filteredDocs, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading } = this.global;
-    
+    const { deleteModalOpen, selectedDoc, tagModalOpen, shareModalOpen, results, filteredDocs, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading, tag } = this.global;
+
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
     const currentDocs = filteredDocs.sort(function(a,b){return new Date(b.lastUpdate) - new Date(a.lastUpdate)});
@@ -225,7 +224,7 @@ class Documents extends Component {
                                         open={shareModalOpen}
                                         onClose={() => setGlobal({shareModalOpen: false})} 
                                         closeIcon style={{borderRadius: "0"}} 
-                                        trigger={<button className='link-button' onClick={() => setGlobal({shareModalOpen: true, docToShare: doc})} style={{color: "#282828"}}><Icon name='share alternate'/>Share</button>}>
+                                        trigger={<button className='link-button' onClick={() => setGlobal({shareModalOpen: true, selectedDoc: doc})} style={{color: "#282828"}}><Icon name='share alternate'/>Share</button>}>
                                         <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Document</Modal.Header>
                                         <Modal.Content>
                                             <Modal.Description>
@@ -274,24 +273,28 @@ class Documents extends Component {
                                         </Modal>
                                     </Dropdown.Item>
                                     <Dropdown.Item>
-                                        <Modal closeIcon trigger={<Link onClick={() => gdocs.loadSingleTags(doc)} to={'/documents'} style={{color: "#282828"}}><Icon name='tag'/>Tag</Link>}>
+                                        <Modal 
+                                        closeIcon 
+                                        open={tagModalOpen}
+                                        onClose={() => setGlobal({tagModalOpen: false})} 
+                                        trigger={<button className='link-button' onClick={() => this.handleTagModal(doc)} style={{color: "#282828"}}><Icon name='tag'/>Tag</button>}>
                                         <Modal.Header>Manage Tags</Modal.Header>
                                         <Modal.Content>
                                             <Modal.Description>
-                                            <Input placeholder='Type a tag...' onChange={gdocs.handleTagChange} />
-                                            <Button onClick={() => gdocs.addTagManual(doc, 'document')} style={{borderRadius: "0"}}>Add Tag</Button><br/>
+                                            <Input id='tag-input' placeholder='Type a tag...' value={tag} onKeyUp={colTags.checkKey} onChange={colTags.handleTagChange} />
+                                            <Button onClick={colTags.addTagManual} style={{borderRadius: "0"}}>Add Tag</Button><br/>
                                             {
                                             singleDocTags.slice(0).reverse().map(tag => {
                                                 return (
                                                 <Label style={{marginTop: "10px"}} key={tag} as='a' tag>
                                                     {tag}
-                                                    <Icon onClick={() => gdocs.deleteTag(tag, 'document')} name='delete' />
+                                                    <Icon onClick={() => colTags.deleteTag(tag)} name='delete' />
                                                 </Label>
                                                 )
                                             })
                                             }
                                             <div>
-                                            <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => this.saveTags(doc)}>Save Tags</Button>
+                                            <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={colTags.saveTags}>Save Tags</Button>
                                             </div>
                                             </Modal.Description>
                                         </Modal.Content>
@@ -299,10 +302,16 @@ class Documents extends Component {
                                     </Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item>
-                                        <Modal open={this.state.open} trigger={
-                                        <button className='link-button' onClick={() => this.setState({ open: true, doc: doc })} to={'/documents'} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</button>
-                                        } basic size='small'>
-                                        <SemanticHeader icon='trash alternate outline' content={this.state.doc.title ? 'Delete ' + this.state.doc.title + '?' : 'Delete document?'} />
+                                        <Modal 
+                                        trigger={
+                                        <button className='link-button' onClick={() => setGlobal({ deleteModalOpen: true, selectedDoc: doc })} to={'/documents'} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</button>
+                                        } 
+                                        basic 
+                                        size='small'
+                                        open={deleteModalOpen}
+                                        onClose={() => setGlobal({deleteModalOpen: false})} 
+                                        >
+                                        <SemanticHeader icon='trash alternate outline' content={selectedDoc.title ? 'Delete ' + selectedDoc.title + '?' : 'Delete document?'} />
                                         <Modal.Content>
                                             <p>
                                             The document cannot be restored.
@@ -314,7 +323,7 @@ class Documents extends Component {
                                                 this.state.loading ?
                                                 <Loading style={{bottom: "0"}} /> :
                                                 <div>
-                                                <Button onClick={() => this.setState({ open: false })} basic color='red' inverted>
+                                                <Button onClick={() => setGlobal({ deleteModalOpen: false })} basic color='red' inverted>
                                                    No
                                                 </Button>
                                                 <Button onClick={this.handleDelete} color='red' inverted>

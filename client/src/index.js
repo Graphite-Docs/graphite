@@ -270,7 +270,9 @@ setGlobal({
     reAuth: false, 
     provider: "",
     shareModalOpen: false, 
-    docToShare: {}
+    tagModalOpen: false,
+    deleteModalOpen: false,
+    selectedDoc: {}
 })
 
 configure({
