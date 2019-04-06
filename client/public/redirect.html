@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Graphite</title>
+  <script>
+  function getParameterByName(name) {
+    var match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+  }
+  var authResponse = getParameterByName('authResponse')
+  console.log('authResponse: ' + authResponse)
+  window.location="graphitedocs:" + authResponse
+  </script>
+<body>
+</body>
+</html>

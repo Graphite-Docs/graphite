@@ -1,0 +1,14 @@
+{
+  "name": "Graphite",
+  "short_name": "Graphite",
+  "background_color": "#eeeeee",
+  "theme_color": "#eeeeee",
+  "display": "standalone",
+  "start_url": "https://app.graphitedocs.com",
+  "description": "Documents, spreadsheets, converations, and more. All decentralized and encrypted.",
+  "icons": [{
+    "src": "https://i.imgur.com/1taYMrP.png",
+    "sizes": "192x192",
+    "type": "image/png"
+  }]
+}
