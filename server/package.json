@@ -5,7 +5,9 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "dotenv": "^7.0.0",
     "express": "^4.16.3",
+    "radiks-server": "^0.1.10",
     "socket.io": "^2.0.4"
   },
   "now": {

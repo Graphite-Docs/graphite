@@ -1,11 +1,21 @@
 const express = require("express");
 const http = require("http");
 const socketIO = require("socket.io");
+const { setup } = require('radiks-server');
 
 // our localhost port
 const port = process.env.REACT_APP_SERVER || 5000;
 
+require('dotenv').config()
+const mongo = process.env.MONGO_URI_DEV;
+
 const app = express();
+
+setup({
+  mongoDBUrl: mongo
+}).then((RadiksController) => {
+  app.use('/radiks', RadiksController);
+});
 
 // our server instance
 const server = http.createServer(app);

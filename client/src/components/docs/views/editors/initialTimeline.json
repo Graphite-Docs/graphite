@@ -1,0 +1,31 @@
+{
+    "title": {
+        "media": {
+          "url": "https://media1.giphy.com/media/l3V0uEmPgKpjZH6ve/giphy.gif?cid=3640f6095c36317e474a482e4185db80",
+          "caption": "Hi!",
+          "credit": "<a href='https://giphy.com/gifs/l3V0uEmPgKpjZH6ve'>giphy</a>"
+        },
+        "text": {
+          "headline": "Welcome to your timeline!",
+          "text": "<p>To update this title section and to add events to your timeline just click that little plus button on the top-left.</p>"
+        }
+    },
+    "events": [
+      {
+        "media": {
+          "url": "https://youtu.be/g6iDZspbRMg",
+          "caption": "Here's an example event: John Oliver's segment on cryptocurrencies",
+          "credit": "Last Week Tonight:<a href='https://www.youtube.com/channel/UC3XTzVzaHQEd30rQbuvCtTQ'>YouTube</a>"
+        },
+        "start_date": {
+          "month": "3",
+          "day": "11",
+          "year": "2018"
+        },
+        "text": {
+          "headline": "Cryptocurrencies: Last Week Tonight with John Oliver",
+          "text": "<p>Digital currencies are generating a lot of excitement. John Oliver enlists Keegan-Michael Key to get potential investors equally excited about the concept of caution.</p>"
+        }
+      }
+    ]
+}

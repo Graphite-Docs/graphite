@@ -2,6 +2,7 @@ import React, { Component } from 'reactn';
 import {BrowserRouter, Route} from 'react-router-dom';
 import Documents from './components/docs/views/Documents';
 import SingleDoc from './components/docs/views/SingleDoc';
+import DeleteDoc from './components/docs/views/DeleteDoc';
 import Vault from './components/files/views/Vault.js';
 import SingleFile from './components/files/views/SingleFile';
 import Forms from './components/forms/views/Forms';
@@ -53,6 +54,7 @@ class App extends Component {
              <Route exact path='/documents' component={Documents} />
              <Route exact path="/documents/:id" component={SingleDoc} />
              <Route exact path="/documents/new/:id" component={SingleDoc} />
+             <Route exact path="/documents/delete/:id" component={DeleteDoc} />
              <Route exact path="/files" component={Vault} />
              <Route exact path="/files/:id" component={SingleFile} />
              <Route exact path="/contacts" component={Contacts} />

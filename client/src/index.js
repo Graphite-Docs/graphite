@@ -1,5 +1,6 @@
 import React, {setGlobal} from 'reactn';
 import ReactDOM from 'react-dom';
+import { Value } from 'slate';
 import 'semantic-ui-css/semantic.min.css'
 import './styles/App.css';
 import App from './App';
@@ -7,6 +8,7 @@ import * as serviceWorker from './serviceWorker';
 import { configure } from 'radiks';
 import { UserSession } from 'blockstack';
 import { appConfig } from './utils/config';
+import initialValue from './components/docs/views/editors/initialValue.json';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
@@ -50,26 +52,7 @@ setGlobal({
     receiverID: "",
     confirmAdd: false,
     title: "",
-    content: {
-    "document": {
-        "nodes": [
-        {
-            "object": "block",
-            "type": "paragraph",
-            "nodes": [
-            {
-                "object": "text",
-                "leaves": [
-                {
-                    "text": ""
-                }
-                ]
-            }
-            ]
-        }
-        ]
-    }
-    },
+    content: Value.fromJSON(initialValue),
     id: "",
     words: "",
     updated: "",

@@ -1,5 +1,10 @@
 /* Universal */
 
+.editor ul li, .editor ol li {
+  font-size: 16px;
+  margin-top: 5px;
+}
+
 .link-button {
   background:none!important;
   color:inherit;
@@ -10,6 +15,42 @@
   text-decoration: none!important;
   cursor: pointer;
   font-weight: 400!important;
+}
+
+.h1-skel {
+  width: 86%;
+  height: 35px;
+  background: #d8d8d8;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+.p-skel {
+  width: 100%;
+  height: 20px;
+  background: #d8d8d8;
+  border-radius: 5px;
+}
+
+.p-skel-short {
+  width: 50%;
+  height: 20px;
+  background: #d8d8d8;
+  border-radius: 5px;
+}
+
+.title-skel-div {
+  width: 100px;
+  height: 30px;
+  background: #fff;
+  border-radius: 5px;
+}
+
+.toolbar-sekl-div {
+  width: 10px;
+  height: 15px;
+  background: #282828;
+  border-radius: 5px;
 }
 
 .blue-skel-div {
@@ -294,6 +335,10 @@ code {
 }
 
 /* Single Doc */
+
+.doc-dropzone {
+  background: none;
+}
 
 .wordcounter {
   color: grey;

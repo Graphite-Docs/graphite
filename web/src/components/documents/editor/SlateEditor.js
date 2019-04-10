@@ -108,10 +108,10 @@ function insertEmbed(editor, src, target) {
             });
         }
       }
-    }
-
-    new window.TL.Timeline('timeline-embed',
+    } else {
+      new window.TL.Timeline('timeline-embed',
           initialTimeline);
+    }
 
   }, 1000)
 }
@@ -284,6 +284,7 @@ componentDidMount() {
   }
   setTimeout(() => {
     if(document.getElementById('timeline-embed')) {
+      console.log("hell yeah here we go")
       new window.TL.Timeline('timeline-embed',
             this.global.myTimeline);
     }
@@ -826,7 +827,6 @@ onClickAlign = (event, align) => {
 
 
   render() {
-    console.log(this.global.content)
     if(document.getElementById('timeline-embed')) {
       timelineEmbedded = true;
     } else {
