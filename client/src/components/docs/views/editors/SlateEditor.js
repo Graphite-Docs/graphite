@@ -857,7 +857,6 @@ class SlateEditor extends React.Component {
   handleClose = () => this.setState({ timelineModal: false });
 
   render() {
-    console.log(this.state.timelineModal)
     if (document.getElementById("timeline-embed")) {
       timelineEmbedded = true;
     } else {

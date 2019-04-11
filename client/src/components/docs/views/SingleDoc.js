@@ -15,7 +15,12 @@ const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder
 class SingleDoc extends Component {
   componentDidMount() {
     if(window.location.href.includes('new')) {
-      setGlobal({loading: true});
+      setGlobal({
+        loading: true, 
+        singleDoc: {}, 
+        content: "", 
+        title: ""
+      });
       setTimeout(() => {
         setGlobal({loading: false, myTimeline: initialTimeline})
       }, 500)

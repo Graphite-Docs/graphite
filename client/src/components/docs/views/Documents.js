@@ -58,7 +58,6 @@ class Documents extends Component {
   render() {
     const { visible } = this.state;
     const { deleteModalOpen, selectedDoc, tagModalOpen, shareModalOpen, results, filteredDocs, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading, tag } = this.global;
-    console.log(filteredDocs)
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
     const currentDocs = filteredDocs.sort((a, b) => parseFloat(b.lastUpdate) - parseFloat(a.lastUpdate));

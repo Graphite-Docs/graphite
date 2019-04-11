@@ -17,6 +17,12 @@ export default class Signin extends Component {
   }
 
   render() {
+    let buttonStyle = {
+      background: "#230D2E",
+      color: "#fff",
+      borderRadius: "0",
+      margin: "5px"
+    };
     let loading = window.location.href.includes('authResponse');
     if(!loading) {
       return (
@@ -34,25 +40,15 @@ export default class Signin extends Component {
               <Card.Description>
                 <h1 style={{ marginTop: "25px" }}>Let's get to work...</h1>
                 <div style={{ marginTop: "45px" }}>
-                  {authProviders.map(provider => {
-                    let buttonStyle = {
-                      background: provider.colorScheme,
-                      color: "#fff",
-                      borderRadius: "0",
-                      margin: "5px"
-                    };
-                    return (
-                      <div key={provider.name}>
-                        <Button
-                          onClick={() => handleAuth(provider.name)}
-                          style={buttonStyle}
-                        >
-                          Continue With {provider.name}
-                        </Button>{" "}
-                        <br />
-                      </div>
-                    );
-                  })}
+                  <Button
+                    onClick={() => handleAuth("Blockstack")}
+                    style={buttonStyle}
+                  >
+                    Continue With Blockstack
+                  </Button>
+                  <div style={{marginTop: "25px"}}>
+                    Or try Graphite Labs new experiment and log in with <a href="#" onClick={() => handleAuth("uPort")}>uPort</a>.
+                  </div>
                 </div>
                 <p style={{ fontSize: "14px", marginTop: "45px" }}>
                   Not sure where to start?
@@ -63,6 +59,7 @@ export default class Signin extends Component {
                     <Modal.Content>
                       <Modal.Description>
                         <h3>Which provider should I sign in with?</h3>
+                        <p>Graphite's core offering is offered via Blockstack's open source protocol. However, as fans of the decentralized web, Graphite has launched Graphite Labs to experiment with other decentralized technologies. The first experiment is logging into Graphite with uPort.</p>
                         <p>
                           <strong>uPort:</strong> uPort is a project being built
                           under the ConsenSys umbrella. It supports decentralized

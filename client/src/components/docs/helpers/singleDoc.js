@@ -5,6 +5,7 @@ import { postData } from "../../shared/helpers/post";
 import update from 'immutability-helper';
 import { loadData } from '../../shared/helpers/accountContext';
 import { singleDocModel } from '../models/singleDocModel';
+import { documentModel } from '../models/documentModel';
 const initialTimeline = require('../views/editors/initialTimeline.json');
 const uuid = require('uuidv4');
 
@@ -46,13 +47,14 @@ export async function saveDoc(updates) {
     //Now we update the index file;
     let docs = await getGlobal().documents;
     let index = await docs.map((x) => {return x.id }).indexOf(filePath);
-    let indexSingleDoc = getGlobal().singleDoc;
-    delete indexSingleDoc.content;
-    if(index > 0 && window.location.href.includes("new")) {
-      await setGlobal({ documents: [...getGlobal().documents, indexSingleDoc]});
-    } else {
-      const updatedDocs = update(getGlobal().documents, {$splice: [[index, 1, indexSingleDoc]]});
+    let docObject = await documentModel();
+    if(index < 0 && window.location.href.includes("new")) {
+      await setGlobal({ documents: [...getGlobal().documents, docObject]});
+    } else if(index > 0) {
+      const updatedDocs = update(getGlobal().documents, {$splice: [[index, 1, docObject]]});
       await setGlobal({documents: updatedDocs});
+    } else {
+      console.log("Error doc index")
     }
     
     let indexParams = {
@@ -68,11 +70,12 @@ export async function saveDoc(updates) {
 
 export async function handleTitle(e) {
   let title = e.target.value;
-  let doc = await getGlobal().singleDoc;
-  doc["title"] = title;
-  setGlobal({ singlDoc: doc, title: title });
+  let updates = {
+    title: title
+  }
+  setGlobal({ title });
   clearTimeout(timer); 
-  timer = setTimeout(saveDoc, 1500);
+  timer = setTimeout(() => saveDoc(updates), 1500);
 }
 
 export async function loadSingle() {
@@ -95,6 +98,8 @@ export async function loadSingle() {
 
 export async function updateVersions() {
   let singleDoc = await getGlobal().singleDoc;
+  let content = await getGlobal().content;
+  singleDoc["content"] = content;
   const newVersionId = uuid();
   let file = `documents/versions/${newVersionId}.json`;
     let versionParams = {
@@ -119,6 +124,7 @@ export async function loadVersion(id) {
   }
 
   let doc = await fetchData(docParams);
+  console.log(JSON.parse(doc))
   setGlobal({
     singleDoc: JSON.parse(doc), 
     title: JSON.parse(doc).title,

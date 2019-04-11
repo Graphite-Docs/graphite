@@ -1,5 +1,7 @@
 import { getMonthDayYear } from "../../shared/helpers/getMonthDayYear";
 import { getGlobal } from 'reactn';
+import { Value } from 'slate';
+const initialValue = require('../views/editors/initialValue.json');
 
 export async function singleDocModel(updates) {
     const { content, title, singleDoc } = await getGlobal();
@@ -7,7 +9,7 @@ export async function singleDocModel(updates) {
     window.location.href.includes("new") ? id = window.location.href.split("new/")[1] : id = window.location.href.split("documents/")[1];
     let singleModel = await {
         id: singleDoc.id || id, 
-        content: content,
+        content: content === "" ? Value.fromJSON(initialValue) : content,
         fileType: "documents", 
         lastUpdate: Date.now(), 
         updated: getMonthDayYear(), 
