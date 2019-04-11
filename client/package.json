@@ -5,7 +5,10 @@
   "dependencies": {
     "blockstack": "^19.0.1",
     "emoji-mart": "^2.11.0",
+    "file-saver": "^2.0.1",
+    "html-docx-js": "^0.3.1",
     "html-word-count": "^2.0.0",
+    "html2pdf.js": "^0.9.1",
     "immutability-helper": "^3.0.0",
     "immutable": "^4.0.0-rc.12",
     "is-hotkey": "^0.1.4",

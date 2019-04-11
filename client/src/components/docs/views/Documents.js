@@ -48,7 +48,7 @@ class Documents extends Component {
 
     shareDoc = (contact) => {
         const { selectedDoc } = this.global;
-        share.sharedInfo(contact, selectedDoc);
+        share.sharedInfo({contact: contact, doc: selectedDoc});
     }
 
     handleTagModal = (doc) => {
@@ -58,10 +58,11 @@ class Documents extends Component {
   render() {
     const { visible } = this.state;
     const { deleteModalOpen, selectedDoc, tagModalOpen, shareModalOpen, results, filteredDocs, appliedFilter, singleDocTags, contacts, currentPage, docsPerPage, loading, tag } = this.global;
-
+    console.log(filteredDocs)
     const indexOfLastDoc = currentPage * docsPerPage;
     const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
-    const currentDocs = filteredDocs.sort(function(a,b){return new Date(b.lastUpdate) - new Date(a.lastUpdate)});
+    const currentDocs = filteredDocs.sort((a, b) => parseFloat(b.lastUpdate) - parseFloat(a.lastUpdate));
+    // const currentDocs = filteredDocs.sort(function(a,b){return new Date(b.lastUpdate) - new Date(a.lastUpdate)});
     let shared = currentDocs.map(a => a.sharedWith);
     let newShared = shared.filter(function(n){ return n !== undefined });
     let mergedShared = [].concat.apply([], newShared);

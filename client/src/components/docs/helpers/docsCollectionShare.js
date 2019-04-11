@@ -6,12 +6,13 @@ import { encryptContent } from 'blockstack';
 import { loadData } from '../../shared/helpers/accountContext';
 import { ToastsStore} from 'react-toasts';
 
-export async function sharedInfo(props, doc) {
+export async function sharedInfo(params) {
+  console.log(params)
     setGlobal({ shareModalOpen: false});
     ToastsStore.success(`Sharing document...`)
     let key;
-    const user = props.contact;
-    setGlobal({ receiverID: props.contact, rtc: true })
+    let user = params.contact.contact;
+    setGlobal({ receiverID: user, rtc: params.realTime || true })
     //Step One: Get Contact's Key
     try {
       let keyParams = {
@@ -40,28 +41,32 @@ export async function sharedInfo(props, doc) {
     catch(error) {
       console.log(error);
     }
-    //Step Three: Load the actual doc to be shared
-    const fullFile = `/documents/${doc.id}.json`;
-    try {
-      let singleDocParams = {
-        fileName: fullFile, 
-        decrypt: true
-      }
-      let singleDoc = await fetchData(singleDocParams);
-      let updatedSingleDoc = JSON.parse(singleDoc);
+    //Step Three: Load the actual doc to be shared unless we are on the singleDoc page already
+    if(params.single) {
+      //Do nothing for now
+    } else {
+      const fullFile = `/documents/${params.doc.id}.json`;
+      try {
+        let singleDocParams = {
+          fileName: fullFile, 
+          decrypt: true
+        }
+        let singleDoc = await fetchData(singleDocParams);
+        let updatedSingleDoc = JSON.parse(singleDoc);
 
-      setGlobal({
-        singleDoc: updatedSingleDoc
-      })
-    }
-    catch(error) {
-      console.log(error)
+        setGlobal({
+          singleDoc: updatedSingleDoc
+        })
+      }
+      catch(error) {
+        console.log(error)
+      }
     }
     //Step Four: Update shared with array for this doc
     await setGlobal({ sharedWith: [...getGlobal().singleDoc.sharedWith, getGlobal().receiverID] });
 
     let value = await getGlobal().documents;
-    let index = await value.map((x) => {return x.id }).indexOf(doc.id);
+    let index = await value.map((x) => {return x.id }).indexOf(params.doc.id);
     
     let singleDoc = await getGlobal().singleDoc;
     singleDoc["sharedWith"] = await getGlobal().sharedWith;
@@ -86,6 +91,7 @@ export async function sharedInfo(props, doc) {
       }
     }
     catch(error) {
+      ToastsStore.error(`Error sharing with ${user}. They may not have logged in before. You can create a public link instead.`)
       console.log(error);
     }
     //Step Six: Encrypt file with recipient's key and save it
@@ -106,7 +112,7 @@ export async function sharedInfo(props, doc) {
     }
     //Step Seven: Now save the original single doc with the new sharedWith array
     try {
-      const singleDocFile = doc.id;
+      const singleDocFile = params.doc.id;
       const singleDocFullFile = `/documents/${singleDocFile}.json`
       let saveSingleDocParams = {
         fileName: singleDocFullFile,

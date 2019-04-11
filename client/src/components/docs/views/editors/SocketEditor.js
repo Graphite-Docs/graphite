@@ -44,15 +44,15 @@ class SocketEditor extends Component {
   componentDidMount() {
     let room;
     if(window.location.href.includes('shared/docs')) {
-      if(window.location.href.includes('ipfs')) {
-        room = window.location.href.split('public/')[1].split('#')[0].split('.json')[0]
-      } else {
         room = window.location.href.split('docs/')[1].split('-')[1]
-      }
     } else if(window.location.href.includes('shared')) {
-      room = window.location.href.split('shared/')[1].split('/')[1].split("#")[0]
+        room = window.location.href.split('shared/')[1].split('/')[1].split("#")[0]
     } else {
-      room = window.location.href.split('doc/')[1].includes('#') ? window.location.href.split('doc/')[1].split('#')[0] : window.location.href.split('doc/')[1]
+      if(window.location.href.includes("new")) {
+        room = window.location.href.split("new/")[1];
+      } else {
+        room = window.location.href.split("documents/")[1];
+      }
     }
     this.socket.on('connect', () => {
       this.socket.emit('room', room)

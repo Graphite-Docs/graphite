@@ -827,7 +827,7 @@ class SlateEditor extends React.Component {
 
   handleTimelineTitleUpdate = () => {
     this.close();
-    single.handleUpdateTimelineTitle();
+    tline.handleUpdateTimelineTitle();
   };
 
   closeConfig2Show = (closeOnEscape, closeOnDimmerClick) => () => {
@@ -848,7 +848,7 @@ class SlateEditor extends React.Component {
   handleTimelineSave = () => {
     new window.TL.Timeline("timeline-embed", this.global.myTimeline);
     this.setState({ timelineModal: false });
-    single.handleTimelineSave();
+    // single.handleTimelineSave();
   };
 
   handleTimelineDeleteEvent = () => {};
@@ -857,6 +857,7 @@ class SlateEditor extends React.Component {
   handleClose = () => this.setState({ timelineModal: false });
 
   render() {
+    console.log(this.state.timelineModal)
     if (document.getElementById("timeline-embed")) {
       timelineEmbedded = true;
     } else {
@@ -1095,7 +1096,7 @@ class SlateEditor extends React.Component {
                     circular
                     icon="add"
                     style={{ cursor: "pointer" }}
-                    onClick={this.handleOpen}
+                    onClick={() => setTimeout(() => this.setState({ timelineModal: true}), 500)}
                   />
                 }
                 open={this.state.timelineModal}
@@ -1132,21 +1133,21 @@ class SlateEditor extends React.Component {
                             <Grid.Column>
                               <p>Media URL</p>
                               <Input
-                                onChange={single.handleTimelineTitleMediaUrl}
+                                onChange={tline.handleTimelineTitleMediaUrl}
                                 placeholder="Enter a url to the media you want to use"
                               />{" "}
                               <br />
                               <p>Media Caption</p>
                               <Input
                                 onChange={
-                                  single.handleTimelineTitleMediaCaption
+                                  tline.handleTimelineTitleMediaCaption
                                 }
                                 placeholder="Enter a caption for the media you want to use"
                               />{" "}
                               <br />
                               <p>Media Credit</p>
                               <Input
-                                onChange={single.handleTimelineTitleMediaCredit}
+                                onChange={tline.handleTimelineTitleMediaCredit}
                                 placeholder="Give credit to the creator of the media"
                               />{" "}
                               <br />
@@ -1155,14 +1156,14 @@ class SlateEditor extends React.Component {
                               <p>Title Headline</p>
                               <Input
                                 onChange={
-                                  single.handleTimelineTitleTextHeadline
+                                  tline.handleTimelineTitleTextHeadline
                                 }
                                 placeholder="Enter a headline"
                               />{" "}
                               <br />
                               <p>Title Sub-Text</p>
                               <Input
-                                onChange={single.handleTimelineTitleTextText}
+                                onChange={tline.handleTimelineTitleTextText}
                                 placeholder="Enter some sub-text"
                               />{" "}
                               <br />

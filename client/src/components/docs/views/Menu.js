@@ -2,7 +2,10 @@ import React, { Component } from "reactn";
 import { Modal, Button, Item, List } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+const actions = require('../helpers/singleDocActions');
 const single = require('../helpers/singleDoc');
+const share = require('../helpers/shareDoc');
+const docCol = require('../helpers/docsCollectionShare');
 
 
 export default class Menu extends Component {
@@ -27,8 +30,8 @@ export default class Menu extends Component {
     }
   }
 
-  handleShare = (props) => {
-    single.sharedInfoSingleDocRTC(props);
+  shareDoc = (params) => {
+    docCol.sharedInfo(params)
     this.setState({modalOpen: false})
   }
 
@@ -38,14 +41,20 @@ export default class Menu extends Component {
 
   handleClose = () => this.setState({ versionModal: false });
 
-  handleVersionSelect = (id) => {
+  handleVersionSelect = async (id) => {
+    await single.loadVersion(id);
     this.setState({ versionModal: false })
-    single.setVersion(id)
   }
 
   render() {
     const linkHref = '';
-    const { versions, contacts, teamList, gaiaLink, singleDocIsPublic, readOnly } = this.global;
+    const { contacts, teamList, gaiaLink, singleDocIsPublic, readOnly, singleDoc } = this.global;
+    let versions;
+    if(singleDoc.versions) {
+      versions = singleDoc.versions;
+    } else {
+      versions = [];
+    }
     let deleteLink;
     if (window.location.href.includes('new')) {
       deleteLink = `/documents/delete/${window.location.href.split('new/')[1]}`
@@ -59,24 +68,24 @@ export default class Menu extends Component {
                       <li className="topmenu">
                           <a href={linkHref}>file</a>
                           <ul className="submenu">
-                              <li><a href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New document</a></li>
+                              <li><button className='link-button' href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New Document</button></li>
                               {/*<li><a>Add tag</a></li>*/}
                               <li className="divider-menu"><hr /></li>
                               
-                              <li><Link to={deleteLink}>delete</Link></li>
+                              <li><button className='link-button'><Link to={deleteLink}>Delete</Link></button></li>
                               <li className="divider-menu"><hr /></li>
                               <li>
-                                  <a href={linkHref}>Download</a>
+                                  <button className='link-button'>Download</button>
                                   <ul className="submenu">
-                                      <li><a href={linkHref} onClick={() => single.downloadDoc('word')}>Microsoft Word (.docx)</a></li>
+                                      <li><button className='link-button' onClick={() => actions.downloadDoc('word')}>Microsoft Word (.docx)</button></li>
                                       {/*<li><a onClick={() => this.props.downloadDoc('odt')}>OpenDocument (.odt)</a></li>
                                       <li><a onClick={() => this.props.downloadDoc('rtf')}>Rich Text (.rtf)</a></li>*/}
-                                      <li><a href={linkHref} onClick={() => single.downloadDoc('txt')}>Plain Text (.txt)</a></li>
-                                      <li><a href={linkHref} onClick={() => single.downloadDoc('pdf')}>PDF (.pdf)</a></li>
+                                      <li><button className='link-button' onClick={() => actions.downloadDoc('txt')}>Plain Text (.txt)</button></li>
+                                      <li><button className='link-button' onClick={() => actions.downloadDoc('pdf')}>PDF (.pdf)</button></li>
 
                                   </ul>
                               </li>
-                              <li><a href={linkHref} onClick={single.print}>Print</a></li>
+                              <li><button className='link-button' onClick={actions.print}>Print</button></li>
                           </ul>
                       </li>
                       { this.global.mediumConnected ? Object.keys(this.global.mediumConnected).length > 0 && this.global.graphitePro ?
@@ -95,7 +104,7 @@ export default class Menu extends Component {
                       <ul className="submenu">
                           <li>
                             <Modal closeIcon style={{borderRadius: "0"}}
-                              trigger={<a href={linkHref}>Public link</a>}>
+                              trigger={<button className='link-button'>Public link</button>}>
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
@@ -113,7 +122,7 @@ export default class Menu extends Component {
                                       </p>
                                     </div>
                                     :
-                                    <Button style={{ borderRadius: "0" }} secondary onClick={single.sharePublicly}>Share Publicly</Button>
+                                    <Button style={{ borderRadius: "0" }} secondary onClick={share.sharePublicly}>Share Publicly</Button>
                                   }
 
                                   {
@@ -132,7 +141,7 @@ export default class Menu extends Component {
                           {
                             this.global.graphitePro ? <li>
                             <Modal closeIcon style={{borderRadius: "0"}}
-                              trigger={<a href={linkHref}>Share with team</a>}>
+                              trigger={<button className='link-button'>Share with team</button>}>
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
@@ -167,7 +176,7 @@ export default class Menu extends Component {
                             <Modal
                               closeIcon
                               style={{borderRadius: "0"}}
-                              trigger={<a href={linkHref} onClick={() => this.setState({ modalOpen: true})}>Share with contact</a>}
+                              trigger={<button className='link-button' onClick={() => this.setState({ modalOpen: true})}>Share with contact</button>}
                               open={this.state.modalOpen}
                               closeOnEscape={true}
                               closeOnDimmerClick={true}
@@ -235,7 +244,7 @@ export default class Menu extends Component {
                                     return (
                                       <Item className="contact-search" key={contact.contact}>
                                         <Item.Image size='tiny' src={contact.img} />
-                                        <Item.Content verticalAlign='middle'>{contact.contact} <br/> <Button onClick={() => single.sharedInfoSingleDocRTC(contact) } color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => single.sharedInfoSingleDocStatic(contact) } color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
+                                        <Item.Content verticalAlign='middle'>{contact.contact} <br/> <Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: true })} color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: false })} color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
                                       </Item>
                                     )
                                   })
@@ -285,7 +294,7 @@ export default class Menu extends Component {
                         closeOnEscape={true}
                         closeOnDimmerClick={true}
                         style={{borderRadius: "0"}}
-                        trigger={<a href={linkHref} onClick={() => this.setState({ versionModal: true })}>History</a>}>
+                        trigger={<button className='link-button' onClick={() => this.setState({ versionModal: true })}>History</button>}>
                         <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Document History</Modal.Header>
                         <Modal.Content>
                           <Modal.Description>
@@ -293,15 +302,15 @@ export default class Menu extends Component {
                             <List divided relaxed>
                               {
                                 versions.slice(0).reverse().map(version => {
-                                  let timestamp = new Date(version.createdAt).getTime();
+                                  let timestamp = new Date(version.timestamp).getTime();
                                   let newDate = new Date();
                                   newDate.setTime(timestamp);
                                   let dateString = newDate.toUTCString();
                                   return (
-                                    <List.Item key={version.id}>
+                                    <List.Item key={version.version}>
                                       <List.Icon name='clock outline' size='large' verticalAlign='middle' />
                                       <List.Content>
-                                        <List.Header as='a' onPointerDown={(e) => this.handleVersionSelect(version.id)}>Version {versions.indexOf(version) + 1}</List.Header>
+                                        <List.Header as='a' onPointerDown={(e) => this.handleVersionSelect(version.version)}>Version {versions.indexOf(version) + 1}</List.Header>
                                         <List.Description as='a'>Created at {dateString}</List.Description>
                                       </List.Content>
                                     </List.Item>

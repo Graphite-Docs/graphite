@@ -450,7 +450,7 @@ code {
   color: #fff!important;
 }
 
-.submenu li a {
+.submenu li a, .submenu li .link-button {
   color: #000!important;
 }
 .cm-e-menu li:hover > ul {

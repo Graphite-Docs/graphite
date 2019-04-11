@@ -64,12 +64,9 @@ export function handleTimelineTitleMediaUrl(e) {
     text.text = getGlobal().timelineTitleTextText;
     object.media = media;
     object.text = text;
-    setGlobal({ timelineTitle: object }, () => {
-      const timelineObj = {};
-      timelineObj.title = getGlobal().timelineTitle;
-      timelineObj.events = getGlobal().timelineEvents;
-      setGlobal({ myTimeline: timelineObj });
-    });
+    let myTimeline = getGlobal().myTimeline;
+    myTimeline["title"] = object;
+    setGlobal({ myTimeline })
   }
   
   export function handleAddNewTimelineEvent() {
@@ -89,32 +86,27 @@ export function handleTimelineTitleMediaUrl(e) {
     object.start_date = start_date;
     object.text = text;
     object.unique_id = Date.now();
-    setGlobal(
-      { timelineEvents: [...getGlobal().timelineEvents, object] },
-      () => {
-        const timelineObj = {};
-        timelineObj.title = getGlobal().timelineTitle;
-        timelineObj.events = getGlobal().timelineEvents;
-        setGlobal({ myTimeline: timelineObj });
-      }
-    );
+    let myTimeline = getGlobal().myTimeline;
+    let timelineEvents = myTimeline.events;
+    timelineEvents.push(object);
+    console.log(timelineEvents);
+    myTimeline["events"] = timelineEvents;
+    setGlobal({myTimeline});
   }
   
   export async function handleTimelineSave() {
-    const object = {};
-    object.title = getGlobal().timelineTitle;
-    object.events = getGlobal().timelineEvents;
-    setGlobal({ myTimeline: object });
+    const myTimeline = getGlobal().myTimeline;
+    setGlobal({ myTimeline });
   }
   
-  export function handleDeleteTimelineEvent(id) {
-    let events = getGlobal().timelineEvents;
-    console.log(events);
-    let index = events.findIndex(a => a.unique_id === id);
+  export async function handleDeleteTimelineEvent(id) {
+    let myTimeline = await getGlobal().myTimeline;
+    let events = myTimeline.events;
+    let index = await events.map((x) => {return x.unique_id }).indexOf(id);
+    console.log(index);
     if (index > -1) {
       events.splice(index, 1);
     }
-    setGlobal({ timelineEvents: events }, () => {
-      handleTimelineSave();
-    });
+    myTimeline["events"] = events;
+    setGlobal({ myTimeline });
   }
