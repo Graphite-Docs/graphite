@@ -1,6 +1,6 @@
 import React, { Component } from 'reactn';
 import SocketEditor from '../views/editors/SocketEditor';
-import EditorSkeleton from '../views/editors/EditorSkeleton';
+import PublicEditorSkeleton from '../views/editors/PublicEditorSkeleton';
 import {Image } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import logoSquare from '../../../assets/images/graphite-mark.svg';
@@ -21,10 +21,10 @@ export default class PublicDoc extends Component {
   }
 
   renderViews() {
-    const { readOnly, title, idToLoad, collabContent, link, loading } = this.global;
+    const { readOnly, title, idToLoad, collabContent, link, loading, docLoaded } = this.global;
     if(loading) {
       return (
-        <EditorSkeleton />
+        <PublicEditorSkeleton />
       )
     } else if(readOnly) {
       return (
@@ -64,7 +64,7 @@ export default class PublicDoc extends Component {
                     }
                     </div>
                     :
-                    <EditorSkeleton />
+                    <PublicEditorSkeleton />
                   }
   
               </div>
@@ -104,7 +104,7 @@ export default class PublicDoc extends Component {
                         <div>
                           <SocketEditor
                             roomId={idToLoad} //this is a string!
-                            docLoaded={this.props.docLoaded} //this is set by loadDoc
+                            docLoaded={docLoaded} //this is set by loadDoc
                             content={collabContent}
                             readOnly={readOnly}
                             handlePubChange={handlePubChange}
@@ -121,7 +121,7 @@ export default class PublicDoc extends Component {
                     }
                     </div>
                     :
-                    <EditorSkeleton />
+                    <PublicEditorSkeleton />
                   }
   
               </div>

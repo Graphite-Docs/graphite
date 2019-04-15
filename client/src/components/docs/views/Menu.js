@@ -108,15 +108,14 @@ export default class Menu extends Component {
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
-                                  <h3>Search for a contact</h3>
                                   <p>This data is not encrypted and can be accessed by anyone with the link that will be generated.</p>
                                   {
-                                    singleDocIsPublic === true ?
+                                    singleDoc.singleDocIsPublic === true ?
                                     <div>
                                       <p style={{marginBottom: "15px"}}>This document is already being shared publicly.</p>
 
-                                      <Button style={{ borderRadius: "0" }} onClick={single.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
-                                      <Button style={{ borderRadius: "0" }} onClick={single.stopSharing} color="red">Stop Sharing Publicly</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={share.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={share.stopSharing} color="red">Stop Sharing Publicly</Button>
                                       <p style={{marginTop: "15px", marginBottom: "15px"}}>
                                         {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
                                       </p>

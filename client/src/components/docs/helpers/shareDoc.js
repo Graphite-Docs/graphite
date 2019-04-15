@@ -2,8 +2,10 @@ import { getGlobal, setGlobal } from 'reactn';
 import { ToastsStore} from 'react-toasts';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { postData } from '../../shared/helpers/post';
+import { saveDoc } from './singleDoc';
 const wordCount = require('html-word-count');
-export function sharePublicly() {
+
+export function sharePublicly(params) {
     let singleDoc = getGlobal().singleDoc;
     if (singleDoc.readOnly === undefined) {
       setGlobal({ readOnly: true }, async () => {
@@ -58,6 +60,11 @@ export function sharePublicly() {
         }
       );
     }
+    if(params) {
+      saveDoc(params)
+    } else {
+      saveDoc({singleDocIsPublic: true})
+    }
   }
 
   export async function savePublic() {
@@ -82,4 +89,15 @@ export function sharePublicly() {
       } catch(error) {
         console.log(error)
       }
+  }
+
+  export function toggleReadOnly() {
+    //make this function toggleReadyOnly state instead, so user can press button again
+    setGlobal({readOnly: !getGlobal().readOnly}, () => {
+      let params = {
+        singleDocIsPublic: true, 
+        readOnly: getGlobal().readOnly
+      }
+      sharePublicly(params);
+    })
   }

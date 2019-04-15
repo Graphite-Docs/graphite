@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "axios": "^0.18.0",
     "blockstack": "^19.0.1",
     "emoji-mart": "^2.11.0",
     "file-saver": "^2.0.1",

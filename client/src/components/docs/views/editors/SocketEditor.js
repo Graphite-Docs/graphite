@@ -8,7 +8,8 @@ class SocketEditor extends Component {
     super(props);
 
     this.state = {
-      endpoint: "https://whispering-sands-47101.herokuapp.com",
+      // endpoint: "https://whispering-sands-47101.herokuapp.com",
+      endpoint: "http://localhost:5000",
       showCollab: false,
       uniqueID: ""
     }
@@ -86,6 +87,7 @@ class SocketEditor extends Component {
   }
 
   render() {
+    console.log("here we go")
     return (
       <SlateEditor
         ref={slateE => { this.slate = slateE; }}

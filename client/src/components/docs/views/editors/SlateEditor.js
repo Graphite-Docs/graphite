@@ -365,6 +365,7 @@ class SlateEditor extends React.Component {
   };
 
   onChange = (change, options = {}) => {
+    const { remote } = this.global;
     if (initialLoad) {
       //Do nothing but set initialLoad back to false
       initialLoad = false;
@@ -376,11 +377,11 @@ class SlateEditor extends React.Component {
       }
     }
 
-    // if (!this.remote) {
-    //   this.props.onChange(change)
-    // } else {
-    //   this.remote = false
-    // }
+    if (remote) {
+      this.props.onChange(change)
+    } else {
+      //
+    }
   };
 
   onCheckboxChange = (event, node) => {

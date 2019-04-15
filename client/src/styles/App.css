@@ -46,6 +46,24 @@
   border-radius: 5px;
 }
 
+.title-skel {
+  max-width: 45%;
+  margin: auto;
+  height: 40px;
+  background: #282828;
+  border-radius: 5px;
+  text-align: center;
+  margin-bottom: 20px;
+  margin-top: 85px;
+}
+
+.title-skel-div-public {
+  width: 100px;
+  height: 10px;
+  background: #fff;
+  border-radius: 5px;
+}
+
 .toolbar-sekl-div {
   width: 10px;
   height: 15px;
