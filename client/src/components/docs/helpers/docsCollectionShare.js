@@ -9,7 +9,6 @@ import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { Value } from 'slate';
 
 export async function sharedInfo(params) {
-  console.log(params)
     const { userSession } = getGlobal();
     setGlobal({ shareModalOpen: false});
     ToastsStore.success(`Sharing document...`)

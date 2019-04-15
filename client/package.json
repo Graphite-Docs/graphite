@@ -47,5 +47,8 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "worker-loader": "^2.0.0"
+  }
 }

@@ -365,6 +365,7 @@ class SlateEditor extends React.Component {
   };
 
   onChange = (change, options = {}) => {
+    const { singleDoc } = this.global;
     if (initialLoad) {
       //Do nothing but set initialLoad back to false
       initialLoad = false;
@@ -376,10 +377,10 @@ class SlateEditor extends React.Component {
       }
     }
 
-    if (!this.remote) {
+    if (singleDoc.readOnly === false || singleDoc.rtc) {
       this.props.onChange(change)
     } else {
-      this.remote = false
+      // this.remote = false
     }
   };
 

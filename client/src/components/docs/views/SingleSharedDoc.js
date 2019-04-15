@@ -1,4 +1,4 @@
-import React, { Component } from "reactn";
+import React, { Component, setGlobal } from "reactn";
 import { Link } from 'react-router-dom';
 import { Icon, Image } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
@@ -10,6 +10,7 @@ const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder
 export default class SingleSharedDoc extends Component {
 
   componentDidMount() {
+    setGlobal({ loading: true})
     shared.loadSharedDoc();
   }
 

@@ -1,10 +1,11 @@
 import React, { Component, setGlobal } from 'reactn';
-import { Container, Input, Grid, Button, Icon, Dropdown, Menu, Label, Sidebar } from 'semantic-ui-react';
+import { Container, Modal, Input, Grid, Button, Icon, Dropdown, Menu, Label, Sidebar } from 'semantic-ui-react';
 import MyDocs from './MyDocs';
 import SharedWithMe from './SharedWithMeCollection';
 import { Link } from 'react-router-dom';
 import Skeleton from './Skeleteon';
 import Nav from '../../shared/views/Nav';
+import { fetchSharedDocs } from '../helpers/sharedDocsCollection';
 const gdocs = require('../helpers/documents');
 const colTags = require('../helpers/docsCollectionTags');
 
@@ -20,6 +21,11 @@ class Documents extends Component {
           onboarding: false, 
           activeItem: "My Documents"
         }
+    }
+
+    componentDidMount() {
+        // console.log(window.startWorker());
+        setTimeout(fetchSharedDocs, 2000);
     }
 
     handleItemClick = (e, { name }) => this.setState({ activeItem: name })
@@ -183,13 +189,23 @@ class Documents extends Component {
                         active={activeItem === 'Shared With Me'}
                         onClick={this.handleItemClick}
                         />
-                        {
-                            graphitePro ? 
-                            <Menu.Menu position="right">
-                                <Menu.Item name='Team Documents' active={activeItem === 'Team Documents'} onClick={this.handleItemClick} />
-                            </Menu.Menu> : 
-                            <div className="hide" />
-                        }
+                        <Menu.Menu position="right">
+                            {
+                                graphitePro ? 
+                                <Menu.Item active={activeItem === 'Team Documents'} onClick={this.handleItemClick}><Icon name="group" />Team Documents</Menu.Item>
+                                :
+                                <Modal closeIcon trigger={<Menu.Item><Icon name="group" />Team Documents</Menu.Item>}>
+                                    <Modal.Header>Working as a team?</Modal.Header>
+                                    <Modal.Content>
+                                    <Modal.Description>
+                                        <p>Graphite Pro has all the team features you and the rest of your organization could need. Learn more today.</p>
+                                        <Button secondary>Learn More</Button>
+                                    </Modal.Description>
+                                    </Modal.Content>
+                                </Modal>
+                            }
+                            
+                        </Menu.Menu> 
                     </Menu>
                     </div>
                     {

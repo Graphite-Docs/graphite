@@ -256,6 +256,7 @@ setGlobal({
     tagModalOpen: false,
     deleteModalOpen: false,
     selectedDoc: {}, 
+    sharedDocs: []
 })
 
 configure({

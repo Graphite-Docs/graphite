@@ -5,9 +5,10 @@ const gdocs = require('../helpers/documents');
 
 class SharedWithMe extends Component {
   render() {
-      let sharedDocs = [];
-      let indexOfFirstDoc;
-      let indexOfLastDoc;
+      const { currentPage, docsPerPage } = this.global;
+      const { sharedDocs } = this.global;
+      const indexOfLastDoc = currentPage * docsPerPage;
+      const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
       const pageNumbers = [];
       for (let i = 1; i <= Math.ceil(sharedDocs.length / this.global.docsPerPage); i++) {
           pageNumbers.push(i);
@@ -35,9 +36,9 @@ class SharedWithMe extends Component {
                 sharedDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
                 return(
                 <Table.Row key={doc.id}>
-                    <Table.Cell><Link to={'/documents/' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
+                    <Table.Cell><Link to={'/shared/documents/docInfo&user=' + doc.sharedBy + '&id=' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
                     <Table.Cell>{doc.sharedBy}</Table.Cell>
-                    <Table.Cell>{doc.date}</Table.Cell>
+                    <Table.Cell>{doc.dateShared}</Table.Cell>
                 </Table.Row>
                 );
                 })
