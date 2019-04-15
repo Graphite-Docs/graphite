@@ -111,7 +111,6 @@ export async function loadSingle() {
   }
 
   let doc = await fetchData(docParams);
-  console.log(JSON.parse(doc));
   setGlobal({
     singleDoc: JSON.parse(doc), 
     title: JSON.parse(doc).title,

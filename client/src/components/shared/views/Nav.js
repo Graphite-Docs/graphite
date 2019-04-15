@@ -58,16 +58,7 @@ export default class Nav extends Component {
           </Dropdown>
           <Dropdown trigger={trigger} icon={null} className="app-switcher">
               <Dropdown.Menu>
-                {
-                  window.location.pathname === '/documents' ? <Dropdown.Item><Link to={'/shared-docs'}>Shared Docs</Link></Dropdown.Item> :
-                  window.location.pathname === '/sheets' ? <Dropdown.Item><Link to={'/shared-sheets'}>Shared Sheets</Link></Dropdown.Item> :
-                  window.location.pathname === '/vault' ? <Dropdown.Item><Link to={'/shared-vault'}>Shared Vault</Link></Dropdown.Item> :
-                  null
-                }
-                {/*<Dropdown.Item><Link to={'/profile'}>Profile</Link></Dropdown.Item>
-                <Dropdown.Item><Link to={'/integrations'}>Integrations</Link></Dropdown.Item>
-                <Dropdown.Item><Link to={'/teams'}>Team Management</Link></Dropdown.Item>*/}
-                {/*<Dropdown.Item><Link to={'/export'}>Export All Data</Link></Dropdown.Item>*/}
+                <Dropdown.Item>Dashboard</Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item><button className="link-button" onClick={signOut}>Sign Out</button></Dropdown.Item>
               </Dropdown.Menu>

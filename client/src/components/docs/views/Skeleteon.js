@@ -1,6 +1,6 @@
 import React, { Component } from 'reactn';
 import Nav from '../../shared/views/Nav';
-import { Container, Input, Grid, Table, Icon } from 'semantic-ui-react';
+import { Container, Input, Grid, Table, Icon, Menu } from 'semantic-ui-react';
 
 class Skeleton extends Component {
   render() {
@@ -17,6 +17,12 @@ class Skeleton extends Component {
                             <Input icon='search' className='search-box'/>
                         </Grid.Column>
                     </Grid>
+                    <div className="margin-top-20">
+                    <Menu secondary>
+                        <Menu.Item><span className="button-grey-skel-div"></span></Menu.Item>
+                        <Menu.Item><span className="button-grey-skel-div"></span></Menu.Item>
+                    </Menu>
+                    </div>
                     <Table unstackable style={{borderRadius: "0"}}>
                         <Table.Header>
                         <Table.Row>

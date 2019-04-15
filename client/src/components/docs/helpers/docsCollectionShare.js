@@ -5,14 +5,24 @@ import { postData } from '../../shared/helpers/post';
 import { encryptContent } from 'blockstack';
 import { loadData } from '../../shared/helpers/accountContext';
 import { ToastsStore} from 'react-toasts';
+import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
+import { Value } from 'slate';
 
 export async function sharedInfo(params) {
   console.log(params)
+    const { userSession } = getGlobal();
     setGlobal({ shareModalOpen: false});
     ToastsStore.success(`Sharing document...`)
     let key;
     let user = params.contact.contact;
-    setGlobal({ receiverID: user, rtc: params.realTime || true })
+
+    if(params.realTime !== undefined) {
+      setGlobal({ rtc: params.realTime });
+    } else {
+      setGlobal({ rtc: true })
+    }
+
+    setGlobal({ receiverID: user })
     //Step One: Get Contact's Key
     try {
       let keyParams = {
@@ -34,9 +44,11 @@ export async function sharedInfo(params) {
         decrypt: true
       }
       let sharedDocs = await fetchData(sharedCollectionParams);
-      setGlobal({
-        sharedCollection: JSON.parse(sharedDocs) || []
-      })
+      if(JSON.parse(sharedDocs)) {
+        setGlobal({ sharedCollection: JSON.parse([sharedDocs]) });
+      } else {
+        setGlobal({ sharedCollection: [] });
+      }
     }
     catch(error) {
       console.log(error);
@@ -69,13 +81,27 @@ export async function sharedInfo(params) {
     let index = await value.map((x) => {return x.id }).indexOf(params.doc.id);
     
     let singleDoc = await getGlobal().singleDoc;
+    setGlobal({ content: Value.fromJSON(singleDoc.content)})
     singleDoc["sharedWith"] = await getGlobal().sharedWith;
-    console.log(singleDoc);
-  
+    singleDoc["rtc"] = await getGlobal().rtc;
+    const object = {};
+    object.id = singleDoc.id;
+    object.title = singleDoc.title;
+    if (getGlobal().rtc) {
+      let content = getGlobal().content;
+      object.content = content.toJSON();
+    } else {
+      object.content = document.getElementsByClassName("editor")[0].innerHTML;
+    }
+    object.readOnly = getGlobal().rtc ? false : true;
+    object.dateShared = getMonthDayYear();
+    object.sharedBy = userSession.loadUserData().username;
+
     const updatedDocs = update(getGlobal().documents, {$splice: [[index, 1, singleDoc]]});
     await setGlobal({
       documents: updatedDocs, 
-      singleDoc
+      singleDoc, 
+      sharedCollection: [...getGlobal().sharedCollection, object]
     })
     //Step Five: Save the shared with collection
     try{

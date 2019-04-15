@@ -43,8 +43,8 @@ class SocketEditor extends Component {
 
   componentDidMount() {
     let room;
-    if(window.location.href.includes('shared/docs')) {
-        room = window.location.href.split('docs/')[1].split('-')[1]
+    if(window.location.href.includes('docInfo')) {
+        room = room = window.location.href.split('id=')[1];
     } else if(window.location.href.includes('shared')) {
         room = window.location.href.split('shared/')[1].split('/')[1].split("#")[0]
     } else {
