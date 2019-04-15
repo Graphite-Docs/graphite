@@ -30,7 +30,7 @@ class SingleDoc extends Component {
   }
   
   render() {
-    const { loading, avatars, save, autoSave, title, singleDocIsPublic} = this.global;
+    const { loading, avatars, save, autoSave, title, singleDocIsPublic, singleDoc} = this.global;
     let uniqueAva = avatars.filter((thing, index, self) => self.findIndex(t => t.name === thing.name) === index)
     let editor = document.getElementsByClassName("editor");
     let words;
@@ -125,7 +125,7 @@ class SingleDoc extends Component {
                   <div>
                     <div>
                       {
-                        this.global.readOnly === false || this.global.rtc ? 
+                        singleDoc.readOnly === false || singleDoc.rtc ? 
                         <SocketEditor /> : 
                         <SlateEditor />
                       }

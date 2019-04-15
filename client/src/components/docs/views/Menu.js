@@ -48,7 +48,7 @@ export default class Menu extends Component {
 
   render() {
     const linkHref = '';
-    const { contacts, teamList, gaiaLink, singleDocIsPublic, readOnly, singleDoc } = this.global;
+    const { contacts, teamList, userSession, readOnly, singleDoc } = this.global;
     let versions;
     if(singleDoc.versions) {
       versions = singleDoc.versions;
@@ -60,6 +60,12 @@ export default class Menu extends Component {
       deleteLink = `/documents/delete/${window.location.href.split('new/')[1]}`
     } else {
       deleteLink = `/documents/delete/${window.location.href.split('documents/')[1]}`
+    }
+    let docId;
+    if(window.location.href.includes("new")) {
+      docId = window.location.href.split("new/")[1];
+    } else {
+      docId = singleDoc.id;
     }
     return (
 
@@ -114,24 +120,19 @@ export default class Menu extends Component {
                                     <div>
                                       <p style={{marginBottom: "15px"}}>This document is already being shared publicly.</p>
 
-                                      <Button style={{ borderRadius: "0" }} onClick={share.toggleReadOnly} color="green">{readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={share.toggleReadOnly} color="green">{singleDoc.readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
                                       <Button style={{ borderRadius: "0" }} onClick={share.stopSharing} color="red">Stop Sharing Publicly</Button>
                                       <p style={{marginTop: "15px", marginBottom: "15px"}}>
                                         {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
                                       </p>
+                                      <div>
+                                        <p><a href={`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}>{`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}</a></p>
+                                      </div>
                                     </div>
                                     :
                                     <Button style={{ borderRadius: "0" }} secondary onClick={share.sharePublicly}>Share Publicly</Button>
                                   }
 
-                                  {
-                                    gaiaLink !== "" ?
-                                    <div>
-                                      <p><a href={gaiaLink}>{gaiaLink}</a></p>
-                                    </div>
-                                    :
-                                    <div className="hide" />
-                                  }
                                 </Modal.Description>
                               </Modal.Content>
                             </Modal>

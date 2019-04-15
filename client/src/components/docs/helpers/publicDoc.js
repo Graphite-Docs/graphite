@@ -44,8 +44,38 @@ export function fetchData(){
 }
 
 export function handlePubChange(change) { //calling this on change in textarea...
-    setGlobal({
-      remote: true,
-      collabContent: change.value
-    });
-  }
+  setGlobal({
+    collabContent: change.value
+  });
+}
+
+export function pollForChanges() {
+  const user = window.location.href.split('docs/')[1].split('-')[0];
+    blockstack.lookupProfile(user, "https://core.blockstack.org/v1/names")
+    .then((profile) => {
+      setGlobal({ url: profile.apps[window.location.origin]}, () => {
+        const id = window.location.href.split('docs/')[1].split('-')[1].split('#')[0]
+        axios.get(`${getGlobal().url}public/${id}.json`)
+        .then((response) => {
+            if(Object.keys(response.data).length > 0) {
+                if(response.data.readOnly !== getGlobal().readOnly) {
+                  fetchData();
+                }
+            } else {
+              setGlobal({
+                  singleDocIsPublic: false,
+              })
+            }
+        })
+        .then(() => {
+            setGlobal({ docLoaded: true, loading: false })
+        })
+        .catch((error) => {
+            console.log('error:', error);
+        });
+      })
+    })
+    .catch((error) => {
+      console.log('could not resolve profile')
+    })
+}

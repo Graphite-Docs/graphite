@@ -365,7 +365,6 @@ class SlateEditor extends React.Component {
   };
 
   onChange = (change, options = {}) => {
-    const { remote } = this.global;
     if (initialLoad) {
       //Do nothing but set initialLoad back to false
       initialLoad = false;
@@ -377,10 +376,10 @@ class SlateEditor extends React.Component {
       }
     }
 
-    if (remote) {
+    if (!this.remote) {
       this.props.onChange(change)
     } else {
-      //
+      this.remote = false
     }
   };
 
@@ -685,6 +684,7 @@ class SlateEditor extends React.Component {
   };
 
   onClickMark = (event, type) => {
+    console.log(type)
     event.preventDefault();
     this.editor.toggleMark(type);
   };

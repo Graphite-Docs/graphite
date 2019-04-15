@@ -53,12 +53,12 @@ export default class Toolbar extends Component {
   renderHeadingDrop() {
     return (
       <Dropdown.Menu>
-        <Dropdown.Item text='Heading One' onPointerDown={(e) => this.props.onClickBlock(e, 'heading-one')} />
-        <Dropdown.Item text='Heading Two' onPointerDown={(e) => this.props.onClickBlock(e, 'heading-two')} />
-        <Dropdown.Item text='Heading Three' onPointerDown={(e) => this.props.onClickBlock(e, 'heading-three')} />
-        <Dropdown.Item text='Heading Four' onPointerDown={(e) => this.props.onClickBlock(e, 'heading-four')} />
-        <Dropdown.Item text='Heading Five' onPointerDown={(e) => this.props.onClickBlock(e, 'heading-five')} />
-        <Dropdown.Item text='Heading Six' onPointerDown={(e) => this.props.onClickBlock(e, 'heading-six')} />
+        <Dropdown.Item text='Heading One' onClick={(e) => this.props.onClickBlock(e, 'heading-one')} />
+        <Dropdown.Item text='Heading Two' onClick={(e) => this.props.onClickBlock(e, 'heading-two')} />
+        <Dropdown.Item text='Heading Three' onClick={(e) => this.props.onClickBlock(e, 'heading-three')} />
+        <Dropdown.Item text='Heading Four' onClick={(e) => this.props.onClickBlock(e, 'heading-four')} />
+        <Dropdown.Item text='Heading Five' onClick={(e) => this.props.onClickBlock(e, 'heading-five')} />
+        <Dropdown.Item text='Heading Six' onClick={(e) => this.props.onClickBlock(e, 'heading-six')} />
       </Dropdown.Menu>
     )
   }
@@ -66,11 +66,11 @@ export default class Toolbar extends Component {
   renderTableDrop() {
     return (
       <Dropdown.Menu>
-        <Dropdown.Item text='Add Column' onPointerDown={(e) => this.props.onInsertCol()} />
-        <Dropdown.Item text='Add Row' onPointerDown={(e) => this.props.onInsertRow()} />
-        <Dropdown.Item text='Remove Row' onPointerDown={(e) => this.props.onRemoveRow()} />
-        <Dropdown.Item text='Remove Column' onPointerDown={(e) => this.props.onRemoveCol()} />
-        <Dropdown.Item text='Remove Table' onPointerDown={(e) => this.props.onRemoveTable()} />
+        <Dropdown.Item text='Add Column' onClick={(e) => this.props.onInsertCol()} />
+        <Dropdown.Item text='Add Row' onClick={(e) => this.props.onInsertRow()} />
+        <Dropdown.Item text='Remove Row' onClick={(e) => this.props.onRemoveRow()} />
+        <Dropdown.Item text='Remove Column' onClick={(e) => this.props.onRemoveCol()} />
+        <Dropdown.Item text='Remove Table' onClick={(e) => this.props.onRemoveTable()} />
       </Dropdown.Menu>
     )
   }
@@ -283,21 +283,21 @@ export default class Toolbar extends Component {
             </Dropdown>
           } content='Heading' />
         </Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
 
-          {/*<Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
+          {/*<Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
 
           <Menu.Item style={{cursor: "pointer"}}>
             <Dropdown text='More'>
               <Dropdown.Menu>
-              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Dropdown.Item>
-              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Dropdown.Item>
-              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Dropdown.Item>
-              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Dropdown.Item>
-              <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Dropdown.Item>
+              <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Dropdown.Item>
+              <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Dropdown.Item>
+              <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Dropdown.Item>
+              <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Dropdown.Item>
+              <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Dropdown.Item>
               <Dropdown.Item style={{cursor: "pointer"}}>
               {
                 this.props.isTable ?
@@ -309,7 +309,7 @@ export default class Toolbar extends Component {
                     } position='bottom center' content='Table options' />
 
                   :
-                <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
+                <Popup trigger={<Icon onClick={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
               }
               </Dropdown.Item>
                 <Dropdown.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}>
@@ -325,16 +325,16 @@ export default class Toolbar extends Component {
 
                 {
                   this.props.hasLinks() ?
-                  <Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /> :
+                  <Icon style={{color: "#4183c4"}} onClick={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /> :
                   linkModal
                 }
 
                 </Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}>
                   {modal}
                 </Dropdown.Item>
@@ -379,16 +379,16 @@ export default class Toolbar extends Component {
             </Dropdown>
           } content='Heading' />
         </Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'file code outline')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
-          {/*<Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'file code outline')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
+          {/*<Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}}>
             <Dropdown text='More'>
               <Dropdown.Menu>
@@ -403,7 +403,7 @@ export default class Toolbar extends Component {
                       } position='bottom center' content='Table options' />
 
                     :
-                  <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
+                  <Popup trigger={<Icon onClick={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
                 }
                 </Dropdown.Item>
                 <Dropdown.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}>
@@ -419,16 +419,16 @@ export default class Toolbar extends Component {
 
                 {
                   this.props.hasLinks() ?
-                  <Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /> :
+                  <Icon style={{color: "#4183c4"}} onClick={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /> :
                   linkModal
                 }
 
                 </Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}>
                   {modal}
                 </Dropdown.Item>
@@ -473,15 +473,15 @@ export default class Toolbar extends Component {
             </Dropdown>
           } content='Heading' />
         </Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
-          {/*<Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
+          {/*<Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'check-list-item')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>*/}
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}}>
           {
             this.props.isTable ?
@@ -493,7 +493,7 @@ export default class Toolbar extends Component {
                 } position='bottom center' content='Table options' />
 
               :
-            <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
+            <Popup trigger={<Icon onClick={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
           }
           </Menu.Item>
           <Menu.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
@@ -506,7 +506,7 @@ export default class Toolbar extends Component {
           </Menu.Item>
           {
             this.props.hasLinks() ?
-            <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
+            <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onClick={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
             <Menu.Item style={{cursor: "pointer"}}>
             {linkModal}
             </Menu.Item>
@@ -514,10 +514,10 @@ export default class Toolbar extends Component {
           <Menu.Item style={{cursor: "pointer"}}>
             <Dropdown text='More'>
               <Dropdown.Menu>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
-                <Dropdown.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Dropdown.Item>
+                <Dropdown.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Dropdown.Item>
                 <Dropdown.Item style={{cursor: "pointer"}}>
                   {modal}
                 </Dropdown.Item>
@@ -563,15 +563,15 @@ export default class Toolbar extends Component {
             </Dropdown>
           } content='Heading' />
         </Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'bold')}><Popup position='bottom center' trigger={<Icon name='bold' />} content='Bold (crtl/cmd + B)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'italic')}><Popup position='bottom center' trigger={<Icon name='italic' />} content='Italic (crtl/cmd + I)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'underline')}><Popup position='bottom center' trigger={<Icon name='underline' />} content='Underline (crtl/cmd + U)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'strikethrough')}><Popup position='bottom center' trigger={<Icon name='strikethrough' />} content='Strikethrough (crtl/cmd + shift + s)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickMark(e, 'code')}><Popup position='bottom center' trigger={<Icon name='file code outline' />} content='Code (ctrl + `)' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'list')}><Popup position='bottom center' trigger={<Icon name='list' />} content='List' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'ordered')}><Popup position='bottom center' trigger={<Icon name='list ol' />} content='Numbered List' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'check-list')}><Popup position='bottom center' trigger={<Icon name='check square outline' />} content='Checklist' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickBlock(e, 'block-quote')}><Popup position='bottom center' trigger={<Icon name='quote right' />} content='Quote' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}}>
           {
             this.props.isTable ?
@@ -583,7 +583,7 @@ export default class Toolbar extends Component {
                 } position='bottom center' content='Table options' />
 
               :
-            <Popup trigger={<Icon onPointerDown={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
+            <Popup trigger={<Icon onClick={(e) => this.props.onInsertTable()} name='table' />} position='bottom center' content='Table' />
           }
           </Menu.Item>
           <Menu.Item onClick={() => this.onColorClick('color')} style={{cursor: "pointer"}}><Popup position='bottom center' trigger={
@@ -596,15 +596,15 @@ export default class Toolbar extends Component {
           </Menu.Item>
           {
             this.props.hasLinks() ?
-            <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onPointerDown={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
+            <Menu.Item style={{cursor: "pointer"}}><Icon style={{color: "#4183c4"}} onClick={(e) => this.props.onClickLink(e, this.state.url)}  name='unlink' /></Menu.Item> :
             <Menu.Item style={{cursor: "pointer"}}>
             {linkModal}
             </Menu.Item>
           }
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Menu.Item>
-          <Menu.Item style={{cursor: "pointer"}} onPointerDown={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'left')}><Popup position='bottom center' trigger={<Icon name='align left' />} content='Align left' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'center')}><Popup position='bottom center' trigger={<Icon name='align center' />} content='Align center' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'right')}><Popup position='bottom center' trigger={<Icon name='align right' />} content='Align right' /></Menu.Item>
+          <Menu.Item style={{cursor: "pointer"}} onClick={(e) => this.props.onClickAlign(e, 'justify')}><Popup position='bottom center' trigger={<Icon name='align justify' />} content='Align justify' /></Menu.Item>
           <Menu.Item style={{cursor: "pointer"}}>
             {modal}
           </Menu.Item>

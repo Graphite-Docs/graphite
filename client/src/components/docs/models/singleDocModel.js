@@ -4,23 +4,27 @@ import { Value } from 'slate';
 const initialValue = require('../views/editors/initialValue.json');
 
 export async function singleDocModel(updates) {
-    const { content, title, singleDoc } = await getGlobal();
+    let singleDoc = getGlobal().singleDoc;
+    let readOnlySource = updates.readOnly !== undefined ? "updates" : "doc";
+    let rtcSource = updates.rtc !== undefined ? "updates" : "doc";
     let id;
     window.location.href.includes("new") ? id = window.location.href.split("new/")[1] : id = window.location.href.split("documents/")[1];
+    //Model
     let singleModel = await {
         id: singleDoc.id || id, 
-        content: content === "" ? Value.fromJSON(initialValue) : content,
+        content: getGlobal().content === "" ? Value.fromJSON(initialValue) : getGlobal().content,
         fileType: "documents", 
         lastUpdate: Date.now(), 
         updated: getMonthDayYear(), 
-        readOnly: singleDoc.readOnly ? updates.readOnly ? updates.readOnly : singleDoc.readOnly : true,
-        rtc: singleDoc.rtc ? updates.rtc ? updates.rtc : singleDoc.rtc : false,
+        readOnly: readOnlySource === "updates" ? updates.readOnly : singleDoc.readOnly,
+        rtc: rtcSource === "updates" ? updates.rtc : singleDoc.rtc,
         sharedWith: updates.sharedWith ? updates.sharedWith :  singleDoc.sharedWith || [], 
         singleDocIsPublic: singleDoc.singleDocIsPublic ? updates.singleDocIsPublic ? updates.singleDocIsPublic : singleDoc.singleDocIsPublic : false,
         singleDocTags: updates.singleDocTags ? updates.singleDocTags : singleDoc.singleDocTags || [], 
         teamDoc: false, 
         versions: singleDoc.versions ? updates.version ? [...singleDoc.versions, updates.version] : singleDoc.versions : [],
-        title: title ? title : "Untitled"
+        title: getGlobal().title ? getGlobal().title : "Untitled"
     }
+    //End Model
     return singleModel;
 }

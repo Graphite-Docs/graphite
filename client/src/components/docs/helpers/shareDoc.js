@@ -7,7 +7,7 @@ const wordCount = require('html-word-count');
 
 export function sharePublicly(params) {
     let singleDoc = getGlobal().singleDoc;
-    if (singleDoc.readOnly === undefined) {
+    if (singleDoc.readOnly === undefined && getGlobal().readOnly === undefined) {
       setGlobal({ readOnly: true }, async () => {
         const object = {
           title: getGlobal().title,
@@ -35,13 +35,13 @@ export function sharePublicly(params) {
     } else {
       const object = {};
       object.title = getGlobal().title;
-      if (singleDoc.readOnly) {
+      if (getGlobal().readOnly) {
         object.content = document.getElementsByClassName("editor")[0].innerHTML;
       } else {
         let content = getGlobal().content;
         object.content = content.toJSON();
       }
-      object.readOnly = singleDoc.readOnly;
+      object.readOnly = getGlobal().readOnly;
       object.words = wordCount(
         document
           .getElementsByClassName("editor")[0]
@@ -56,7 +56,7 @@ export function sharePublicly(params) {
           singleDoc: singleDoc
         },
         () => {
-          savePublic();
+          savePublic(true);
         }
       );
     }
@@ -67,7 +67,7 @@ export function sharePublicly(params) {
     }
   }
 
-  export async function savePublic() {
+  export async function savePublic(showToast) {
     const { userSession } = getGlobal();
     const user = userSession.loadUserData().username;
     let id;
@@ -85,15 +85,17 @@ export function sharePublicly(params) {
         const publicDoc = await postData(pubDocParams);
         console.log(publicDoc);
         setGlobal({ gaiaLink: link});
-        ToastsStore.success(`Document shared publicly`)
+        showToast ? ToastsStore.success(`Document shared publicly`) : console.log("saved")
       } catch(error) {
         console.log(error)
       }
   }
 
   export function toggleReadOnly() {
+    let doc = getGlobal().singleDoc;
+    let currentStatus = doc.readOnly;
     //make this function toggleReadyOnly state instead, so user can press button again
-    setGlobal({readOnly: !getGlobal().readOnly}, () => {
+    setGlobal({readOnly: !currentStatus}, () => {
       let params = {
         singleDocIsPublic: true, 
         readOnly: getGlobal().readOnly

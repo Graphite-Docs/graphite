@@ -6,6 +6,9 @@ import update from 'immutability-helper';
 import { loadData } from '../../shared/helpers/accountContext';
 import { singleDocModel } from '../models/singleDocModel';
 import { documentModel } from '../models/documentModel';
+import { savePublic } from './shareDoc';
+import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
+const wordCount = require('html-word-count');
 const initialTimeline = require('../views/editors/initialTimeline.json');
 const uuid = require('uuidv4');
 
@@ -66,6 +69,27 @@ export async function saveDoc(updates) {
     console.log(updatedIndex);
     loadData({refresh: false});
     setGlobal({ autoSave: "Saved" });
+
+    if(singleDoc.singleDocIsPublic) {
+      const object = {};
+      object.title = getGlobal().title;
+      if (singleDoc.readOnly) {
+        object.content = document.getElementsByClassName("editor")[0].innerHTML;
+      } else {
+        let content = getGlobal().content;
+        object.content = content.toJSON();
+      }
+      object.readOnly = singleDoc.readOnly;
+      object.words = wordCount(
+        document
+          .getElementsByClassName("editor")[0]
+          .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
+      );
+      object.shared = getMonthDayYear();
+      object.singleDocIsPublic = true;
+      setGlobal({ singlePublic: object})
+      savePublic(false);
+    }
 }
 
 export async function handleTitle(e) {

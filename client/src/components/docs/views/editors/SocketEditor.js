@@ -1,7 +1,6 @@
 import React, { Component } from 'reactn';
 import socketIOClient from 'socket.io-client';
 import SlateEditor from './SlateEditor';
-import { loadUserData, isUserSignedIn } from 'blockstack';
 
 class SocketEditor extends Component {
   constructor(props) {
@@ -13,10 +12,10 @@ class SocketEditor extends Component {
       showCollab: false,
       uniqueID: ""
     }
-
+    const { userSession } = this.global;
     //TODO need to change this to use DID.
-    if(isUserSignedIn()) {
-      this.uniqueID = loadUserData().username;
+    if(userSession.isUserSignedIn()) {
+      this.uniqueID = userSession.loadUserData().username;
     } else {
       this.uniqueID = Math.round(Math.random() * 1000000000000);
     }
@@ -87,7 +86,6 @@ class SocketEditor extends Component {
   }
 
   render() {
-    console.log("here we go")
     return (
       <SlateEditor
         ref={slateE => { this.slate = slateE; }}

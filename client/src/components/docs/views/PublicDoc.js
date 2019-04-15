@@ -6,14 +6,15 @@ import {Menu as MainMenu} from 'semantic-ui-react';
 import logoSquare from '../../../assets/images/graphite-mark.svg';
 import {
   fetchData,
-  handlePubChange
+  handlePubChange, 
+  pollForChanges
 } from '../helpers/publicDoc'
 
 export default class PublicDoc extends Component {
 
   componentDidMount() {
     fetchData();
-    // setInterval(pollData, 3000)
+    setInterval(pollForChanges, 3000)
   }
 
   componentWillUnmount() {
