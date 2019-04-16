@@ -168,6 +168,10 @@
 }
 /* Margin */
 
+.margin-top-10 {
+  margin-top: 10px;
+}
+
 .margin-top-20 {
   margin-top: 20px;
 }
@@ -1223,6 +1227,19 @@ div.markdown-editor__editor-container h2 {
 }
 
 /* Vault */
+
+.file-processing {
+  text-align: center;
+  padding: 30px;
+}
+
+.file-processing img {
+  max-width: 80%;
+  margin: auto;
+  border-radius: 15px;
+  margin-top: 30px;
+  margin-bottom: 20px;
+}
 
 .html-card {
   background: #fff;

@@ -156,7 +156,7 @@ setGlobal({
     typeList: "hide",
     selectedType: "",
     applyFilter: false,
-    filteredVault: [],
+    filteredFiles: [],
     currentVaultPage: 1,
     description: "",
     appsUsed: "",
@@ -256,7 +256,10 @@ setGlobal({
     tagModalOpen: false,
     deleteModalOpen: false,
     selectedDoc: {}, 
-    sharedDocs: []
+    sharedDocs: [],
+    fileProcessing: false,
+    vaultModalOpen: false, 
+    sharefileModalOpen: false
 })
 
 configure({

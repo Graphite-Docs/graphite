@@ -2,6 +2,7 @@ import React, { Component, setGlobal } from 'reactn';
 import { Input, Button, Table, Icon, Dropdown, Modal, Menu, Label, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+import { ToastsStore} from 'react-toasts';
 const gdocs = require('../helpers/documents');
 const share = require('../helpers/docsCollectionShare')
 const colTags = require('../helpers/docsCollectionTags');
@@ -12,8 +13,31 @@ shareDoc = (contact) => {
     share.sharedInfo({contact: contact, doc: selectedDoc});
 }
 
+handleDelete = () => {
+    const {selectedDoc} = this.global;
+    gdocs.deleteDoc(selectedDoc)
+}
+
+handleTagModal = (doc) => {
+    setGlobal({tagModalOpen: true})
+    colTags.loadSingleDoc(doc)
+}
+
+copyLink = () => {
+    /* Get the text field */
+    var copyText = document.getElementById("copyLink");
+    console.log(copyText)
+    /* Select the text field */
+    copyText.select();
+
+    /* Copy the text inside the text field */
+    document.execCommand("copy");
+    ToastsStore.success(`Link copied`)
+  }
+
   render() {
       const { currentDocs, indexOfFirstDoc, indexOfLastDoc, shareModalOpen, results, contacts, tagModalOpen, tag, singleDocTags, deleteModalOpen, selectedDoc, renderPageNumbers, pageNumbers} = this.props;
+      const { userSession } = this.global;
       return (
         <div>
         <Table unstackable style={{borderRadius: "0", marginTop: "10px"}}>
@@ -51,7 +75,25 @@ shareDoc = (contact) => {
                 return(
                 <Table.Row key={doc.id}>
                     <Table.Cell><Link to={'/documents/' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
-                    <Table.Cell>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')}</Table.Cell>
+                    <Table.Cell>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')} 
+                    {uniqueCollaborators.length > 0 ? 
+                    <Modal trigger={
+                        <span style={{marginLeft: "5px"}}><Icon style={{color: "#4183c4", cursor: "pointer"}} name="linkify" /></span>
+                      }
+                        size='small'
+                        closeIcon
+                      >
+                        <Modal.Content>
+                          <Modal.Description className='link-modal'>
+                            <p>Provide your collaborators this link for quick access:</p>
+                            <Input readOnly id="copyLink" value={`${window.location.origin}/documents/docInfo&user=${userSession.loadUserData().username}&id=${doc.id}`} />
+                            <p className="margin-top-10"><Button onClick={this.copyLink} secondary>Copy Link</Button><Icon onClick={this.copyLink} style={{cursor: "pointer", marginLeft: "10px"}} name="copy" /></p>
+                          </Modal.Description>
+                        </Modal.Content>
+                    </Modal> :
+                    <span className="hide"></span>
+                    }
+                    </Table.Cell>
                     <Table.Cell>{doc.updated}</Table.Cell>
                     <Table.Cell>{tags === "" ? tags : tags.join(', ')}</Table.Cell>
                     <Table.Cell>

@@ -26,7 +26,6 @@ export async function loadData(params) {
     let docs = await fetchData(docsParams);
     let contacts = await fetchData(contactsParams);
     let files = await fetchData(filesParams);
-
     setGlobal({
         documents: JSON.parse(docs), 
         filteredDocs: JSON.parse(docs),

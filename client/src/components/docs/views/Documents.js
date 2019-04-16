@@ -1,4 +1,4 @@
-import React, { Component, setGlobal } from 'reactn';
+import React, { Component } from 'reactn';
 import { Container, Modal, Input, Grid, Button, Icon, Dropdown, Menu, Label, Sidebar } from 'semantic-ui-react';
 import MyDocs from './MyDocs';
 import SharedWithMe from './SharedWithMeCollection';
@@ -7,7 +7,6 @@ import Skeleton from './Skeleteon';
 import Nav from '../../shared/views/Nav';
 import { fetchSharedDocs } from '../helpers/sharedDocsCollection';
 const gdocs = require('../helpers/documents');
-const colTags = require('../helpers/docsCollectionTags');
 
 class Documents extends Component {
     constructor(props) {
@@ -47,16 +46,6 @@ class Documents extends Component {
         this.setState({ visible: false}, () => {
             gdocs.collabFilter(props)
         })
-    }
-
-    handleDelete = () => {
-        const {selectedDoc} = this.global;
-        gdocs.deleteDoc(selectedDoc)
-    }
-
-    handleTagModal = (doc) => {
-        setGlobal({tagModalOpen: true})
-        colTags.loadSingleDoc(doc)
     }
   render() {
     const { visible, activeItem } = this.state;
@@ -198,8 +187,8 @@ class Documents extends Component {
                                     <Modal.Header>Working as a team?</Modal.Header>
                                     <Modal.Content>
                                     <Modal.Description>
-                                        <p>Graphite Pro has all the team features you and the rest of your organization could need. Learn more today.</p>
-                                        <Button secondary>Learn More</Button>
+                                        <p>Graphite Pro has all the team features you and the rest of your organization could need. <Link to={'/trial'}>Sign up today for a 30-day free trial.</Link></p>
+                                        <Link to={'/trial'}><Button secondary>Try Graphite Pro Free</Button></Link>
                                     </Modal.Description>
                                     </Modal.Content>
                                 </Modal>
