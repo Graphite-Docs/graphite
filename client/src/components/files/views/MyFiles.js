@@ -67,7 +67,7 @@ class MyFiles extends Component {
 
               return(
                 <Table.Row key={file.id} style={{ marginTop: "35px"}}>
-                  <Table.Cell><Link to={'/vault/' + file.id}>{file.name ? file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name : "Untitled"}</Link></Table.Cell>
+                  <Table.Cell><Link to={'/files/' + file.id}>{file.name ? file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name : "Untitled"}</Link></Table.Cell>
                   <Table.Cell>{uniqueCollaborators === [] ? uniqueCollaborators : uniqueCollaborators.join(', ')}</Table.Cell>
                   <Table.Cell>{file.uploaded}</Table.Cell>
                   <Table.Cell>{tags === [] ? tags : tags.join(', ')}</Table.Cell>

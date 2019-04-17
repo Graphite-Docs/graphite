@@ -26,7 +26,6 @@ handleTagModal = (doc) => {
 copyLink = () => {
     /* Get the text field */
     var copyText = document.getElementById("copyLink");
-    console.log(copyText)
     /* Select the text field */
     copyText.select();
 

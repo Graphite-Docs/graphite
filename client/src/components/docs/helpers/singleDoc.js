@@ -8,9 +8,11 @@ import { singleDocModel } from '../models/singleDocModel';
 import { documentModel } from '../models/documentModel';
 import { savePublic } from './shareDoc';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
+import { serializer } from './deserializer';
 const wordCount = require('html-word-count');
 const initialTimeline = require('../views/editors/initialTimeline.json');
 const uuid = require('uuidv4');
+const lzjs = require('lzjs');
 
 var timer = null;
 var versionTimer = null
@@ -111,10 +113,16 @@ export async function loadSingle() {
   }
 
   let doc = await fetchData(docParams);
+  let parsedDoc = JSON.parse(doc);
+  let compressed = parsedDoc.compressed;
+  let updatedContent;
+  if(compressed === true) {
+    updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
+  }
   setGlobal({
-    singleDoc: JSON.parse(doc), 
+    singleDoc: parsedDoc, 
     title: JSON.parse(doc).title,
-    content: Value.fromJSON(JSON.parse(doc).content),
+    content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
     loading: false, 
     myTimeline: JSON.parse(doc).myTimeline || initialTimeline
   })

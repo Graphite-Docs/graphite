@@ -2,13 +2,14 @@ import { fetchData } from '../../shared/helpers/fetch';
 import { setGlobal, getGlobal } from 'reactn';
 import update from 'immutability-helper';
 import { postData } from '../../shared/helpers/post';
-import { encryptContent } from 'blockstack';
 import { ToastsStore} from 'react-toasts';
 import { loadData } from '../../shared/helpers/accountContext';
+import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 
 export async function sharedVaultInfo(contact, file) {
+    const { userSession } = getGlobal();
     setGlobal({sharefileModalOpen: false});
-    ToastsStore.success(`Sharing file tags...`)
+    ToastsStore.success(`Sharing file...`)
     let key;
     const user = contact.contact;
     const userShort = contact.contact.split('.').join('_');
@@ -52,7 +53,9 @@ export async function sharedVaultInfo(contact, file) {
         //Set single file state and set shared with array for that file
         let JSONFile = JSON.parse(singleFile);
         JSONFile["sharedWithSingle"] = [...JSON.parse(singleFile).sharedWithSingle, user];
-        setGlobal({ singleFile: JSONFile, sharedWithSingle: JSONFile.sharedWithSingle });
+        JSONFile["sharedBy"] = userSession.loadUserData().username;
+        JSONFile["dateShared"] = getMonthDayYear();
+        setGlobal({ singleFile: JSONFile, sharedWithSingle: JSONFile.sharedWithSingle, sharedCollection: [...getGlobal().sharedCollection, JSONFile]  });
     } catch(error) {
         console.log(error);
     }
@@ -61,7 +64,7 @@ export async function sharedVaultInfo(contact, file) {
     let files = getGlobal().files;
     const index = files.map((x) => {return x.id }).indexOf(file.id);
     let thisFile = files[index];
-    thisFile["sharedWith"] = [...getGlobal().sharedWithSingle];
+    thisFile["sharedWithSingle"] = [...getGlobal().sharedWithSingle, user];
     const updatedFiles = update(getGlobal().files, {$splice: [[index, 1, thisFile]]});
     setGlobal({ files: updatedFiles, filteredFiles: updatedFiles});
 
@@ -108,7 +111,7 @@ export async function sharedVaultInfo(contact, file) {
 
     try {
         //Save share file collection encrypted with recipient's key
-        const encryptedData = encryptContent(JSON.stringify(getGlobal().sharedCollection), {publicKey: key})
+        const encryptedData = userSession.encryptContent(JSON.stringify(getGlobal().sharedCollection), {publicKey: key})
         let shareParams = {
             fileName: `/shared/${userShort + fileName}`,
             encrypt: false, 

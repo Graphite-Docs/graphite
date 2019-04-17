@@ -1,7 +1,7 @@
 import { fetchData } from '../../shared/helpers/fetch';
 import { setGlobal } from 'reactn';
 export async function loadSingleVaultFile(props) {
-    console.log(props);
+    setGlobal({loading: true})
     const file = `${props}.json`
     const fileParams = {
         fileName: file,
@@ -10,6 +10,10 @@ export async function loadSingleVaultFile(props) {
 
     let thisFile = await fetchData(fileParams);
     setGlobal({
-        file: JSON.parse(thisFile)
+        file: JSON.parse(thisFile), 
+        singleFile: JSON.parse(thisFile),
+        name: JSON.parse(thisFile).name, 
+        type: JSON.parse(thisFile).type,
+        loading: false
     })
 }

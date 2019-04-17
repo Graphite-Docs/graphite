@@ -5,8 +5,7 @@ const gdocs = require('../helpers/documents');
 
 class SharedWithMe extends Component {
   render() {
-      const { currentPage, docsPerPage } = this.global;
-      const { sharedDocs } = this.global;
+      const { currentPage, docsPerPage, sharedDocs } = this.global;
       const indexOfLastDoc = currentPage * docsPerPage;
       const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
       const pageNumbers = [];

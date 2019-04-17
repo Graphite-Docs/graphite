@@ -13,9 +13,9 @@ export function filterVaultList(event){
     setGlobal({filteredFiles: updatedList});
   }
   
-export function handleVaultPageChange(number) {
+export function handlePageChange(number) {
     setGlobal({
-    currentVaultPage: number
+    currentPage: number
     });
 }
 
@@ -27,25 +27,25 @@ export function applyVaultFilter() {
   export function filterVaultNow() {
     let files = getGlobal().files;
     if(getGlobal().selectedTag !== "") {
-      let tagFilter = files.filter(x => typeof x.singleFileTags !== 'undefined' ? x.singleFileTags.includes(getGlobal().selectedTag) : null);
+      let tagFilter = files.filter(x => typeof x.tags !== 'undefined' ? x.tags.includes(getGlobal().selectedTag) : null);
       // let tagFilter = files.filter(x => x.tags.includes(getGlobal().selectedTag));
-      setGlobal({ filteredVault: tagFilter, appliedFilter: true});
+      setGlobal({ filteredFiles: tagFilter, appliedFilter: true});
     } else if (getGlobal().selectedDate !== "") {
       let definedDate = files.filter((val) => { return val.uploaded !==undefined });
       let dateFilter = definedDate.filter(x => x.uploaded.includes(getGlobal().selectedDate));
-      setGlobal({ filteredVault: dateFilter, appliedFilter: true});
+      setGlobal({ filteredFiles: dateFilter, appliedFilter: true});
     } else if (getGlobal().selectedCollab !== "") {
-      let collaboratorFilter = files.filter(x => typeof x.sharedWith !== 'undefined' ? x.sharedWith.includes(getGlobal().selectedCollab) : null);
+      let collaboratorFilter = files.filter(x => typeof x.sharedWithSingle !== 'undefined' ? x.sharedWithSingle.includes(getGlobal().selectedCollab) : null);
       // let collaboratorFilter = files.filter(x => x.sharedWith.includes(getGlobal().selectedCollab));
-      setGlobal({ filteredVault: collaboratorFilter, appliedFilter: true});
+      setGlobal({ filteredFiles: collaboratorFilter, appliedFilter: true});
     } else if(getGlobal().selectedType) {
       let typeFilter = files.filter(x => x.type.includes(getGlobal().selectedType));
-      setGlobal({ filteredVault: typeFilter, appliedFilter: true});
+      setGlobal({ filteredFiles: typeFilter, appliedFilter: true});
     }
   }
 
   export function clearVaultFilter() {
-    setGlobal({ appliedFilter: false, filteredVault: getGlobal().files });
+    setGlobal({ appliedFilter: false, filteredFiles: getGlobal().files });
   }
 
   export function collabVaultFilter(collab, type) {

@@ -5,6 +5,7 @@ import Nav from '../../shared/views/Nav';
 import { Link } from 'react-router-dom';
 import MyFiles from './MyFiles';
 import SharedWithMeCollection from './SharedWithMeCollection';
+import { fetchSharedFiles } from '../helpers/sharedFilesCollection';
 import DropModal from './DropModal';
 const vault = require('../helpers/vault');
 
@@ -19,6 +20,10 @@ class Vault extends Component {
       run: false,
       activeItem: "My Files"
     }
+  }
+
+  componentDidMount() {
+    setTimeout(fetchSharedFiles, 3000);
   }
 
   handleItemClick = (e, { name }) => this.setState({ activeItem: name })
@@ -63,7 +68,7 @@ class Vault extends Component {
     const indexOfFirstFile = indexOfLastFile - filesPerPage;
     const currentFiles = files.slice(0).reverse();
 
-    let shared = currentFiles.map(a => a.sharedWith);
+    let shared = currentFiles.map(a => a.sharedWithSingle);
     let newShared = shared.filter(function(n){ return n !== undefined });
     let mergedShared = [].concat.apply([], newShared);
     let uniqueCollabs = [];
@@ -71,7 +76,7 @@ class Vault extends Component {
       if(window.$.inArray(el, uniqueCollabs) === -1) uniqueCollabs.push(el);
     });
 
-    let tags = currentFiles.map(a => a.singleFileTags);
+    let tags = currentFiles.map(a => a.tags);
     let newTags = tags.filter(function(n){ return n !== undefined });
     let mergedTags = [].concat.apply([], newTags);
     let uniqueTags = [];
@@ -229,7 +234,12 @@ class Vault extends Component {
               pageNumbers={pageNumbers}
               renderPageNumbers={renderPageNumbers}
             /> : 
-            <SharedWithMeCollection />
+            <SharedWithMeCollection 
+              indexOfFirstFile={indexOfFirstFile}
+              indexOfLastFile={indexOfLastFile} 
+              pageNumbers={pageNumbers}
+              renderPageNumbers={renderPageNumbers}
+            />
           }
           </Container>
         </div>

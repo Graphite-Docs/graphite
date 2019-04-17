@@ -1,33 +1,28 @@
 import { getGlobal, setGlobal } from 'reactn';
 import { fetchData } from '../../shared/helpers/fetch';
-const blockstack = require("blockstack");
 
-export async function fetchSharedDocs() {
-    let sharedDocs = [];
+export function fetchSharedFiles() {
     const { userSession } = getGlobal();
     let contacts = getGlobal().contacts;
-    await asyncForEach(contacts, async contact => {
+    asyncForEach(contacts, async contact => {
         const userToLoadFrom = contact.contact;
-        const fileString = 'shareddocs.json';
-        const file = blockstack.getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey) + fileString;
+        const userShort = userSession.loadUserData().username.split('.').join('_');
+        const fileName = "sharedvault.json";
         const privateKey = userSession.loadUserData().appPrivateKey;
-    
-        const directory = `shared/${file}`;
+
         const options = { username: userToLoadFrom, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-        
         let params = {
-            fileName: directory, 
+            fileName: `/shared/${userShort + fileName}`, 
             options
         }
     
         let sharedCollection = await fetchData(params);
         if(sharedCollection) {
-            let decryptedContent = JSON.parse(userSession.decryptContent(sharedCollection, {privateKey: privateKey}));
-            let filteredDocs = decryptedContent.filter(a => a.sharedBy);
-            sharedDocs = sharedDocs.concat(filteredDocs);
+            let decryptedContent = JSON.parse(userSession.decryptContent(JSON.parse(sharedCollection), {privateKey: privateKey}));
+            let filteredFiles = decryptedContent.filter(a => a.sharedBy);
+            setGlobal({ sharedFiles: getGlobal().sharedFiles.concat(filteredFiles)});
         }
     })
-    setGlobal({ sharedDocs });
 }
 
 async function asyncForEach(array, callback) {

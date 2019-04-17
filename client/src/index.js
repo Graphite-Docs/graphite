@@ -145,7 +145,7 @@ setGlobal({
     combined: [],
     filesPerPage: 10,
     filesSelected: [],
-    file: "",
+    file: {},
     name: "",
     lastModifiedDate: "",
     link: "",
@@ -257,6 +257,7 @@ setGlobal({
     deleteModalOpen: false,
     selectedDoc: {}, 
     sharedDocs: [],
+    sharedFiles: [],
     fileProcessing: false,
     vaultModalOpen: false, 
     sharefileModalOpen: false

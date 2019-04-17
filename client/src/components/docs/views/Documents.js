@@ -24,7 +24,7 @@ class Documents extends Component {
 
     componentDidMount() {
         // console.log(window.startWorker());
-        setTimeout(fetchSharedDocs, 2000);
+        setTimeout(fetchSharedDocs, 3000);
     }
 
     handleItemClick = (e, { name }) => this.setState({ activeItem: name })
