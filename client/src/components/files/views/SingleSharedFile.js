@@ -9,15 +9,15 @@ import FileSkeleton from './FileSkeleton';
 import { Input, Pagination, Container, Image, Icon, Modal, Button } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
-// import { handleaddItem } from '../../docs/helpers/singleDoc';
 
+const shared = require('../helpers/sharedVaultFiles');
 const single = require('../helpers/singleVaultFile');
 
-export default class SingleVaultFile extends Component {
+export default class SingleSharedFile extends Component {
   state = {activePage: 1}
 
   componentDidMount() {
-    single.loadSingleVaultFile(window.location.href.split('files/')[1]);
+    shared.loadSingleSharedVault();
   }
 
   handlePaginationChange = (e, { activePage }) => this.setState({ activePage }, () => {

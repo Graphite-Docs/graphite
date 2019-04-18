@@ -55,7 +55,7 @@ export async function saveDoc(updates) {
     let docObject = await documentModel();
     if(index < 0 && window.location.href.includes("new")) {
       await setGlobal({ documents: [...getGlobal().documents, docObject]});
-    } else if(index > 0) {
+    } else if(index > -1) {
       const updatedDocs = update(getGlobal().documents, {$splice: [[index, 1, docObject]]});
       await setGlobal({documents: updatedDocs});
     } else {

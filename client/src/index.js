@@ -260,7 +260,8 @@ setGlobal({
     sharedFiles: [],
     fileProcessing: false,
     vaultModalOpen: false, 
-    sharefileModalOpen: false
+    sharefileModalOpen: false, 
+    vaultPublicModalOpen: false
 })
 
 configure({

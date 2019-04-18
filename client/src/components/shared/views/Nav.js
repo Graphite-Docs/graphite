@@ -3,7 +3,6 @@ import {
   Person,
 } from 'blockstack';
 import { Link } from 'react-router-dom';
-import logo from '../../../assets/images/whitelogo.svg';
 import logoSquare from '../../../assets/images/graphite-mark.svg';
 import { Menu, Image, Icon, Dropdown } from 'semantic-ui-react'
 import { signOut } from '..//helpers/auth';
@@ -67,9 +66,9 @@ export default class Nav extends Component {
       );
     } else {
       return(
-        <Menu style={{ borderRadius: "0", background: "#282828", border: "none" }}>
+        <Menu className='header-menu' style={{ borderRadius: "0", background: "#000", border: "none" }}>
           <Menu.Item>
-            <Link to={'/'}><Image src={logo} style={{ maxHeight: "50px" }} /></Link>
+            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px" }} /></Link>
           </Menu.Item>
           <Menu.Item position="right">
             <a style={{ color: "#fff" }} href="https://graphitedocs.com/about" target="_blank" rel="noopener noreferrer">About</a>

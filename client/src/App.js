@@ -7,6 +7,7 @@ import PublicDoc from './components/docs/views/PublicDoc';
 import SingleSharedDoc from './components/docs/views/SingleSharedDoc';
 import Vault from './components/files/views/Vault.js';
 import SingleFile from './components/files/views/SingleFile';
+import SingleSharedFile from './components/files/views/SingleSharedFile';
 import Forms from './components/forms/views/Forms';
 import SingleForm from './components/forms/views/SingleForm';
 import SingleFormResults from './components/forms/views/SingleFormResults';
@@ -16,7 +17,7 @@ import Settings from './components/settings/views/Settings';
 import Invites from './components/settings/views/Invites';
 import SignIn from './components/shared/views/SignIn';
 import Skeleton from './components/docs/views/Skeleteon';
-import { User } from 'radiks';
+//import { User } from 'radiks';
 import { loadData } from './components/shared/helpers/accountContext';
 import {ToastsContainer, ToastsStore} from 'react-toasts';
 
@@ -30,7 +31,7 @@ class App extends Component {
       }
     } else {
       if(userSession.isUserSignedIn()) {
-        await User.createWithCurrentUser();
+        // await User.createWithCurrentUser();
         loadData();
       }
     }
@@ -61,6 +62,7 @@ class App extends Component {
              <Route exact path="/shared/documents/:id" component={SingleSharedDoc} />
              <Route exact path="/files" component={Vault} />
              <Route exact path="/files/:id" component={SingleFile} />
+             <Route exact path="/shared/files/:id" component={SingleSharedFile} />
              <Route exact path="/contacts" component={Contacts} />
              <Route exact path='/contacts/:id' component={SingleContact} />
              <Route exact path="/forms" component={Forms} />

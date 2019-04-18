@@ -74,3 +74,13 @@ export function applyVaultFilter() {
   export function setPagination(e) {
     setGlobal({ filesPerPage: e.target.value });
   }
+
+  export function handleVaultPageChange(number) {
+    setGlobal({
+      currentVaultPage: number
+    });
+  }
+
+  export function setVaultPages(e) {
+    setGlobal({ filesPerPage: e.target.value });
+  }
