@@ -48,7 +48,7 @@ export default class Contacts extends Component {
     } else {
       contacts = [];
     }
-    console.log(contacts)
+ 
     let theseResults;
     if(results !==null) {
       theseResults = results;
@@ -106,28 +106,15 @@ export default class Contacts extends Component {
               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Add a New Contact</Modal.Header>
               <Modal.Content>
                 <Modal.Description>
-                  <p>First, choose the contact type</p>
-                  {
-                    this.state.blockstackUser ? 
-                    <div><Button secondary onClick={() => this.setState({ blockstackUser: true, uPortUser: false})}>Blockstack User</Button><Button onClick={() => this.setState({ blockstackUser: false, uPortUser: true})}>uPort User</Button></div> : 
-                    this.state.uPortUser ? 
-                    <div><Button onClick={() => this.setState({ blockstackUser: true, uPortUser: false})}>Blockstack User</Button><Button secondary onClick={() => this.setState({ blockstackUser: false, uPortUser: true})}>uPort User</Button></div> :
-                    <div><Button onClick={() => this.setState({ blockstackUser: true, uPortUser: false})}>Blockstack User</Button><Button onClick={() => this.setState({ blockstackUser: false, uPortUser: true})}>uPort User</Button></div>
-                  }
                   <h3>Search for a contact</h3>
-                  {
-                    this.state.uPortUser ? 
-                    <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cx.handleNewUportContact} /> : 
-                    <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cx.handleNewContact} />
-                  }
+                  <Input icon='users' iconPosition='left' placeholder='Search users...' onChange={cx.handleNewContact} />
                   <Item.Group divided>
                   {
-                    this.state.blockstackUser ?
                     theseResults.map(result => {
                     let profile = result.profile;
                     let image = profile.image;
                     let imageLink;
-                    if(image !=null) {
+                    if(image) {
                       if(image[0]){
                         imageLink = image[0].contentUrl;
                       } else {
@@ -138,36 +125,13 @@ export default class Contacts extends Component {
                     }
 
                       return (
-                          <Item className="contact-search" onClick={() => cx.handleAddContact(result.fullyQualifiedName)} key={result.username}>
+                          <Item className="contact-search" onClick={() => cx.handleAddContact(result)} key={result.username}>
                           <Item.Image size='tiny' src={imageLink} />
                           <Item.Content verticalAlign='middle'>{result.username}</Item.Content>
                           </Item>
                           )
                         }
                       )
-                    : 
-                    theseResults.map(result => {
-                      let profile = result.profile;
-                      let image = profile.image;
-                      let imageLink;
-                      if(image !=null) {
-                        if(image[0]){
-                          imageLink = image[0].contentUrl;
-                        } else {
-                          imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-                        }
-                      } else {
-                        imageLink = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
-                      }
-  
-                        return (
-                            <Item className="contact-search" onClick={() => cx.handleAddUPortContact(result)} key={result.did}>
-                            <Item.Image size='tiny' src={imageLink} />
-                            <Item.Content verticalAlign='middle'>{result.profile.name}</Item.Content>
-                            </Item>
-                            )
-                          }
-                        )
                   }
                   </Item.Group>
                 </Modal.Description>
@@ -249,9 +213,9 @@ export default class Contacts extends Component {
               return(
                 <Table.Row key={contact.contact}>
                   <Table.Cell>
-                  <Image style={{height: "40px", width: "40px", marginRight: "10px"}} src={contact.img || avatarFallbackImage} avatar /><span>
+                  <Image style={{height: "40px", width: "40px", marginRight: "10px"}} src={contact.img ? contact.img || avatarFallbackImage : contact.image || avatarFallbackImage} avatar /><span>
                   <Modal closeIcon style={{borderRadius: "0"}} trigger={<Link to={'/contacts'}>
-                    {contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact}
+                    {contact.contact ? contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact : contact.id}
                   </Link>}>
                     <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>{contact.contact}</Modal.Header>
                     <Modal.Content>
@@ -346,29 +310,31 @@ export default class Contacts extends Component {
             </Table.Body>
           </Table>
           <div>
-          {
+                 {
             pageNumbers.length > 0 ?
-            <div style={{maxWidth: "50%", margin:"auto"}}>
-              <Menu pagination>
-              {renderPageNumbers}
-              </Menu>
+            <div style={{textAlign: "center"}}>
+            <Menu pagination>
+            {renderPageNumbers}
+            </Menu>
             </div> :
             <div />
-          }
-            <div style={{float: "right", marginBottom: "25px"}}>
-              <label>Contacts per page</label>
-              <select value={this.global.contactsPerPage} onChange={cx.setContactsPerPage}>
-                <option value={10}>
-                10
-                </option>
-                <option value={20}>
-                20
-                </option>
-                <option value={50}>
-                50
-                </option>
-              </select>
-            </div>
+        }
+        <div style={{float: "right", marginBottom: "25px"}}>
+            <label>Contacts per page</label>
+            <span className="custom-dropdown small">
+            <select className="ui selection dropdown custom-dropdown" onChange={cx.setContactsPerPage}>
+            <option value={10}>
+            10
+            </option>
+            <option value={20}>
+            20
+            </option>
+            <option value={50}>
+            50
+            </option>
+        </select>
+        </span>
+        </div>
           </div>
         </div>
             </Container>
