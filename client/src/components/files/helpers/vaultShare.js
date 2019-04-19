@@ -7,6 +7,7 @@ import { loadData } from '../../shared/helpers/accountContext';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 
 export async function sharedVaultInfo(contact, file) {
+    console.log(file)
     const { userSession } = getGlobal();
     setGlobal({sharefileModalOpen: false});
     ToastsStore.success(`Sharing file...`)

@@ -2,6 +2,7 @@ import React, { Component, setGlobal } from 'reactn';
 import { Input, Button, Table, Icon, Dropdown, Modal, Menu, Label, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+import { ToastsStore} from 'react-toasts';
 const vault = require('../helpers/vault');
 const share = require('../helpers/vaultShare');
 const fileTags = require('../helpers/vaultTags');
@@ -23,9 +24,31 @@ class MyFiles extends Component {
         fileTags.loadSingleVaultTags(file)
     }
 
+    handleDelete = () => {
+      this.setState({ open: false });
+      let file = this.state.file;
+      vault.handleDeleteVaultItem(file)
+    }
+
+    handleShare = (file) => {
+      setGlobal({sharefileModalOpen: true});
+      this.setState({ file: file});
+    }
+
+    copyLink = () => {
+      /* Get the text field */
+      var copyText = document.getElementById("copyLink");
+      /* Select the text field */
+      copyText.select();
+  
+      /* Copy the text inside the text field */
+      document.execCommand("copy");
+      ToastsStore.success(`Link copied`)
+    }
+
   render() {
       const { currentFiles, indexOfFirstFile, indexOfLastFile, contacts, pageNumbers, renderPageNumbers } = this.props;
-      const { tag, tags, tagModalOpen, sharefileModalOpen } = this.global;
+      const { tag, tags, tagModalOpen, sharefileModalOpen, userSession } = this.global;
       let vaultTags;
       if(tags) {
           vaultTags = tags;
@@ -68,7 +91,26 @@ class MyFiles extends Component {
               return(
                 <Table.Row key={file.id} style={{ marginTop: "35px"}}>
                   <Table.Cell><Link to={'/files/' + file.id}>{file.name ? file.name.length > 20 ? file.name.substring(0,20)+"..." :  file.name : "Untitled"}</Link></Table.Cell>
-                  <Table.Cell>{uniqueCollaborators === [] ? uniqueCollaborators : uniqueCollaborators.join(', ')}</Table.Cell>
+                  <Table.Cell>
+                    {uniqueCollaborators === [] ? uniqueCollaborators : uniqueCollaborators.join(', ')}
+                    {uniqueCollaborators.length > 0 ?
+                    <Modal trigger={
+                        <span style={{marginLeft: "5px"}}><Icon style={{color: "#4183c4", cursor: "pointer"}} name="linkify" /></span>
+                      }
+                        size='small'
+                        closeIcon
+                      >
+                        <Modal.Content>
+                          <Modal.Description className='link-modal'>
+                            <p>Provide your contact this link for quick access:</p>
+                            <Input readOnly id="copyLink" value={`${window.location.origin}/files/fileInfo&user=${userSession.loadUserData().username}&id=${file.id}`} />
+                            <p className="margin-top-10"><Button onClick={this.copyLink} secondary>Copy Link</Button><Icon onClick={this.copyLink} style={{cursor: "pointer", marginLeft: "10px"}} name="copy" /></p>
+                          </Modal.Description>
+                        </Modal.Content>
+                    </Modal> :
+                    <span className="hide"></span>
+                    }
+                  </Table.Cell>
                   <Table.Cell>{file.uploaded}</Table.Cell>
                   <Table.Cell>{tags === [] ? tags : tags.join(', ')}</Table.Cell>
                   <Table.Cell>
@@ -78,7 +120,7 @@ class MyFiles extends Component {
                           <Modal 
                           closeIcon 
                           style={{borderRadius: "0"}} 
-                          trigger={<button onClick={() => setGlobal({sharefileModalOpen: true})} className="link-button" style={{color: "#282828"}}><Icon name='share alternate'/>Share</button>}
+                          trigger={<button onClick={() => this.handleShare(file)} className="link-button" style={{color: "#282828"}}><Icon name='share alternate'/>Share</button>}
                           open={sharefileModalOpen}
                           onClose={() => setGlobal({ sharefileModalOpen: false})}
                           >
@@ -89,7 +131,7 @@ class MyFiles extends Component {
                                 <h4>Your Contacts</h4>
                                 {contacts.slice(0).reverse().map(contact => {
                                   return (
-                                    <Item className="contact-search" onClick={() => share.sharedVaultInfo(contact, file)} key={contact.contact}>
+                                    <Item className="contact-search" onClick={() => share.sharedVaultInfo(contact, this.state.file)} key={contact.contact}>
                                       <Item.Image size='tiny' src={contact.img} />
                                       <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
                                     </Item>
@@ -145,10 +187,10 @@ class MyFiles extends Component {
                               <div>
                                 <div>
                                   <Button onClick={() => this.setState({ open: false })} basic color='red' inverted>
-                                    <Icon name='remove' /> No
+                                    No
                                   </Button>
                                   <Button onClick={this.handleDelete} color='red' inverted>
-                                    <Icon name='checkmark' /> Delete
+                                    Delete
                                   </Button>
                                 </div>
                               </div>

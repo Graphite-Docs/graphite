@@ -203,7 +203,7 @@ copyLink = () => {
                                         No
                                     </Button>
                                     <Button onClick={this.handleDelete} color='red' inverted>
-                                            Delete
+                                        Delete
                                     </Button>
                                     </div>
                                 </div>

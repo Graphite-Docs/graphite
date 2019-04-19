@@ -43,12 +43,6 @@ class Vault extends Component {
     vault.collabVaultFilter(collab, type)
   }
 
-  handleDelete = () => {
-    this.setState({ open: false });
-    let file = this.state.file;
-    vault.handleDeleteVaultItem(file)
-  }
-
   handleReject = () => {
     console.log("Rejected")
   }

@@ -53,6 +53,7 @@ setGlobal({
     confirmAdd: false,
     title: "",
     content: Value.fromJSON(initialValue),
+    singleFileContent: "",
     id: "",
     words: "",
     updated: "",

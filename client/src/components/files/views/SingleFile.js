@@ -48,7 +48,7 @@ export default class SingleVaultFile extends Component {
   }
 
   render() {
-    const { singleFile, type, loading, pages, page, name, link, content, grid, userSession } = this.global;
+    const { singleFile, type, loading, pages, page, name, link, singleFileContent, grid, userSession } = this.global;
     var thisStyle = {
       display: "none"
     };
@@ -66,7 +66,7 @@ export default class SingleVaultFile extends Component {
     if(!loading) {
       return (
         <div>
-        <MainMenu style={{ borderRadius: "0", background: "#282828", color: "#fff" }}>
+        <MainMenu style={{ borderRadius: "0", background: "#000", color: "#fff" }}>
           <MainMenu.Item>
             <Link style={{color: "#fff"}} to={'/files'}><Icon style={{color:"fff"}} name='arrow left' /></Link>
           </MainMenu.Item>
@@ -145,8 +145,8 @@ export default class SingleVaultFile extends Component {
           </MainMenu.Item>
           {type.includes("word") ? (
             <MainMenu.Item>
-              <button className="link-button" style={{color: "#fff", cursor: "pointer"}} onClick={this.handleaddItem}>
-                Edit in Documents
+              <button className="link-button" style={{color: "#fff", cursor: "pointer"}} onClick={single.addToDocs}>
+                Add to Documents
               </button>
             </MainMenu.Item>
           ) :  (
@@ -190,7 +190,7 @@ export default class SingleVaultFile extends Component {
                           <div
                             className="print-view no-edit"
                             dangerouslySetInnerHTML={{
-                              __html: content
+                              __html: singleFileContent
                             }}
                           />
                         </div>

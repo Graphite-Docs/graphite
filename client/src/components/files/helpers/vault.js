@@ -1,7 +1,50 @@
 import {setGlobal, getGlobal} from 'reactn';
+import { ToastsStore} from 'react-toasts';
+import { postData } from '../../shared/helpers/post';
+import { loadData } from '../../shared/helpers/accountContext';
 
-export function handleDeleteVaultItem() {
 
+export async function handleDeleteVaultItem(file) {
+  //First we delete the file from the index
+  let files = await getGlobal().files;
+  let index = await files.map((x) => {return x.id }).indexOf(file.id);
+  if(index > -1) {
+    files.splice(index, 1);
+    await setGlobal({ files, filteredFiles: files, deleteModalOpen: false });
+    ToastsStore.success(`Deleting file...`)
+    try {
+      let file = 'uploads.json';
+      let fileIndexParams = {
+          fileName: file, 
+          body: JSON.stringify(getGlobal().files), 
+          encrypt: true
+      }
+      const updatedFileIndex = await postData(fileIndexParams);
+      console.log(updatedFileIndex);
+    } catch(error) {
+      console.log(error)
+    }
+  } else {
+    ToastsStore.error(`Error deleting`)
+    console.log("Problem with index");
+  }
+
+  //Now we have to save an empty file for the singleDoc
+  const empty = {};
+  try {
+    let singleFilePath = `${file.id}.json`;
+    let singleFileParams = {
+        fileName: singleFilePath, 
+        body: JSON.stringify(empty), 
+        encrypt: true
+    }
+    const singleFileEmpty = await postData(singleFileParams);
+    console.log(singleFileEmpty);
+    ToastsStore.success(`File deleted!`);
+    loadData({refresh: false});
+  } catch(error) {
+    console.log(error)
+  }
 }
 
 export function filterVaultList(event){

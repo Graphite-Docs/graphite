@@ -4,7 +4,9 @@ import { postData } from '../../shared/helpers/post';
 import { ToastsStore} from 'react-toasts';
 import update from 'immutability-helper';
 import XLSX from "xlsx";
+import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 const mammoth = require("mammoth");
+const uuid = require('uuidv4');
 const str2ab = require("string-to-arraybuffer");
 const rtfToHTML = require('./rtf-to-html');
 const Papa = require('papaparse');
@@ -34,7 +36,7 @@ export async function loadSingleVaultFile(props) {
           .convertToHtml({ arrayBuffer: abuf4 })
           .then(result => {
             var html = result.value; // The generated HTML
-            setGlobal({ content: html });
+            setGlobal({ singleFileContent: html });
             setGlobal({ loading: false });
           })
           .done();
@@ -46,7 +48,7 @@ export async function loadSingleVaultFile(props) {
           console.log(window.atob(base64));
           console.log(html)
           let htmlFixed = html.replace("body", ".noclass");
-          setGlobal({ content:  htmlFixed});
+          setGlobal({ singleFileContent:  htmlFixed});
           setGlobal({ loading: "hide", show: "" });
         })
       }
@@ -54,7 +56,7 @@ export async function loadSingleVaultFile(props) {
       else if (getGlobal().type.includes("text/plain")) {
         let base64 = getGlobal().link.split("data:text/plain;base64,")[1];
         setGlobal({ loading: "hide", show: "" });
-        setGlobal({ content: window.atob(base64) });
+        setGlobal({ singleFileContent: window.atob(base64) });
       }
 
       else if (getGlobal().type.includes("sheet")) {
@@ -235,5 +237,65 @@ export async function signWithBlockusign(fileId) {
 
   export function handlePrevious (props){
     setGlobal({ page: props })
+  }
+
+  export async function addToDocs() {
+    ToastsStore.success(`Adding to Documents...`)
+    const singleFile = await getGlobal().singleFile;
+    const content = await getGlobal().singleFileContent;
+    const id = uuid();
+    let singleModel = {
+      id: id, 
+      content,
+      fileType: "documents", 
+      lastUpdate: Date.now(), 
+      updated: getMonthDayYear(), 
+      readOnly: true,
+      rtc: false,
+      sharedWith: [], 
+      singleDocIsPublic: false,
+      singleDocTags: [], 
+      teamDoc: false, 
+      versions: [],
+      title: singleFile.name, 
+      compressed: true
+  }
+    let fileName = `/documents/${id}.json`;
+    let docParams = {
+        fileName, 
+        body: JSON.stringify(singleModel), 
+        encrypt: true
+    }
+    const updatedDoc = await postData(docParams);
+    console.log(updatedDoc);
+    
+    //Now we update the index file;
+    let docs = await getGlobal().documents;
+    let docObject = {
+      id: id, 
+      fileType: "documents", 
+      lastUpdate: Date.now(), 
+      updated: getMonthDayYear(), 
+      readOnly: true,
+      rtc: false,
+      sharedWith: [], 
+      singleDocIsPublic: false,
+      singleDocTags: [], 
+      teamDoc: false, 
+      versions: [],
+      title: singleFile.name
+    }
+
+    await setGlobal({ documents: [...docs, docObject], filteredDocs: [...getGlobal().filteredDocs, docObject]})
+    
+    let indexParams = {
+      fileName: 'documentscollection.json', 
+      body: JSON.stringify(getGlobal().documents), 
+      encrypt: true
+    }
+
+    const postedDocIndex = await postData(indexParams);
+    console.log(postedDocIndex);
+    ToastsStore.success(`Documented added!`)
   }
 
