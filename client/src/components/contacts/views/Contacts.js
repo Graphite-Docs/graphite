@@ -1,4 +1,4 @@
-import React, { Component } from "reactn";
+import React, { Component, setGlobal } from "reactn";
 import { Link } from "react-router-dom";
 import ContactsSkeleton from './ContactsSkeleton';
 import { Image, Card, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
@@ -17,12 +17,13 @@ export default class Contacts extends Component {
       contact: {},
       run: false,
       onboarding: false, 
+      activeItem: "List"
     }
   }
 
   handleDelete = () => {
     this.setState({ open: false }, () => {
-      cx.handleDeleteContact(this.state.contact)
+      cx.hanldeDeleteContact(this.state.contact)
     })
   }
 
@@ -38,10 +39,16 @@ export default class Contacts extends Component {
     })
   }
 
+  handleTagModal = (contact) => {
+    this.setState({ contact });
+    setGlobal({ tagModalOpen: true });
+    cx.loadSingleContact(contact);
+  }
+
   render(){
-    const { applyFilter, loading, filteredContacts, appliedFilter, deleteState, currentPage, types, contactsPerPage, results} = this.global;
+    const { type, tagModalOpen, graphitePro, contactModalOpen, applyFilter, loading, filteredContacts, appliedFilter, deleteState, currentPage, types, contactsPerPage, results} = this.global;
     applyFilter === true ? cx.applyContactsFilter() : console.log("null");
-    const { visible } = this.state;
+    const { visible, activeItem } = this.state;
     let contacts;
     if(filteredContacts) {
       contacts = filteredContacts;
@@ -102,7 +109,13 @@ export default class Contacts extends Component {
         <Grid stackable columns={2}>
           <Grid.Column>
             <h2>Contacts ({currentContacts.length})
-            <Modal closeIcon style={{borderRadius: "0"}} trigger={<Button style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>}>
+            <Modal 
+            closeIcon 
+            style={{borderRadius: "0"}} 
+            trigger={<Button onClick={() => setGlobal({ contactModalOpen: true })} style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>}
+            open={contactModalOpen}
+            onClose={() => setGlobal({ contactModalOpen: false })}
+            >
               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Add a New Contact</Modal.Header>
               <Modal.Content>
                 <Modal.Description>
@@ -188,7 +201,24 @@ export default class Contacts extends Component {
             </Dropdown>
           </Menu.Item>
         </Sidebar>
-
+        <div className="margin-top-20">
+          <Menu secondary>
+              <Menu.Item name='List' active={activeItem === 'List'} onClick={this.handleItemClick} />
+              {
+                graphitePro ? 
+                <Menu.Item name='Map' active={activeItem === 'Map'} onClick={this.handleItemClick} /> : 
+                <Modal closeIcon trigger={<Menu.Item><Icon name="globe" />Map</Menu.Item>}>
+                  <Modal.Header>Ready to get more?</Modal.Header>
+                  <Modal.Content>
+                  <Modal.Description>
+                      <p>With Graphite Pro, you can add additional metadata about your contacts, including addresses, and visualize them on a map. <Link to={'/trial'}>Try it free for 30 days.</Link></p>
+                      <Link to={'/trial'}><Button secondary>Try Graphite Pro Free</Button></Link>
+                  </Modal.Description>
+                  </Modal.Content>
+                </Modal>
+              }
+          </Menu>
+          </div>
           <div className="">
           <Table unstackable style={{borderRadius: "0", marginTop: "35px"}}>
             <Table.Header>
@@ -211,7 +241,7 @@ export default class Contacts extends Component {
                   gridTypes = [];
                 }
               return(
-                <Table.Row key={contact.contact}>
+                <Table.Row key={contact.contact || contact.id}>
                   <Table.Cell>
                   <Image style={{height: "40px", width: "40px", marginRight: "10px"}} src={contact.img ? contact.img || avatarFallbackImage : contact.image || avatarFallbackImage} avatar /><span>
                   <Modal closeIcon style={{borderRadius: "0"}} trigger={<Link to={'/contacts'}>
@@ -248,11 +278,16 @@ export default class Contacts extends Component {
                   <Dropdown icon='ellipsis vertical' className='actions'>
                     <Dropdown.Menu>
                       <Dropdown.Item>
-                        <Modal closeIcon trigger={<Link onClick={() => cx.loadSingleTypes(contact)} to={'/contacts'} style={{color: "#282828"}}><Icon name='tag'/>Type</Link>}>
+                        <Modal 
+                          closeIcon 
+                          trigger={<button className="link-button" onClick={() => this.handleTagModal(contact)} style={{color: "#282828"}}><Icon name='tag'/>Type</button>}
+                          open={tagModalOpen}
+                          onClose={() => setGlobal({ tagModalOpen: false })}
+                          >
                           <Modal.Header>Manage Types</Modal.Header>
                           <Modal.Content>
                             <Modal.Description>
-                            <Input placeholder='Enter a type...' value={this.global.type} onChange={cx.setTypes} />
+                            <Input placeholder='Enter a type...' value={type} onKeyUp={cx.checkKey} onChange={cx.setTypes} />
                             <Button onClick={() => cx.addTypeManual(contact, 'contact')} style={{borderRadius: "0"}}>Add Type</Button><br/>
                             {
                               theseTypes.slice(0).reverse().map(tag => {
@@ -265,7 +300,7 @@ export default class Contacts extends Component {
                               })
                             }
                             <div>
-                              <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => cx.saveNewTypes(contact)}>Save Types</Button>
+                              <Button style={{background: "#282828", color: "#fff", borderRadius: "0", marginTop: "15px"}} onClick={() => cx.saveTypes(this.state.contact)}>Save Types</Button>
                             </div>
                             </Modal.Description>
                           </Modal.Content>
@@ -276,7 +311,7 @@ export default class Contacts extends Component {
                         <Modal open={this.state.open} trigger={
                           <button className="link-button" onClick={() => this.setState({ open: true, contact: contact })} style={{color: "red"}}><Icon name='trash alternate outline'/>Delete</button>
                         } basic size='small'>
-                          <SemanticHeader icon='trash alternate outline' content={this.state.contact.contact ? 'Delete ' + this.state.contact.contact + '?' : 'Delete contact?'} />
+                          <SemanticHeader icon='trash alternate outline' content={this.state.contact.contact ? `Delete ${this.state.contact.contact}?` : this.state.contact.id ? `Delete ${this.state.contact.id}?` : 'Delete contact?'} />
                           <Modal.Content>
                             <p>
                               The contact can be restored by re-adding the user.
@@ -289,10 +324,10 @@ export default class Contacts extends Component {
                                 <ContactsSkeleton style={{bottom: "0"}} /> :
                                 <div>
                                   <Button onClick={() => this.setState({ open: false })} basic color='red' inverted>
-                                    <Icon name='remove' /> No
+                                    No
                                   </Button>
                                   <Button onClick={this.handleDelete} color='red' inverted>
-                                    <Icon name='checkmark' /> Delete
+                                    Delete
                                   </Button>
                                 </div>
                               }

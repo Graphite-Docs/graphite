@@ -262,7 +262,8 @@ setGlobal({
     fileProcessing: false,
     vaultModalOpen: false, 
     sharefileModalOpen: false, 
-    vaultPublicModalOpen: false
+    vaultPublicModalOpen: false, 
+    contactModalOpen: false
 })
 
 configure({
