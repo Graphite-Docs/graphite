@@ -13,8 +13,9 @@ import SingleForm from './components/forms/views/SingleForm';
 import SingleFormResults from './components/forms/views/SingleFormResults';
 import Contacts from './components/contacts/views/Contacts';
 import SingleContact from './components/contacts/views/SingleContact';
-import Settings from './components/settings/views/Settings';
-import Invites from './components/settings/views/Invites';
+import Settings from './components/pro/views/Settings';
+import Invites from './components/pro/views/Invites';
+import Trial from './components/pro/views/Trial';
 import SignIn from './components/shared/views/SignIn';
 import Skeleton from './components/docs/views/Skeleteon';
 //import { User } from 'radiks';
@@ -69,6 +70,7 @@ class App extends Component {
              <Route exact path='/forms/:id' component={SingleForm} />
              <Route exact path='/forms/results/:id' component={SingleFormResults} />
              <Route exact path='/settings' component={Settings} />
+             <Route exact path='/trial' component={Trial} />
            </div>
          </BrowserRouter>
         </div>

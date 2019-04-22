@@ -264,6 +264,7 @@ setGlobal({
     sharefileModalOpen: false, 
     vaultPublicModalOpen: false, 
     contactModalOpen: false,
+    getNotifiedModalOpen: false,
     contact: {}
 })
 

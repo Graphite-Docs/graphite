@@ -213,31 +213,31 @@
 /* Margin */
 
 .margin-top-10 {
-  margin-top: 10px;
+  margin-top: 10px!important;
 }
 
 .margin-top-20 {
-  margin-top: 20px;
+  margin-top: 20px!important;
 }
 
 .margin-top-25 {
-    margin-top: 25px;
+    margin-top: 25px!important;
 }
 
 .margin-top-45 {
-    margin-top: 45px;
+    margin-top: 45px!important;
 }
 
 .margin-top-65 {
-    margin-top: 65px;
+    margin-top: 65px!important;
 }
 
 .margin-top-85 {
-    margin-top: 85px;
+    margin-top: 85px!important;
 }
 
 .margin-top-100 {
-    margin-top: 100px;
+    margin-top: 100px!important;
 }
 
 /* End Margin */
@@ -385,6 +385,15 @@ code {
 
 .app-switcher .menu, .actions .menu {
   left: -100px!important;
+}
+
+
+/* Trial */
+
+.trial-image {
+  max-width: 70%!important;
+  margin: auto!important;
+  margin-top: 40px!important;
 }
 
 /* App Page */

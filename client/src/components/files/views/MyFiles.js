@@ -131,7 +131,7 @@ class MyFiles extends Component {
                                 <h4>Your Contacts</h4>
                                 {contacts.slice(0).reverse().map(contact => {
                                   return (
-                                    <Item className="contact-search" onClick={() => share.sharedVaultInfo(contact, this.state.file)} key={contact.contact}>
+                                    <Item key={contact.id || contact.contact} className="contact-search" onClick={() => share.sharedVaultInfo(contact, this.state.file)}>
                                       <Item.Image size='tiny' src={contact.img} />
                                       <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
                                     </Item>

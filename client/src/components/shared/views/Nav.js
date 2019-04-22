@@ -56,9 +56,9 @@ export default class Nav extends Component {
           </Dropdown>
           <Dropdown trigger={trigger} icon={null} className="app-switcher">
               <Dropdown.Menu>
-                <Dropdown.Item>Dashboard</Dropdown.Item>
-                <Dropdown.Divider />
-                <Dropdown.Item><button className="link-button" onClick={signOut}>Sign Out</button></Dropdown.Item>
+                {/*<Dropdown.Item>Dashboard</Dropdown.Item>
+                <Dropdown.Divider />*/}
+                <Dropdown.Item style={{marginRight: "10px"}}><button className="link-button" onClick={signOut}>Sign Out</button></Dropdown.Item>
               </Dropdown.Menu>
           </Dropdown>
           </Menu.Item>
