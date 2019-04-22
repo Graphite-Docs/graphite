@@ -1,8 +1,43 @@
 /* Universal */
 
+/* Custom Grid */
+
+.col-25-left {
+  width: 24%;
+  margin: auto;
+  float: left;
+  padding: 1%;
+}
+
+.col-33-left {
+  width: 32%;
+  margin: auto;
+  float: left;
+  padding: 1%;
+}
+
+.col-33-right {
+  width: 32%;
+  margin: auto;
+  float: right;
+  padding: 1%;
+}
+
+.col-75-right {
+  width: 75%;
+  margin: auto;
+  float: right;
+  padding: 1%;
+}
+
 .editor ul li, .editor ol li {
   font-size: 16px;
   margin-top: 5px;
+}
+
+.contain {
+  max-width: 85%;
+  margin: auto;
 }
 
 .link-button {
@@ -15,6 +50,15 @@
   text-decoration: none!important;
   cursor: pointer;
   font-weight: 400!important;
+}
+
+.title-span {
+  width: 10%;
+  background: #ABACAD;
+  border-radius: 25px;
+  height: 15px;
+  float: left;
+  padding-right: 15px;
 }
 
 .h1-skel {
@@ -1265,6 +1309,68 @@ div.markdown-editor__editor-container h2 {
 
 .ui.items>.contacts-items {
   display: block!important;
+}
+
+/* Contacts Page  */
+
+@media screen and (max-width: 900px) {
+  .col-25-left {
+    float: none;
+    width: 85%;
+    margin: auto;
+  }
+
+  .col-75-right {
+    float: none;
+    width: 85%;
+    margin: auto;
+  }
+}
+
+.contact-avatar{
+  max-width: 65%!important;
+  border-radius: 500rem;
+  margin: auto!important;
+}
+
+.contact-card div {
+  margin: 10px;
+  width: auto!important;
+}
+
+.contact-details .line, .contact-details-pro .line {
+  max-width: 85%;
+  margin: auto;
+  margin-bottom: 15px!important;
+}
+
+.contact-details .line span, .contact-details-pro .line span {
+  width: 25%;
+  height: 20px!important;
+}
+
+.contact-details .line div {
+  width: 85%;
+  height: 20px!important;
+}
+
+.contact-details, .contact-details-pro {
+  padding: 10px;
+}
+
+.contact-details-pro .line div {
+  width: auto;
+  height: 25px;
+  margin-left: 10px;
+}
+
+.contact-card {
+  padding: 10px;
+}
+
+.label-item {
+  float: left!important;
+  font-weight: 600!important;
 }
 
 /* Account Settings */

@@ -263,7 +263,8 @@ setGlobal({
     vaultModalOpen: false, 
     sharefileModalOpen: false, 
     vaultPublicModalOpen: false, 
-    contactModalOpen: false
+    contactModalOpen: false,
+    contact: {}
 })
 
 configure({

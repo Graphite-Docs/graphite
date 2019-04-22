@@ -1,7 +1,7 @@
 import React, { Component, setGlobal } from "reactn";
 import { Link } from "react-router-dom";
 import ContactsSkeleton from './ContactsSkeleton';
-import { Image, Card, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
+import { Image, Container, Input, Grid, Button, Table, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import Nav from '../../shared/views/Nav';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -243,32 +243,11 @@ export default class Contacts extends Component {
               return(
                 <Table.Row key={contact.contact || contact.id}>
                   <Table.Cell>
-                  <Image style={{height: "40px", width: "40px", marginRight: "10px"}} src={contact.img ? contact.img || avatarFallbackImage : contact.image || avatarFallbackImage} avatar /><span>
-                  <Modal closeIcon style={{borderRadius: "0"}} trigger={<Link to={'/contacts'}>
-                    {contact.contact ? contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact : contact.id}
-                  </Link>}>
-                    <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>{contact.contact}</Modal.Header>
-                    <Modal.Content>
-                    <Card style={{margin: "auto"}}>
-                      <Image src={contact.img || avatarFallbackImage} />
-                      <Card.Content>
-                        <Card.Header>{contact.name ? contact.name : contact.contact}</Card.Header>
-                        <Card.Description>{contact.description} <br/></Card.Description>
-                      </Card.Content>
-                      <Card.Content extra>
-                        <Link to={'/documents/shared/' + contact.contact}>
-                          <Icon style={{fontSize: "26px"}} name='file alternate outline' />
-                          Shared Docs
-                        </Link>
-                        <Link to={'/vault/shared/' + contact.contact}>
-                          <Icon style={{fontSize: "26px", marginLeft: "5px"}} name='shield alternate' />
-                          Shared Files
-                        </Link>
-                      </Card.Content>
-                    </Card>
-                    </Modal.Content>
-                  </Modal>
-
+                  <Image style={{height: "40px", width: "40px", marginRight: "10px"}} src={contact.img ? contact.img || avatarFallbackImage : contact.image || avatarFallbackImage} avatar />
+                  <span>
+                    <Link to={`/contacts/${contact.contact ? contact.contact : contact.id}`}>
+                      {contact.contact ? contact.contact.length > 30 ? contact.contact.substring(0,30)+"..." :  contact.contact : contact.id}
+                    </Link>
                   </span>
                   </Table.Cell>
                   <Table.Cell>{contact.name || ""}</Table.Cell>
