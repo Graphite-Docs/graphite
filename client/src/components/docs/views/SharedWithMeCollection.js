@@ -5,7 +5,7 @@ const gdocs = require('../helpers/documents');
 
 class SharedWithMe extends Component {
   render() {
-      const { currentPage, docsPerPage, sharedDocs } = this.global;
+      const { currentPage, docsPerPage, sharedDocs, sharedCollectionLoading } = this.global;
       const indexOfLastDoc = currentPage * docsPerPage;
       const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
       const pageNumbers = [];
@@ -18,59 +18,68 @@ class SharedWithMe extends Component {
             <Menu.Item key={number} style={{ background:"#282828", color: "#fff", borderRadius: "0" }} name={number.toString()} active={this.global.currentPage.toString() === number.toString()} onClick={() => gdocs.handlePageChange(number)} />
         );
       });
-      return (
-        <div>
-        <Table unstackable style={{borderRadius: "0", marginTop: "10px"}}>
-            <Table.Header>
-            <Table.Row>
-                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
-                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Shared By</Table.HeaderCell>
-                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date Shared</Table.HeaderCell>
-                <Table.HeaderCell style={{borderRadius: "0", border: "none"}}></Table.HeaderCell>
-            </Table.Row>
-            </Table.Header>
 
-            <Table.Body>
-            {
-                sharedDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
-                return(
-                <Table.Row key={doc.id}>
-                    <Table.Cell><Link to={'/shared/documents/docInfo&user=' + doc.sharedBy + '&id=' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
-                    <Table.Cell>{doc.sharedBy}</Table.Cell>
-                    <Table.Cell>{doc.dateShared}</Table.Cell>
+      if(sharedCollectionLoading) {
+        return (
+            <div className="margin-top-20 center">
+                <h3>Loading all your shared docs...</h3>
+            </div>
+        )
+      } else {
+        return (
+            <div>
+            <Table unstackable style={{borderRadius: "0", marginTop: "10px"}}>
+                <Table.Header>
+                <Table.Row>
+                    <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Title</Table.HeaderCell>
+                    <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Shared By</Table.HeaderCell>
+                    <Table.HeaderCell style={{borderRadius: "0", border: "none"}}>Date Shared</Table.HeaderCell>
+                    <Table.HeaderCell style={{borderRadius: "0", border: "none"}}></Table.HeaderCell>
                 </Table.Row>
-                );
-                })
+                </Table.Header>
+    
+                <Table.Body>
+                {
+                    sharedDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
+                    return(
+                    <Table.Row key={doc.id}>
+                        <Table.Cell><Link to={'/shared/documents/docInfo&user=' + doc.sharedBy + '&id=' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
+                        <Table.Cell>{doc.sharedBy}</Table.Cell>
+                        <Table.Cell>{doc.dateShared}</Table.Cell>
+                    </Table.Row>
+                    );
+                    })
+                }
+                </Table.Body>
+            </Table>
+            {
+                pageNumbers.length > 0 ?
+                <div style={{textAlign: "center"}}>
+                <Menu pagination>
+                {renderPageNumbers}
+                </Menu>
+                </div> :
+                <div />
             }
-            </Table.Body>
-        </Table>
-        {
-            pageNumbers.length > 0 ?
-            <div style={{textAlign: "center"}}>
-            <Menu pagination>
-            {renderPageNumbers}
-            </Menu>
-            </div> :
-            <div />
-        }
-        <div style={{float: "right", marginBottom: "25px"}}>
-            <label>Docs per page</label>
-            <span className="custom-dropdown small">
-            <select className="ui selection dropdown custom-dropdown" value={this.global.docsPerPage} onChange={gdocs.setDocsPerPage}>
-            <option value={10}>
-            10
-            </option>
-            <option value={20}>
-            20
-            </option>
-            <option value={50}>
-            50
-            </option>
-        </select>
-        </span>
-        </div>
-        </div>
-       );
+            <div style={{float: "right", marginBottom: "25px"}}>
+                <label>Docs per page</label>
+                <span className="custom-dropdown small">
+                <select className="ui selection dropdown custom-dropdown" value={this.global.docsPerPage} onChange={gdocs.setDocsPerPage}>
+                <option value={10}>
+                10
+                </option>
+                <option value={20}>
+                20
+                </option>
+                <option value={50}>
+                50
+                </option>
+            </select>
+            </span>
+            </div>
+            </div>
+           );
+      }
   }
 }
 

@@ -1,10 +1,11 @@
 import { getGlobal, setGlobal } from 'reactn';
 import { fetchData } from '../../shared/helpers/fetch';
 
-export function fetchSharedFiles() {
+export async function fetchSharedFiles() {
+    setGlobal({ sharedCollectionLoading: true });
     const { userSession } = getGlobal();
     let contacts = getGlobal().contacts;
-    asyncForEach(contacts, async contact => {
+    await asyncForEach(contacts, async contact => {
         const userToLoadFrom = contact.contact;
         const userShort = userSession.loadUserData().username.split('.').join('_');
         const fileName = "sharedvault.json";
@@ -23,6 +24,7 @@ export function fetchSharedFiles() {
             setGlobal({ sharedFiles: getGlobal().sharedFiles.concat(filteredFiles)});
         }
     })
+    setGlobal({ sharedCollectionLoading: false });
 }
 
 async function asyncForEach(array, callback) {

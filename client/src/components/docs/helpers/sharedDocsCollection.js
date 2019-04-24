@@ -3,6 +3,7 @@ import { fetchData } from '../../shared/helpers/fetch';
 const blockstack = require("blockstack");
 
 export async function fetchSharedDocs() {
+    setGlobal({ sharedCollectionLoading: true });
     let sharedDocs = [];
     const { userSession } = getGlobal();
     let contacts = getGlobal().contacts;
@@ -27,7 +28,7 @@ export async function fetchSharedDocs() {
             sharedDocs = sharedDocs.concat(filteredDocs);
         }
     })
-    setGlobal({ sharedDocs });
+    setGlobal({ sharedDocs, sharedCollectionLoading: false });
 }
 
 async function asyncForEach(array, callback) {

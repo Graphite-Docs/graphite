@@ -265,7 +265,8 @@ setGlobal({
     vaultPublicModalOpen: false, 
     contactModalOpen: false,
     getNotifiedModalOpen: false,
-    contact: {}
+    contact: {},
+    sharedCollectionLoading: false
 })
 
 configure({
