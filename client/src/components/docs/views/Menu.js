@@ -307,7 +307,7 @@ export default class Menu extends Component {
                                   newDate.setTime(timestamp);
                                   let dateString = newDate.toUTCString();
                                   return (
-                                    <List.Item key={version.version}>
+                                    <List.Item key={version}>
                                       <List.Icon name='clock outline' size='large' verticalAlign='middle' />
                                       <List.Content>
                                         <List.Header as='a' onPointerDown={(e) => this.handleVersionSelect(version.version)}>Version {versions.indexOf(version) + 1}</List.Header>

@@ -50,7 +50,7 @@ export default class Nav extends Component {
           <Dropdown icon='th' className="app-switcher" style={{ color: "#fff", marginRight: "15px" }}>
             <Dropdown.Menu>
               <Dropdown.Item><Link to={'/documents'}><Icon name='file alternate outline'/>Documents</Link></Dropdown.Item>
-              <Dropdown.Item><Link to={'/files'}><Icon name='shield alternate' />Vault</Link></Dropdown.Item>
+              <Dropdown.Item><Link to={'/files'}><Icon name='file image outline' />Files</Link></Dropdown.Item>
               <Dropdown.Item><Link to={'/contacts'}><Icon name='address book outline' />Contacts</Link></Dropdown.Item>
             </Dropdown.Menu>
           </Dropdown>

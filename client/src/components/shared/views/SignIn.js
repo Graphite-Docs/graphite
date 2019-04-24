@@ -98,8 +98,12 @@ class SignIn extends Component {
           </Card>
 
           <h4 style={{ marginTop: "55px" }}>
+            Looking for uPort authentication? That's part of <a href="https://graphitedocs.com/labs" target="_blank" rel="noopener noreferrer">Graphite Labs</a>.
+          </h4>
+
+          <h4 style={{ marginTop: "55px" }}>
             <a
-              href="https://graphitedocs.com/about"
+              href="https://graphitedocs.com"
               target="_blank"
               rel="noopener noreferrer"
             >

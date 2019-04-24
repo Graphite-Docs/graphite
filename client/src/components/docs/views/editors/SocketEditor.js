@@ -7,8 +7,7 @@ class SocketEditor extends Component {
     super(props);
 
     this.state = {
-      // endpoint: "https://whispering-sands-47101.herokuapp.com",
-      endpoint: "http://localhost:5000",
+      endpoint: "https://socket.graphitedocs.com/",
       showCollab: false,
       uniqueID: ""
     }
@@ -27,7 +26,6 @@ class SocketEditor extends Component {
       if (ops !== null && this.uniqueID !== uniqueID) {
         setTimeout(() => {
           try {
-            console.log(uniqueID)
             this.slate.applyOperations(ops);
           } catch(e) {
             console.log(e)
@@ -46,7 +44,7 @@ class SocketEditor extends Component {
     if(window.location.href.includes('docInfo')) {
         room = room = window.location.href.split('id=')[1];
     } else if(window.location.href.includes('shared')) {
-        room = window.location.href.split('shared/')[1].split('/')[1].split("#")[0]
+        room = window.location.href.split('shared/docs/')[1].split('-')[1]
     } else {
       if(window.location.href.includes("new")) {
         room = window.location.href.split("new/")[1];
@@ -57,7 +55,6 @@ class SocketEditor extends Component {
     this.socket.on('connect', () => {
       this.socket.emit('room', room)
     })
-  
   }
 
   send = content => {
@@ -86,6 +83,7 @@ class SocketEditor extends Component {
   }
 
   render() {
+
     return (
       <SlateEditor
         ref={slateE => { this.slate = slateE; }}
