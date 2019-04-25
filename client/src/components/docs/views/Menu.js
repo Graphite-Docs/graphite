@@ -48,7 +48,7 @@ export default class Menu extends Component {
 
   render() {
     const linkHref = '';
-    const { contacts, teamList, userSession, readOnly, singleDoc } = this.global;
+    const { contacts, teamList, userSession, singleDoc } = this.global;
     let versions;
     if(singleDoc.versions) {
       versions = singleDoc.versions;
@@ -123,7 +123,7 @@ export default class Menu extends Component {
                                       <Button style={{ borderRadius: "0" }} onClick={share.toggleReadOnly} color="green">{singleDoc.readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
                                       <Button style={{ borderRadius: "0" }} onClick={share.stopSharing} color="red">Stop Sharing Publicly</Button>
                                       <p style={{marginTop: "15px", marginBottom: "15px"}}>
-                                        {readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
+                                        {singleDoc.readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
                                       </p>
                                       <div>
                                         <p><a href={`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}>{`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}</a></p>

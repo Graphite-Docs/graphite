@@ -266,7 +266,7 @@ class SlateEditor extends React.Component {
       v: "",
       timelineModal: false,
       timelineTitleOpen: false,
-      timelineEventOpen: false
+      timelineEventOpen: false, 
     };
     this.editor = null;
   }
@@ -377,10 +377,12 @@ class SlateEditor extends React.Component {
       }
     }
 
-    if (singleDoc.readOnly === false || singleDoc.rtc || readOnly === false) {
-      this.props.onChange(change)
+    if(!this.remote) {
+      if (singleDoc.readOnly === false || singleDoc.rtc || readOnly === false) {
+        this.props.onChange(change)
+      }
     } else {
-      // this.remote = false
+      this.remote = false;
     }
   };
 
