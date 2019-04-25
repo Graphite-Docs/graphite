@@ -8,3 +8,6 @@ dist
 src/components/helpers/dev.js
 src/components/helpers/prod.js
 .env
+.gitignore
+.dockerignore
+.DS_Store
