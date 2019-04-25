@@ -1,0 +1,4 @@
+[build]
+base = "graphite/"
+publish = "graphite/build/"
+command = "npm run build"
