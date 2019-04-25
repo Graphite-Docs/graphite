@@ -1,4 +1,4 @@
 [build]
-base = "/"
-publish = "/build"
-command = "yarn build"
+base = "/client/"
+publish = "/client/build"
+command = "npm run build"
