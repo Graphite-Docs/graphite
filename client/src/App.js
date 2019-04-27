@@ -16,25 +16,19 @@ import SingleContact from './components/contacts/views/SingleContact';
 import Settings from './components/pro/views/Settings';
 import Invites from './components/pro/views/Invites';
 import Trial from './components/pro/views/Trial';
+import ApiDocs from './components/pro/views/ApiDocs';
 import SignIn from './components/shared/views/SignIn';
 import Skeleton from './components/docs/views/Skeleteon';
-//import { User } from 'radiks';
+import { checkPro } from './components/pro/helpers/account';
 import { loadData } from './components/shared/helpers/accountContext';
 import {ToastsContainer, ToastsStore} from 'react-toasts';
 
 class App extends Component {
   async componentDidMount() {
     const { userSession } = this.global;
-    if(localStorage.getItem('GROUP_MEMBERSHIPS_STORAGE_KEY')) {
-      console.log("Radiks user")
-      if(userSession.isUserSignedIn()) {
-        loadData();
-      }
-    } else {
-      if(userSession.isUserSignedIn()) {
-        // await User.createWithCurrentUser();
-        loadData();
-      }
+    if(userSession.isUserSignedIn()) {
+      checkPro();
+      loadData();
     }
  
     if (userSession.isSignInPending()) {
@@ -71,6 +65,7 @@ class App extends Component {
              <Route exact path='/forms/results/:id' component={SingleFormResults} />
              <Route exact path='/settings' component={Settings} />
              <Route exact path='/trial' component={Trial} />
+             <Route exact path='/pro/api' component={ApiDocs} />
            </div>
          </BrowserRouter>
         </div>
@@ -92,6 +87,7 @@ class App extends Component {
                 <Route exact path='/?auth=' component={Skeleton} />
                 <Route exact path="/:id" component={SignIn} />
                 <Route exact path="/shared/docs/:id" component={PublicDoc} />
+                <Route exact path='/pro/api' component={ApiDocs} />
               </div>
             </BrowserRouter>
           </div>

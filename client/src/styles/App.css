@@ -390,6 +390,17 @@ code {
 
 /* Trial */
 
+.pricing-card {
+  max-width: 90%!important;
+  margin: auto!important;
+  margin-top: 40px!important;
+  padding: 15px!important;
+}
+
+.feature-list li {
+  margin-top: 5px;
+}
+
 .trial-image {
   max-width: 70%!important;
   margin: auto!important;
