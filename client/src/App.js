@@ -1,4 +1,4 @@
-import React, { Component } from 'reactn';
+import React, { Component, setGlobal } from 'reactn';
 import {BrowserRouter, Route} from 'react-router-dom';
 import Documents from './components/docs/views/Documents';
 import SingleDoc from './components/docs/views/SingleDoc';
@@ -19,7 +19,7 @@ import Trial from './components/pro/views/Trial';
 import ApiDocs from './components/pro/views/ApiDocs';
 import SignIn from './components/shared/views/SignIn';
 import Skeleton from './components/docs/views/Skeleteon';
-import { checkPro } from './components/pro/helpers/account';
+import { checkPro, fetchOrg, filterTeams } from './components/pro/helpers/account';
 import { loadData } from './components/shared/helpers/accountContext';
 import {ToastsContainer, ToastsStore} from 'react-toasts';
 
@@ -27,8 +27,35 @@ class App extends Component {
   async componentDidMount() {
     const { userSession } = this.global;
     if(userSession.isUserSignedIn()) {
-      checkPro();
       loadData();
+      let proData = await checkPro();
+      setGlobal({ proUserProfile: proData });
+      console.log(proData);
+      if(proData === "error fetching user") {
+        console.log("Not a Pro user");
+      } else {
+        let orgData = await fetchOrg(proData.accountProfile.orgInfo.name);
+        await filterTeams(orgData);
+        const trialAccount = orgData.orgProfile.trialAccount.onTrial;
+        if(trialAccount === true) {
+          const proOrgInfo = orgData.orgProfile
+          setGlobal({ graphitePro: true, proOrgInfo, proLoading: false  })
+        } else {
+            //Check if payments are up to date
+            const overdue = orgData.orgProfile.paymentInfo.overdue;
+            if(overdue === true) {
+                const suspended = orgData.orgProfile.paymentInfo.suspended;
+                if(suspended) {
+                    setGlobal({ suspendedMessage: true, proLoading: false });
+                } else {
+                    setGlobal({ ovedueMessage: true, proLoading: false });
+                }
+            } else {
+                const proOrgInfo = orgData.orgProfile
+                setGlobal({ graphitePro: true, proOrgInfo, proLoading: false  })
+            }
+        }
+      }
     }
  
     if (userSession.isSignInPending()) {

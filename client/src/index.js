@@ -22,6 +22,7 @@ setGlobal({
     contacts: [],
     files: [],
     teams: [],
+    filteredTeams: [],
     person: {
         name() {
           return 'Anonymous';
@@ -37,6 +38,7 @@ setGlobal({
     tempDocId: "",
     redirect: false,
     loading: true,
+    proLoading: true,
     migrationLength: 1,
     migrationCount: 0,
     migrationComplete: false,
@@ -110,6 +112,7 @@ setGlobal({
     slackConnected: false,
     slackWebhookUrl: "",
     graphitePro: false,
+    proOrgInfo: {},
     newTeammateEmail: "",
     newTeammateName: "",
     newTeammateRole: "",
@@ -138,7 +141,6 @@ setGlobal({
     deleteDoc: false,
     settingsMain: "hide",
     settingsOnboarding: "hide",
-    loadingBar: "",
     teamDocs: [],
     sharedDocsCount: 0,
     analytics: [],
@@ -189,7 +191,6 @@ setGlobal({
     originalConfig: {},
     invite: {},
     teamShare: false,
-    loadingIndicator: false,
     auditThis: false,
     teamDoc: false,
     isTeamDoc: false,

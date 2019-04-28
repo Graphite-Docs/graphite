@@ -242,6 +242,24 @@
 
 /* End Margin */
 
+/* Padding */
+
+.padding-top-10 {
+  padding-top: 10px;
+}
+
+.padding-top-20 {
+  padding-top: 20px;
+}
+
+.padding-top-30 {
+  padding-top: 30px;
+}
+
+.padding-top-40 {
+  padding-top: 40px;
+}
+
 /* Text */
 
 .center {
@@ -1395,29 +1413,27 @@ div.markdown-editor__editor-container h2 {
 
 /* Account Settings */
 
-.roleDrop {
-  width: 25%!important;
-  height: 40px;
-  background: none transparent!important;
-  border: 1px #eee solid;
-  -webkit-box-shadow: none!important;
-  box-shadow: none!important;
-  cursor: text;
-  top: 0;
-  left: 1px;
-  width: 100%;
-  outline: 0;
-  -webkit-tap-highlight-color: rgba(255,255,255,0);
-  padding: inherit;
+.settings-side {
+  background: #eee;
+  position: fixed;
+  left: 0;
+  width: 20%;
+  height: 100%;
+  padding: 30px;
 }
 
-/* shared sheets */
-
-.shared-sheet-menu {
-  height: 50px!important;
-  padding: 0!important;
+.settings-main-container {
+  width: 80%;
+  position: relative;
+  left: 20%;
 }
 
-.spreadsheet-table1 {
-  margin-top: -75px!important;
+.settings-side .ui.list .item {
+  margin-top: 10px;
+}
+
+.table-container {
+  max-width: 85%;
+  margin: auto;
+  margin-top: 20px;
 }
