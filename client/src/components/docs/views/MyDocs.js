@@ -138,7 +138,6 @@ copyLink = () => {
                                 <Item.Group divided>
                                 <h4>Your Contacts</h4>
                                 {contacts.slice(0).reverse().map(contact => {
-                                    console.log(contact)
                                     return (
                                     <Item className="contact-search" onClick={() => this.shareDoc(contact)} key={contact.contact || contact.id}>
                                         <Item.Image size='tiny' src={contact.img || contact.image} />

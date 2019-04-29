@@ -13,7 +13,7 @@ export async function sharedInfo(params) {
     setGlobal({ shareModalOpen: false});
     ToastsStore.success(`Sharing document...`)
     let key;
-    let user = params.contact.contact;
+    let user = params.contact.contact ? params.contact.contact : params.contact.id;
 
     if(params.realTime !== undefined) {
       setGlobal({ rtc: params.realTime });

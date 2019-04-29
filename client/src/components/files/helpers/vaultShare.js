@@ -7,13 +7,12 @@ import { loadData } from '../../shared/helpers/accountContext';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 
 export async function sharedVaultInfo(contact, file) {
-    console.log(file)
     const { userSession } = getGlobal();
     setGlobal({sharefileModalOpen: false});
     ToastsStore.success(`Sharing file...`)
     let key;
-    const user = contact.contact;
-    const userShort = contact.contact.split('.').join('_');
+    const user = contact.contact ? contact.contact : contact.id;
+    const userShort = contact.contact ? contact.contact.split('.').join('_') : contact.id.split('.').join('_');
     const fileName = "sharedvault.json";
     //Step One: Load User Key
     try {
