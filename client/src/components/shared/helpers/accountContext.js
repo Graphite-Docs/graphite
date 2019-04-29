@@ -1,5 +1,7 @@
-import { setGlobal } from 'reactn';
+import { setGlobal, getGlobal } from 'reactn';
 import { fetchData } from "./fetch";
+import { getPublicKeyFromPrivate } from 'blockstack';
+import { postData } from './post';
 
 export async function loadData(params) {
     if(params) {
@@ -20,10 +22,21 @@ export async function loadData(params) {
         fileName: 'uploads.json',
         decrypt: true
     }
+
+    const keyParams = {
+        fileName: "key.json", 
+        decrypt: false
+    }
     // const formsParams = {
 
     // }
-    let docs = await fetchData(docsParams);
+    let key = fetchData(keyParams);
+    if(key) {
+        //Nothing
+    } else {
+        saveKey();
+    }
+    let docs = fetchData(docsParams);
     let oldFile;
     let isArr = Object.prototype.toString.call(JSON.parse(docs)) === '[object Array]';
     //older versions of the doc collection stored the entire state object at the time. Need to check for that
@@ -33,7 +46,7 @@ export async function loadData(params) {
         oldFile = true;
     }
 
-    let contacts = await fetchData(contactsParams);
+    let contacts = fetchData(contactsParams);
     let oldContactsFile;
     let isContactsArr = Object.prototype.toString.call(JSON.parse(contacts)) === '[object Array]';
     //older versions of the contacts collection stored the entire state object at the time. Need to check for that
@@ -43,7 +56,7 @@ export async function loadData(params) {
         oldContactsFile = true;
     }
     
-    let files = await fetchData(filesParams);
+    let files = fetchData(filesParams);
     setGlobal({
         documents: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [], 
         filteredDocs: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
@@ -57,4 +70,16 @@ export async function loadData(params) {
     
     
     // await fetchData(formsParams);
+}
+
+export async function saveKey() {
+    const { userSession } = getGlobal();
+    const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+    const keyParams = {
+        fileName: "key.json", 
+        encrypt: false, 
+        body: JSON.stringify(pubKey)
+    }
+    const postedKey = await postData(keyParams);
+    console.log(postedKey);
 }
