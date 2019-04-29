@@ -1,11 +1,11 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Graphite",
+  "name": "Graphite",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "https://i.imgur.com/O6ZdY49.png",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "type": "image/png"
     }
   ],
   "start_url": ".",

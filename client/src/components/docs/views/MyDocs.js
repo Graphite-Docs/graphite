@@ -139,7 +139,7 @@ copyLink = () => {
                                 <h4>Your Contacts</h4>
                                 {contacts.slice(0).reverse().map(contact => {
                                     return (
-                                    <Item className="contact-search" onClick={() => this.shareDoc(contact)} key={contact.contact}>
+                                    <Item className="contact-search" onClick={() => this.shareDoc(contact)} key={contact.contact || contact.id}>
                                         <Item.Image size='tiny' src={contact.img} />
                                         <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
                                     </Item>

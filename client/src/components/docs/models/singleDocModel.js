@@ -23,7 +23,7 @@ export async function singleDocModel(updates) {
         readOnly: readOnlySource === "updates" ? updates.readOnly : singleDoc.readOnly,
         rtc: rtcSource === "updates" ? updates.rtc : singleDoc.rtc,
         sharedWith: updates.sharedWith ? updates.sharedWith :  singleDoc.sharedWith || [], 
-        singleDocIsPublic: singleDoc.singleDocIsPublic ? updates.singleDocIsPublic ? updates.singleDocIsPublic : singleDoc.singleDocIsPublic : false,
+        singleDocIsPublic: updates.singleDocIsPublic !==undefined ? updates.singleDocIsPublic : singleDoc.singleDocIsPublic ? singleDoc.singleDocIsPublic : false,
         singleDocTags: updates.singleDocTags ? updates.singleDocTags : singleDoc.singleDocTags || [], 
         teamDoc: false, 
         versions: singleDoc.versions ? updates.version ? [...singleDoc.versions, updates.version] : singleDoc.versions : [],

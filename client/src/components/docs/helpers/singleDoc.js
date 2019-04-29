@@ -112,12 +112,7 @@ export async function handleTitle(e) {
 
 export async function loadSingle() {
   setGlobal({loading: true});
-  let file;
-  if(window.location.href.includes('new')) {
-    file = `/documents/${window.location.href.split('new/')[1]}.json`;
-  } else {
-    file = `/documents/${window.location.href.split('documents/')[1]}.json`;
-  }
+  const file = `/documents/${window.location.href.split('documents/')[1]}.json`;
   const docParams = {
     fileName: file,
     decrypt: true
@@ -130,7 +125,7 @@ export async function loadSingle() {
   if(compressed === true) {
     console.log("compressed")
     updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
-  }
+  } 
   setGlobal({
     singleDoc: parsedDoc, 
     title: JSON.parse(doc).title,

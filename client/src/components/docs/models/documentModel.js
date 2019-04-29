@@ -6,7 +6,7 @@ export async function documentModel(updates) {
     let id;
     window.location.href.includes("new") ? id = window.location.href.split("new/")[1] : id = window.location.href.split("documents/")[1];
     let documentModel = await {
-        id: updates.id ? updates.id : singleDoc.id || id, 
+        id: updates ? updates.id ? updates.id : singleDoc.id || id : singleDoc.id || id, 
         fileType: "documents", 
         lastUpdate: Date.now(), 
         updated: getMonthDayYear(), 

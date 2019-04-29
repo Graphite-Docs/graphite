@@ -5,6 +5,18 @@ import { postData } from '../../shared/helpers/post';
 import { saveDoc } from './singleDoc';
 const wordCount = require('html-word-count');
 
+export function stopSharing() {
+  const singleDoc = getGlobal().singleDoc;
+  const updates = {
+    readOnly: true,
+    singleDocIsPublic: false
+  }
+  setGlobal({ singleDoc, readOnly: true, singleDocIsPublic: false, singlePublic: {} });
+
+  savePublic({showToast: "stopped"});
+  saveDoc(updates);
+}
+
 export function sharePublicly(params) {
     let singleDoc = getGlobal().singleDoc;
     if (singleDoc.readOnly === undefined && getGlobal().readOnly === undefined) {
@@ -58,7 +70,7 @@ export function sharePublicly(params) {
           singleDoc: singleDoc
         },
         () => {
-          savePublic(true);
+          savePublic({showToast: "shared"});
         }
       );
     }
@@ -69,7 +81,7 @@ export function sharePublicly(params) {
     }
   }
 
-  export async function savePublic(showToast) {
+  export async function savePublic(toast) {
     const { userSession } = getGlobal();
     const user = userSession.loadUserData().username;
     let id;
@@ -87,7 +99,7 @@ export function sharePublicly(params) {
         const publicDoc = await postData(pubDocParams);
         console.log(publicDoc);
         setGlobal({ gaiaLink: link});
-        showToast ? ToastsStore.success(`Document shared publicly`) : console.log("saved")
+        toast.showToast === "shared" ? ToastsStore.success(`Document shared publicly`) : toast.showToast === "stopped" ? ToastsStore.success(`Document no longer shared publicly`) : console.log("saved")
       } catch(error) {
         console.log(error)
       }
