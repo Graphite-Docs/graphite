@@ -44,7 +44,7 @@ export async function sharedInfo(params) {
           decrypt: true
         }
         let sharedDocs = await fetchData(sharedCollectionParams);
-        if(JSON.parse(sharedDocs)) {
+        if(sharedDocs) {
           setGlobal({ sharedCollection: JSON.parse([sharedDocs]) });
         } else {
           setGlobal({ sharedCollection: [] });
@@ -167,7 +167,7 @@ export async function sharedInfo(params) {
       }
       loadData({refresh: false});
     } else {
-      
+
       ToastsStore.error(`Error sharing with ${user}. They may not have logged in before. You can create a public link instead.`)
     }
   }
