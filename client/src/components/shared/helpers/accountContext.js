@@ -30,13 +30,13 @@ export async function loadData(params) {
     // const formsParams = {
 
     // }
-    let key = fetchData(keyParams);
+    let key = await fetchData(keyParams);
     if(key) {
         //Nothing
     } else {
         saveKey();
     }
-    let docs = fetchData(docsParams);
+    let docs = await fetchData(docsParams);
     let oldFile;
     let isArr = Object.prototype.toString.call(JSON.parse(docs)) === '[object Array]';
     //older versions of the doc collection stored the entire state object at the time. Need to check for that
@@ -46,7 +46,7 @@ export async function loadData(params) {
         oldFile = true;
     }
 
-    let contacts = fetchData(contactsParams);
+    let contacts = await fetchData(contactsParams);
     let oldContactsFile;
     let isContactsArr = Object.prototype.toString.call(JSON.parse(contacts)) === '[object Array]';
     //older versions of the contacts collection stored the entire state object at the time. Need to check for that
@@ -56,7 +56,7 @@ export async function loadData(params) {
         oldContactsFile = true;
     }
     
-    let files = fetchData(filesParams);
+    let files = await fetchData(filesParams);
     setGlobal({
         documents: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [], 
         filteredDocs: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
