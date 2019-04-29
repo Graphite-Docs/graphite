@@ -85,7 +85,7 @@ copyLink = () => {
                         <Modal.Content>
                           <Modal.Description className='link-modal'>
                             <p>Provide your collaborators this link for quick access:</p>
-                            <Input readOnly id="copyLink" value={`${window.location.origin}/documents/docInfo&user=${userSession.loadUserData().username}&id=${doc.id}`} />
+                            <Input readOnly id="copyLink" value={`${window.location.origin}/shared/documents/docInfo&user=${userSession.loadUserData().username}&id=${doc.id}`} />
                             <p className="margin-top-10"><Button onClick={this.copyLink} secondary>Copy Link</Button><Icon onClick={this.copyLink} style={{cursor: "pointer", marginLeft: "10px"}} name="copy" /></p>
                           </Modal.Description>
                         </Modal.Content>

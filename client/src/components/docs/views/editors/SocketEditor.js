@@ -83,7 +83,6 @@ class SocketEditor extends Component {
   }
 
   render() {
-
     return (
       <SlateEditor
         ref={slateE => { this.slate = slateE; }}

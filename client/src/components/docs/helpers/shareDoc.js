@@ -22,6 +22,7 @@ export function sharePublicly(params) {
           singleDocIsPublic: true
         };
         singleDoc["singleDocIsPublic"] = true;
+        singleDoc["readOnly"] = true;
         setGlobal(
           {
             singlePublic: object,
@@ -50,6 +51,7 @@ export function sharePublicly(params) {
       object.shared = getMonthDayYear();
       object.singleDocIsPublic = true;
       singleDoc["singleDocIsPublic"] = true;
+      singleDoc["readOnly"] = getGlobal().readOnly;
       setGlobal(
         {
           singlePublic: object,

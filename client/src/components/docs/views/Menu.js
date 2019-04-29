@@ -74,7 +74,7 @@ export default class Menu extends Component {
                       <li className="topmenu">
                           <a href={linkHref}>file</a>
                           <ul className="submenu">
-                              <li><button className='link-button' href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New Document</button></li>
+                              <li><a className='link-button' href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New Document</a></li>
                               {/*<li><a>Add tag</a></li>*/}
                               <li className="divider-menu"><hr /></li>
                               

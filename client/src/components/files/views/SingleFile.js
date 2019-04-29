@@ -135,7 +135,7 @@ export default class SingleVaultFile extends Component {
                   <div style={{marginTop: "15px"}}>
                     {
                       singleFile.publicVaultFile && sharedBy ?
-                      <div><a id='shared-vault-link' href={window.location.origin + '/public/vault/' + sharedBy + '/' + window.location.href.split('files/')[1]} target='_blank' rel="noopener noreferrer" style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/vault/' + sharedBy + '/' + window.location.href.split('files/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
+                      <div><a id='shared-vault-link' href={window.location.origin + '/public/files/' + sharedBy + '/' + window.location.href.split('files/')[1]} target='_blank' rel="noopener noreferrer" style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/files/' + sharedBy + '/' + window.location.href.split('files/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
                       <div className='hide' />
                     }
                   </div>

@@ -8,11 +8,15 @@ export async function singleDocModel(updates) {
     let readOnlySource = updates.readOnly !== undefined ? "updates" : "doc";
     let rtcSource = updates.rtc !== undefined ? "updates" : "doc";
     let id;
-    window.location.href.includes("new") ? id = window.location.href.split("new/")[1] : id = window.location.href.split("documents/")[1];
+    if(updates.id) {
+        id = updates.id;
+    } else {
+        window.location.href.includes("new") ? id = window.location.href.split("new/")[1] : id = window.location.href.split("documents/")[1];
+    }
     //Model
     let singleModel = await {
         id: singleDoc.id || id, 
-        content: getGlobal().content === "" ? Value.fromJSON(initialValue) : getGlobal().content,
+        content: updates.content ? updates.content : getGlobal().content === "" ? Value.fromJSON(initialValue) : getGlobal().content,
         fileType: "documents", 
         lastUpdate: Date.now(), 
         updated: getMonthDayYear(), 
