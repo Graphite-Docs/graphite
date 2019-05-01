@@ -22,6 +22,16 @@ export async function startTrial() {
         pubKey: blockstack.getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey),
         teamPubKey: publicKey
     }
+
+    let trialParams = {
+        fileName: "account.json", 
+        encrypted: true,
+        body: JSON.stringify(trialObject)
+    }
+
+    let postTrial = await postData(trialParams);
+    console.log(postTrial);
+    
     let serverUrl;
     const data = {
         profile: userSession.loadUserData().profile, 
@@ -57,7 +67,7 @@ export async function startTrial() {
                 const postedKey = await postData(teamKeyParams);
                 console.log(postedKey);
 
-                //ToastsStore.success(`You've been added to the list!`);
+                setGlobal({ welcome: true });
             }
         }).catch((error) => {
             console.log(error)

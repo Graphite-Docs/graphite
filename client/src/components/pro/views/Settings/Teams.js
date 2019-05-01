@@ -5,7 +5,6 @@ class Teams extends Component {
   render() {
       const { filteredTeams } = this.global;
       let teamList = filteredTeams.length > 0 ? filteredTeams : [];
-      console.log(teamList);
       return (
         <div>
             <Container>

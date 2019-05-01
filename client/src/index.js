@@ -267,7 +267,8 @@ setGlobal({
     contactModalOpen: false,
     trialModalOpen: false,
     contact: {},
-    sharedCollectionLoading: false
+    sharedCollectionLoading: false, 
+    welcome: false
 })
 
 configure({

@@ -1,4 +1,4 @@
-import React, { Component, setGlobal } from 'reactn';
+import React, { Component } from 'reactn';
 import {BrowserRouter, Route} from 'react-router-dom';
 import Documents from './components/docs/views/Documents';
 import SingleDoc from './components/docs/views/SingleDoc';
@@ -13,13 +13,14 @@ import SingleForm from './components/forms/views/SingleForm';
 import SingleFormResults from './components/forms/views/SingleFormResults';
 import Contacts from './components/contacts/views/Contacts';
 import SingleContact from './components/contacts/views/SingleContact';
-import Settings from './components/pro/views/Settings';
-import Invites from './components/pro/views/Invites';
+import Settings from './components/pro/views/Settings/Settings';
+import Invites from './components/pro/views/Invites/Invites';
+import Walkthrough from './components/pro/views/Walkthrough';
 import Trial from './components/pro/views/Trial';
-import ApiDocs from './components/pro/views/ApiDocs';
+import ApiDocs from './components/pro/views/API/ApiDocs';
 import SignIn from './components/shared/views/SignIn';
 import Skeleton from './components/docs/views/Skeleteon';
-import { checkPro, fetchOrg, filterTeams } from './components/pro/helpers/account';
+import { handleProCheck } from './components/pro/helpers/account';
 import { loadData } from './components/shared/helpers/accountContext';
 import {ToastsContainer, ToastsStore} from 'react-toasts';
 
@@ -28,34 +29,7 @@ class App extends Component {
     const { userSession } = this.global;
     if(userSession.isUserSignedIn()) {
       loadData();
-      let proData = await checkPro();
-      setGlobal({ proUserProfile: proData });
-      console.log(proData);
-      if(proData === "error fetching user") {
-        console.log("Not a Pro user");
-      } else {
-        let orgData = await fetchOrg(proData.accountProfile.orgInfo.name);
-        await filterTeams(orgData);
-        const trialAccount = orgData.orgProfile.trialAccount.onTrial;
-        if(trialAccount === true) {
-          const proOrgInfo = orgData.orgProfile
-          setGlobal({ graphitePro: true, proOrgInfo, proLoading: false  })
-        } else {
-            //Check if payments are up to date
-            const overdue = orgData.orgProfile.paymentInfo.overdue;
-            if(overdue === true) {
-                const suspended = orgData.orgProfile.paymentInfo.suspended;
-                if(suspended) {
-                    setGlobal({ suspendedMessage: true, proLoading: false });
-                } else {
-                    setGlobal({ ovedueMessage: true, proLoading: false });
-                }
-            } else {
-                const proOrgInfo = orgData.orgProfile
-                setGlobal({ graphitePro: true, proOrgInfo, proLoading: false  })
-            }
-        }
-      }
+      handleProCheck();
     }
  
     if (userSession.isSignInPending()) {
@@ -92,6 +66,7 @@ class App extends Component {
              <Route exact path='/forms/results/:id' component={SingleFormResults} />
              <Route exact path='/settings' component={Settings} />
              <Route exact path='/trial' component={Trial} />
+             <Route exact path='/walkthrough' component={Walkthrough} />
              <Route exact path='/pro/api' component={ApiDocs} />
            </div>
          </BrowserRouter>

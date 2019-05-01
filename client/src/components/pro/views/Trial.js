@@ -8,8 +8,20 @@ import dataCenter from '../../../assets/images/data_center.svg';
 import { startTrial } from '../helpers/trialSignUps';
 
 class Trial extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            trialStarting: false
+        }
+    }
+
+  start = () => {
+    startTrial();
+    this.setState({ trialStarting: true })
+  }
   render() {
       const { trialModalOpen } = this.global;
+      const { trialStarting } = this.state;
       return (
         <div>
          <Nav />
@@ -41,7 +53,11 @@ class Trial extends Component {
                                 <label>Email Address</label>
                                 <input id="trial-email" placeholder='Email' />
                                 </Form.Field>
-                                <Button onClick={startTrial} secondary>Start my trial account</Button>
+                                {
+                                    trialStarting ? 
+                                    <Button>Starting your trial...</Button> : 
+                                    <Button onClick={this.start} secondary>Start my trial account</Button>
+                                }
                             </Form>
                             </Modal.Description>
                             </Modal.Content>

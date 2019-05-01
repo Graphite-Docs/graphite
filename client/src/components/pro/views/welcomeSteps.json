@@ -1,0 +1,29 @@
+{
+    "steps": [
+        {
+            "id": 1, 
+            "text": "Welcome One", 
+            "img": "welcomeOne"
+        }, 
+        {
+            "id": 2, 
+            "text": "Welcome Two",
+            "img": "welcomeTwo"
+        },
+        {
+            "id": 3, 
+            "text": "Welcome Three",
+            "img": "welcomeThree"
+        },
+        {
+            "id": 4, 
+            "text": "Welcome Four",
+            "img": "welcomeThree"
+        },
+        {
+            "id": 5, 
+            "text": "Welcome Five",
+            "img": "welcomeFour"
+        }
+    ]
+}

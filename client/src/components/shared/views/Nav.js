@@ -26,7 +26,7 @@ export default class Nav extends Component {
   }
 
   renderHeader() {
-    const { userSession } = this.global;
+    const { userSession, graphitePro } = this.global;
     if (userSession.isUserSignedIn() ) {
       const userData = userSession.loadUserData();
       let person;
@@ -56,8 +56,9 @@ export default class Nav extends Component {
           </Dropdown>
           <Dropdown trigger={trigger} icon={null} className="app-switcher">
               <Dropdown.Menu>
-                <Dropdown.Item><Link to={'/settings'}>Settings</Link></Dropdown.Item>
-                <Dropdown.Divider />
+                { graphitePro ? <Dropdown.Item><Link to={'/settings'}>Settings</Link></Dropdown.Item> : <div className="hide" /> }
+                { graphitePro ? <Dropdown.Item><Link to={'/walkthrough'}>Walkthrough</Link></Dropdown.Item> : <div className="hide" /> }
+                { graphitePro ?  <Dropdown.Divider /> : <div className="hide" /> }
                 <Dropdown.Item style={{marginRight: "10px"}}><button className="link-button" onClick={signOut}>Sign Out</button></Dropdown.Item>
               </Dropdown.Menu>
           </Dropdown>

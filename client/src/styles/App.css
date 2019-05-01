@@ -129,6 +129,13 @@
   border-radius: 25px;
 }
 
+.black-skel-div {
+  width: 80px;
+  height: 15px;
+  background: #000;
+  border-radius: 25px;
+}
+
 .button-grey-skel-div {
   width: 80px;
   height: 30px;
@@ -1412,6 +1419,22 @@ div.markdown-editor__editor-container h2 {
 }
 
 /* Account Settings */
+
+.welcome-walk {
+  margin-top: 10%!important;
+}
+
+@media only screen and (max-width: 950px) {
+  .welcome-walk {
+    margin-top: 20%!important;
+  }
+}
+
+@media only screen and (max-width: 750px) {
+  .welcome-walk {
+    margin-top: 30%!important;
+  }
+}
 
 .settings-side {
   background: #eee;
