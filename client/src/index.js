@@ -267,9 +267,12 @@ setGlobal({
     contactModalOpen: false,
     trialModalOpen: false,
     orgNameModalOpen: false,
+    newTeamModalOpen: false,
     contact: {},
     sharedCollectionLoading: false, 
-    welcome: false
+    welcome: false, 
+    newTeamName: "", 
+    selectedTeam: ""
 })
 
 configure({

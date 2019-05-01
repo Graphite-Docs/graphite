@@ -37,7 +37,8 @@ export async function startTrial() {
     let serverUrl;
     const data = {
         profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username
+        username: userSession.loadUserData().username, 
+        pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
     

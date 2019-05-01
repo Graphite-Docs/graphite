@@ -48,7 +48,7 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "mocha src/tests/App.test.js",
     "eject": "react-scripts eject",
     "memory-build": "react-scripts --max_old_space_size=4096 build"
   },

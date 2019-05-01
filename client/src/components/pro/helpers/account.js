@@ -86,6 +86,7 @@ export function fetchOrg(orgId) {
     }
     return axios.get(`${baseUrl}/account/org/${orgId}/${pubKey}`, headerObj)
         .then(async (res) => {
+            console.log(res)
             if(res.data.data) {
                 return res.data.data;
             } else {
@@ -98,8 +99,8 @@ export async function filterTeams(orgData) {
     const userData = getGlobal().proUserProfile;
     const teamIds = userData.accountProfile.membershipTeams.map(a => a.teamId);
     let teams = [];
-    asyncForEach(teamIds, (id) => {
-        teams = teams.concat(orgData.orgProfile.teams.filter(a => a.id === id))
+    await asyncForEach(teamIds, (id) => {
+        teams = teams.concat(orgData.orgProfile.teams.filter(a => a.id === id));
     })
     setGlobal({ teams, filteredTeams: teams });
 }
@@ -142,7 +143,8 @@ export async function saveOrgDetails() {
         },
     }
     let serverUrl = window.location.href.includes("local") ? "http://localhost:5000" : "https://socket.graphitedocs.com";
-    const url = `${serverUrl}/account/org/name`;
+    const orgId = getGlobal().proOrgInfo.orgId;
+    const url = `${serverUrl}/account/org/name/${orgId}`;
     const body = {
         orgName: getGlobal().orgName, 
         orgId: getGlobal().proOrgInfo.orgId,

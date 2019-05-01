@@ -2,6 +2,7 @@ import React, { Component } from 'reactn';
 import Teams from './Teams';
 import Users from './Users';
 import Organization from './Organization';
+import SelectedTeam from './SelectedTeam';
 import { List } from 'semantic-ui-react';
 
 class SettingsMain extends Component {
@@ -13,6 +14,7 @@ class SettingsMain extends Component {
   }
   render() {
       const { settingsNav } = this.state;
+      const { selectedTeam } = this.global;
       return (
         <div>
             <div className="settings-side">
@@ -30,6 +32,8 @@ class SettingsMain extends Component {
             </div>
             <div className="settings-main-container">
                 {
+                    selectedTeam !== "" ? 
+                    <SelectedTeam /> : 
                     settingsNav === "org" ? <Organization /> : settingsNav === "teams" ? <Teams /> : <Users />
                 }
             </div>

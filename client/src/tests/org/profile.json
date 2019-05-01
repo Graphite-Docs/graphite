@@ -1,0 +1,99 @@
+{
+    "payload": {
+        "jti": "9e986a5e-9b48-470b-bc33-546f4ba716d3",
+        "iat": "2019-05-01T12:46:33.811Z",
+        "exp": "2020-05-01T12:46:33.811Z",
+        "subject": {
+        "publicKey": "0247d7373e610cead92e7f6e5d3b7a55ba05b2d4a77d391ea7d39fcb4a7ac62e5f"
+        },
+        "issuer": {
+        "publicKey": "0247d7373e610cead92e7f6e5d3b7a55ba05b2d4a77d391ea7d39fcb4a7ac62e5f"
+        },
+        "claim": {
+        "@type": "Person",
+        "@context": "http://schema.org",
+        "name": "Justin Hunter",
+        "account": [
+            {
+            "@type": "Account",
+            "placeholder": false,
+            "service": "twitter",
+            "identifier": "jehunter5811",
+            "proofType": "http",
+            "proofUrl": "https://twitter.com/jehunter5811/status/923924411312431104"
+            },
+            {
+            "@type": "Account",
+            "placeholder": false,
+            "service": "bitcoin",
+            "identifier": "1282upyNqgBChitLRHR86Ug3yL3Uz2WkSV",
+            "proofType": "http",
+            "proofUrl": ""
+            },
+            {
+            "@type": "Account",
+            "placeholder": false,
+            "service": "linkedIn",
+            "identifier": "justin-hunter-b30a1b80",
+            "proofType": "http",
+            "proofUrl": "https://www.linkedin.com/feed/update/urn:li:activity:6331532487780556800"
+            },
+            {
+            "@type": "Account",
+            "placeholder": false,
+            "service": "github",
+            "identifier": "jehunter5811",
+            "proofType": "http",
+            "proofUrl": "https://gist.github.com/jehunter5811/f4b1d1abe07903deddbaa9f1e670038b"
+            },
+            {
+            "@type": "Account",
+            "placeholder": false,
+            "service": "hackerNews",
+            "identifier": "jhunter1016",
+            "proofType": "http",
+            "proofUrl": "https://news.ycombinator.com/user?id=jhunter1016"
+            }
+        ],
+        "image": [
+            {
+            "@type": "ImageObject",
+            "name": "avatar",
+            "contentUrl": "https://gaia.blockstack.org/hub/16KyUebBPPXgQLvA1f51bpsne3gL7Emdrc/0/avatar-0"
+            }
+        ],
+        "description": "Writer, programmer, designer, founder of Graphite.",
+        "apps": {
+            "http://publik.ykliao.com": "https://gaia.blockstack.org/hub/163f7KpMp4H2p9p6sUzCK9Q7j7qvfKvxpf/",
+            "http://localhost:8080": "https://gaia.blockstack.org/hub/1KcW8ij1vbvnaUBRJRdXFiVH3sEbeHap4b/",
+            "http://serene-hamilton-56e88e.netlify.com": "https://gaia.blockstack.org/hub/1wStVA7gKnDmFWwvMH7PPDG3HKKi3cWSb/",
+            "https://app.graphitedocs.com": "https://gaia.blockstack.org/hub/1Q5G5kWwDikELELXc54tNdwTg8gbfnLKDU/",
+            "http://app.graphitedocs.com": "https://gaia.blockstack.org/hub/1Cw8zAL1nzN7PqHQ3GcTQQnM7oyEacvMvy/",
+            "https://sketch.riot.ai": "https://gaia.blockstack.org/hub/187nFTGz7LPVn5E4yguLYhFiUJuBpQL46H/",
+            "https://serene-hamilton-56e88e.netlify.com": "https://gaia.blockstack.org/hub/13tuG2P23LBReXC3y36x84jrid5ynJkY26/",
+            "http://localhost:3000": "https://gaia.blockstack.org/hub/14zTFZn5NkBtHQgEzKFJA9RyUce9UJaHvv/",
+            "http://dcms.brightblock.org": "https://gaia.blockstack.org/hub/1NqV5zxfq52R1MxcD8r8reqnyvWKzpRvWC/",
+            "http://www.brightblock.org": "https://gaia.blockstack.org/hub/18TsL4twNXmsHaJbmbKgkYpvexRLDVVF6b/",
+            "http://localhost:3001": "https://gaia.blockstack.org/hub/1FUCroHtX1HWVFoFgH937TtqDs9b8iYhMn/",
+            "https://www.stealthy.im": "https://gaia.blockstack.org/hub/1Ffe7hxNCXp2fZnSShfn5fxbgwAQ8xpfN2/",
+            "https://blockx-socialapp.herokuapp.com": "https://gaia.blockstack.org/hub/1M2zDDoK4mcC6qGDzNAvWvsX1Wj7EWDaRY/",
+            "https://chat.postly.co": "https://gaia.blockstack.org/hub/1EpSw4eJwjkv4F1WdDfZQfENwNCBEdkv2L/",
+            "https://blockusign.co": "https://gaia.blockstack.org/hub/18jPHenPxod9X43eptHDT7ecwVpwqx19ZV/",
+            "https://chat.openintents.org": "https://gaia.blockstack.org/hub/1CpvEx1D3ZZH81oadjE1JpLELQSWWscqPy/",
+            "https://xordrive.io": "https://gaia.blockstack.org/hub/1PJaKCDj8VyQ5DbRxu5nW95yByKWQmZAcm/",
+            "https://staging-publishing.graphitedocs.com": "https://gaia.blockstack.org/hub/13qk6eNn8EDL8hNBA7v4riH3pAKJmjpLoY/",
+            "https://publishing.graphitedocs.com": "https://gaia.blockstack.org/hub/1CL4mrw1qM2A4q11XCZ2RFzRRBmqoPVdnC/",
+            "https://dpage.io": "https://gaia.blockstack.org/hub/16ETwzsGBs7jLg9eVpaoQUpaAa2P1JvgLh/",
+            "https://xorbrowser.com": "https://gaia.blockstack.org/hub/13yX75QcYVBjzTjpR1ZQ6dLYvAcgbUqTLA/",
+            "https://debutapp.social": "https://gaia.blockstack.org/hub/1Ly7qa3NBpUP3pcNJKoZesqk3A3iTh5p3B/"
+        },
+        "api": {
+            "gaiaHubConfig": {
+            "url_prefix": "https://gaia.blockstack.org/hub/"
+            },
+            "gaiaHubUrl": "https://hub.blockstack.org"
+        }
+        }
+    },
+    "signature": "6d-BiKKT05g2dhpgtukbWPhBmF-RFDNXSM8c3kvVAIXOw9poByHU_ALNa3_WqguD-tRYfc5aDj5DCGJ2dM9zYQ"
+}
