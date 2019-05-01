@@ -1,5 +1,7 @@
-import { setGlobal } from 'reactn';
+import { setGlobal, getGlobal } from 'reactn';
 import { fetchData } from "./fetch";
+import { getPublicKeyFromPrivate } from 'blockstack';
+import { postData } from './post';
 
 export async function loadData(params) {
     if(params) {
@@ -20,9 +22,20 @@ export async function loadData(params) {
         fileName: 'uploads.json',
         decrypt: true
     }
+
+    const keyParams = {
+        fileName: "key.json", 
+        decrypt: false
+    }
     // const formsParams = {
 
     // }
+    let key = await fetchData(keyParams);
+    if(key) {
+        //Nothing
+    } else {
+        saveKey();
+    }
     let docs = await fetchData(docsParams);
     let oldFile;
     let isArr = Object.prototype.toString.call(JSON.parse(docs)) === '[object Array]';
@@ -57,4 +70,16 @@ export async function loadData(params) {
     
     
     // await fetchData(formsParams);
+}
+
+export async function saveKey() {
+    const { userSession } = getGlobal();
+    const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+    const keyParams = {
+        fileName: "key.json", 
+        encrypt: false, 
+        body: JSON.stringify(pubKey)
+    }
+    const postedKey = await postData(keyParams);
+    console.log(postedKey);
 }

@@ -103,7 +103,7 @@ class MyFiles extends Component {
                         <Modal.Content>
                           <Modal.Description className='link-modal'>
                             <p>Provide your contact this link for quick access:</p>
-                            <Input readOnly id="copyLink" value={`${window.location.origin}/files/fileInfo&user=${userSession.loadUserData().username}&id=${file.id}`} />
+                            <Input readOnly id="copyLink" value={`${window.location.origin}/shared/files/fileInfo&user=${userSession.loadUserData().username}&id=${file.id}`} />
                             <p className="margin-top-10"><Button onClick={this.copyLink} secondary>Copy Link</Button><Icon onClick={this.copyLink} style={{cursor: "pointer", marginLeft: "10px"}} name="copy" /></p>
                           </Modal.Description>
                         </Modal.Content>
@@ -132,8 +132,8 @@ class MyFiles extends Component {
                                 {contacts.slice(0).reverse().map(contact => {
                                   return (
                                     <Item key={contact.id || contact.contact} className="contact-search" onClick={() => share.sharedVaultInfo(contact, this.state.file)}>
-                                      <Item.Image size='tiny' src={contact.img} />
-                                      <Item.Content verticalAlign='middle'>{contact.contact}</Item.Content>
+                                      <Item.Image size='tiny' src={contact.img || contact.image} />
+                                      <Item.Content verticalAlign='middle'>{contact.contact || contact.id}</Item.Content>
                                     </Item>
                                   )
                                 })

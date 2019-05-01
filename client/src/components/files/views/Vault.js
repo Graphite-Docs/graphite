@@ -203,7 +203,7 @@ class Vault extends Component {
               <Menu.Menu position="right">
                   {
                       graphitePro ? 
-                      <Menu.Item active={activeItem === 'Team Files'} onClick={this.handleItemClick}><Icon name="group" />Team Documents</Menu.Item>
+                      <Menu.Item active={activeItem === 'Team Files'} onClick={this.handleItemClick}><Icon name="group" />Team Files</Menu.Item>
                       :
                       <Modal closeIcon trigger={<Menu.Item><Icon name="group" />Team Files</Menu.Item>}>
                           <Modal.Header>Working as a team?</Modal.Header>

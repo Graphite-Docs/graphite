@@ -1,10 +1,10 @@
-import React, { Component } from 'reactn';
+import React, { Component, setGlobal } from 'reactn';
 import { Container, Grid, Table, Icon, Modal, Input, Button } from 'semantic-ui-react';
 const account = require('../../helpers/account');
 
 class Organization extends Component {
   render() {
-    const { proOrgInfo } = this.global;
+    const { proOrgInfo, orgNameModalOpen } = this.global;
     let payments;
     if(proOrgInfo.paymentInfo.paymentHistory.length > 0) {
       payments = proOrgInfo.paymentInfo.paymentHistory;
@@ -25,13 +25,17 @@ class Organization extends Component {
                             <Grid.Column>
                               <h5>Organization Name</h5>
                               <p>{proOrgInfo.orgName} 
-                              <Modal trigger={<Icon style={{cursor: "pointer", marginLeft: "10px"}} name="edit"/>}>
+                              <Modal 
+                                open={orgNameModalOpen}
+                                onClose={() => setGlobal({ orgNameModalOpen: false})}
+                                closeIcon
+                                trigger={<Icon onClick={() => setGlobal({orgNameModalOpen: true})} style={{cursor: "pointer", marginLeft: "10px"}} name="edit"/>}>
                                 <Modal.Content>
                                   <Modal.Description>
                                     <h3>Update Organization Name</h3>
                                     <Input type="text" onChange={account.handleOrgName} />
                                   </Modal.Description>
-                                  <Button className="margin-top-10" secondary>Save</Button>
+                                  <Button onClick={account.saveOrgDetails} className="margin-top-10" secondary>Save</Button>
                                 </Modal.Content>
                               </Modal>
                               </p>

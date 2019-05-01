@@ -1,12 +1,13 @@
 {
-  "name": "client",
-  "version": "0.1.0",
+  "name": "Graphite",
+  "version": "2.1.0",
   "private": true,
   "dependencies": {
     "axios": "^0.18.0",
     "blockstack": "^19.0.1",
     "dotenv": "^7.0.0",
     "emoji-mart": "^2.11.0",
+    "expect.js": "^0.3.1",
     "file-saver": "^2.0.1",
     "html-docx-js": "^0.3.1",
     "html-word-count": "^2.0.0",
@@ -38,6 +39,7 @@
     "slate-react": "^0.21.20",
     "socket.io-client": "^2.2.0",
     "string-to-arraybuffer": "^1.0.2",
+    "superagent": "^5.0.5",
     "swagger-ui-react": "^3.22.1",
     "uuidv4": "^4.0.0",
     "video-react": "^0.13.6",
@@ -47,7 +49,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "memory-build": "react-scripts --max_old_space_size=4096 build"
   },
   "eslintConfig": {
     "extends": "react-app"

@@ -1,5 +1,5 @@
 import React, { Component } from 'reactn';
-import SocketEditor from '../views/editors/SocketEditor';
+import SocketEditor from './editors/SocketEditor';
 import PublicEditorSkeleton from '../views/editors/PublicEditorSkeleton';
 import {Image } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';

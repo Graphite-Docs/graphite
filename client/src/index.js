@@ -266,6 +266,7 @@ setGlobal({
     vaultPublicModalOpen: false, 
     contactModalOpen: false,
     trialModalOpen: false,
+    orgNameModalOpen: false,
     contact: {},
     sharedCollectionLoading: false, 
     welcome: false

@@ -48,7 +48,7 @@ export default class Menu extends Component {
 
   render() {
     const linkHref = '';
-    const { contacts, teamList, userSession, singleDoc } = this.global;
+    const { contacts, userSession, singleDoc } = this.global;
     let versions;
     if(singleDoc.versions) {
       versions = singleDoc.versions;
@@ -74,7 +74,7 @@ export default class Menu extends Component {
                       <li className="topmenu">
                           <a href={linkHref}>file</a>
                           <ul className="submenu">
-                              <li><button className='link-button' href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New Document</button></li>
+                              <li><a className='link-button' href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New Document</a></li>
                               {/*<li><a>Add tag</a></li>*/}
                               <li className="divider-menu"><hr /></li>
                               
@@ -138,7 +138,7 @@ export default class Menu extends Component {
                             </Modal>
 
                           </li>
-                          {
+                          {/*
                             this.global.graphitePro ? <li>
                             <Modal closeIcon style={{borderRadius: "0"}}
                               trigger={<button className='link-button'>Share with team</button>}>
@@ -168,7 +168,7 @@ export default class Menu extends Component {
                             </Modal>
                             </li> :
                             <li className="hide"></li>
-                          }
+                          */}
                           {
                             this.global.teamDoc && this.global.userRole === "User" ?
                             <li className="hide">Share</li> :
@@ -242,9 +242,9 @@ export default class Menu extends Component {
                                   <h4>Your Contacts</h4>
                                   {contacts.slice(0).reverse().map(contact => {
                                     return (
-                                      <Item className="contact-search" key={contact.contact}>
-                                        <Item.Image size='tiny' src={contact.img} />
-                                        <Item.Content verticalAlign='middle'>{contact.contact} <br/> <Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: true })} color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: false })} color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
+                                      <Item className="contact-search" key={contact.contact || contact.id}>
+                                        <Item.Image size='tiny' src={contact.img || contact.image} />
+                                        <Item.Content verticalAlign='middle'>{contact.contact || contact.id} <br/> <Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: true })} color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: false })} color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
                                       </Item>
                                     )
                                   })

@@ -60,6 +60,12 @@ export async function saveDoc(updates) {
       await setGlobal({documents: updatedDocs});
     } else {
       console.log("Error doc index")
+      console.log("Checking if this is a shared doc...")
+      if(window.location.href.includes("docInfo")) {
+        console.log("Shared doc.")
+      } else {
+        console.log("Not a shared doc.")
+      }
     }
     
     let indexParams = {
@@ -117,8 +123,9 @@ export async function loadSingle() {
   let compressed = parsedDoc.compressed;
   let updatedContent;
   if(compressed === true) {
+    console.log("compressed")
     updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
-  }
+  } 
   setGlobal({
     singleDoc: parsedDoc, 
     title: JSON.parse(doc).title,

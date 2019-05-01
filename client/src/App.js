@@ -7,6 +7,7 @@ import PublicDoc from './components/docs/views/PublicDoc';
 import SingleSharedDoc from './components/docs/views/SingleSharedDoc';
 import Vault from './components/files/views/Vault.js';
 import SingleFile from './components/files/views/SingleFile';
+import PublicFile from './components/files/views/PublicFile';
 import SingleSharedFile from './components/files/views/SingleSharedFile';
 import Forms from './components/forms/views/Forms';
 import SingleForm from './components/forms/views/SingleForm';
@@ -59,6 +60,7 @@ class App extends Component {
              <Route exact path="/files" component={Vault} />
              <Route exact path="/files/:id" component={SingleFile} />
              <Route exact path="/shared/files/:id" component={SingleSharedFile} />
+             <Route exact path="/public/files/:id/:id" component={PublicFile} />
              <Route exact path="/contacts" component={Contacts} />
              <Route exact path='/contacts/:id' component={SingleContact} />
              <Route exact path="/forms" component={Forms} />
@@ -90,6 +92,7 @@ class App extends Component {
                 <Route exact path="/:id" component={SignIn} />
                 <Route exact path="/shared/docs/:id" component={PublicDoc} />
                 <Route exact path='/pro/api' component={ApiDocs} />
+                <Route exact path="/public/files/:id/:id" component={PublicFile} />
               </div>
             </BrowserRouter>
           </div>

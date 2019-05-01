@@ -15,7 +15,11 @@ var FileSaver = require('file-saver');
 let timer = null;
 
 export async function loadSingleVaultFile(props) {
-    setGlobal({loading: true})
+    if(window.location.href.includes('documents')) {
+      setGlobal({ loading: false });
+    } else {
+      setGlobal({loading: true})
+    }
     const file = `${props}.json`
     const fileParams = {
         fileName: file,
@@ -143,7 +147,7 @@ export async function signWithBlockusign(fileId) {
 
   export async function shareVaultFile() {
     ToastsStore.success(`Creating public link...`)
-    let fileName = `public/vault/${window.location.href.split('files/')[1].split('#')[0]}.json`;
+    let fileName = `public/files/${window.location.href.split('files/')[1].split('#')[0]}.json`;
     let singleFile = await getGlobal().singleFile;
     singleFile["publicVaultFile"] = true;
     await setGlobal({ singleFile, publicVaultFile: true });
@@ -163,7 +167,7 @@ export async function signWithBlockusign(fileId) {
 
   export async function stopSharingPubVaultFile() {
     ToastsStore.success(`Removing access...`)
-    let fileName = `public/vault/${window.location.href.split('files/')[1]}.json`;
+    let fileName = `public/files/${window.location.href.split('files/')[1]}.json`;
     let singleFile = await getGlobal().singleFile;
     singleFile["publicVaultFile"] = false;
     await setGlobal({ singleFile, publicVaultFile: false});
