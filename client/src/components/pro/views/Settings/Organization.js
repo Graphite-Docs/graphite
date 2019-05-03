@@ -6,8 +6,8 @@ class Organization extends Component {
   render() {
     const { proOrgInfo, orgNameModalOpen } = this.global;
     let payments;
-    if(proOrgInfo.paymentInfo.paymentHistory.length > 0) {
-      payments = proOrgInfo.paymentInfo.paymentHistory;
+    if(proOrgInfo.accountPlan.paymentHistory.length > 0) {
+      payments = proOrgInfo.accountPlan.paymentHistory;
     } else {
       payments = [];
     }
@@ -42,7 +42,7 @@ class Organization extends Component {
                             </Grid.Column>
                             <Grid.Column>
                               <h5>Account Plan</h5>
-                              {proOrgInfo.trialAccount.onTrial ? <p className="margin-top-10">Trial ({`${((proOrgInfo.trialAccount.trialEnd - proOrgInfo.trialAccount.timestamp)/1000/60/60/24).toFixed(0)} days left`})</p> : <p className="margin-top-10">{proOrgInfo.accountPlan}</p> }
+                              {proOrgInfo.accountPlan.planType === "Trial" ? <p className="margin-top-10">Trial ({`${((proOrgInfo.accountPlan.trialEnd - proOrgInfo.accountPlan.timestamp)/1000/60/60/24).toFixed(0)} days left`})</p> : <p className="margin-top-10">{proOrgInfo.accountPlan.planType}</p> }
                             </Grid.Column>
                         </Grid>
                         <Grid stackable columns={1}>

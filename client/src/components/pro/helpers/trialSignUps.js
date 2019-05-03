@@ -17,6 +17,7 @@ export async function startTrial() {
     const email = document.getElementById('trial-email').value;
     const trialObject = {
         orgId: uuid(),
+        userId: uuid(),
         name, 
         organization, 
         email, 
@@ -27,7 +28,7 @@ export async function startTrial() {
 
     let trialParams = {
         fileName: "account.json", 
-        encrypted: true,
+        encrypt: true,
         body: JSON.stringify(trialObject)
     }
 

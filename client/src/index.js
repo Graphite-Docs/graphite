@@ -268,11 +268,14 @@ setGlobal({
     trialModalOpen: false,
     orgNameModalOpen: false,
     newTeamModalOpen: false,
+    newTeamMateModalOpen: false,
     contact: {},
     sharedCollectionLoading: false, 
     welcome: false, 
     newTeamName: "", 
-    selectedTeam: ""
+    selectedTeam: "", 
+    settingsNav: "org", 
+    teamKeys: {}
 })
 
 configure({

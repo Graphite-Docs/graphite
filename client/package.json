@@ -15,6 +15,7 @@
     "immutability-helper": "^3.0.0",
     "immutable": "^4.0.0-rc.12",
     "is-hotkey": "^0.1.4",
+    "jsonwebtoken": "^8.5.1",
     "lzjs": "^1.3.0",
     "mammoth": "^1.4.8",
     "papaparse": "^4.6.3",

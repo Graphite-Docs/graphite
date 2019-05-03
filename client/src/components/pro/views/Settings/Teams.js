@@ -4,7 +4,7 @@ const team = require('../../helpers/team');
 
 class Teams extends Component {
   render() {
-      const { filteredTeams, newTeamModalOpen } = this.global;
+      const { filteredTeams, newTeamModalOpen, userSession } = this.global;
       let teamList = filteredTeams.length > 0 ? filteredTeams : [];
       return (
         <div>
@@ -16,6 +16,7 @@ class Teams extends Component {
                             <h2>Teams ({teamList.length}) 
                             <Modal 
                             open={newTeamModalOpen}
+                            closeIcon
                             onClose={() => setGlobal({ newTeamModalOpen: false})}
                             trigger={<Button onClick={() => setGlobal({ newTeamModalOpen: true})} style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button>}>
                                 <Modal.Content>
@@ -25,7 +26,7 @@ class Teams extends Component {
                                         <Input placeholder="My team" label="Name" onChange={team.handleTeamName}/>
                                     </Container>
                                 </Modal.Description>
-                                <Button onClick={team.saveNewTeam} className="margin-top-10" secondary>Save</Button>
+                                <Button onClick={() => team.saveNewTeam()} className="margin-top-10" secondary>Save</Button>
                                 </Modal.Content>
                             </Modal>
                             </h2>
@@ -45,10 +46,13 @@ class Teams extends Component {
                             <Table.Body>
                                 {
                                     teamList.map(team => {
+                                        const myUserAccount = team.users.filter(user => user.username === userSession.loadUserData().username)[0];
+                                        const canDelete = (myUserAccount.role === "Admin" || myUserAccount.role === "Manager") && team.name !== "Admins" ? true : false;
                                         return (
                                             <Table.Row key={team.id}>
                                                 <Table.Cell><button onClick={() => setGlobal({ selectedTeam: team.id})} className="link-button" style={{color: "#4183c4"}}>{team.name}</button></Table.Cell>
                                                 <Table.Cell>{team.users.length}</Table.Cell>
+                                                <Table.Cell>{canDelete ? <button className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
                                             </Table.Row>
                                         )
                                     })
