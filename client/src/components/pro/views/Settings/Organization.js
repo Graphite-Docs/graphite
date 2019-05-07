@@ -4,13 +4,21 @@ const account = require('../../helpers/account');
 
 class Organization extends Component {
   render() {
-    const { proOrgInfo, orgNameModalOpen } = this.global;
+    const { proOrgInfo, orgNameModalOpen, userSession } = this.global;
+    const thisUser = proOrgInfo.users.filter(users => users.username === userSession.loadUserData().username)[0];
     let payments;
-    if(proOrgInfo.accountPlan.paymentHistory.length > 0) {
-      payments = proOrgInfo.accountPlan.paymentHistory;
-    } else {
-      payments = [];
+    if(thisUser) {
+      if(thisUser.isAdmin) {
+        if(proOrgInfo.accountPlan.paymentHistory.length > 0) {
+          payments = proOrgInfo.accountPlan.paymentHistory;
+        } else {
+          payments = [];
+        }
+      } else {
+        payments = [];
+      }
     }
+
       return (
         <div>
             <Container>
@@ -24,8 +32,10 @@ class Organization extends Component {
                         <Grid stackable columns={2}>
                             <Grid.Column>
                               <h5>Organization Name</h5>
-                              <p>{proOrgInfo.orgName} 
-                              <Modal 
+                              <p>{proOrgInfo.name} 
+                              {
+                                thisUser ? 
+                                <Modal 
                                 open={orgNameModalOpen}
                                 onClose={() => setGlobal({ orgNameModalOpen: false})}
                                 closeIcon
@@ -38,6 +48,9 @@ class Organization extends Component {
                                   <Button onClick={account.saveOrgDetails} className="margin-top-10" secondary>Save</Button>
                                 </Modal.Content>
                               </Modal>
+                                :
+                                <span className="hide" />
+                              }
                               </p>
                             </Grid.Column>
                             <Grid.Column>
@@ -45,7 +58,9 @@ class Organization extends Component {
                               {proOrgInfo.accountPlan.planType === "Trial" ? <p className="margin-top-10">Trial ({`${((proOrgInfo.accountPlan.trialEnd - proOrgInfo.accountPlan.timestamp)/1000/60/60/24).toFixed(0)} days left`})</p> : <p className="margin-top-10">{proOrgInfo.accountPlan.planType}</p> }
                             </Grid.Column>
                         </Grid>
-                        <Grid stackable columns={1}>
+                        {
+                          thisUser ?
+                          <Grid stackable columns={1}>
                             <Grid.Column>
                               <h5>Billing History</h5>
                               <Table>
@@ -71,7 +86,13 @@ class Organization extends Component {
                                 </Table.Body>
                             </Table>
                             </Grid.Column>
+                        </Grid> : 
+                        <Grid stackable columns={1}>
+                          <Grid.Column>
+                            <h5>Billing History Available to Admins Only</h5>
+                          </Grid.Column>
                         </Grid>
+                        }
                     </div>
                 </div>
             </Container>

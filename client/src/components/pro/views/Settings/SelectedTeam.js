@@ -1,6 +1,7 @@
 import React, { Component, setGlobal } from 'reactn';
-import { Container, Grid, Icon, Table, Modal, Button, Input, Radio } from 'semantic-ui-react';
+import { Container, Grid, Icon, Table, Modal, Button, Input, Radio, Popup } from 'semantic-ui-react';
 const team = require('../../helpers/team');
+const invites = require('../../helpers/invites');
 
 class SelectedTeam extends Component {
   constructor(props) {
@@ -33,9 +34,15 @@ class SelectedTeam extends Component {
   }
 
   render() {
-      const { filteredTeams, selectedTeam, newTeamMateModalOpen } = this.global;
+      const { filteredTeams, selectedTeam, newTeamMateModalOpen, userSession } = this.global;
       const { role } = this.state;
       const thisTeam = filteredTeams.filter(team => team.id === selectedTeam)[0];
+      const userList = Object.keys(thisTeam.users).map(function(key) {
+        return thisTeam.users[key];
+     });
+     const thisUser = userList.filter(user => user.username === userSession.loadUserData().username)[0];
+     const canDelete = thisUser.role === "Admin" || thisUser.role === "Manager";
+
       return (
         <div>
             <Container>
@@ -44,7 +51,7 @@ class SelectedTeam extends Component {
                         <button onClick={() => setGlobal({ selectedTeam: "", settingsNav: "teams"})} className="link-button"><Icon name="arrow left" /> Back to Teams</button>
                         <Grid className="margin-top-25" stackable columns={1}>
                             <Grid.Column>
-                                <h2>{thisTeam.name} ({thisTeam.users.length}) 
+                                <h2>{thisTeam.name} ({userList.length}) 
                                 <Modal 
                                 closeIcon
                                 open={newTeamMateModalOpen}
@@ -116,14 +123,14 @@ class SelectedTeam extends Component {
                             </Table.Header>
                             <Table.Body>
                                 {
-                                    thisTeam.users.map(user => {
+                                    userList.map(user => {
                                         return (
                                             <Table.Row key={user.username || user.email}>
                                                 <Table.Cell>{user.name}</Table.Cell>
-                                                <Table.Cell>{user.username ? user.username : <span style={{color: "#ffae42"}}>Invite Pending</span>}</Table.Cell>
+                                                <Table.Cell>{user.username ? user.username : <span><span style={{color: "#ffae42"}}>Invite Pending</span><span style={{marginLeft: "5px"}}>  <Popup trigger={<Icon onClick={() => invites.resendInvite(user, selectedTeam)} style={{cursor: "pointer", color: "rgb(65, 131, 196)", paddingTop: "2px"}} name="mail" />} content="Re-send invite email." basic /></span></span>}</Table.Cell>
                                                 <Table.Cell>{user.email}</Table.Cell>
                                                 <Table.Cell>{user.role}</Table.Cell>
-                                                <Table.Cell></Table.Cell>
+                                                <Table.Cell>{canDelete && user.username !== userSession.loadUserData().username ? <button className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
                                             </Table.Row>
                                         )
                                     })

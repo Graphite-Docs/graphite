@@ -6,8 +6,11 @@ import { fetchData } from '../../shared/helpers/fetch';
 const blockstack = require("blockstack");
 
 export async function handleProCheck() {
-    let proData = await checkPro();
-      setGlobal({ proUserProfile: proData });
+    if(window.location.href.includes('invite/accept')) {
+        //Do nothing since a redirect should happen anyway
+    } else {
+        let proData = await checkPro();
+        setGlobal({ proUserProfile: proData });
       if(proData === "User not found") {
         console.log("Not a Pro user");
         setGlobal({ proLoading: false })
@@ -16,7 +19,7 @@ export async function handleProCheck() {
         if(proData.length > 1) {
             //Need to present an org selector and switcher
         } else {
-            const orgData = proData.orgProfile;
+            const orgData = proData;
             await filterTeams(orgData);
             const trialAccount = orgData.accountPlan.planType === "Trial" ? true : false;
             if(trialAccount === true) {
@@ -34,13 +37,13 @@ export async function handleProCheck() {
                     }
                     return "success";
                 } else {
-                    const proOrgInfo = orgData.orgProfile
-                    setGlobal({ graphitePro: true, proOrgInfo, proLoading: false  })
+                    setGlobal({ graphitePro: true, proOrgInfo: orgData, proLoading: false  })
                     return "success";
                 }
             }
         }
       }
+    }
 }
 
 export async function checkPro() {
@@ -137,6 +140,7 @@ export async function saveOrgDetails() {
     axios.put(url, JSON.stringify(body), headerObj)
         .then((res) => {
             if(res.data.success === true) {
+                handleProCheck();
                 setGlobal({ orgNameModalOpen: false });
                 ToastsStore.success("Account name updated!");
             } else {

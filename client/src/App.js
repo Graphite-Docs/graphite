@@ -35,7 +35,11 @@ class App extends Component {
  
     if (userSession.isSignInPending()) {
       userSession.handlePendingSignIn().then(async () => {
-        window.location = window.location.origin;
+        if(window.location.href.includes('invite')) {
+          window.location = `${window.location.origin}/invite/accept`;
+        } else {
+          window.location = window.location.origin;
+        }
       });
     }
   }
@@ -68,6 +72,7 @@ class App extends Component {
              <Route exact path='/forms/results/:id' component={SingleFormResults} />
              <Route exact path='/settings' component={Settings} />
              <Route exact path='/trial' component={Trial} />
+             <Route exact path='/invite/:id' component={Invites} />
              <Route exact path='/walkthrough' component={Walkthrough} />
              <Route exact path='/pro/api' component={ApiDocs} />
            </div>
@@ -76,11 +81,17 @@ class App extends Component {
        );
     } else {
       if(window.location.href.includes('?authResponse')) {
-        return (
-          <BrowserRouter>
-            <Skeleton />
-          </BrowserRouter>
-        )
+        if(window.location.href.includes('invite')) {
+          return (
+            <h1>Loading Invite...</h1>
+          )
+        } else {
+          return (
+            <BrowserRouter>
+              <Skeleton />
+            </BrowserRouter>
+          )
+        }
       } else {
         return (
           <div>

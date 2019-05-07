@@ -6,6 +6,7 @@ class Teams extends Component {
   render() {
       const { filteredTeams, newTeamModalOpen, userSession } = this.global;
       let teamList = filteredTeams.length > 0 ? filteredTeams : [];
+
       return (
         <div>
             <Container>
@@ -51,7 +52,7 @@ class Teams extends Component {
                                         return (
                                             <Table.Row key={team.id}>
                                                 <Table.Cell><button onClick={() => setGlobal({ selectedTeam: team.id})} className="link-button" style={{color: "#4183c4"}}>{team.name}</button></Table.Cell>
-                                                <Table.Cell>{team.users.length}</Table.Cell>
+                                                <Table.Cell>{Object.keys(team.users).length}</Table.Cell>
                                                 <Table.Cell>{canDelete ? <button className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
                                             </Table.Row>
                                         )

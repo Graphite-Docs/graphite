@@ -40,16 +40,15 @@ export async function saveNewTeam() {
             pubKey: publicKey, 
             users: [
                 {
-                    id: userInfo.userId,
+                    id: userInfo.id,
                     username: userSession.loadUserData().username,
                     role: checkRole === "Admin" ? "Admin" : "Manager",
                     email: userInfo.email, 
-                    name: userInfo.name
+                    name: userInfo.name 
                 }
             ]
         }
     }
-
     const teamKey = {
         private: privateKey,
         public: publicKey
@@ -110,7 +109,7 @@ export async function saveNewTeammate(data) {
     const orgInfo = proOrgInfo;
     const index = await orgInfo.teams.map((x) => {return x.id }).indexOf(data.selectedTeam);
 
-    orgInfo.teams[index].users.push(userObj);
+    orgInfo.teams[index].users[userId] = userObj;
     const updatedUserObj = userObj;
     delete updatedUserObj.invitePending;
     orgInfo.users.push(updatedUserObj);
@@ -118,7 +117,7 @@ export async function saveNewTeammate(data) {
     const accountParams = {
         fileName: "account.json", 
         encrypt: true, 
-        body: JSON.stringify(getGlobal(proOrgInfo))
+        body: JSON.stringify(getGlobal().proOrgInfo)
     }
     const updatedAccount = await postData(accountParams);
     console.log(updatedAccount);

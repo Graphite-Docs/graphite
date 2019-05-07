@@ -20,7 +20,7 @@ class SettingsMain extends Component {
                         <button onClick={() => setGlobal({ settingsNav: "teams", selectedTeam: "" })} className="link-button">Teams</button>
                     </List.Item>
                     <List.Item>
-                        {thisUser.isAdmin ? <button onClick={() => setGlobal({ settingsNav: "users", selectedTeam: "" })} className="link-button">Users</button> : <button className="hide"></button>}
+                        {thisUser ? <button onClick={() => setGlobal({ settingsNav: "users", selectedTeam: "" })} className="link-button">Users</button> : <button className="hide"></button>}
                     </List.Item>
                 </List>
             </div>
