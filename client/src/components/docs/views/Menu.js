@@ -1,5 +1,5 @@
-import React, { Component } from "reactn";
-import { Modal, Button, Item, List } from 'semantic-ui-react';
+import React, { Component, setGlobal } from "reactn";
+import { Modal, Button, Item, List, Accordion, Icon } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 const actions = require('../helpers/singleDocActions');
@@ -15,8 +15,17 @@ export default class Menu extends Component {
     this.state = {
       modalOpen: false,
       modalTwoOpen: false,
-      visible: false
+      visible: false, 
+      activeIndex: 0 
     }
+  }
+
+  handleClick = (e, titleProps) => {
+    const { index } = titleProps
+    const { activeIndex } = this.state
+    const newIndex = activeIndex === index ? -1 : index
+
+    this.setState({ activeIndex: newIndex })
   }
 
   doCommand = (props) => {
@@ -47,8 +56,10 @@ export default class Menu extends Component {
   }
 
   render() {
+    const { activeIndex } = this.state;
     const linkHref = '';
-    const { contacts, userSession, singleDoc } = this.global;
+    const { contacts, userSession, singleDoc, graphitePro, proOrgInfo, teamListModalOpen, teamShare } = this.global;
+    const teamList = proOrgInfo.teams;
     let versions;
     if(singleDoc.versions) {
       versions = singleDoc.versions;
@@ -138,23 +149,47 @@ export default class Menu extends Component {
                             </Modal>
 
                           </li>
-                          {/*
-                            this.global.graphitePro ? <li>
-                            <Modal closeIcon style={{borderRadius: "0"}}
-                              trigger={<button className='link-button'>Share with team</button>}>
+                          {
+                            graphitePro && teamList.length > 0 ? <li>
+                            <Modal 
+                              open={teamListModalOpen}
+                              onClose={() => setGlobal({ teamListModalOpen: false})}
+                              closeIcon style={{borderRadius: "0"}}
+                              trigger={<button onClick={() => setGlobal({ teamListModalOpen: true})} className='link-button'>Share with team</button>}
+                              >
                               <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
                               <Modal.Content>
                                 <Modal.Description>
-                                  <h3>Search for a contact</h3>
                                   <p>By sharing with your entire team, each teammate will have immediate access to the document and will be able to collaborate in real-time.</p>
-                                  <p>For reference, you can see your list of teammates below:</p>
+                                  <p>For reference, you can see your list of teammates by expanding each team below.</p>
                                   <Item.Group divided>
-                                  {teamList.map(mate => {
+                                  {teamList.map(team => {
                                       return (
-                                          <Item className="contact-search" key={mate.name}>
-                                          <Item.Content verticalAlign='middle'>{mate.email}
+                                          <Item className="contact-search" key={team.id}>
+                                          <Item.Content verticalAlign='middle'>
+                                          <Accordion>
+                                            <Accordion.Title active={activeIndex === team.id} index={team.id} onClick={this.handleClick}>
+                                              <Icon name='dropdown' />
+                                              {`${team.name} (${team.users.length} members)`}
+                                            </Accordion.Title>
+                                            <Accordion.Content active={activeIndex === team.id}>
+                                              {
+                                                team.users.map(user => {
+                                                  return (
+                                                    <p>
+                                                      {user.username}
+                                                    </p>
+                                                  )
+                                                })
+                                              }
+                                            </Accordion.Content>
+                                          </Accordion>
                                           <br/>
-                                          {mate.role}
+                                          {
+                                            teamShare === false ? 
+                                            <Button style={{float: "right", borderRadius: "0px"}} secondary onClick={() => single.shareWithTeam({teamId: team.id, teamName: team.name})}>Share</Button> : 
+                                            <div className="hide" />
+                                          }
                                           </Item.Content>
                                           </Item>
                                           )
@@ -162,13 +197,13 @@ export default class Menu extends Component {
                                       )
                                   }
                                   </Item.Group>
-                                  <Button secondary style={{borderRadius: "0"}} onClick={single.shareToTeam}>Share</Button>
+                                  {teamShare === false ? <div className="hide" /> : <Button style={{borderRadius: "0"}}>Sharing...</Button>}
                                 </Modal.Description>
                               </Modal.Content>
                             </Modal>
                             </li> :
                             <li className="hide"></li>
-                          */}
+                          }
                           {
                             this.global.teamDoc && this.global.userRole === "User" ?
                             <li className="hide">Share</li> :

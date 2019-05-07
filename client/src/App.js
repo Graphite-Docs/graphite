@@ -29,8 +29,8 @@ class App extends Component {
   async componentDidMount() {
     const { userSession } = this.global;
     if(userSession.isUserSignedIn()) {
+      await handleProCheck();
       loadData();
-      handleProCheck();
     }
  
     if (userSession.isSignInPending()) {

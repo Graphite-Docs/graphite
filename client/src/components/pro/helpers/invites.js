@@ -110,14 +110,23 @@ export async function decodeToken() {
         pubKey: blockstack.getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey),
     }
 
-    let accountParams = {
+    const accountParams = {
         fileName: "account.json", 
         encrypt: true,
         body: JSON.stringify(accountObject)
     }
 
-    let postAccount = await postData(accountParams);
+    const postAccount = await postData(accountParams);
     console.log(postAccount);
+
+    const teamKeyParams = {
+        fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${decoded.selectedTeam}/key.json`,
+        encrypt: true, 
+        body: JSON.stringify(decoded.teamKeys)
+    }
+    const postedKeys = await postData(teamKeyParams);
+    console.log(postedKeys);
+
     updateUserInfo(decoded);
 }
 

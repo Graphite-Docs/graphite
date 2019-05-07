@@ -2,6 +2,8 @@ import { setGlobal, getGlobal } from 'reactn';
 import { fetchData } from "./fetch";
 import { getPublicKeyFromPrivate } from 'blockstack';
 import { postData } from './post';
+import axios from 'axios';
+const blockstack = require('blockstack');
 
 export async function loadData(params) {
     if(params) {
@@ -65,7 +67,13 @@ export async function loadData(params) {
         files: JSON.parse(files) || [],
         filteredFiles: JSON.parse(files) || [],
         loading: false
-    })
+    });
+
+    if(getGlobal().graphitePro) {
+        const teamDocs = await fetchTeamDocs();
+        console.log(teamDocs);
+        setGlobal({ teamDocs });
+    }
 
     
     
@@ -82,4 +90,47 @@ export async function saveKey() {
     }
     const postedKey = await postData(keyParams);
     console.log(postedKey);
+}
+
+export async function fetchTeamDocs() {
+    const { proOrgInfo, userSession } = getGlobal();
+    const orgId = proOrgInfo.orgId;
+    const teams = proOrgInfo.teams;
+    let myTeams = [];
+    let teamDocs = [];
+    teams.map(team => {
+        if(team.users.some(user => user.username === userSession.loadUserData().username)) {
+            myTeams.push(team);
+        }
+        return myTeams;
+    });
+
+    const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
+    const data = {
+        profile: userSession.loadUserData().profile, 
+        username: userSession.loadUserData().username
+    }
+    const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+    const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
+    const headerObj = {
+        headers: {
+            'Access-Control-Allow-Origin': '*', 
+            'Content-Type': 'application/json', 
+            'Authorization': bearer
+        }, 
+    }
+
+    for(const team of myTeams) {
+        await axios.get(`${baseUrl}/account/organization/${orgId}/documents/${team.id}?pubKey=${pubKey}`, headerObj)
+        .then(async (res) => {
+            if(res.data.data) {
+                console.log(res.data.data);
+                teamDocs.push(res.data.data);
+            } else {
+                console.log(`No team docs found for team id ${team.id}`);
+            }
+        }).catch(err => console.log(err));
+    }
+
+    return teamDocs;
 }

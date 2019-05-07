@@ -2,6 +2,7 @@ import React, { Component } from 'reactn';
 import { Container, Modal, Input, Grid, Button, Icon, Dropdown, Menu, Label, Sidebar } from 'semantic-ui-react';
 import MyDocs from './MyDocs';
 import SharedWithMe from './SharedWithMeCollection';
+import TeamDocs from './TeamDocs';
 import { Link } from 'react-router-dom';
 import Skeleton from './Skeleteon';
 import Nav from '../../shared/views/Nav';
@@ -181,7 +182,7 @@ class Documents extends Component {
                         <Menu.Menu position="right">
                             {
                                 graphitePro ? 
-                                <Menu.Item active={activeItem === 'Team Documents'} onClick={this.handleItemClick}><Icon name="group" />Team Documents</Menu.Item>
+                                <Menu.Item name="Team Documents" active={activeItem === 'Team Documents'} onClick={this.handleItemClick}><Icon name="group" />Team Documents</Menu.Item>
                                 :
                                 <Modal closeIcon trigger={<Menu.Item><Icon name="group" />Team Documents</Menu.Item>}>
                                     <Modal.Header>Working as a team?</Modal.Header>
@@ -214,6 +215,8 @@ class Documents extends Component {
                             renderPageNumbers={renderPageNumbers}
                             pageNumbers={pageNumbers}
                         /> : 
+                        activeItem === "Team Documents" ?
+                        <TeamDocs /> : 
                         <SharedWithMe />
                     }
                 </Container>

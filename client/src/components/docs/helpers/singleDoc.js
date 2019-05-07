@@ -9,10 +9,15 @@ import { documentModel } from '../models/documentModel';
 import { savePublic } from './shareDoc';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { serializer } from './deserializer';
+import { ToastsStore} from 'react-toasts';
+import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
+import axios from 'axios';
 const wordCount = require('html-word-count');
 const initialTimeline = require('../views/editors/initialTimeline.json');
 const uuid = require('uuidv4');
 const lzjs = require('lzjs');
+const environment = window.location.origin;
+const blockstack = require('blockstack');
 
 var timer = null;
 var versionTimer = null
@@ -98,6 +103,12 @@ export async function saveDoc(updates) {
       setGlobal({ singlePublic: object})
       savePublic(false);
     }
+
+    // if(singleDoc.teams) {
+    //   for(const team of singleDoc.teams) {
+    //     await shareWithTeam({teamId: team, teamName: "", fromSave: true})
+    //   }
+    // }
 }
 
 export async function handleTitle(e) {
@@ -170,4 +181,107 @@ export async function loadVersion(id) {
     content: Value.fromJSON(JSON.parse(doc).content),
     myTimeline: JSON.parse(doc).myTimeline || initialTimeline
   })
+}
+
+export async function shareWithTeam(data) {
+  if(data.fromSave) {
+    //Nothing
+  } else {
+    setGlobal({ teamShare: true });
+  }
+  const { userSession, proOrgInfo } = getGlobal();
+  let fileId;
+  if(window.location.href.includes("new")) {
+    fileId = window.location.href.split('new/')[1];
+  } else {
+    fileId = window.location.href.split('documents/')[1];
+  }
+  //First we need to fetch the teamKey
+  const teamKeyParams = {
+    fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${data.teamId}/key.json`,
+    decrypt: true
+  }
+  const fetchedKeys = await fetchData(teamKeyParams);
+
+  const document = {
+    id: fileId,
+    team: data.teamId, 
+    orgId: proOrgInfo.orgId,
+    title: getGlobal().title,
+    content: getGlobal().content, 
+    currentHostBucket: userSession.loadUserData().username
+  }
+  const encryptedTeamDoc = userSession.encryptContent(JSON.stringify(document), {publicKey: JSON.parse(fetchedKeys).public})
+  //const decryptedTeamDoc = userSession.decryptContent(encryptedTeamDoc, {privateKey: JSON.parse(fetchedKeys).private});
+  const teamDoc = {
+    fileName: `teamDocs/${data.teamId}/${fileId}.json`, 
+    encrypt: false,
+    body: JSON.stringify(encryptedTeamDoc)
+  }
+  const postedTeamDoc = await postData(teamDoc);
+  console.log(postedTeamDoc);
+
+  let singleDoc = getGlobal().singleDoc;
+  let singleDocTeams = singleDoc.teams;
+  if(singleDocTeams) {
+    if(singleDocTeams.includes(data.teamId)) {
+      //Do nothing
+    } else {
+      singleDocTeams.push(data.teamId)
+    }
+  } else {
+    singleDocTeams = [];
+    singleDocTeams.push(data.teamId);
+  }
+  singleDoc["teams"] = singleDocTeams;
+  await setGlobal({ singleDoc });
+  if(data.fromSave) {
+    //Do nothing
+  } else {
+    await saveDoc();
+  }
+
+  const privateKey = userSession.loadUserData().appPrivateKey;
+
+  const syncedDoc = {
+    id: fileId,
+    title: userSession.encryptContent(getGlobal().title, {publicKey: JSON.parse(fetchedKeys).public}), 
+    teamName: userSession.encryptContent(data.teamName, {publicKey: JSON.parse(fetchedKeys).public}),
+    orgId: proOrgInfo.orgId,
+    teamId: data.teamId,
+    lastUpdated: getMonthDayYear(),
+    timestamp: Date.now(), 
+    currentHostBucket: userSession.encryptContent(userSession.loadUserData().username, {publicKey: JSON.parse(fetchedKeys).public}),
+    pubKey: getPublicKeyFromPrivate(privateKey)
+  }
+  
+  let serverUrl;
+    const tokenData = {
+        profile: userSession.loadUserData().profile, 
+        username: userSession.loadUserData().username, 
+        pubKey: getPublicKeyFromPrivate(privateKey)
+    }
+    const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
+    
+    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
+    const headerObj = {
+        headers: {
+            'Access-Control-Allow-Origin': '*', 
+            'Content-Type': 'application/json', 
+            'Authorization': bearer
+        }, 
+    }
+    axios.post(`${serverUrl}/account/organization/${proOrgInfo.orgId}/documents`, JSON.stringify(syncedDoc), headerObj)
+        .then(async (res) => {
+            console.log(res.data)
+            if(res.data.success === false) {
+                ToastsStore.error(res.data.message);
+            } else {
+              setGlobal({ teamShare: false, teamListModalOpen: false });
+              ToastsStore.success(`Document shared with team: ${data.teamName}`);
+            }
+        }).catch((error) => {
+            console.log(error)
+            ToastsStore.error(`Trouble sharing document`);
+        })
 }

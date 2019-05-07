@@ -190,7 +190,6 @@ setGlobal({
     accountInfo: {},
     originalConfig: {},
     invite: {},
-    teamShare: false,
     auditThis: false,
     teamDoc: false,
     isTeamDoc: false,
@@ -269,13 +268,15 @@ setGlobal({
     orgNameModalOpen: false,
     newTeamModalOpen: false,
     newTeamMateModalOpen: false,
+    teamListModalOpen: false,
     contact: {},
     sharedCollectionLoading: false, 
     welcome: false, 
     newTeamName: "", 
     selectedTeam: "", 
     settingsNav: "org", 
-    teamKeys: {}
+    teamKeys: {}, 
+    teamShare: false
 })
 
 configure({
