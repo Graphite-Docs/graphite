@@ -43,9 +43,9 @@ class TeamDocs extends Component {
                     teamDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
                     return(
                     <Table.Row key={doc.id}>
-                        <Table.Cell><Link to={'/'}>{doc.title}</Link></Table.Cell>
-                        <Table.Cell>{doc.team}</Table.Cell>
-                        <Table.Cell>{doc.updated}</Table.Cell>
+                        <Table.Cell><Link to={`/documents/team/${doc.teamId}/${doc.id}`}>{doc.title}</Link></Table.Cell>
+                        <Table.Cell>{doc.teamName}</Table.Cell>
+                        <Table.Cell>{doc.lastUpdated}</Table.Cell>
                     </Table.Row>
                     );
                     })

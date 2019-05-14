@@ -187,7 +187,7 @@ export default class Menu extends Component {
                                           <br/>
                                           {
                                             teamShare === false ? 
-                                            <Button style={{float: "right", borderRadius: "0px"}} secondary onClick={() => single.shareWithTeam({teamId: team.id, teamName: team.name})}>Share</Button> : 
+                                            <Button style={{float: "right", borderRadius: "0px"}} secondary onClick={() => single.shareWithTeam({teamId: team.id, teamName: team.name, initialShare: true})}>Share</Button> : 
                                             <div className="hide" />
                                           }
                                           </Item.Content>

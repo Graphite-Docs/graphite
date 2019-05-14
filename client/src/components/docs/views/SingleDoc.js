@@ -31,6 +31,16 @@ class SingleDoc extends Component {
   
   render() {
     const { loading, avatars, save, autoSave, title, singleDocIsPublic, singleDoc} = this.global;
+    let realTime = false;
+    if(singleDoc.readOnly === false) {
+      realTime = true;
+    } else if(singleDoc.rtc) {
+      realTime = true;
+    } else if(singleDoc.teamDoc === true) {
+      realTime = true;
+    } else if(window.location.href.includes('team')) {
+      realTime = true;
+    }
     let uniqueAva = avatars.filter((thing, index, self) => self.findIndex(t => t.name === thing.name) === index)
     let editor = document.getElementsByClassName("editor");
     let words;
@@ -125,7 +135,7 @@ class SingleDoc extends Component {
                   <div>
                     <div>
                       {
-                        singleDoc.readOnly === false || singleDoc.rtc ? 
+                        realTime === true ? 
                         <SocketEditor /> : 
                         <SlateEditor />
                       }

@@ -57,6 +57,7 @@ class App extends Component {
              <Route exact path='/' component={Documents} />
              <Route exact path='/documents' component={Documents} />
              <Route exact path="/documents/:id" component={SingleDoc} />
+             <Route exact path="/documents/team/:id/:id" component={SingleDoc} />
              <Route exact path="/documents/new/:id" component={SingleDoc} />
              <Route exact path="/documents/delete/:id" component={DeleteDoc} />
              <Route exact path="/shared/docs/:id" component={PublicDoc} />
@@ -80,7 +81,7 @@ class App extends Component {
         </div>
        );
     } else {
-      if(window.location.href.includes('?authResponse')) {
+      if(window.location.href.includes('?authResponse') || window.location.href.includes('?echoReply')) {
         if(window.location.href.includes('invite')) {
           return (
             <h1>Loading Invite...</h1>

@@ -71,7 +71,6 @@ export async function loadData(params) {
 
     if(getGlobal().graphitePro) {
         const teamDocs = await fetchTeamDocs();
-        console.log(teamDocs);
         setGlobal({ teamDocs });
     }
 
@@ -124,8 +123,23 @@ export async function fetchTeamDocs() {
         await axios.get(`${baseUrl}/account/organization/${orgId}/documents/${team.id}?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             if(res.data.data) {
-                console.log(res.data.data);
-                teamDocs.push(res.data.data);
+                const docs = res.data.data;
+                //Now we need to fetch the team key
+                const teamKeyParams = {
+                    fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
+                    decrypt: true,
+                }
+                const fetchedKeys = await fetchData(teamKeyParams);
+                
+                // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
+                asyncForEach(docs, (doc) => {
+                    let thisDoc = doc;
+                    thisDoc.currentHostBucket = userSession.decryptContent(thisDoc.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
+                    thisDoc.teamName = userSession.decryptContent(thisDoc.teamName, {privateKey: JSON.parse(fetchedKeys).private});
+                    thisDoc.title = userSession.decryptContent(thisDoc.title, {privateKey: JSON.parse(fetchedKeys).private});
+                
+                    teamDocs.push(thisDoc);
+                })
             } else {
                 console.log(`No team docs found for team id ${team.id}`);
             }
@@ -134,3 +148,9 @@ export async function fetchTeamDocs() {
 
     return teamDocs;
 }
+
+async function asyncForEach(array, callback) {
+    for (let index = 0; index < array.length; index++) {
+      await callback(array[index], index, array);
+    }
+  }

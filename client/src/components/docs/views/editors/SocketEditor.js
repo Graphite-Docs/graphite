@@ -1,13 +1,14 @@
 import React, { Component } from 'reactn';
 import socketIOClient from 'socket.io-client';
 import SlateEditor from './SlateEditor';
+let serverhost = window.location.href.includes("local") ? "http://localhost:5000" : "https://socket.graphitedocs.com";
 
 class SocketEditor extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      endpoint: "https://socket.graphitedocs.com/",
+      endpoint: serverhost,
       showCollab: false,
       uniqueID: ""
     }
@@ -48,6 +49,8 @@ class SocketEditor extends Component {
     } else {
       if(window.location.href.includes("new")) {
         room = window.location.href.split("new/")[1];
+      } else if(window.location.href.includes('team')) {
+        room = window.location.href.split('team/')[1].split('/')[1];
       } else {
         room = window.location.href.split("documents/")[1];
       }
@@ -63,6 +66,7 @@ class SocketEditor extends Component {
   }
 
   onChange = change => {
+    console.log("changing")
     const ops = change.operations
     // console.log(ops);
     const ops2 = ops

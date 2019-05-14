@@ -29,7 +29,7 @@ export async function singleDocModel(updates) {
         sharedWith: updates ? updates.sharedWith ? updates.sharedWith :  singleDoc.sharedWith || [] : singleDoc.sharedWith || [], 
         singleDocIsPublic: updates ? updates.singleDocIsPublic !==undefined ? updates.singleDocIsPublic : singleDoc.singleDocIsPublic ? singleDoc.singleDocIsPublic : false : false,
         singleDocTags: updates ? updates.singleDocTags ? updates.singleDocTags : singleDoc.singleDocTags || [] : singleDoc.singleDocTags || [], 
-        teamDoc: false, 
+        teamDoc: updates ? updates.teamDoc ? updates.teamDoc : singleDoc.teamDoc || false : singleDoc.teamDoc || false, 
         versions: singleDoc.versions ? updates ? updates.version ? [...singleDoc.versions, updates.version] : singleDoc.versions : singleDoc.versions : [],
         title: getGlobal().title ? getGlobal().title : "Untitled", 
         teams: getGlobal().singleDoc.teams ? getGlobal().singleDoc.teams : []

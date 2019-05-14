@@ -42,6 +42,8 @@ export async function saveDoc(updates) {
     let filePath;
     if(window.location.href.includes('new')) {
       filePath = window.location.href.split('new/')[1];
+    } else if(window.location.href.includes('team')) {
+      filePath = window.location.href.split('team/')[1].split('/')[1];
     } else {
       filePath = window.location.href.split('documents/')[1];
     }
@@ -104,11 +106,23 @@ export async function saveDoc(updates) {
       savePublic(false);
     }
 
-    // if(singleDoc.teams) {
-    //   for(const team of singleDoc.teams) {
-    //     await shareWithTeam({teamId: team, teamName: "", fromSave: true})
-    //   }
-    // }
+    if(window.location.href.includes('team')) {
+      const data = {
+        fromSave: true, 
+        teamName: "", //Will need to think through how best to pass this through
+        teamId: window.location.href.split('team/')[1].split('/')[0]
+      }
+      shareWithTeam(data);
+    } else if(singleDoc.teams) {
+      for (const team of singleDoc.teams) {
+        const data = {
+          fromSave: true, 
+          teamId: team.teamId, 
+          teamName: team.teamName
+        }
+        shareWithTeam(data);
+      }
+    }
 }
 
 export async function handleTitle(e) {
@@ -122,28 +136,81 @@ export async function handleTitle(e) {
 }
 
 export async function loadSingle() {
+  const { userSession } = getGlobal();
   setGlobal({loading: true});
-  const file = `/documents/${window.location.href.split('documents/')[1]}.json`;
-  const docParams = {
-    fileName: file,
-    decrypt: true
-  }
+  if(window.location.href.includes('team')) {
+    //First we need to get the team key for decryption
+    const teamId = window.location.href.split('team/')[1].split('/')[0];
+    const fileId = window.location.href.split('team/')[1].split('/')[1];
+    const teamKeyParams = {
+      fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${teamId}/key.json`,
+      decrypt: true,
+    }
+    const fetchedKeys = await fetchData(teamKeyParams);
+    //then we need to know who to fetch the file from
+    const teamDocs = getGlobal().teamDocs;
+    if(teamDocs.length > 0) {
+      //On refresh, team docs won't be loaded right away, so need to check for them.
+      const index = await teamDocs.map((x) => {return x.id }).indexOf(fileId);
+      const thisDoc = teamDocs[index];
+      const userHub = thisDoc.currentHostBucket;
+      const teamDoc = {
+        fileName: `teamDocs/${teamId}/${fileId}.json`,
+        options: { username: userHub, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+      }
+      const encryptedDoc = await fetchData(teamDoc);
+      const decryptedDoc = userSession.decryptContent(JSON.parse(encryptedDoc), {privateKey: JSON.parse(fetchedKeys).private});
+      setGlobal({
+        singleDoc: JSON.parse(decryptedDoc), 
+        title: JSON.parse(decryptedDoc).title,
+        content: Value.fromJSON(JSON.parse(decryptedDoc).content),
+        loading: false, 
+        myTimeline: JSON.parse(decryptedDoc).myTimeline || initialTimeline
+      })
+    } else {
+        await setTimeout(async () => {
+          const teamDocs = await getGlobal().teamDocs;
+          const index = await teamDocs.map((x) => {return x.id }).indexOf(fileId);
+          const thisDoc = teamDocs[index];
+          const userHub = thisDoc.currentHostBucket;
+          const teamDoc = {
+            fileName: `teamDocs/${teamId}/${fileId}.json`,
+            options: { username: userHub, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+          }
+          const encryptedDoc = await fetchData(teamDoc);
+          const decryptedDoc = userSession.decryptContent(JSON.parse(encryptedDoc), {privateKey: JSON.parse(fetchedKeys).private});
+          setGlobal({
+            singleDoc: JSON.parse(decryptedDoc), 
+            title: JSON.parse(decryptedDoc).title,
+            content: Value.fromJSON(JSON.parse(decryptedDoc).content),
+            loading: false, 
+            myTimeline: JSON.parse(decryptedDoc).myTimeline || initialTimeline
+          })
+        }, 3000);
+    }
+  } else {
+    const file = `/documents/${window.location.href.split('documents/')[1]}.json`;
+    const docParams = {
+      fileName: file,
+      decrypt: true
+    }
 
-  let doc = await fetchData(docParams);
-  let parsedDoc = JSON.parse(doc);
-  let compressed = parsedDoc.compressed;
-  let updatedContent;
-  if(compressed === true) {
-    console.log("compressed")
-    updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
-  } 
-  setGlobal({
-    singleDoc: parsedDoc, 
-    title: JSON.parse(doc).title,
-    content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
-    loading: false, 
-    myTimeline: JSON.parse(doc).myTimeline || initialTimeline
-  })
+    let doc = await fetchData(docParams);
+    let parsedDoc = JSON.parse(doc);
+    let compressed = parsedDoc.compressed;
+    let updatedContent;
+    if(compressed === true) {
+      console.log("compressed")
+      updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
+    } 
+    setGlobal({
+      singleDoc: parsedDoc, 
+      title: JSON.parse(doc).title,
+      content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
+      loading: false, 
+      myTimeline: JSON.parse(doc).myTimeline || initialTimeline
+    })
+  }
 }
 
 export async function updateVersions() {
@@ -193,6 +260,8 @@ export async function shareWithTeam(data) {
   let fileId;
   if(window.location.href.includes("new")) {
     fileId = window.location.href.split('new/')[1];
+  } else if(window.location.href.includes('team')) {
+    fileId = window.location.href.split('team/')[1].split('/')[1];
   } else {
     fileId = window.location.href.split('documents/')[1];
   }
@@ -212,7 +281,7 @@ export async function shareWithTeam(data) {
     currentHostBucket: userSession.loadUserData().username
   }
   const encryptedTeamDoc = userSession.encryptContent(JSON.stringify(document), {publicKey: JSON.parse(fetchedKeys).public})
-  //const decryptedTeamDoc = userSession.decryptContent(encryptedTeamDoc, {privateKey: JSON.parse(fetchedKeys).private});
+ 
   const teamDoc = {
     fileName: `teamDocs/${data.teamId}/${fileId}.json`, 
     encrypt: false,
@@ -222,23 +291,12 @@ export async function shareWithTeam(data) {
   console.log(postedTeamDoc);
 
   let singleDoc = getGlobal().singleDoc;
-  let singleDocTeams = singleDoc.teams;
-  if(singleDocTeams) {
-    if(singleDocTeams.includes(data.teamId)) {
-      //Do nothing
-    } else {
-      singleDocTeams.push(data.teamId)
-    }
-  } else {
-    singleDocTeams = [];
-    singleDocTeams.push(data.teamId);
-  }
-  singleDoc["teams"] = singleDocTeams;
+  singleDoc["teamDoc"] = true;
   await setGlobal({ singleDoc });
   if(data.fromSave) {
     //Do nothing
   } else {
-    await saveDoc();
+    await saveDoc({teamDoc: true});
   }
 
   const privateKey = userSession.loadUserData().appPrivateKey;
@@ -278,10 +336,14 @@ export async function shareWithTeam(data) {
                 ToastsStore.error(res.data.message);
             } else {
               setGlobal({ teamShare: false, teamListModalOpen: false });
-              ToastsStore.success(`Document shared with team: ${data.teamName}`);
+              if(data.initialShare === true) {
+                ToastsStore.success(`Document shared with team: ${data.teamName}`);
+              }
             }
         }).catch((error) => {
-            console.log(error)
-            ToastsStore.error(`Trouble sharing document`);
+            console.log(error);
+            if(data.initialShare === true) {
+              ToastsStore.error(`Trouble sharing document`);
+            }
         })
 }

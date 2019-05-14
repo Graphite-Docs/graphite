@@ -365,7 +365,7 @@ class SlateEditor extends React.Component {
   };
 
   onChange = (change, options = {}) => {
-    const { singleDoc, readOnly } = this.global;
+    const { singleDoc } = this.global;
     if (initialLoad) {
       //Do nothing but set initialLoad back to false
       initialLoad = false;
@@ -378,7 +378,17 @@ class SlateEditor extends React.Component {
     }
 
     if(!this.remote) {
-      if (singleDoc.readOnly === false || singleDoc.rtc || readOnly === false) {
+      let realTime = false;
+      if(singleDoc.readOnly === false) {
+        realTime = true;
+      } else if(singleDoc.rtc) {
+        realTime = true;
+      } else if(singleDoc.teamDoc === true) {
+        realTime = true;
+      } else if(window.location.href.includes('team')) {
+        realTime = true;
+      }
+      if (realTime === true) {
         this.props.onChange(change)
       }
     } else {
