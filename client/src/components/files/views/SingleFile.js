@@ -1,4 +1,4 @@
-import React, { Component } from "reactn";
+import React, { Component, setGlobal } from "reactn";
 import { Link } from 'react-router-dom';
 import PDF from "react-pdf-js";
 import { Player } from "video-react";
@@ -6,7 +6,7 @@ import "video-react/dist/video-react.css";
 import HotTable from "react-handsontable";
 import {CSVLink} from 'react-csv';
 import FileSkeleton from './FileSkeleton';
-import { Input, Pagination, Container, Image, Icon, Modal, Button } from 'semantic-ui-react';
+import { Input, Pagination, Container, Image, Icon, Modal, Button, Item, Accordion, Dropdown } from 'semantic-ui-react';
 import {Header as SemanticHeader } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 // import { handleaddItem } from '../../docs/helpers/singleDoc';
@@ -14,7 +14,21 @@ import {Menu as MainMenu} from 'semantic-ui-react';
 const single = require('../helpers/singleVaultFile');
 
 export default class SingleVaultFile extends Component {
-  state = {activePage: 1}
+  constructor(props) {
+    super(props);
+    this.state = {
+      activeIndex: 0, 
+      activePage: 1 
+    }
+  }
+
+  handleClick = (e, titleProps) => {
+    const { index } = titleProps
+    const { activeIndex } = this.state
+    const newIndex = activeIndex === index ? -1 : index
+
+    this.setState({ activeIndex: newIndex })
+  }
 
   componentDidMount() {
     single.loadSingleVaultFile(window.location.href.split('files/')[1]);
@@ -48,7 +62,9 @@ export default class SingleVaultFile extends Component {
   }
 
   render() {
-    const { singleFile, type, loading, pages, page, name, link, singleFileContent, grid, userSession } = this.global;
+    const { proOrgInfo, graphitePro, teamListModalOpen, teamShare, singleFile, type, loading, pages, page, name, link, singleFileContent, grid, userSession } = this.global;
+    const { activeIndex } = this.state;
+    const teamList = proOrgInfo.teams;
     var thisStyle = {
       display: "none"
     };
@@ -121,27 +137,90 @@ export default class SingleVaultFile extends Component {
             <MainMenu.Item />
           )}
           <MainMenu.Item>
-            <Modal closeIcon trigger={<button className="link-button"><Icon style={{cursor: "pointer", color: "#fff"}} name='linkify' /></button>}>
-              <Modal.Header>Create a Public Link</Modal.Header>
-              <Modal.Content>
-                <Modal.Description>
-                  <SemanticHeader>Public Link</SemanticHeader>
-                  <p>By generating a public link, you will be saving an unencrypted copy of your file. Only those will the link can access it.</p>
-                  {
-                    singleFile.publicVaultFile ?
-                    <Button style={{ borderRadius: "0" }} onClick={single.stopSharingPubVaultFile} color="red">Stop Sharing Publicly</Button> :
-                    <Button style={{ borderRadius: "0" }} onClick={single.shareVaultFile} color="green">Generate Public Link</Button>
-                  }
-                  <div style={{marginTop: "15px"}}>
-                    {
-                      singleFile.publicVaultFile && sharedBy ?
-                      <div><a id='shared-vault-link' href={window.location.origin + '/public/files/' + sharedBy + '/' + window.location.href.split('files/')[1]} target='_blank' rel="noopener noreferrer" style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/files/' + sharedBy + '/' + window.location.href.split('files/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
-                      <div className='hide' />
-                    }
-                  </div>
-                </Modal.Description>
-              </Modal.Content>
-            </Modal>
+            <Dropdown style={{color: "#fff"}} icon='share alternate' simple>
+              <Dropdown.Menu>
+                {
+                  graphitePro ?
+                  <Dropdown.Item>
+                    <Modal 
+                    open={teamListModalOpen}
+                    onClose={() => setGlobal({ teamListModalOpen: false})}
+                    closeIcon style={{borderRadius: "0"}}
+                    trigger={<button onClick={() => setGlobal({ teamListModalOpen: true})} className='link-button'>Share With Team</button>}
+                    >
+                    <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
+                    <Modal.Content>
+                      <Modal.Description>
+                        <p>By sharing with your entire team, each teammate will have immediate access to the document and will be able to collaborate in real-time.</p>
+                        <p>For reference, you can see your list of teammates by expanding each team below.</p>
+                        <Item.Group divided>
+                        {teamList.map(team => {
+                            return (
+                                <Item className="contact-search" key={team.id}>
+                                <Item.Content verticalAlign='middle'>
+                                <Accordion>
+                                  <Accordion.Title active={activeIndex === team.id} index={team.id} onClick={this.handleClick}>
+                                    <Icon name='dropdown' />
+                                    {`${team.name} (${team.users.length} members)`}
+                                  </Accordion.Title>
+                                  <Accordion.Content active={activeIndex === team.id}>
+                                    {
+                                      team.users.map(user => {
+                                        return (
+                                          <p key={user.username}>
+                                            {user.username}
+                                          </p>
+                                        )
+                                      })
+                                    }
+                                  </Accordion.Content>
+                                </Accordion>
+                                <br/>
+                                {
+                                  teamShare === false ? 
+                                  <Button style={{float: "right", borderRadius: "0px"}} secondary onClick={() => single.shareWithTeam({teamId: team.id, teamName: team.name, initialShare: true})}>Share</Button> : 
+                                  <div className="hide" />
+                                }
+                                </Item.Content>
+                                </Item>
+                                )
+                              }
+                            )
+                        }
+                        </Item.Group>
+                        {teamShare === false ? <div className="hide" /> : <Button style={{borderRadius: "0"}}>Sharing...</Button>}
+                      </Modal.Description>
+                    </Modal.Content>
+                  </Modal>
+                  </Dropdown.Item> 
+                   : 
+                  <Dropdown.Item className="hide" />
+                }
+                <Dropdown.Item>
+                  <Modal closeIcon trigger={<button className="link-button">Create Public Link</button>}>
+                    <Modal.Header>Create a Public Link</Modal.Header>
+                    <Modal.Content>
+                      <Modal.Description>
+                        <SemanticHeader>Public Link</SemanticHeader>
+                        <p>By generating a public link, you will be saving an unencrypted copy of your file. Only those will the link can access it.</p>
+                        {
+                          singleFile.publicVaultFile ?
+                          <Button style={{ borderRadius: "0" }} onClick={single.stopSharingPubVaultFile} color="red">Stop Sharing Publicly</Button> :
+                          <Button style={{ borderRadius: "0" }} onClick={single.shareVaultFile} color="green">Generate Public Link</Button>
+                        }
+                        <div style={{marginTop: "15px"}}>
+                          {
+                            singleFile.publicVaultFile && sharedBy ?
+                            <div><a id='shared-vault-link' href={window.location.origin + '/public/files/' + sharedBy + '/' + window.location.href.split('files/')[1]} target='_blank' rel="noopener noreferrer" style={{wordWrap:"break-word"}}>{ window.location.origin + '/public/files/' + sharedBy + '/' + window.location.href.split('files/')[1]}</a><Icon onClick={this.copyLink} style={{marginLeft: "10px", cursor: "pointer"}} name='copy outline' /></div> :
+                            <div className='hide' />
+                          }
+                        </div>
+                      </Modal.Description>
+                    </Modal.Content>
+                  </Modal>
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           </MainMenu.Item>
           {type.includes("word") ? (
             <MainMenu.Item>

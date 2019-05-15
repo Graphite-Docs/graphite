@@ -5,6 +5,9 @@ import { ToastsStore} from 'react-toasts';
 import update from 'immutability-helper';
 import XLSX from "xlsx";
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
+import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
+import axios from 'axios';
+const blockstack = require('blockstack');
 const mammoth = require("mammoth");
 const uuid = require('uuidv4');
 const str2ab = require("string-to-arraybuffer");
@@ -13,6 +16,7 @@ const Papa = require('papaparse');
 let abuf4;
 var FileSaver = require('file-saver');
 let timer = null;
+const environment = window.location.origin;
 
 export async function loadSingleVaultFile(props) {
     if(window.location.href.includes('documents')) {
@@ -301,5 +305,93 @@ export async function signWithBlockusign(fileId) {
     const postedDocIndex = await postData(indexParams);
     console.log(postedDocIndex);
     ToastsStore.success(`Documented added!`)
+  }
+
+  export async function shareWithTeam(data) {
+    setGlobal({ teamShare: true });
+    const { userSession, proOrgInfo } = getGlobal();
+    let fileId;
+    if(window.location.href.includes('team')) {
+      fileId = window.location.href.split('team/')[1].split('/')[1];
+    } else {
+      fileId = window.location.href.split('files/')[1];
+    }
+    //First we need to fetch the teamKey
+    const teamKeyParams = {
+      fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${data.teamId}/key.json`,
+      decrypt: true
+    }
+    const fetchedKeys = await fetchData(teamKeyParams);
+  
+    const file = {
+      id: fileId,
+      team: data.teamId, 
+      orgId: proOrgInfo.orgId,
+      name: getGlobal().name, 
+      file: getGlobal().singleFile,
+      currentHostBucket: userSession.loadUserData().username
+    }
+    const encryptedTeamFile = userSession.encryptContent(JSON.stringify(file), {publicKey: JSON.parse(fetchedKeys).public})
+   
+    const teamFile = {
+      fileName: `teamFiles/${data.teamId}/${fileId}.json`, 
+      encrypt: false,
+      body: JSON.stringify(encryptedTeamFile)
+    }
+    const postedTeamFile = await postData(teamFile);
+    console.log(postedTeamFile);
+  
+    let singleFile = getGlobal().singleFile;
+    singleFile["teamFile"] = true;
+    await setGlobal({ singleFile });
+    await saveFile();
+  
+    const privateKey = userSession.loadUserData().appPrivateKey;
+  
+    const syncedFile = {
+      id: fileId,
+      name: userSession.encryptContent(getGlobal().name, {publicKey: JSON.parse(fetchedKeys).public}), 
+      teamName: userSession.encryptContent(data.teamName, {publicKey: JSON.parse(fetchedKeys).public}),
+      orgId: proOrgInfo.orgId,
+      teamId: data.teamId,
+      lastUpdated: getMonthDayYear(),
+      timestamp: Date.now(), 
+      currentHostBucket: userSession.encryptContent(userSession.loadUserData().username, {publicKey: JSON.parse(fetchedKeys).public}),
+      pubKey: getPublicKeyFromPrivate(privateKey)
+    }
+    
+    let serverUrl;
+      const tokenData = {
+          profile: userSession.loadUserData().profile, 
+          username: userSession.loadUserData().username, 
+          pubKey: getPublicKeyFromPrivate(privateKey)
+      }
+      const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
+      
+      environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
+      const headerObj = {
+          headers: {
+              'Access-Control-Allow-Origin': '*', 
+              'Content-Type': 'application/json', 
+              'Authorization': bearer
+          }, 
+      }
+      axios.post(`${serverUrl}/account/organization/${proOrgInfo.orgId}/files`, JSON.stringify(syncedFile), headerObj)
+          .then(async (res) => {
+              console.log(res.data)
+              if(res.data.success === false) {
+                  ToastsStore.error(res.data.message);
+              } else {
+                setGlobal({ teamShare: false, teamListModalOpen: false });
+                if(data.initialShare === true) {
+                  ToastsStore.success(`File shared with team: ${data.teamName}`);
+                }
+              }
+          }).catch((error) => {
+              console.log(error);
+              if(data.initialShare === true) {
+                ToastsStore.error(`Trouble sharing file`);
+              }
+          })
   }
 

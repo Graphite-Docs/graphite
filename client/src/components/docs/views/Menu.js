@@ -176,7 +176,7 @@ export default class Menu extends Component {
                                               {
                                                 team.users.map(user => {
                                                   return (
-                                                    <p>
+                                                    <p key={user.username}>
                                                       {user.username}
                                                     </p>
                                                   )

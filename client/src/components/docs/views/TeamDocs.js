@@ -1,11 +1,12 @@
 import React, { Component } from 'reactn';
 import { Table, Menu } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+import { deleteTeamDoc } from '../helpers/teamDocs';
 const gdocs = require('../helpers/documents');
 
 class TeamDocs extends Component {
   render() {
-      const { currentPage, docsPerPage, teamDocs, teamCollectionLoading } = this.global;
+      const { currentPage, docsPerPage, teamDocs, teamCollectionLoading, proOrgInfo, userSession } = this.global;
       const indexOfLastDoc = currentPage * docsPerPage;
       const indexOfFirstDoc = indexOfLastDoc - docsPerPage;
       const pageNumbers = [];
@@ -41,11 +42,17 @@ class TeamDocs extends Component {
                 <Table.Body>
                 {
                     teamDocs.slice(indexOfFirstDoc, indexOfLastDoc).map(doc => {
+                    const teams = proOrgInfo.teams;
+                    const thisTeam = teams.filter(a => a.id === doc.teamId)[0];
+                    const users = thisTeam.users;
+                    const thisUser = users.filter(a => a.username === userSession.loadUserData().username)[0];
+                    const isAdminOrManager = thisUser.role === "Admin" || thisUser.role === "Manager" ? true : false;
                     return(
                     <Table.Row key={doc.id}>
                         <Table.Cell><Link to={`/documents/team/${doc.teamId}/${doc.id}`}>{doc.title}</Link></Table.Cell>
                         <Table.Cell>{doc.teamName}</Table.Cell>
                         <Table.Cell>{doc.lastUpdated}</Table.Cell>
+                        <Table.Cell>{isAdminOrManager ? <button onClick={() => deleteTeamDoc({teamId: doc.teamId, docId: doc.id})} className="link-button" style={{color: "red"}}>Delete</button> : <span className="hide" />}</Table.Cell>
                     </Table.Row>
                     );
                     })
