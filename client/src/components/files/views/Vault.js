@@ -4,6 +4,7 @@ import { Container, Input, Grid, Button, Icon, Dropdown, Modal, Menu, Label, Sid
 import Nav from '../../shared/views/Nav';
 import { Link } from 'react-router-dom';
 import MyFiles from './MyFiles';
+import TeamFiles from './TeamFiles';
 import SharedWithMeCollection from './SharedWithMeCollection';
 import { fetchSharedFiles } from '../helpers/sharedFilesCollection';
 import DropModal from './DropModal';
@@ -50,7 +51,6 @@ class Vault extends Component {
   render() {
     const { vaultModalOpen, loading, graphitePro, contacts, appliedFilter, currentPage, filesPerPage, filteredFiles } = this.global;
     const { visible, activeItem } = this.state;
-
     let files;
     if (filteredFiles !== null) {
       files = filteredFiles;
@@ -203,7 +203,7 @@ class Vault extends Component {
               <Menu.Menu position="right">
                   {
                       graphitePro ? 
-                      <Menu.Item active={activeItem === 'Team Files'} onClick={this.handleItemClick}><Icon name="group" />Team Files</Menu.Item>
+                      <Menu.Item name="Team Files" active={activeItem === 'Team Files'} onClick={this.handleItemClick}><Icon name="group" />Team Files</Menu.Item>
                       :
                       <Modal closeIcon trigger={<Menu.Item><Icon name="group" />Team Files</Menu.Item>}>
                           <Modal.Header>Working as a team?</Modal.Header>
@@ -227,7 +227,8 @@ class Vault extends Component {
               contacts={contacts}
               pageNumbers={pageNumbers}
               renderPageNumbers={renderPageNumbers}
-            /> : 
+            /> : activeItem === "Team Files" ? 
+            <TeamFiles /> :  
             <SharedWithMeCollection 
               indexOfFirstFile={indexOfFirstFile}
               indexOfLastFile={indexOfLastFile} 

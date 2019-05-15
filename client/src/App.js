@@ -64,6 +64,7 @@ class App extends Component {
              <Route exact path="/shared/documents/:id" component={SingleSharedDoc} />
              <Route exact path="/files" component={Vault} />
              <Route exact path="/files/:id" component={SingleFile} />
+             <Route exact path="/files/team/:id/:id" component={SingleFile} />
              <Route exact path="/shared/files/:id" component={SingleSharedFile} />
              <Route exact path="/public/files/:id/:id" component={PublicFile} />
              <Route exact path="/contacts" component={Contacts} />

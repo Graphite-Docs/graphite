@@ -71,12 +71,10 @@ export async function loadData(params) {
 
     if(getGlobal().graphitePro) {
         const teamDocs = await fetchTeamDocs();
-        setGlobal({ teamDocs });
+        await setGlobal({ teamDocs });
+        const teamFiles = await fetchTeamFiles();
+        await setGlobal({ teamFiles });
     }
-
-    
-    
-    // await fetchData(formsParams);
 }
 
 export async function saveKey() {
@@ -147,6 +145,64 @@ export async function fetchTeamDocs() {
     }
 
     return teamDocs;
+}
+
+export async function fetchTeamFiles() {
+    const { proOrgInfo, userSession } = getGlobal();
+    const orgId = proOrgInfo.orgId;
+    const teams = proOrgInfo.teams;
+    let myTeams = [];
+    let teamFiles = [];
+    teams.map(team => {
+        if(team.users.some(user => user.username === userSession.loadUserData().username)) {
+            myTeams.push(team);
+        }
+        return myTeams;
+    });
+
+    const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
+    const data = {
+        profile: userSession.loadUserData().profile, 
+        username: userSession.loadUserData().username
+    }
+    const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+    const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
+    const headerObj = {
+        headers: {
+            'Access-Control-Allow-Origin': '*', 
+            'Content-Type': 'application/json', 
+            'Authorization': bearer
+        }, 
+    }
+
+    for(const team of myTeams) {
+        await axios.get(`${baseUrl}/account/organization/${orgId}/files/${team.id}?pubKey=${pubKey}`, headerObj)
+        .then(async (res) => {
+            if(res.data.data) {
+                const files = res.data.data;
+                //Now we need to fetch the team key
+                const teamKeyParams = {
+                    fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
+                    decrypt: true,
+                }
+                const fetchedKeys = await fetchData(teamKeyParams);
+                
+                // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
+                asyncForEach(files, (file) => {
+                    let thisFile = file;
+                    thisFile.currentHostBucket = userSession.decryptContent(thisFile.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
+                    thisFile.teamName = userSession.decryptContent(thisFile.teamName, {privateKey: JSON.parse(fetchedKeys).private});
+                    thisFile.name = userSession.decryptContent(thisFile.name, {privateKey: JSON.parse(fetchedKeys).private});
+                
+                    teamFiles.push(thisFile);
+                })
+            } else {
+                console.log(`No team files found for team id ${team.id}`);
+            }
+        }).catch(err => console.log(err));
+    }
+
+    return teamFiles;
 }
 
 async function asyncForEach(array, callback) {

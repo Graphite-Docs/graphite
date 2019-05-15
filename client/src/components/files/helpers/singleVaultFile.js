@@ -18,71 +18,158 @@ var FileSaver = require('file-saver');
 let timer = null;
 const environment = window.location.origin;
 
-export async function loadSingleVaultFile(props) {
+export async function loadSingleVaultFile() {
+    let wb;
+    let first_worksheet;
+    let data;
+    const { userSession } = getGlobal();
     if(window.location.href.includes('documents')) {
       setGlobal({ loading: false });
     } else {
       setGlobal({loading: true})
     }
-    const file = `${props}.json`
-    const fileParams = {
-        fileName: file,
-        decrypt: true
-    }
 
-    let thisFile = await fetchData(fileParams);
-    await setGlobal({
-        file: JSON.parse(thisFile), 
-        singleFile: JSON.parse(thisFile),
-        name: JSON.parse(thisFile).name, 
-        type: JSON.parse(thisFile).type,
-        link: JSON.parse(thisFile).link
-    })
-    if (getGlobal().type.includes("word")) {
-        abuf4 = str2ab(getGlobal().link);
-        mammoth
-          .convertToHtml({ arrayBuffer: abuf4 })
-          .then(result => {
-            var html = result.value; // The generated HTML
-            setGlobal({ singleFileContent: html });
-            setGlobal({ loading: false });
+    if(window.location.href.includes('team')) {
+      //First we need to get the team key for decryption
+      const teamId = window.location.href.split('team/')[1].split('/')[0];
+      const fileId = window.location.href.split('team/')[1].split('/')[1];
+      const teamKeyParams = {
+        fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${teamId}/key.json`,
+        decrypt: true,
+      }
+      const fetchedKeys = await fetchData(teamKeyParams);
+      //then we need to know who to fetch the file from
+      const teamFiles = getGlobal().teamFiles;
+      if(teamFiles.length > 0) {
+        //On refresh, team docs won't be loaded right away, so need to check for them.
+        const index = await teamFiles.map((x) => {return x.id }).indexOf(fileId);
+        const thisFile = teamFiles[index];
+        const userHub = thisFile.currentHostBucket;
+        const teamFile = {
+          fileName: `teamFiles/${teamId}/${fileId}.json`,
+          options: { username: userHub, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+        }
+        const encryptedFile = await fetchData(teamFile);
+        const decryptedFile = userSession.decryptContent(JSON.parse(encryptedFile), {privateKey: JSON.parse(fetchedKeys).private});
+        await setGlobal({
+          singleFile: JSON.parse(decryptedFile), 
+          file: JSON.parse(decryptedFile),
+          name: JSON.parse(decryptedFile).name,
+          type: JSON.parse(decryptedFile).file.type,
+          link: JSON.parse(decryptedFile).file.link
+        });
+        if (getGlobal().type.includes("word")) {
+          abuf4 = str2ab(getGlobal().link);
+          mammoth
+            .convertToHtml({ arrayBuffer: abuf4 })
+            .then(result => {
+              var html = result.value; // The generated HTML
+              setGlobal({ singleFileContent: html });
+              setGlobal({ loading: false });
+            })
+            .done();
+        }
+
+        else if (getGlobal().type.includes("rtf")) {
+          let base64 = getGlobal().link.split("data:text/rtf;base64,")[1];
+          rtfToHTML.fromString(window.atob(base64), (err, html) => {
+            console.log(window.atob(base64));
+            console.log(html)
+            let htmlFixed = html.replace("body", ".noclass");
+            setGlobal({ singleFileContent:  htmlFixed});
+            setGlobal({ loading: "hide", show: "" });
           })
-          .done();
-      }
+        }
 
-      else if (getGlobal().type.includes("rtf")) {
-        let base64 = getGlobal().link.split("data:text/rtf;base64,")[1];
-        rtfToHTML.fromString(window.atob(base64), (err, html) => {
-          console.log(window.atob(base64));
-          console.log(html)
-          let htmlFixed = html.replace("body", ".noclass");
-          setGlobal({ singleFileContent:  htmlFixed});
+        else if (getGlobal().type.includes("text/plain")) {
+          let base64 = getGlobal().link.split("data:text/plain;base64,")[1];
           setGlobal({ loading: "hide", show: "" });
+          setGlobal({ singleFileContent: window.atob(base64) });
+        }
+
+        else if (getGlobal().type.includes("sheet")) {
+          abuf4 = str2ab(getGlobal().link);
+          wb = XLSX.read(abuf4, { type: "buffer" });
+          first_worksheet = wb.Sheets[wb.SheetNames[0]];
+          data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
+          
+          setGlobal({ grid: data });
+          setGlobal({ loading: "hide", show: "" });
+        }
+
+        else if (getGlobal().type.includes("csv")) {
+          let base64 = getGlobal().link.split("data:text/csv;base64,")[1];
+          setGlobal({ grid: Papa.parse(window.atob(base64)).data });
+          setGlobal({ loading: "hide", show: "" });
+        }
+        setGlobal({ loading: false });
+      } else { 
+        console.log("No team files...")
+        //Need to figure out how to handle this better.
+      } 
+      
+      } else {
+        const fileId = window.location.href.split('files/')[1];
+        const file = `${fileId}.json`
+        const fileParams = {
+            fileName: file,
+            decrypt: true
+        }
+
+        let thisFile = await fetchData(fileParams);
+        await setGlobal({
+            file: JSON.parse(thisFile), 
+            singleFile: JSON.parse(thisFile),
+            name: JSON.parse(thisFile).name, 
+            type: JSON.parse(thisFile).type,
+            link: JSON.parse(thisFile).link
         })
-      }
+        if (getGlobal().type.includes("word")) {
+            abuf4 = str2ab(getGlobal().link);
+            mammoth
+              .convertToHtml({ arrayBuffer: abuf4 })
+              .then(result => {
+                var html = result.value; // The generated HTML
+                setGlobal({ singleFileContent: html });
+                setGlobal({ loading: false });
+              })
+              .done();
+          }
 
-      else if (getGlobal().type.includes("text/plain")) {
-        let base64 = getGlobal().link.split("data:text/plain;base64,")[1];
-        setGlobal({ loading: "hide", show: "" });
-        setGlobal({ singleFileContent: window.atob(base64) });
-      }
+          else if (getGlobal().type.includes("rtf")) {
+            let base64 = getGlobal().link.split("data:text/rtf;base64,")[1];
+            rtfToHTML.fromString(window.atob(base64), (err, html) => {
+              console.log(window.atob(base64));
+              console.log(html)
+              let htmlFixed = html.replace("body", ".noclass");
+              setGlobal({ singleFileContent:  htmlFixed});
+              setGlobal({ loading: "hide", show: "" });
+            })
+          }
 
-      else if (getGlobal().type.includes("sheet")) {
-        abuf4 = str2ab(getGlobal().link);
-        var wb = XLSX.read(abuf4, { type: "buffer" });
-        var first_worksheet = wb.Sheets[wb.SheetNames[0]];
-        var data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
-        
-        setGlobal({ grid: data });
-        setGlobal({ loading: "hide", show: "" });
-      }
+          else if (getGlobal().type.includes("text/plain")) {
+            let base64 = getGlobal().link.split("data:text/plain;base64,")[1];
+            setGlobal({ loading: "hide", show: "" });
+            setGlobal({ singleFileContent: window.atob(base64) });
+          }
 
-      else if (getGlobal().type.includes("csv")) {
-        let base64 = getGlobal().link.split("data:text/csv;base64,")[1];
-        setGlobal({ grid: Papa.parse(window.atob(base64)).data });
-        setGlobal({ loading: "hide", show: "" });
-      }
-      setGlobal({ loading: false });
+          else if (getGlobal().type.includes("sheet")) {
+            abuf4 = str2ab(getGlobal().link);
+            wb = XLSX.read(abuf4, { type: "buffer" });
+            first_worksheet = wb.Sheets[wb.SheetNames[0]];
+            data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
+            
+            setGlobal({ grid: data });
+            setGlobal({ loading: "hide", show: "" });
+          }
+
+          else if (getGlobal().type.includes("csv")) {
+            let base64 = getGlobal().link.split("data:text/csv;base64,")[1];
+            setGlobal({ grid: Papa.parse(window.atob(base64)).data });
+            setGlobal({ loading: "hide", show: "" });
+          }
+          setGlobal({ loading: false });
+    }
 }
 
 export async function downloadPDF() {

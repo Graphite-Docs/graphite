@@ -238,7 +238,7 @@ export default class SingleVaultFile extends Component {
                 <div>
                   {type.includes("image") ? (
                     <div style={{maxWidth: "85%", margin: "auto"}}>
-                      <Image style={{maxWidth: "65%", margin: "auto"}} src={singleFile.link} />
+                      <Image style={{maxWidth: "65%", margin: "auto"}} src={singleFile.link || link} />
                     </div>
                   ) : type.includes("pdf") ? (
                     <Container>
