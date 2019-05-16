@@ -130,7 +130,7 @@ class SelectedTeam extends Component {
                                                 <Table.Cell>{user.username ? user.username : <span><span style={{color: "#ffae42"}}>Invite Pending</span><span style={{marginLeft: "5px"}}>  <Popup trigger={<Icon onClick={() => invites.resendInvite(user, selectedTeam)} style={{cursor: "pointer", color: "rgb(65, 131, 196)", paddingTop: "2px"}} name="mail" />} content="Re-send invite email." basic /></span></span>}</Table.Cell>
                                                 <Table.Cell>{user.email}</Table.Cell>
                                                 <Table.Cell>{user.role}</Table.Cell>
-                                                <Table.Cell>{canDelete && user.username !== userSession.loadUserData().username ? <button className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
+                                                <Table.Cell>{canDelete && user.username !== userSession.loadUserData().username ? <button onClick={() => team.deleteUser({team: selectedTeam, user: user})} className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
                                             </Table.Row>
                                         )
                                     })

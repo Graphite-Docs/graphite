@@ -1,5 +1,6 @@
 import React, { Component } from 'reactn';
 import { Grid, Container, Table } from 'semantic-ui-react';
+import { deleteFromOrg } from '../../helpers/account';
 
 class Users extends Component {
   render() {
@@ -35,7 +36,7 @@ class Users extends Component {
                                             <Table.Row key={user.id}>
                                                 <Table.Cell>{user.name}</Table.Cell>
                                                 <Table.Cell>{user.username}</Table.Cell>
-                                                <Table.Cell>{user.username !== userSession.loadUserData().username ? <button className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
+                                                <Table.Cell>{user.username !== userSession.loadUserData().username ? <button onClick={() => deleteFromOrg(user)} className="link-button" style={{color: "red"}}>Delete</button> : ""}</Table.Cell>
                                             </Table.Row>
                                         )
                                     })

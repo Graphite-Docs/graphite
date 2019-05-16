@@ -159,3 +159,40 @@ export async function saveNewTeammate(data) {
             ToastsStore.error(`Trouble adding new user`);
         })
 }
+
+export async function deleteUser(data) {
+    const { userSession, proOrgInfo } = getGlobal();
+
+    const privateKey = userSession.loadUserData().appPrivateKey;
+    const pubKey = getPublicKeyFromPrivate(privateKey);
+
+    let serverUrl;
+    const tokenData = {
+        profile: userSession.loadUserData().profile, 
+        username: userSession.loadUserData().username, 
+        pubKey
+    }
+    const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
+
+    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
+    const headerObj = {
+        headers: {
+            'Access-Control-Allow-Origin': '*', 
+            'Content-Type': 'application/json', 
+            'Authorization': bearer
+        }, 
+    }
+    axios.delete(`${serverUrl}/account/organization/${proOrgInfo.orgId}/teams/${data.team}/users/${data.user.id}?pubKey=${pubKey}`, headerObj)
+        .then(async (res) => {
+            console.log(res.data)
+            if(res.data.success === false) {
+                ToastsStore.error(res.data.message);
+            } else {
+                await handleProCheck();
+                ToastsStore.success(`User removed`);
+            }
+        }).catch((error) => {
+            console.log(error);
+            ToastsStore.error(`Trouble removing user`);
+        })
+}

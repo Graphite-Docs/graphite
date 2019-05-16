@@ -3,7 +3,9 @@ import { getGlobal, setGlobal } from 'reactn';
 import { postData } from '../../shared/helpers/post';
 import { ToastsStore} from 'react-toasts';
 import { fetchData } from '../../shared/helpers/fetch';
+import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
 const blockstack = require("blockstack");
+const environment = window.location.origin;
 
 export async function handleProCheck() {
     if(window.location.href.includes('invite/accept')) {
@@ -147,4 +149,41 @@ export async function saveOrgDetails() {
                 ToastsStore.error(res.data.message);
             }
         }).catch(err => console.log(err))
+}
+
+export async function deleteFromOrg(data) {
+    const { userSession, proOrgInfo } = getGlobal();
+
+    const privateKey = userSession.loadUserData().appPrivateKey;
+    const pubKey = getPublicKeyFromPrivate(privateKey);
+
+    let serverUrl;
+    const tokenData = {
+        profile: userSession.loadUserData().profile, 
+        username: userSession.loadUserData().username, 
+        pubKey
+    }
+    const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
+
+    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
+    const headerObj = {
+        headers: {
+            'Access-Control-Allow-Origin': '*', 
+            'Content-Type': 'application/json', 
+            'Authorization': bearer
+        }, 
+    }
+    axios.delete(`${serverUrl}/account/organization/${proOrgInfo.orgId}/users/${data.id}?pubKey=${pubKey}`, headerObj)
+        .then(async (res) => {
+            console.log(res.data)
+            if(res.data.success === false) {
+                ToastsStore.error(res.data.message);
+            } else {
+                await handleProCheck();
+                ToastsStore.success(`User removed`);
+            }
+        }).catch((error) => {
+            console.log(error);
+            ToastsStore.error(`Trouble removing user`);
+        })
 }
