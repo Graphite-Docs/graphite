@@ -5,7 +5,8 @@ import ContactCardPro from './ContactCardPro';
 
 class MainContactCardContent extends Component {
   render() {
-      const { graphitePro, name, contact } = this.props;
+      const { name, contact } = this.props;
+      const { graphitePro } = this.global;
       return (
         <Segment>
         {graphitePro ? 

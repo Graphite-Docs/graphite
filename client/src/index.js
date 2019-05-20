@@ -276,7 +276,8 @@ setGlobal({
     selectedTeam: "", 
     settingsNav: "org", 
     teamKeys: {}, 
-    teamShare: false
+    teamShare: false, 
+    contactEditing: false
 })
 
 configure({

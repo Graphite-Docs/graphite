@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 class ContactCardFree extends Component {
   render() {
-      const { name, contact } = this.props;
+      const { contact } = this.props;
       return (
          <div className="contact-details">
             <Modal closeIcon size='small' trigger={<Button style={{float: "right"}}>Edit Contact Info</Button>}>
@@ -16,7 +16,7 @@ class ContactCardFree extends Component {
                     </Modal.Description>
                 </Modal.Content>
             </Modal>
-            <div className="line"><span className="label-item">Blockstack ID</span><div>{name ? name : "Not a Blockstack User"}</div></div>
+            <div className="line"><span className="label-item">Blockstack ID</span><div>{contact.id ? contact.id : contact.contact ? contact.contact : "Not a Blockstack User"}</div></div>
             <div className="line"><span className="label-item">Name</span><div>{contact.name ? contact.name :  "Anonymous"}</div></div>
             <div className="line"><span className="label-item">Email</span><div>{contact.emailAddress ? contact.emailAddress : ""}</div></div>
             <div className="line"><span className="label-item">Website</span><div>{contact.website ? contact.website : ""}</div></div>

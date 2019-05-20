@@ -1358,6 +1358,10 @@ div.markdown-editor__editor-container h2 {
 
 /* Contacts Page  */
 
+#mapid {
+  height: 600px;
+}
+
 @media screen and (max-width: 900px) {
   .col-25-left {
     float: none;
