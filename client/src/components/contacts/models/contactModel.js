@@ -15,6 +15,7 @@ export const ContactModel = (newContact) => {
         city: "",
         region: "",
         country: "",
+        phone: "",
         website: newContact.profile ? newContact.profile.website ? newContact.profile.website[0].url : "" : "",
         socialAccounts: newContact.profile ? newContact.profile.account ? newContact.profile.account : [] : [], 
         notes: []

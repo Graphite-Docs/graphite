@@ -32,6 +32,7 @@ class ContactCardPro extends Component {
       region: contact.region,
       country: contact.country,
       postalCode: contact.postalCode,
+      phone: contact.phone,
       dateAdded: contact.dateAdded,
       fileType: contact.fileType,
       notes: contact.notes,
@@ -61,17 +62,20 @@ class ContactCardPro extends Component {
       this.setState({ country: e.target.value });
     } else if(field === "postalCode") {
       this.setState({ postalCode: e.target.value });
+    } else if(field === "phone") {
+      this.setState({ phone: e.target.value });
     }
   }
   renderEdit() {
     const { contact } = this.props;
-    const { name, emailAddress, website, addressLine1, addressLine2, region, country, postalCode, city } = this.state;
+    const { name, emailAddress, phone, website, addressLine1, addressLine2, region, country, postalCode, city } = this.state;
     return (
        <div className="contact-details-pro">
           <Button onClick={() => saveContact(this.state)} style={{float: "right"}} secondary>Save Contact Info</Button> : 
           <div className="line"><span className="label-item">Blockstack ID</span><div style={{marginLeft: "10px"}}>{contact.id || contact.contact ? contact.id || contact.contact : "Not a Blockstack User"}</div></div>
           <div className="line"><span className="label-item">Name</span><div><Input onChange={(e) => this.handleChange(e, 'name')} type="text" value={name ? name :  "Anonymous"} /></div></div>
           <div className="line"><span className="label-item">Email</span><div><Input onChange={(e) => this.handleChange(e, 'email')} type="text" value={emailAddress ? emailAddress : ""} /></div></div>
+          <div className="line"><span className="label-item">Phone</span><div><Input onChange={(e) => this.handleChange(e, 'phone')} type="text" value={phone ? phone : ""} /></div></div>
           <div className="line"><span className="label-item">Website</span><div><Input onChange={(e) => this.handleChange(e, 'website')} type="text" value={website ? website : ""} /></div></div>
           <div className="line"><span className="label-item">Address Line 1</span><div><Input onChange={(e) => this.handleChange(e, 'addressLine1')} type="text" value={addressLine1 ? addressLine1 : ""} /></div></div>
           <div className="line"><span className="label-item">Address Line 2</span><div><Input onChange={(e) => this.handleChange(e, 'addressLine2')} type="text" value={addressLine2 ? addressLine2 : ""} /></div></div>
@@ -86,7 +90,7 @@ class ContactCardPro extends Component {
   renderStatic() {
     const { contact } = this.props;
     const { contactEditing } = this.global;
-      const { name, emailAddress, website, addressLine1, addressLine2, region, country, postalCode, city } = this.state;
+      const { name, emailAddress, phone, website, addressLine1, addressLine2, region, country, postalCode, city } = this.state;
       return (
          <div className="contact-details-pro">
             {
@@ -97,6 +101,7 @@ class ContactCardPro extends Component {
             <div className="line"><span className="label-item">Blockstack ID</span><div style={{marginLeft: "10px"}}>{contact.id || contact.contact ? contact.id || contact.contact : "Not a Blockstack User"}</div></div>
             <div className="line"><span className="label-item">Name</span><div>{name ? name :  "Anonymous"}</div></div>
             <div className="line"><span className="label-item">Email</span><div>{emailAddress ? emailAddress : ""}</div></div>
+            <div className="line"><span className="label-item">Phone</span><div>{phone ? phone : ""}</div></div>
             <div className="line"><span className="label-item">Website</span><div>{website ? website : ""}</div></div>
             <div className="line"><span className="label-item">Address Line 1</span><div>{addressLine1 ? addressLine1 : ""}</div></div>
             <div className="line"><span className="label-item">Address Line 2</span><div>{addressLine2 ? addressLine2 : ""}</div></div>

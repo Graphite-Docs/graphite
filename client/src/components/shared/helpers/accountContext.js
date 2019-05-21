@@ -29,9 +29,7 @@ export async function loadData(params) {
         fileName: "key.json", 
         decrypt: false
     }
-    // const formsParams = {
 
-    // }
     let key = await fetchData(keyParams);
     if(key) {
         //Nothing
@@ -59,6 +57,14 @@ export async function loadData(params) {
     }
     
     let files = await fetchData(filesParams);
+
+    const formsParams = {
+        fileName: "forms.json",
+        decrypt: true
+    }
+
+    let forms = await fetchData(formsParams);
+
     setGlobal({
         documents: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [], 
         filteredDocs: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
@@ -66,6 +72,8 @@ export async function loadData(params) {
         filteredContacts: JSON.parse(contacts) ? oldContactsFile === true ? JSON.parse(contacts).contacts : JSON.parse(contacts) : [],
         files: JSON.parse(files) || [],
         filteredFiles: JSON.parse(files) || [],
+        forms: JSON.parse(forms) || [],
+        filteredForms: JSON.parse(forms) || [],
         loading: false
     });
 

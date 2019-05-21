@@ -13,6 +13,7 @@ export const SingleContactModel = (newContact) => {
         city: "",
         region: "",
         country: "",
+        phone: "",
         notes: [], 
         socialAccounts: newContact.profile ? newContact.profile.accounts ? newContact.profile.accounts : [] : []
     }

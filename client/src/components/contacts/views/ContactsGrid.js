@@ -7,6 +7,18 @@ const cx = require('../helpers/contacts');
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 class ContactsGrid extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+          visible: false,
+          open: false,
+          contact: {},
+          run: false,
+          onboarding: false, 
+          activeItem: "List", 
+          mapView: false
+        }
+      }
 
   componentDidMount() {
     setGlobal({ filteredContacts: this.global.contacts });

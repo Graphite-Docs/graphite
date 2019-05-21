@@ -71,6 +71,7 @@ class App extends Component {
              <Route exact path='/contacts/:id' component={SingleContact} />
              <Route exact path="/forms" component={Forms} />
              <Route exact path='/forms/:id' component={SingleForm} />
+             <Route exact path='/forms/new/:id' component={SingleForm} />
              <Route exact path='/forms/results/:id' component={SingleFormResults} />
              <Route exact path='/settings' component={Settings} />
              <Route exact path='/trial' component={Trial} />

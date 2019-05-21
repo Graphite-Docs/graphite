@@ -38,6 +38,7 @@ setGlobal({
     tempDocId: "",
     redirect: false,
     loading: true,
+    formLoading: true,
     proLoading: true,
     migrationLength: 1,
     migrationCount: 0,
@@ -202,6 +203,8 @@ setGlobal({
     importAll: false,
     showInstallMessage: false,
     forms: [],
+    filteredForms: [],
+    formsPerPage: 10,
     singleForm: {},
     formContents: [],
     qIndex: 0,
@@ -277,7 +280,9 @@ setGlobal({
     settingsNav: "org", 
     teamKeys: {}, 
     teamShare: false, 
-    contactEditing: false
+    contactEditing: false, 
+    newNote: "", 
+    contactNotes: []
 })
 
 configure({

@@ -1449,6 +1449,27 @@ div.markdown-editor__editor-container h2 {
   padding: 30px;
 }
 
+.form-side {
+  background: #eee;
+  position: fixed;
+  left: 0;
+  top: 90px;
+  width: 22%;
+  height: 100%;
+  padding: 30px;
+}
+
+.form-main-container {
+  width: 70%;
+  position: relative;
+  left: 25%;
+}
+
+.form-card {
+  width: 100%!important;
+  padding: 15px!important;
+}
+
 .settings-main-container {
   width: 80%;
   position: relative;
