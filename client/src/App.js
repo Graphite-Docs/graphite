@@ -11,6 +11,7 @@ import PublicFile from './components/files/views/PublicFile';
 import SingleSharedFile from './components/files/views/SingleSharedFile';
 import Forms from './components/forms/views/Forms';
 import SingleForm from './components/forms/views/SingleForm';
+import PublicForm from './components/forms/views/PublicForm';
 import SingleFormResults from './components/forms/views/SingleFormResults';
 import Contacts from './components/contacts/views/Contacts';
 import SingleContact from './components/contacts/views/SingleContact';
@@ -72,6 +73,7 @@ class App extends Component {
              <Route exact path="/forms" component={Forms} />
              <Route exact path='/forms/:id' component={SingleForm} />
              <Route exact path='/forms/new/:id' component={SingleForm} />
+             <Route exact path='/public/forms/:id/:id' component={PublicForm} />
              <Route exact path='/forms/results/:id' component={SingleFormResults} />
              <Route exact path='/settings' component={Settings} />
              <Route exact path='/trial' component={Trial} />

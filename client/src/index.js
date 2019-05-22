@@ -282,7 +282,14 @@ setGlobal({
     teamShare: false, 
     contactEditing: false, 
     newNote: "", 
-    contactNotes: []
+    contactNotes: [], 
+    formTitleSaved: false,
+    formLinkModalOpen: false, 
+    formEmbedModalOpen: false, 
+    teamForms: [], 
+    formResponses: [],
+    submitted: false, 
+    embed: ""
 })
 
 configure({

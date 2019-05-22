@@ -82,6 +82,8 @@ export async function loadData(params) {
         await setGlobal({ teamDocs });
         const teamFiles = await fetchTeamFiles();
         await setGlobal({ teamFiles });
+        const teamForms = await fetchTeamForms();
+        await setGlobal({ teamForms });
     }
 }
 
@@ -211,6 +213,64 @@ export async function fetchTeamFiles() {
     }
 
     return teamFiles;
+}
+
+export async function fetchTeamForms() {
+    const { proOrgInfo, userSession } = getGlobal();
+    const orgId = proOrgInfo.orgId;
+    const teams = proOrgInfo.teams;
+    let myTeams = [];
+    let teamForms = [];
+    teams.map(team => {
+        if(team.users.some(user => user.username === userSession.loadUserData().username)) {
+            myTeams.push(team);
+        }
+        return myTeams;
+    });
+
+    const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
+    const data = {
+        profile: userSession.loadUserData().profile, 
+        username: userSession.loadUserData().username
+    }
+    const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+    const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
+    const headerObj = {
+        headers: {
+            'Access-Control-Allow-Origin': '*', 
+            'Content-Type': 'application/json', 
+            'Authorization': bearer
+        }, 
+    }
+
+    for(const team of myTeams) {
+        await axios.get(`${baseUrl}/account/organization/${orgId}/teams/${team.id}/forms?pubKey=${pubKey}`, headerObj)
+        .then(async (res) => {
+            if(res.data.data) {
+                const forms = res.data.data;
+                //Now we need to fetch the team key
+                const teamKeyParams = {
+                    fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
+                    decrypt: true,
+                }
+                const fetchedKeys = await fetchData(teamKeyParams);
+                
+                // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
+                asyncForEach(forms, (form) => {
+                    let thisForm = form;
+                    thisForm.currentHostBucket = userSession.decryptContent(thisForm.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
+                    thisForm.teamName = userSession.decryptContent(thisForm.teamName, {privateKey: JSON.parse(fetchedKeys).private});
+                    thisForm.title = userSession.decryptContent(thisForm.title, {privateKey: JSON.parse(fetchedKeys).private});
+                
+                    teamForms.push(thisForm);
+                })
+            } else {
+                console.log(`No team files found for team id ${team.id}`);
+            }
+        }).catch(err => console.log(err));
+    }
+
+    return teamForms;
 }
 
 async function asyncForEach(array, callback) {

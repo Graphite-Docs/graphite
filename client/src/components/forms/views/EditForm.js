@@ -61,7 +61,7 @@ class EditForm extends Component {
       }
 
       setGlobal({ singleForm });
-      this.setState({ questionModalOpen: false, questionType: 'single', questionText: "" });
+      this.setState({ questionModalOpen: false, questionType: 'single', questionText: "", questionOptions: [] });
       saveForm();
   }
 

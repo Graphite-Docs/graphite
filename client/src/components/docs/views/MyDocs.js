@@ -73,7 +73,7 @@ copyLink = () => {
 
                 return(
                 <Table.Row key={doc.id}>
-                    <Table.Cell><Link to={'/documents/' + doc.id}>{doc.title ? doc.title.length > 20 ? doc.title.substring(0,20)+"..." :  doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
+                    <Table.Cell><Link to={'/documents/' + doc.id}>{doc.title ? doc.title : "Untitled"} <span>{doc.singleDocIsPublic ? <Icon name='globe' /> : <Icon name='lock' />}</span></Link></Table.Cell>
                     <Table.Cell>{uniqueCollaborators === "" ? uniqueCollaborators : uniqueCollaborators.join(', ')} 
                     {uniqueCollaborators.length > 0 ? 
                     <Modal trigger={

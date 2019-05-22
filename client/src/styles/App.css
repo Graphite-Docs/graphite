@@ -568,7 +568,7 @@ code {
 	background-color: #fff;
 }
 
-.topmenu a {
+.topmenu a, .topmenu button {
   color: #fff!important;
 }
 
@@ -1468,6 +1468,13 @@ div.markdown-editor__editor-container h2 {
 .form-card {
   width: 100%!important;
   padding: 15px!important;
+}
+
+.public-form-card {
+  width: 85%!important;
+  margin: auto!important;
+  margin-top: 65px!important;
+  padding: 25px!important;
 }
 
 .settings-main-container {

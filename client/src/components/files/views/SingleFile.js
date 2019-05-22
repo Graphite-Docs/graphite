@@ -151,7 +151,7 @@ export default class SingleVaultFile extends Component {
                     <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
                     <Modal.Content>
                       <Modal.Description>
-                        <p>By sharing with your entire team, each teammate will have immediate access to the document and will be able to collaborate in real-time.</p>
+                        <p>By sharing with your entire team, each teammate will have immediate access to the file and will be able to make changes.</p>
                         <p>For reference, you can see your list of teammates by expanding each team below.</p>
                         <Item.Group divided>
                         {teamList.map(team => {

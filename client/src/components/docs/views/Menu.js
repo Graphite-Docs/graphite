@@ -83,7 +83,7 @@ export default class Menu extends Component {
               <div className="cm-e-menu">
                   <ul>
                       <li className="topmenu">
-                          <a href={linkHref}>file</a>
+                          <button className="link-button">File</button>
                           <ul className="submenu">
                               <li><a className='link-button' href={`${window.location.origin}/documents/new/${Date.now()}`} target='_blank' rel="noopener noreferrer">New Document</a></li>
                               {/*<li><a>Add tag</a></li>*/}
@@ -117,7 +117,7 @@ export default class Menu extends Component {
 
 
                       <li className="topmenu">
-                      <a href={linkHref}>Share</a>
+                      <button className="link-button">Share</button>
                       <ul className="submenu">
                           <li>
                             <Modal closeIcon style={{borderRadius: "0"}}
@@ -293,7 +293,7 @@ export default class Menu extends Component {
                       </ul>
                       </li>
                       <li className="topmenu">
-                          <a href={linkHref}>Info</a>
+                        <button className="link-button">Info</button>
                           <ul className="submenu">
                             <Modal closeIcon trigger={<li><a href={linkHref}>Shortcuts & Markdown Guide</a></li>}>
                             <Modal.Header>Shortcuts & Markdown Guide</Modal.Header>
