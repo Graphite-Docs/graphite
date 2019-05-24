@@ -31,7 +31,7 @@ class Responses extends Component {
                         {
                             resp.responses.map(response => {
                                 return(
-                                    <Table.Cell>{response.response}</Table.Cell>
+                                    <Table.Cell key={response.id}>{response.response}</Table.Cell>
                                 )
                             })
                         }

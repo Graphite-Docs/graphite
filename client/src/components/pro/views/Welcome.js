@@ -1,5 +1,5 @@
 import React, { Component, setGlobal } from 'reactn';
-import { Grid, Icon, Container, Button } from 'semantic-ui-react';
+import { Grid, Icon, Container, Button, Image } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
 import Nav from '../../shared/views/Nav';
 import welcomesteps from './welcomeSteps.json';
@@ -59,7 +59,8 @@ class Welcome extends Component {
             </Grid.Column>
             <Grid.Column className="center">
                 <Grid.Row>
-                <h3 className="center">{welcomesteps.steps.filter(a => a.id === welcomeStep)[0].text}</h3>
+                <Image src={welcomesteps.steps.filter(a => a.id === welcomeStep)[0].img} alt={welcomesteps.steps.filter(a => a.id === welcomeStep)[0].id} />
+                <p className="center margin-top-10">{welcomesteps.steps.filter(a => a.id === welcomeStep)[0].text}</p>
                 </Grid.Row>
             </Grid.Column>
             <Grid.Column className="center">
@@ -77,8 +78,8 @@ class Welcome extends Component {
                 <div className="center margin-top-100">
                     {
                         window.location.href.includes('settings') ?
-                        <Button onClick={this.handleDone} secondary>All Done!</Button> : 
-                        <Link to={'/settings'}><Button secondary>All Done!</Button></Link>
+                        <Button style={{marginBottom: "45px"}} onClick={this.handleDone} secondary>All Done!</Button> : 
+                        <Link to={'/settings'}><Button style={{marginBottom: "45px"}} secondary>All Done!</Button></Link>
                     }
                     
                 </div>

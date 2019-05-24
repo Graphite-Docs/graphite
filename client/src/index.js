@@ -278,7 +278,7 @@ setGlobal({
     newTeamName: "", 
     selectedTeam: "", 
     settingsNav: "org", 
-    teamKeys: {}, 
+    teamKeys: "", 
     teamShare: false, 
     contactEditing: false, 
     newNote: "", 
@@ -289,7 +289,8 @@ setGlobal({
     teamForms: [], 
     formResponses: [],
     submitted: false, 
-    embed: ""
+    embed: "", 
+    teamId: ""
 })
 
 configure({

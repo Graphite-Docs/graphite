@@ -1,10 +1,11 @@
-import React, { Component } from 'reactn';
-import { Container, Input, Grid, Button, Icon, Dropdown, Modal, Menu, Label, Sidebar } from 'semantic-ui-react';
+import React, { Component, setGlobal } from 'reactn';
+import { Container, Input, Grid, Button, Icon, Dropdown, Modal, Menu, Label, Sidebar, Item, Accordion } from 'semantic-ui-react';
 import Nav from '../../shared/views/Nav';
 import { Link } from 'react-router-dom';
 import FormsSkeleton from './FormsSkeleton';
 import MyForms from './MyForms';
 import TeamForms from './TeamForms';
+import { filterFormsList } from '../helpers/forms';
 const forms = require('../helpers/forms');
 const uuid = require('uuidv4');
 
@@ -17,12 +18,17 @@ class Forms extends Component {
       file: {},
       onboarding: false,
       run: false,
-      activeItem: "My Forms"
+      activeItem: "My Forms", 
+      activeIndex: 0
     }
   }
 
-  componentDidMount() {
-    
+  handleClick = (e, titleProps) => {
+    const { index } = titleProps
+    const { activeIndex } = this.state
+    const newIndex = activeIndex === index ? -1 : index
+
+    this.setState({ activeIndex: newIndex })
   }
 
   handleItemClick = (e, { name }) => this.setState({ activeItem: name })
@@ -37,10 +43,15 @@ class Forms extends Component {
     forms.dateFormsFilter(date, type)
   }
 
+  handleNewForm = (team) => {
+    localStorage.setItem('teamId', team.id)
+    setGlobal({teamId: team.id, teamName: team.name});
+  }
 
   render() {
-    const { loading, graphitePro, contacts, appliedFilter, currentPage, formsPerPage, filteredForms } = this.global;
-    const { visible, activeItem } = this.state;
+    const { proOrgInfo, teamForms, loading, graphitePro, contacts, appliedFilter, currentPage, formsPerPage, filteredForms } = this.global;
+    const { visible, activeItem, activeIndex } = this.state;
+    const teamList = proOrgInfo.teams;
     let forms;
     if (filteredForms.length > 0) {
       forms = filteredForms;
@@ -90,13 +101,61 @@ class Forms extends Component {
         <Grid stackable columns={2}>
           <Grid.Column>
             <h2>Forms ({currentForms.length})
-            <Link to={`/forms/new/${uuid()}`}><Button style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button></Link>
+            {
+              activeItem === "My Forms" ? 
+              <Link to={`/forms/new/${uuid()}`}><Button style={{borderRadius: "0", marginLeft: "10px"}} secondary>New</Button></Link> : 
+              <Modal 
+                  closeIcon 
+                  style={{borderRadius: "0"}}
+                  trigger={<Button style={{borderRadius: "0", marginLeft: "10px"}} secondary>New Team Form</Button>}
+                  >
+                  <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>New Team Form</Modal.Header>
+                  <Modal.Content>
+                    <Modal.Description>
+                      <p>Choose the team for which you will create this form.</p>
+                      <p>For reference, you can see your list of teammates by expanding each team below.</p>
+                      <Item.Group divided>
+                      {teamList.map(team => {
+                          return (
+                              <Item className="contact-search" key={team.id}>
+                              <Item.Content verticalAlign='middle'>
+                              <Accordion>
+                                <Accordion.Title active={activeIndex === team.id} index={team.id} onClick={this.handleClick}>
+                                  <Icon name='dropdown' />
+                                  {`${team.name} (${team.users.length} members)`}
+                                </Accordion.Title>
+                                <Accordion.Content active={activeIndex === team.id}>
+                                  {
+                                    team.users.map(user => {
+                                      return (
+                                        <p key={user.username}>
+                                          {user.username}
+                                        </p>
+                                      )
+                                    })
+                                  }
+                                </Accordion.Content>
+                              </Accordion>
+                              <br/>
+                              <Link to={`/team/${team.id}/forms/new/${uuid()}`}><Button style={{float: "right", borderRadius: "0px"}} secondary onClick={() => this.handleNewForm(team)}>Create Form</Button></Link>
+                              </Item.Content>
+                              </Item>
+                              )
+                            }
+                          )
+                      }
+                      </Item.Group>
+                    </Modal.Description>
+                  </Modal.Content>
+                </Modal>
+              }
+            
               {appliedFilter === false ? <span className="filter"><button className='link-button' onClick={() => this.setState({visible: true})} style={{fontSize:"16px", marginLeft: "10px", cursor: "pointer", color: "#4183c4"}}>Filter<Icon name='caret down' /></button></span> : <span className="hide"><button className='link-button'>Filter</button></span>}
               {appliedFilter === true ? <span className="filter"><Label style={{fontSize:"16px", marginLeft: "10px"}} as='a' basic color='grey' onClick={forms.clearFormFilter}>Clear</Label></span> : <div />}
             </h2>
           </Grid.Column>
           <Grid.Column>
-            <Input onChange={forms.filterFormsList} icon='search' placeholder='Search...' />
+            <Input onChange={filterFormsList} icon='search' placeholder='Search...' />
           </Grid.Column>
         </Grid>
 
@@ -167,7 +226,14 @@ class Forms extends Component {
           </Menu>
           </div>
           { activeItem === "Team Forms" ? 
-            <TeamForms /> : 
+            <TeamForms 
+              teamForms={teamForms}
+              indexOfFirstForm={indexOfFirstForm}
+              indexOfLastForm={indexOfLastForm}
+              contacts={contacts}
+              pageNumbers={pageNumbers}
+              renderPageNumbers={renderPageNumbers}
+            /> : 
             <MyForms 
               currentForms={currentForms}
               indexOfFirstForm={indexOfFirstForm}

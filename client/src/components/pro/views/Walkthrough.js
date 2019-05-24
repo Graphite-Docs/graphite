@@ -1,21 +1,28 @@
 import React, { Component } from 'reactn';
 import Welcome from './Welcome';
 import Trial from './Trial';
+import SettingsSkeleton from './SettingsSkeleton';
 
 class Walkthrough extends Component {
 
   render() {
-      const { graphitePro } = this.global;
-      if(graphitePro) {
-        return (
-            <div>
-             <Welcome />
-            </div>
-           );
-      } else {
+      const { graphitePro, loading } = this.global;
+      if(loading) {
           return (
-              <Trial />
+              <SettingsSkeleton />
           )
+      } else {
+        if(graphitePro) {
+            return (
+                <div>
+                 <Welcome />
+                </div>
+               );
+          } else {
+              return (
+                  <Trial />
+              )
+          }
       }
   }
 }

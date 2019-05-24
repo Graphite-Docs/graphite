@@ -61,7 +61,7 @@ class EditForm extends Component {
       }
 
       setGlobal({ singleForm });
-      this.setState({ questionModalOpen: false, questionType: 'single', questionText: "", questionOptions: [] });
+      this.setState({ questionModalOpen: false, questionType: 'single', questionText: "", questionOptions: [], questionRequired: false });
       saveForm();
   }
 
@@ -334,7 +334,7 @@ class EditForm extends Component {
                                         {
                                             question.options.map(opt => {
                                                 return (
-                                                    <Form.Field label={opt.optionText} control='input' type='radio' name={opt.id} />
+                                                    <Form.Field key={opt.id} label={opt.optionText} control='input' type='radio' name={opt.id} />
                                                 );
                                             })
                                         }

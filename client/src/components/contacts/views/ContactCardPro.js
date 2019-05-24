@@ -15,6 +15,7 @@ class ContactCardPro extends Component {
       region: "",
       country: "",
       postalCode: "", 
+      phone: "",
       image: ""
     }
   }

@@ -83,7 +83,7 @@ export async function loadData(params) {
         const teamFiles = await fetchTeamFiles();
         await setGlobal({ teamFiles });
         const teamForms = await fetchTeamForms();
-        await setGlobal({ teamForms });
+        await setGlobal({ teamForms: teamForms || [] });
     }
 }
 
@@ -258,7 +258,7 @@ export async function fetchTeamForms() {
                 // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
                 asyncForEach(forms, (form) => {
                     let thisForm = form;
-                    thisForm.currentHostBucket = userSession.decryptContent(thisForm.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
+                    //thisForm.currentHostBucket = thisForm.currentHostBucket;//userSession.decryptContent(thisForm.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
                     thisForm.teamName = userSession.decryptContent(thisForm.teamName, {privateKey: JSON.parse(fetchedKeys).private});
                     thisForm.title = userSession.decryptContent(thisForm.title, {privateKey: JSON.parse(fetchedKeys).private});
                 

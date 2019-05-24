@@ -19,7 +19,21 @@ class SingleForm extends Component {
   }
 
   componentDidMount() {
-    const id = window.location.href.includes('new') ? window.location.href.split('new/')[1] : window.location.href.split('forms/')[1];
+    let id;
+    if(window.location.href.includes('team')) {
+      if(window.location.href.includes('new')) {
+        id = window.location.href.split('new/')[1];
+      } else {
+        id = window.location.href.split('forms/')[1];
+      }
+    } else {
+      if(window.location.href.includes('new')) {
+        id = window.location.href.split('new/')[1];
+      } else {
+        id = window.location.href.split('forms/')[1];
+      }
+    }
+    
     loadForm(id);
   }
 
@@ -56,7 +70,7 @@ class SingleForm extends Component {
   }
 
   render() {
-      const { graphitePro, proOrgInfo, singleForm, embed, teamListModalOpen, teamShare, formLoading, formLinkModalOpen, formEmbedModalOpen } = this.global;
+      const { userSession, graphitePro, proOrgInfo, singleForm, embed, teamListModalOpen, teamShare, formLoading, formLinkModalOpen, formEmbedModalOpen } = this.global;
       const { activeItem, activeIndex } = this.state;
       const teamList = proOrgInfo.teams;
       if(formLoading === true) {
@@ -165,7 +179,11 @@ class SingleForm extends Component {
                       <Modal.Description>
                         <h3>Link to Form</h3>
                         <p>Use this link to direct respondents to your form.</p>
-                        <Input style={{width: "90%"}} readOnly id="copyLink" value={`${window.location.origin}/public/forms/${proOrgInfo.orgId}/${singleForm.id}`} />
+                        {
+                          singleForm.teamForm ? 
+                          <Input style={{width: "90%"}} readOnly id="copyLink" value={`${window.location.origin}/public/forms/${proOrgInfo.orgId}/${singleForm.id}`} /> : 
+                          <Input style={{width: "90%"}} readOnly id="copyLink" value={`${window.location.origin}/single/forms/${proOrgInfo.orgId}/${singleForm.id}/${userSession.loadUserData().username}`} />                          
+                        }
                         <p className="margin-top-10"><Button onClick={this.copyLink} secondary>Copy Link</Button><Icon onClick={this.copyLink} style={{cursor: "pointer", marginLeft: "10px"}} name="copy" /></p>
                       </Modal.Description>
                     </Modal.Content>

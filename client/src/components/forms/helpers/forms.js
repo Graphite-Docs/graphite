@@ -50,7 +50,7 @@ export async function handleDeleteFormItem(form) {
 export function filterFormsList(event){
     var updatedList = getGlobal().forms;
     updatedList = updatedList.filter(function(item){
-      return item.name.toLowerCase().search(
+      return item.title.toLowerCase().search(
         event.target.value.toLowerCase()) !== -1;
     });
     setGlobal({filteredForms: updatedList});
@@ -80,7 +80,7 @@ export function applyFormsFilter() {
     } 
   }
 
-  export function clearFormsFilter() {
+  export function clearFormFilter() {
     setGlobal({ appliedFilter: false, filteredForms: getGlobal().forms });
   }
 
@@ -102,4 +102,8 @@ export function applyFormsFilter() {
 
   export function setFormsPages(e) {
     setGlobal({ formsPerPage: e.target.value });
+  }
+
+  export function deleteTeamForm(form) {
+    console.log(form);
   }

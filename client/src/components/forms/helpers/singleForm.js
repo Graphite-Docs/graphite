@@ -8,19 +8,24 @@ import update from 'immutability-helper';
 import axios from 'axios';
 const environment = window.location.origin;
 const blockstack = require('blockstack');
-const uuid = require('uuidv4');
 var timer = null;
 
 export async function loadForm(id) {
-    const { userSession, proOrgInfo } = getGlobal();
+    let fetchedKeys;
+    const { userSession } = getGlobal();
+    let teamForm = window.location.href.includes('team') ? true : false;
     setGlobal({ formLoading: true });
-    const formParams = {
-        fileName: `forms/${id}.json`, 
-        decrypt: true
-    }
-    const form = await fetchData(formParams);
-    if(JSON.parse(form)) {
-        await setGlobal({ singleForm: JSON.parse(form), formLoading: false});
+    if(teamForm) {
+        const teamId = window.location.href.split('team/')[1].split('/')[0];
+        //Need to load the team form info first, then we can figure out which bucket to load from.
+        //Fetch teamKeys
+        const teamKeyParams = {
+            fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${teamId}/key.json`,
+            decrypt: true,
+        }
+        fetchedKeys = await fetchData(teamKeyParams);
+        
+        setGlobal({ teamKeys: fetchedKeys });
         const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
         const data = {
             profile: userSession.loadUserData().profile, 
@@ -35,36 +40,160 @@ export async function loadForm(id) {
                 'Authorization': bearer
             }, 
         }
-        axios.get(`${baseUrl}/public/organization/${proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
+
+        axios.get(`${baseUrl}/public/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
             .then(async (res) => {
-                console.log(res);
+                
                 if(res.data.data) {
-                    setGlobal({ formResponses: res.data.data});
-                    // //Now we need to fetch the team key
-                    // const teamKeyParams = {
-                    //     fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
-                    //     decrypt: true,
-                    // }
-                    // const fetchedKeys = await fetchData(teamKeyParams);
+                    const host = res.data.data.currentHostBucket;
+                    const options = { username: host, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+                    let params = {
+                        fileName: `forms/${id}.json`, 
+                        options
+                    }
+                
+                    let teamForm = await fetchData(params);
+                    let decryptedForm = JSON.parse(userSession.decryptContent(teamForm, {privateKey: JSON.parse(fetchedKeys).private}));
+                    
+                    await setGlobal({ singleForm: decryptedForm, formLoading: false });
+                    //finally we need to fetch the responses
+                    axios.get(`${baseUrl}/account/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
+                        .then(async (res) => {
+                            console.log(res);
+                            if(res.data.data) {
+                                setGlobal({ formResponses: res.data.data});
+                                // //Now we need to fetch the team key
+                                // const teamKeyParams = {
+                                //     fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
+                                //     decrypt: true,
+                                // }
+                                // const fetchedKeys = await fetchData(teamKeyParams);
+                            } else {
+                                console.log(`No form responses found for form id ${id}`);
+                            }
+                        }).catch(err => console.log(err));
                 } else {
-                    console.log(`No form responses found for form id ${id}`);
+                    console.log(`creating form`);
+                    postNewForm(id, fetchedKeys);
                 }
             }).catch(err => console.log(err));
     } else {
-        if(window.location.href.includes('new')) {
-            setGlobal({ formLoading: false });
-            //Need to create the form since it doesn't exist yet
-            const formObject = {
-                id: uuid(),
-                tags: [],
-                title: "Untitled",
-                created: getMonthDayYear(),
-                lastUpdated: Date.now(),
-                questions: [], 
-                teamForm: false, 
-                teams: []
+        const formParams = {
+            fileName: `forms/${id}.json`, 
+            decrypt: true
+        }
+        const form = await fetchData(formParams);
+        if(JSON.parse(form)) {
+            await setGlobal({ singleForm: JSON.parse(form), formLoading: false});
+            
+            if(teamForm) {
+                const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
+                const data = {
+                    profile: userSession.loadUserData().profile, 
+                    username: userSession.loadUserData().username
+                }
+                const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+                const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
+                const headerObj = {
+                    headers: {
+                        'Access-Control-Allow-Origin': '*', 
+                        'Content-Type': 'application/json', 
+                        'Authorization': bearer
+                    }, 
+                }
+                axios.get(`${baseUrl}/public/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
+                    .then(async (res) => {
+                        console.log(res);
+                        if(res.data.data) {
+                            setGlobal({ formResponses: res.data.data});
+                            // //Now we need to fetch the team key
+                            // const teamKeyParams = {
+                            //     fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
+                            //     decrypt: true,
+                            // }
+                            // const fetchedKeys = await fetchData(teamKeyParams);
+                        } else {
+                            console.log(`No form responses found for form id ${id}`);
+                        }
+                    }).catch(err => console.log(err));
+            } else {
+                const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
+                const data = {
+                    profile: userSession.loadUserData().profile, 
+                    username: userSession.loadUserData().username
+                }
+                const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
+                const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
+                const headerObj = {
+                    headers: {
+                        'Access-Control-Allow-Origin': '*', 
+                        'Content-Type': 'application/json', 
+                        'Authorization': bearer
+                    }, 
+                }
+                axios.get(`${baseUrl}/public/forms/${id}/user/${userSession.loadUserData().username}?pubKey=${pubKey}`, headerObj)
+                .then(async (res) => {
+                    if(res.data.data) {
+                        setGlobal({ formResponses: res.data.data});
+                        // //Now we need to fetch the team key
+                        // const teamKeyParams = {
+                        //     fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
+                        //     decrypt: true,
+                        // }
+                        // const fetchedKeys = await fetchData(teamKeyParams);
+                    } else {
+                        console.log(`No form responses found for form id ${id}`);
+                    }
+                }).catch(err => console.log(err));
             }
-            setGlobal({ singleForm: formObject });
+        } else {
+            postNewForm(id, getGlobal().teamKeys);
+        }
+    }
+}
+
+export async function postNewForm(id, fetchedKeys) {
+    console.log(fetchedKeys);
+
+    let teamForm = window.location.href.includes('team') ? true : false;
+    const { userSession } = getGlobal();
+    if(window.location.href.includes('new')) {
+        let teamName = getGlobal().teamName;
+        const teamId = window.location.href.split('team/')[1].split('/')[0];
+        
+        setGlobal({ formLoading: false });
+        //Need to create the form since it doesn't exist yet
+        const formObject = {
+            id: id,
+            tags: [],
+            title: "Untitled",
+            created: getMonthDayYear(),
+            lastUpdated: Date.now(),
+            questions: [], 
+            teamForm: teamForm ? true : false,
+            teamName: teamForm ? getGlobal().teamName : "",
+            teamId: teamForm ? getGlobal().teamId : "",
+            teams: []
+        }
+        setGlobal({ singleForm: formObject });
+        if(teamForm) {
+            //Don't add to index
+            const encryptedFormObject = userSession.encryptContent(JSON.stringify(formObject), {publicKey: JSON.parse(fetchedKeys).public})
+            const newFormParams = {
+                fileName: `forms/${formObject.id}.json`, 
+                encrypt: false, 
+                body: encryptedFormObject
+            }
+            const newForm = await postData(newFormParams);
+            console.log(newForm);
+            const data = {
+                fromSave: true, 
+                teamId: teamId, 
+                teamName: teamName, 
+                initialShare: true
+            }
+            shareWithTeam(data);
+        } else {
             const newFormParams = {
                 fileName: `forms/${formObject.id}.json`, 
                 encrypt: true, 
@@ -82,14 +211,16 @@ export async function loadForm(id) {
             }
             const newIndex = await postData(newFormIndex);
             console.log(newIndex);
-        } else {
-            console.log("Error loading form");
-            setGlobal({ singleForm: {}, formLoading: false })
         }
+    } else {
+        console.log("Error loading form");
+        setGlobal({ singleForm: {}, formLoading: false })
     }
 }
 
 export async function saveForm(teamShare) {
+    const { userSession } = getGlobal();
+    const teamForm = window.location.href.includes('team') ? true : false;
     let singleForm = getGlobal().singleForm;
     const formObject = {
         id: singleForm.id,
@@ -99,58 +230,54 @@ export async function saveForm(teamShare) {
         lastUpdated: Date.now(),
         questions: singleForm.questions, 
         teamForm: singleForm.teamForm, 
-        teams: singleForm.teams
+        teams: singleForm.teams, 
+        teamName: singleForm.teamName || "",
+        teamId: singleForm.teamId || ""
     }
     setGlobal({ singleForm: formObject });
-    const newFormParams = {
-        fileName: `forms/${formObject.id}.json`, 
-        encrypt: true, 
-        body: JSON.stringify(formObject)
-    }
-    const newForm = await postData(newFormParams);
-    console.log(newForm);
-    let forms = getGlobal().forms;
-    let index = await forms.map((x) => {return x.id }).indexOf(formObject.id);
-    if(index > -1) {
-        const updatedForms = update(getGlobal().forms, {$splice: [[index, 1, formObject]]});
-        await setGlobal({forms: updatedForms, filteredForms: updatedForms });
-        const newFormIndex = {
-            fileName: 'forms.json',
-            encrypt: true,
-            body: JSON.stringify(getGlobal().forms)
+    let newFormParams;
+    if(teamForm) {
+        const encryptedTeamForm = userSession.encryptContent(JSON.stringify(formObject), {publicKey: JSON.parse(getGlobal().teamKeys).public})
+        newFormParams = {
+            fileName: `forms/${formObject.id}.json`, 
+            encrypt: false, 
+            body: encryptedTeamForm
         }
-        const newIndex = await postData(newFormIndex);
-        console.log(newIndex);
-        ToastsStore.success(`Form saved`);
-        if(window.location.href.includes('team')) {
-            if (teamShare === false) {
-                
-            } else {
-                const data = {
-                    fromSave: true, 
-                    teamName: "", //Will need to think through how best to pass this through
-                    teamId: window.location.href.split('team/')[1].split('/')[0]
-                  }
-                  shareWithTeam(data);
-            }
-          } else if(singleForm.teams) {
-              if(teamShare === false) {
-
-              } else {
-                for (const team of singleForm.teams) {
-                    const data = {
-                      fromSave: true, 
-                      teamId: team, 
-                      teamName: team.teamName
-                    }
-                    shareWithTeam(data);
-                  }
-              }
+        const data = {
+            fromSave: true, 
+            teamName: singleForm.teamName,
+            teamId: singleForm.teamId
           }
+          shareWithTeam(data);
     } else {
-        console.log("Error form index");
-        ToastsStore.error(`Trouble saving form`);
+        newFormParams = {
+            fileName: `forms/${formObject.id}.json`, 
+            encrypt: true, 
+            body: JSON.stringify(formObject)
+        }
+        let forms = getGlobal().forms;
+        let index = await forms.map((x) => {return x.id }).indexOf(formObject.id);
+        if(index > -1) {
+            const updatedForms = update(getGlobal().forms, {$splice: [[index, 1, formObject]]});
+            await setGlobal({forms: updatedForms, filteredForms: updatedForms });
+            const newFormIndex = {
+                fileName: 'forms.json',
+                encrypt: true,
+                body: JSON.stringify(getGlobal().forms)
+            }
+            const newIndex = await postData(newFormIndex);
+            console.log(newIndex);
+            ToastsStore.success(`Form saved`);
+        } else {
+            console.log("Error form index");
+            ToastsStore.error(`Trouble saving form`);
+        }
     }
+
+    const newForm = await postData(newFormParams);
+    
+    ToastsStore.success(`Form saved`);
+    console.log(newForm);
 }
 
 export async function deleteQuestion(question) {
@@ -186,6 +313,7 @@ export function handleFormTitle(e) {
 export async function publicForm(type) {
     let singleForm = getGlobal().singleForm;
     let proOrgInfo = getGlobal().proOrgInfo;
+    let userSession = getGlobal().userSession;
 
     const formObject = {
         id: singleForm.id,
@@ -216,7 +344,12 @@ export async function publicForm(type) {
     if(type === 'link') {
         setGlobal({ formLinkModalOpen: true })
     } else {
-        setGlobal({ formEmbedModalOpen: true, embed: `<iframe \nsrc=${window.location.origin}/public/forms/${proOrgInfo.orgId}/${singleForm.id}" \ntitle=${singleForm.title} \nstyle="position: absolute; height: 100%; max-width: 100%; margin: auto; border: none">\n</iframe>` });
+        let singleForm = getGlobal().singleForm;
+        if(singleForm.teamForm) {
+            setGlobal({ formEmbedModalOpen: true, embed: `<iframe \nsrc="${window.location.origin}/public/forms/${proOrgInfo.orgId}/${singleForm.id}" \ntitle="${singleForm.title}" \nstyle="position: absolute; height: 100%; max-width: 100%; margin: auto; border: none">\n</iframe>` });
+        } else {
+            setGlobal({ formEmbedModalOpen: true, embed: `<iframe \nsrc="${window.location.origin}/single/forms/${proOrgInfo.orgId}/${singleForm.id}/${userSession.loadUserData().username}" \ntitle="${singleForm.title}" \nstyle="position: absolute; height: 100%; max-width: 100%; margin: auto; border: none">\n</iframe>` });
+        }
     }
 }
 
@@ -299,13 +432,13 @@ export async function shareWithTeam(data) {
               } else {
                 setGlobal({ teamShare: false, teamListModalOpen: false });
                 if(data.initialShare === true) {
-                  ToastsStore.success(`Form shared with team: ${data.teamName}`);
+                  ToastsStore.success(`Team form created for team: ${data.teamName}`);
                 }
               }
           }).catch((error) => {
               console.log(error);
               if(data.initialShare === true) {
-                ToastsStore.error(`Trouble sharing form`);
+                ToastsStore.error(`Trouble creating form`);
               }
           })
   }

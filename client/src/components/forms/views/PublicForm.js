@@ -3,6 +3,7 @@ import { Container, Card, Form, Button } from 'semantic-ui-react';
 import PublicFormSkel from './PublicFormSkel';
 import { loadPublicForm, postForm } from '../helpers/publicForm';
 import { ToastsStore} from 'react-toasts';
+let allowSubmit = true;
 
 class PublicForm extends Component {
   constructor(props) {
@@ -34,6 +35,7 @@ class PublicForm extends Component {
   }
 
   handleSubmit = () => {
+      allowSubmit = true;
       const { publicForm } = this.global;
       const questions = publicForm.questions;
       let responses = [];
@@ -75,24 +77,30 @@ class PublicForm extends Component {
             }
           }
         if(questionObj.response) {
-            this.setState({ allowSubmit: true });
             responses.push(questionObj);
         } else {
             if(question.required) {
+                allowSubmit = false;
                 ToastsStore.error(`Please answer all required questions`);
             } else {
-                this.setState({ allowSubmit: true });
                 responses.push(questionObj);
             }
-        }   
+        }
+        // if(question.required && !questionObj.response) {
+        //     allowSubmit = false;
+        // } 
       }
-      if(this.state.allowSubmit) {
+      if(allowSubmit) {
+        this.setState({ submitting: true });
         postForm(responses);
       }
+
+      console.log(allowSubmit);
   }
 
   render() {
       const { loading, submitted, publicForm } = this.global;
+      const { submitting } = this.state;
       if(loading) {
         return(
             <PublicFormSkel />
@@ -165,7 +173,7 @@ class PublicForm extends Component {
                                         )
                                     })
                                 }
-                                <Button onClick={this.handleSubmit} type='submit'>Submit</Button>
+                                <Button onClick={this.handleSubmit} type='submit'>{submitting ? "Submitting..." : "Submit"}</Button>
                             </Form>
                         </Card>
                     </Container>

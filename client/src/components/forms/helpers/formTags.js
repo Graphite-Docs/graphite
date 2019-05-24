@@ -12,12 +12,12 @@ export function setFormsTags(e) {
 export function checkKey(event) {
     if(event.key === "Enter") {
         if(getGlobal().tag !== "") {
-            addFormsTagManual();
+            addFormTagManual();
         }
     }
 }
 
-export function addFormsTagManual() {
+export function addFormTagManual() {
     let tags = getGlobal().tags;
     setGlobal({ tags: [...tags, getGlobal().tag]}, () => {
     setGlobal({ tag: "" });
