@@ -24,7 +24,7 @@ export async function loadForm(id) {
             decrypt: true,
         }
         fetchedKeys = await fetchData(teamKeyParams);
-        
+        console.log(fetchedKeys);
         setGlobal({ teamKeys: fetchedKeys });
         const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
         const data = {
@@ -158,8 +158,11 @@ export async function postNewForm(id, fetchedKeys) {
     let teamForm = window.location.href.includes('team') ? true : false;
     const { userSession } = getGlobal();
     if(window.location.href.includes('new')) {
+        let teamId;
         let teamName = getGlobal().teamName;
-        const teamId = window.location.href.split('team/')[1].split('/')[0];
+        if(teamForm) {
+            teamId = window.location.href.split('team/')[1].split('/')[0];
+        }
         
         setGlobal({ formLoading: false });
         //Need to create the form since it doesn't exist yet

@@ -52,7 +52,7 @@ export default class Nav extends Component {
               <Dropdown.Item><Link to={'/documents'}><Icon name='file alternate outline'/>Documents</Link></Dropdown.Item>
               <Dropdown.Item><Link to={'/files'}><Icon name='file image outline' />Files</Link></Dropdown.Item>
               <Dropdown.Item><Link to={'/contacts'}><Icon name='address book outline' />Contacts</Link></Dropdown.Item>
-              <Dropdown.Item><Link to={'/forms'}><Icon name='wpforms' />Forms</Link></Dropdown.Item>
+              { graphitePro ? <Dropdown.Item><Link to={'/forms'}><Icon name='wpforms' />Forms</Link></Dropdown.Item> : <div className="hide" />}
             </Dropdown.Menu>
           </Dropdown>
           <Dropdown trigger={trigger} icon={null} className="app-switcher">
