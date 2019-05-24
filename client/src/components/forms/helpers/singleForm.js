@@ -314,6 +314,7 @@ export function handleFormTitle(e) {
 }
 
 export async function publicForm(type) {
+    const teamForm = window.location.href.includes('team') ? true : false;
     let singleForm = getGlobal().singleForm;
     let proOrgInfo = getGlobal().proOrgInfo;
     let userSession = getGlobal().userSession;
@@ -336,14 +337,17 @@ export async function publicForm(type) {
     }
     const newPublicForm = await postData(newFormParams);
     console.log(newPublicForm);
-    if(singleForm.teams.length > 0) {
-        for(const team of singleForm.teams) {
-            const teamInfo = {
-                teamId: team
-            }
-            shareWithTeam(teamInfo)
+    if(teamForm) {
+        const teamId = window.location.href.split('team/')[1].split('/')[0];
+        const teams = proOrgInfo.teams;
+        const thisTeam = teams.filter(a => a.id === teamId)[0];
+        const teamInfo = {
+            teamId: teamId,
+            teamName: thisTeam.name
         }
+        shareWithTeam(teamInfo);
     }
+   
     if(type === 'link') {
         setGlobal({ formLinkModalOpen: true })
     } else {
