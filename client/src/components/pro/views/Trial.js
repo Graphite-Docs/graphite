@@ -1,6 +1,6 @@
 import React, { Component, setGlobal } from 'reactn';
 import Nav from '../../shared/views/Nav';
-import { Container, Button, Modal, Form, Divider, Grid, Image, Card} from 'semantic-ui-react';
+import { Container, Button, Modal, Form, Divider, Grid, Image} from 'semantic-ui-react';
 import files from '../../../assets/images/files_and_folder.svg';
 import security from '../../../assets/images/security.svg';
 import teamWork from '../../../assets/images/group_presentation.svg';
@@ -104,46 +104,61 @@ class Trial extends Component {
                             <Grid columns={2} stackable>
                                 <Grid.Column>
                                     <Grid.Row>
-                                        <Card className="pricing-card center">
+                                        <div className="pricing-card center">
                                             <div>
-                                                <Container>
+                                                
                                                     <h3>Pro Plan</h3>
-                                                    <h2 style={{color: "#2185d0"}}>$99/month - up to 5 users</h2>
+                                                    <h2 style={{color: "#2185d0"}}>$99USD/month - up to 15 users</h2>
                                                     <ul className="feature-list">
-                                                        <li>$1 per user per month after 5</li>
-                                                        <li>Email support</li>
-                                                        <li>Your data hosted on your server</li>
-                                                        <li>Audit logs</li>
-                                                        <li>Team management and collaboration</li>
+                                                        <li>Up to 15 users*</li>
+                                                        <li>Team management</li>
                                                         <li>Roles and permissions</li>
+                                                        <li>Access controls</li>
+                                                        <li>Audits (soon)</li>
+                                                        <li>Desktop apps (soon)</li>
+                                                        <li>Unique encryption keys per team</li>
+                                                        <li>Option of partner hosting or self hosting of data**</li>
+                                                        <li>SLA (Service Level Agreement):</li>
+                                                        <ul>
+                                                            <li>Designate one contact in your organization that can reach out for support</li>
+                                                            <li>Email support Monday through Friday 8am - 5pm Central Time</li>
+                                                            <li>Response time within 3 hours</li>
+                                                        </ul>
                                                     </ul>
-                                                </Container>
+                                               
                                             </div>
-                                        </Card>
+                                        </div>
                                     </Grid.Row>
                                 </Grid.Column>
                                 <Grid.Column>
                                     <Grid.Row>
-                                        <Card className="pricing-card">
+                                        <div className="pricing-card">
                                             <div>
-                                                <Container>
-                                                    <h3>Custom Enterprise Plan</h3>
-                                                    <h2 style={{color: "#2185d0"}}>Pricing varies based on needs</h2>
+                                                
+                                                    <h3>Advanced Plan</h3>
+                                                    <h2 style={{color: "#2185d0"}}>Starts at $199USD/month</h2>
                                                     <ul className="feature-list">
                                                         <li>All of the Pro Plan feature plus</li>
-                                                        <li>Phone support</li>
-                                                        <li>Storage hub customization</li>
-                                                        <li>Custom deployment of your storage hub server</li>
-                                                        <li>Key management service</li>
-                                                        <li>Additional customizations per your request</li>
+                                                        <li>Live on-boarding support</li>
+                                                        <li>Storage hub customization (custom contract)</li>
+                                                        <li>Custom deployment of your storage hub server (custom contract)</li>
+                                                        <li>Key management service (custom contract)</li>
+                                                        <li>SLA (Service Level Agreement):</li>
+                                                        <ul>
+                                                            <li>Designate five contacts in your organization that can reach out for support</li>
+                                                            <li>Phone support Monday through Friday 9am - 5pm Central Time</li>
+                                                            <li>Email support Monday through Friday 8am - 5pm Central Time</li>
+                                                            <li>Response time within 1 hours</li>
+                                                        </ul>
                                                     </ul>
-                                                </Container>
+                                                
                                             </div>
-                                        </Card>
+                                        </div>
                                     </Grid.Row>
                                 </Grid.Column>
                             </Grid>
-                            
+                            <span>* Users are classified as people in your organization with an Admin or Manager role. User role users are not counted.</span> <br/>
+                            <span>** Partner hosting means storing your data on a storage hub that's already been deployed for you. This option can reduce storage costs but comes with privacy and ownership trade-offs. If you self-host a storage hub, you must deploy it yourself or pay for a custom agreement to have Graphite deploy it.</span>
                             <Image src={dataCenter} className="trial-image" />
                             <h3>It's your organization's data. It should live where you want it to live, and it should be encrypted with keys owned by you.</h3>
                         </div>
