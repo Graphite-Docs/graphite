@@ -71,7 +71,7 @@ export async function startTrial() {
                 const postedKey = await postData(teamKeyParams);
                 console.log(postedKey);
 
-                setGlobal({ welcome: true });
+                setGlobal({ welcome: true, graphitePro: true });
             }
         }).catch((error) => {
             console.log(error)
