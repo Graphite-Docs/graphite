@@ -19,6 +19,7 @@ class SingleForm extends Component {
   }
 
   componentDidMount() {
+    setGlobal({ formResponses: [] });
     let id;
     if(window.location.href.includes('team')) {
       if(window.location.href.includes('new')) {

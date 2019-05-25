@@ -5,6 +5,7 @@ import { ToastsStore} from 'react-toasts';
 import { fetchData } from '../../shared/helpers/fetch';
 const uuid = require('uuidv4');
 const environment = window.location.origin;
+const blockstack = require('blockstack');
 let host;
 
 export async function loadPublicForm() {
@@ -43,14 +44,35 @@ export async function loadFromHost(host) {
     } else {
         formId = window.location.href.split('forms/')[1].split('/')[1];
     }
-    const options = { username: host, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
-    let params = {
-        fileName: `public/forms/${formId}.json`, 
-        options
-    }
-    let fetchedForm = await fetchData(params);
-    console.log(fetchedForm);
-    setGlobal({ publicForm: JSON.parse(fetchedForm), loading: false  });
+    // const options = { username: host, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    // let params = {
+    //     fileName: `public/forms/${formId}.json`, 
+    //     options
+    // }
+    // let fetchedForm = await fetchData(params);
+    // console.log(fetchedForm);
+    // setGlobal({ publicForm: JSON.parse(fetchedForm), loading: false  });
+    blockstack.lookupProfile(host, "https://core.blockstack.org/v1/names")
+    .then((profile) => {
+      setGlobal({ url: profile.apps[window.location.origin]}, () => {
+        axios.get(`${getGlobal().url}public/forms/${formId}.json`)
+        .then((response) => {
+            console.log(response.data);
+            if(Object.keys(response.data).length > 0) {
+                setGlobal({ publicForm: response.data, loading: false  });
+            } else {
+
+            }
+        })
+        .catch((error) => {
+            console.log('error:', error);
+        });
+      })
+    })
+    .catch((error) => {
+        console.log(error);
+      console.log('could not resolve profile')
+})
 }
 
 export async function postForm(responses) {
