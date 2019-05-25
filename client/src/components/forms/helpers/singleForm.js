@@ -176,7 +176,8 @@ export async function postNewForm(id, fetchedKeys) {
             teamForm: teamForm ? true : false,
             teamName: teamForm ? getGlobal().teamName : "",
             teamId: teamForm ? getGlobal().teamId : "",
-            teams: []
+            teams: [], 
+            responses: []
         }
         setGlobal({ singleForm: formObject });
         if(teamForm) {
@@ -236,9 +237,10 @@ export async function saveForm(teamShare) {
         teamForm: singleForm.teamForm, 
         teams: singleForm.teams, 
         teamName: singleForm.teamName || "",
-        teamId: singleForm.teamId || ""
+        teamId: singleForm.teamId || "", 
+        responses: singleForm.responses || []
     }
-    setGlobal({ singleForm: formObject });
+    await setGlobal({ singleForm: formObject });
     let newFormParams;
     if(teamForm) {
         const encryptedTeamForm = userSession.encryptContent(JSON.stringify(formObject), {publicKey: JSON.parse(getGlobal().teamKeys).public});
@@ -374,20 +376,20 @@ export async function shareWithTeam(data) {
     } else {
       setGlobal({ teamShare: true });
     }
-    const { userSession, proOrgInfo, singleForm } = getGlobal();
+    const { userSession, proOrgInfo } = getGlobal();
     //First we need to fetch the teamKey
     const teamKeyParams = {
       fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${data.teamId}/key.json`,
       decrypt: true
     }
     const fetchedKeys = await fetchData(teamKeyParams);
-  
+    let singleForm = getGlobal().singleForm;
     const form = {
       id: singleForm.id,
       team: data.teamId, 
       orgId: proOrgInfo.orgId,
       title: singleForm.title,
-      responses: data.responses,
+      responses: singleForm.responses || getGlobal().formResponses,
       currentHostBucket: userSession.loadUserData().username
     }
     const encryptedTeamForm = userSession.encryptContent(JSON.stringify(form), {publicKey: JSON.parse(fetchedKeys).public})
@@ -420,7 +422,7 @@ export async function shareWithTeam(data) {
       teamId: data.teamId,
       lastUpdated: getMonthDayYear(),
       timestamp: Date.now(), 
-      responses: getGlobal().formResponses,
+      responses: singleForm.responses || getGlobal().formResponses,
       currentHostBucket: userSession.loadUserData().username,
       pubKey: getPublicKeyFromPrivate(privateKey)
     }
