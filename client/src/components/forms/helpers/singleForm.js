@@ -223,6 +223,7 @@ export async function postNewForm(id, fetchedKeys) {
 
 export async function saveForm(teamShare) {
     const { userSession } = getGlobal();
+    const proOrgInfo = getGlobal().proOrgInfo;
     const teamForm = window.location.href.includes('team') ? true : false;
     let singleForm = getGlobal().singleForm;
     const formObject = {
@@ -240,7 +241,11 @@ export async function saveForm(teamShare) {
     setGlobal({ singleForm: formObject });
     let newFormParams;
     if(teamForm) {
-        const encryptedTeamForm = userSession.encryptContent(JSON.stringify(formObject), {publicKey: JSON.parse(getGlobal().teamKeys).public})
+        const encryptedTeamForm = userSession.encryptContent(JSON.stringify(formObject), {publicKey: JSON.parse(getGlobal().teamKeys).public});
+        const teamId = window.location.href.split('team/')[1].split('/')[0];
+        const teams = proOrgInfo.teams;
+        const thisTeam = teams.filter(a => a.id === teamId)[0];
+
         newFormParams = {
             fileName: `forms/${formObject.id}.json`, 
             encrypt: false, 
@@ -248,8 +253,8 @@ export async function saveForm(teamShare) {
         }
         const data = {
             fromSave: true, 
-            teamName: singleForm.teamName,
-            teamId: singleForm.teamId
+            teamName: thisTeam.name,
+            teamId: teamId
           }
           shareWithTeam(data);
     } else {
@@ -327,8 +332,10 @@ export async function publicForm(type) {
         lastUpdated: Date.now(),
         questions: singleForm.questions, 
         teamForm: singleForm.teamForm,
-        teams: singleForm.teams
+        teams: singleForm.teams, 
+        responses: getGlobal().formResponses
     }
+    console.log(formObject);
     setGlobal({ singleForm: formObject });
     const newFormParams = {
         fileName: `public/forms/${formObject.id}.json`, 
@@ -361,6 +368,7 @@ export async function publicForm(type) {
 }
 
 export async function shareWithTeam(data) {
+    console.log(data);
     if(data.fromSave) {
       //Nothing
     } else {
@@ -379,6 +387,7 @@ export async function shareWithTeam(data) {
       team: data.teamId, 
       orgId: proOrgInfo.orgId,
       title: singleForm.title,
+      responses: data.responses,
       currentHostBucket: userSession.loadUserData().username
     }
     const encryptedTeamForm = userSession.encryptContent(JSON.stringify(form), {publicKey: JSON.parse(fetchedKeys).public})
@@ -411,6 +420,7 @@ export async function shareWithTeam(data) {
       teamId: data.teamId,
       lastUpdated: getMonthDayYear(),
       timestamp: Date.now(), 
+      responses: getGlobal().formResponses,
       currentHostBucket: userSession.loadUserData().username,
       pubKey: getPublicKeyFromPrivate(privateKey)
     }

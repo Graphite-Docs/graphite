@@ -112,6 +112,8 @@ class App extends Component {
                 <Route exact path="/shared/docs/:id" component={PublicDoc} />
                 <Route exact path='/pro/api' component={ApiDocs} />
                 <Route exact path="/public/files/:id/:id" component={PublicFile} />
+                <Route exact path='/public/forms/:id/:id' component={PublicForm} />
+                <Route exact path='/single/forms/:id/:id/:id' component={PublicForm} />
               </div>
             </BrowserRouter>
           </div>

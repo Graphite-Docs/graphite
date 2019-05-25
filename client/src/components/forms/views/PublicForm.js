@@ -13,6 +13,7 @@ class PublicForm extends Component {
       };
   }
   componentDidMount() {
+      document.body.style.background = "#eee";
     loadPublicForm();
   }
 
@@ -93,7 +94,7 @@ class PublicForm extends Component {
       if(allowSubmit) {
         this.setState({ submitting: true });
         postForm(responses);
-      }
+      } 
 
       console.log(allowSubmit);
   }
@@ -146,6 +147,7 @@ class PublicForm extends Component {
                                                             question.options.map(opt => {
                                                                 return (
                                                                     <Form.Field 
+                                                                        key={opt.id}
                                                                         label={opt.optionText}
                                                                         className={question.id}
                                                                         value={opt.optionText}
@@ -163,7 +165,7 @@ class PublicForm extends Component {
                                                         {
                                                             question.options.map(opt => {
                                                                 return (
-                                                                    <Form.Field className={question.id} onChange={(e) => this.handleChange(e, 'checkbox')} name={opt.id} label={opt.optionText} control='input' checked={this.state[opt.id]} type='checkbox' />
+                                                                    <Form.Field key={opt.id} className={question.id} onChange={(e) => this.handleChange(e, 'checkbox')} name={opt.id} label={opt.optionText} control='input' checked={this.state[opt.id]} type='checkbox' />
                                                                 );
                                                             })
                                                         }

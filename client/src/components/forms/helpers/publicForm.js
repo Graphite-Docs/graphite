@@ -2,15 +2,15 @@ import axios from 'axios';
 import {setGlobal, getGlobal} from 'reactn';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { ToastsStore} from 'react-toasts';
-const blockstack = require('blockstack');
+import { fetchData } from '../../shared/helpers/fetch';
 const uuid = require('uuidv4');
 const environment = window.location.origin;
 let host;
 
 export async function loadPublicForm() {
+    console.log("loading...")
     if(window.location.href.includes('single')) {
-        console.log("uuuuuhhhh what?")
-        const host = window.location.href.split('forms/')[1].split('/')[2];
+        host = window.location.href.split('forms/')[1].split('/')[2];
         loadFromHost(host);
     } else {
         const formId = window.location.href.split('forms/')[1].split('/')[1];
@@ -43,27 +43,14 @@ export async function loadFromHost(host) {
     } else {
         formId = window.location.href.split('forms/')[1].split('/')[1];
     }
-    blockstack.lookupProfile(host, "https://core.blockstack.org/v1/names")
-    .then((profile) => {
-      setGlobal({ url: profile.apps[window.location.origin]}, () => {
-        axios.get(`${getGlobal().url}public/forms/${formId}.json`)
-        .then((response) => {
-            console.log(response.data);
-            if(Object.keys(response.data).length > 0) {
-                setGlobal({ publicForm: response.data, loading: false  });
-            } else {
-                //
-            }
-        })
-        .catch((error) => {
-            console.log('error:', error);
-        });
-      })
-    })
-    .catch((error) => {
-        console.log(error);
-      console.log('could not resolve profile')
-    })
+    const options = { username: host, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
+    let params = {
+        fileName: `public/forms/${formId}.json`, 
+        options
+    }
+    let fetchedForm = await fetchData(params);
+    console.log(fetchedForm);
+    setGlobal({ publicForm: JSON.parse(fetchedForm), loading: false  });
 }
 
 export async function postForm(responses) {
