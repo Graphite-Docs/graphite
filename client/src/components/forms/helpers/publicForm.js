@@ -8,13 +8,13 @@ const blockstack = require('blockstack');
 let host;
 
 export async function loadPublicForm() {
-    console.log("loading...")
+    //console.log("loading...")
     if(window.location.href.includes('single')) {
-        console.log("single form");
+        //console.log("single form");
         host = window.location.href.split('forms/')[1].split('/')[2];
         loadFromHost(host);
     } else {
-        console.log("team form");
+        //console.log("team form");
         const formId = window.location.href.split('forms/')[1].split('/')[1];
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
         const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
@@ -24,8 +24,8 @@ export async function loadPublicForm() {
                 'Content-Type': 'application/json'
             }, 
         }
-        console.log(formId);
-        console.log(`${baseUrl}/public/organization/${orgId}/forms/${formId}`);
+        //console.log(formId);
+        //console.log(`${baseUrl}/public/organization/${orgId}/forms/${formId}`);
         axios.get(`${baseUrl}/public/organization/${orgId}/forms/${formId}`, headerObj)
             .then(async (res) => {
                 console.log(res);
@@ -41,7 +41,7 @@ export async function loadPublicForm() {
 }
 
 export async function loadFromHost(host) {
-    console.log(host);
+    //console.log(host);
     let formId;
     if(window.location.href.includes('single')) {
         formId = window.location.href.split('forms/')[1].split('/')[1];
@@ -58,11 +58,11 @@ export async function loadFromHost(host) {
     // setGlobal({ publicForm: JSON.parse(fetchedForm), loading: false  });
     blockstack.lookupProfile(host, "https://core.blockstack.org/v1/names")
     .then((profile) => {
-        console.log(profile);
-        console.log(profile.apps[window.location.origin]);
+        //console.log(profile);
+        //console.log(profile.apps[window.location.origin]);
         axios.get(`${profile.apps[window.location.origin]}public/forms/${formId}.json`)
         .then((response) => {
-            console.log(response);
+            //console.log(response);
             if(Object.keys(response.data).length > 0) {
                 setGlobal({ publicForm: response.data, loading: false  });
             } else {
