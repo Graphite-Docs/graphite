@@ -1,5 +1,6 @@
 import React, { Component, setGlobal } from 'reactn';
 import { Container, Grid, Icon, Table, Modal, Button, Input, Radio, Popup } from 'semantic-ui-react';
+import RoleTable from './RoleTable';
 const team = require('../../helpers/team');
 const invites = require('../../helpers/invites');
 
@@ -74,7 +75,7 @@ class SelectedTeam extends Component {
                                                 <Modal.Content >
                                                 <Modal.Description>
                                                     <h3>What can each user role do?</h3>
-                                                    <p>Role Table Here</p>
+                                                    <RoleTable />
                                                 </Modal.Description>
                                                 </Modal.Content>
                                             </Modal>
