@@ -2,7 +2,6 @@ import axios from 'axios';
 import {setGlobal, getGlobal} from 'reactn';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { ToastsStore} from 'react-toasts';
-import { fetchData } from '../../shared/helpers/fetch';
 const uuid = require('uuidv4');
 const environment = window.location.origin;
 const blockstack = require('blockstack');
@@ -11,9 +10,11 @@ let host;
 export async function loadPublicForm() {
     console.log("loading...")
     if(window.location.href.includes('single')) {
+        console.log("single form");
         host = window.location.href.split('forms/')[1].split('/')[2];
         loadFromHost(host);
     } else {
+        console.log("team form");
         const formId = window.location.href.split('forms/')[1].split('/')[1];
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
         const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
@@ -24,8 +25,10 @@ export async function loadPublicForm() {
             }, 
         }
         console.log(formId);
+        console.log(`${baseUrl}/public/organization/${orgId}/forms/${formId}`);
         axios.get(`${baseUrl}/public/organization/${orgId}/forms/${formId}`, headerObj)
             .then(async (res) => {
+                console.log(res);
                 if(res.data.data) {
                     console.log(res.data.data);
                     host = res.data.data.currentHostBucket;
@@ -38,6 +41,7 @@ export async function loadPublicForm() {
 }
 
 export async function loadFromHost(host) {
+    console.log(host);
     let formId;
     if(window.location.href.includes('single')) {
         formId = window.location.href.split('forms/')[1].split('/')[1];
@@ -54,20 +58,20 @@ export async function loadFromHost(host) {
     // setGlobal({ publicForm: JSON.parse(fetchedForm), loading: false  });
     blockstack.lookupProfile(host, "https://core.blockstack.org/v1/names")
     .then((profile) => {
-      setGlobal({ url: profile.apps[window.location.origin]}, () => {
-        axios.get(`${getGlobal().url}public/forms/${formId}.json`)
+        console.log(profile);
+        console.log(profile.apps[window.location.origin]);
+        axios.get(`${profile.apps[window.location.origin]}public/forms/${formId}.json`)
         .then((response) => {
-            console.log(response.data);
+            console.log(response);
             if(Object.keys(response.data).length > 0) {
                 setGlobal({ publicForm: response.data, loading: false  });
             } else {
-
+                console.log("error")
             }
         })
         .catch((error) => {
             console.log('error:', error);
         });
-      })
     })
     .catch((error) => {
         console.log(error);
