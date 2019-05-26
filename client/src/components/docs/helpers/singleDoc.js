@@ -61,10 +61,10 @@ export async function saveDoc(updates) {
     let index = await docs.map((x) => {return x.id }).indexOf(filePath);
     let docObject = await documentModel();
     if(index < 0 && window.location.href.includes("new")) {
-      await setGlobal({ documents: [...getGlobal().documents, docObject]});
+      await setGlobal({ documents: [...getGlobal().documents, docObject], filteredDocs: [...getGlobal().documents, docObject]});
     } else if(index > -1) {
       const updatedDocs = update(getGlobal().documents, {$splice: [[index, 1, docObject]]});
-      await setGlobal({documents: updatedDocs});
+      await setGlobal({documents: updatedDocs, filteredDocs: updatedDocs});
     } else {
       console.log("Error doc index")
       console.log("Checking if this is a shared doc...")
