@@ -3,7 +3,7 @@ import {
   Person,
 } from 'blockstack';
 import { Link } from 'react-router-dom';
-import logoSquare from '../../../assets/images/graphite-mark.svg';
+import logoSquare from '../../../assets/images/whiteMark.svg';
 import { Menu, Image, Icon, Dropdown } from 'semantic-ui-react'
 import { signOut } from '..//helpers/auth';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
@@ -44,7 +44,7 @@ export default class Nav extends Component {
       return (
         <Menu className='header-menu' style={{ borderRadius: "0", background: "#000", border: "none" }}>
           <Menu.Item>
-            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px", marginLeft: "10px" }} /></Link>
+            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px", marginLeft: "10px", padding: "5px" }} /></Link>
           </Menu.Item>
           <Menu.Item position="right">
           <Dropdown icon='th' className="app-switcher" style={{ color: "#fff", marginRight: "15px" }}>
