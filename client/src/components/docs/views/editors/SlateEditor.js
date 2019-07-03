@@ -17,7 +17,6 @@ import {
   Grid
 } from "semantic-ui-react";
 import { Header as SemanticHeader } from "semantic-ui-react";
-import Toolbar from "./Toolbar";
 import initialTimeline from "./initialTimeline.json";
 const single = require("../../helpers/singleDoc");
 const tline = require("../../helpers/timelineHandlers");
@@ -902,34 +901,7 @@ class SlateEditor extends React.Component {
         window.location.href.includes("shared") ? (
           <div className="hide" />
         ) : (
-          <Toolbar
-            onClickMark={this.onClickMark}
-            onClickBlock={this.onClickBlock}
-            onFontColorClick={this.onFontColorClick}
-            onInsertTable={this.onInsertTable}
-            onInsertCol={this.onInsertCol}
-            onInsertRow={this.onInsertRow}
-            onRemoveCol={this.onRemoveCol}
-            onRemoveRow={this.onRemoveRow}
-            onRemoveTable={this.onRemoveTable}
-            onClickLink={this.onClickLink}
-            onClickColor={this.onClickColor}
-            onClickHighlight={this.onClickHighlight}
-            modalOpen={this.state.modalOpen}
-            modalTwoOpen={this.state.modalTwoOpen}
-            modalController={this.modalController}
-            hasLinks={this.hasLinks}
-            onClickAlign={this.onClickAlign}
-            onClickImage={this.onClickImage}
-            onImageUpload={this.onImageUpload}
-            onClickEmbed={this.onClickEmbed}
-            onClickEmoji={this.onClickEmoji}
-            onClickRedo={this.onClickRedo}
-            onClickUndo={this.onClickUndo}
-            isTable={isTable}
-            files={this.global.files}
-            timelineEmbedded={timelineEmbedded}
-          />
+          <div/>
         )}
         {this.global.showCollab ? (
           <div className="authorship">

@@ -89,7 +89,7 @@ export async function saveDoc(updates) {
       const object = {};
       object.title = getGlobal().title;
       if (singleDoc.readOnly) {
-        object.content = document.getElementsByClassName("editor")[0].innerHTML;
+        object.content = document.getElementById("editor-section").innerHTML;
       } else {
         let content = getGlobal().content;
         object.content = content.toJSON();
@@ -97,7 +97,7 @@ export async function saveDoc(updates) {
       object.readOnly = singleDoc.readOnly;
       object.words = wordCount(
         document
-          .getElementsByClassName("editor")[0]
+          .getElementById("editor-section")
           .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
       );
       object.shared = getMonthDayYear();
