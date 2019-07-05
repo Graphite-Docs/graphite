@@ -23,7 +23,7 @@ export function sharePublicly(params) {
       setGlobal({ readOnly: true }, async () => {
         const object = {
           title: getGlobal().title,
-          content: document.getElementsByClassName("editor")[0].innerHTML, 
+          content: document.getElementById("editor-section").innerHTML, 
           readOnly: true,
           words: wordCount(
             document
@@ -49,17 +49,12 @@ export function sharePublicly(params) {
       const object = {};
       object.title = getGlobal().title;
       if (getGlobal().readOnly) {
-        object.content = document.getElementsByClassName("editor")[0].innerHTML;
+        object.content = document.getElementById("editor-section").innerHTML;
       } else {
         let content = getGlobal().content;
         object.content = content.toJSON();
       }
       object.readOnly = getGlobal().readOnly;
-      object.words = wordCount(
-        document
-          .getElementsByClassName("editor")[0]
-          .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
-      );
       object.shared = getMonthDayYear();
       object.singleDocIsPublic = true;
       singleDoc["singleDocIsPublic"] = true;

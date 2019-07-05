@@ -18,6 +18,7 @@ import initialValue from './initialValue.json';
 import Dimmer from './Dimmer';
 import Outline from './Outline';
 import WordModal from './WordModal';
+import SharePublic from './SharePublic';
 import CommentReview from './CommentReview';
 import PageSettings from './PageSettings';
 import bold from './assets/icons/bold.svg';
@@ -165,21 +166,49 @@ style = (type) => {
   }
 }
 
-handleChange = (editor) => {
+handleChange = (change) => {
+  const { singleDoc, readOnly } = this.global;
   if(initialLoad) {
     //Do nothing besides set initial load to false
     initialLoad = false;
   } else {
     if (window.location.href.includes("shared/docs")) {
-      handlePubChange(editor);
+      handlePubChange(change);
     } else {
-      onChange(editor)
+      onChange(change)
     }
+  }
+  
+  if(!this.remote) {
+    let realTime = false;
+    if(singleDoc.readOnly === false) {
+      realTime = true;
+    } else if(singleDoc.rtc) {
+      realTime = true;
+    } else if(singleDoc.teamDoc === true) {
+      realTime = true;
+    } else if(window.location.href.includes('team')) {
+      realTime = true;
+    } else if(readOnly !== true) {
+      realTime = true;
+    }
+    if (realTime === true) {
+      this.props.onChange(change)
+    }
+  } else {
+    this.remote = false;
   }
 }
 
+applyOperations = operations => {
+  this.remote = true;
+  if (operations) {
+    operations.forEach(o => this.editor.applyOperation(o));
+  }
+};
+
   render() {
-    const { content } = this.global;
+    const { content, collabContent } = this.global;
     const { editor } = this;
     //Checking to see if the editor exists and if there is a table and if the user has clicked into the table
     if(editor) {
@@ -193,6 +222,7 @@ handleChange = (editor) => {
     }
     return (
     <div>
+        
         <TableModal 
           setTable={this.setTable}
         />
@@ -238,6 +268,7 @@ handleChange = (editor) => {
               </div>
             </div>
             <Dimmer />
+            <SharePublic />
             <Outline />
             <WordModal />
             <CommentReview />
@@ -251,7 +282,7 @@ handleChange = (editor) => {
                 onClickUndo={this.onClickUndo}
                 onDrop={handleImageDrop} 
                 onDragOver={handleDragOver} 
-                value={content ? content : Value.fromJSON(initialValue)} 
+                value={collabContent ? collabContent : content ? content : Value.fromJSON(initialValue)} 
                 onChange={this.handleChange} 
                 onKeyDown={onKeyDown}
                 renderMark={renderMark}

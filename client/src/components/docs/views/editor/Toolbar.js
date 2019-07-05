@@ -319,13 +319,13 @@ export default class Toolbar extends React.Component {
                 </li>
             </ul>
         </div>
-        <div className="modal" style={{display: "none"}} id='link-modal'>
+        <div className="custom-modal" style={{display: "none"}} id='link-modal'>
             <div>
                 <input id="link-input" type="text" placeholder="https://graphitedocs.com" />
             </div>
         </div>
 
-        <div className="modal" style={{display: "none"}} id='comment-modal'>
+        <div className="custom-modal" style={{display: "none"}} id='comment-modal'>
             <div>
                 <textarea id="comment-input" placeholder="Your comment"></textarea>
                 <button onClick={this.handleComment} className="save-button">Add Comment</button><button onClick={this.closeModals} className="cancel-button">Cancel</button>

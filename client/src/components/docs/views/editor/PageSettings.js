@@ -38,7 +38,7 @@ export default class PageSettings extends React.Component {
   render() {
     const { document, orientation, marginBottom, marginLeft, marginRight, marginTop } = this.global;
     return (
-    <div style={{display: "none"}} id="page-settings" className="modal">
+    <div style={{display: "none"}} id="page-settings" className="custom-modal">
         <h2 onClick={this.handleClose}>X</h2>
         <h3>Page Settings</h3>
         <ul>

@@ -3,7 +3,7 @@ import React from 'reactn';
 
 export default class Dimmer extends React.Component {
   handleDimmerClick = () => {
-      let modals = document.getElementsByClassName('modal');
+      let modals = document.getElementsByClassName('custom-modal');
       for (const modal of modals) {
           modal.style.display = "none";
       }

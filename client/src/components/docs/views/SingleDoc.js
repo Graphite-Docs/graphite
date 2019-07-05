@@ -1,11 +1,6 @@
 import React, { Component, setGlobal } from 'reactn';
-import { Image, Icon, Input, List } from 'semantic-ui-react';
-import { Link } from 'react-router-dom';
-import {Menu as MainMenu} from 'semantic-ui-react';
-import Menu from './Menu';
-import SocketEditor from './editors/SocketEditor';
-import SlateEditor from "./editors/SlateEditor";
-import Editor from './editor/Editor';
+import SocketEditor from './editor/SocketEditor';
+import SlateEditor from './editor/Editor';
 import EditorSkeleton from './editor/EditorSkeleton';
 const single = require('../helpers/singleDoc');
 
@@ -28,7 +23,7 @@ class SingleDoc extends Component {
   }
   
   render() {
-    const { loading, avatars, save, autoSave, title, singleDocIsPublic, singleDoc} = this.global;
+    const { loading, singleDoc} = this.global;
     let realTime = false;
     if(singleDoc.readOnly === false) {
       realTime = true;
@@ -39,7 +34,7 @@ class SingleDoc extends Component {
     } else if(window.location.href.includes('team')) {
       realTime = true;
     }
-    
+
     if(loading) {
         return (
           <EditorSkeleton />
@@ -47,7 +42,11 @@ class SingleDoc extends Component {
       } else {
         return (
           <div>  
-            <Editor />
+            {
+              realTime === true ? 
+              <SocketEditor /> : 
+              <SlateEditor />
+            }
          </div>
       );
       }

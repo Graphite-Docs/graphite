@@ -21,10 +21,10 @@ const STARTING_NODE = 'page-view';
 let enterPress = 0;
 var timer = null;
 
-export function onChange(editor) {
-  const { value } = editor;
-  
+export function onChange(change) {
+  const { value } = change;
   setGlobal({ 
+    autoSave: "Saving...",
     content: value 
   });
   let updates = {
@@ -32,9 +32,9 @@ export function onChange(editor) {
   }
   clearTimeout(timer); 
   timer = setTimeout(() => saveDoc(updates), 3000);
-  
+
   if(!hasBlock('page-view')) {
-    if(editor) {
+    if(change) {
       //clickBlock(editor, 'page-view');
     }
   }

@@ -35,7 +35,6 @@ export async function handleChange(change) {
 }
 
 export async function saveDoc(updates) {
-    setGlobal({ autoSave: "Saving" })
     let singleDoc = await singleDocModel(updates);
     setGlobal({ singleDoc: singleDoc });
 
@@ -83,7 +82,7 @@ export async function saveDoc(updates) {
     const updatedIndex = await postData(indexParams);
     console.log(updatedIndex);
     loadData({refresh: false});
-    setGlobal({ autoSave: "Saved" });
+    setGlobal({ autoSave: "All changed saved" });
 
     if(singleDoc.singleDocIsPublic) {
       const object = {};

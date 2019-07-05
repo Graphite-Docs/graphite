@@ -2,14 +2,35 @@ import React, { setGlobal } from 'reactn';
 import { exportAsWord, exportAsRTF, exportAsTXT, exportAsPDF } from '../../helpers/exportHelpers';
 import { handlePageSettings, lineHeight } from '../../helpers/settings';
 import Countable from 'countable';
+import { Modal, Button, Item, Accordion, Icon } from 'semantic-ui-react';
+const share = require('../../helpers/shareDoc');
+const single = require('../../helpers/singleDoc');
+const docCol = require('../../helpers/docsCollectionShare');
 
 export default class MenuBar extends React.Component {
 
   constructor(props) {
       super(props);
       this.state = {
-          menuSelection: "file"
+          menuSelection: "file", 
+          activeIndex: 0, 
+          modalOpen: false, 
       }
+  }
+
+  shareDoc = (params) => {
+    docCol.sharedInfo(params)
+    this.setState({modalOpen: false})
+  }
+
+  handleClose = () => this.setState({ versionModal: false });
+
+  handleClick = (e, titleProps) => {
+    const { index } = titleProps
+    const { activeIndex } = this.state
+    const newIndex = activeIndex === index ? -1 : index
+
+    this.setState({ activeIndex: newIndex })
   }
 
   handleSelection = async (menuSelection) => {
@@ -32,7 +53,11 @@ export default class MenuBar extends React.Component {
       } else if(menuSelection === "tools") {
         await this.setState({ menuSelection })
         document.getElementById('tools-drop').style.display = "inline-block";
+      } else if(menuSelection === 'share') {
+        await this.setState({ menuSelection })
+        document.getElementById('share-drop').style.display = "inline-block";
       }
+
       if(document.getElementById('table-drop')) {
         document.getElementById('table-drop').style.display = "none";
       }
@@ -96,7 +121,16 @@ export default class MenuBar extends React.Component {
   }
 
   render() {
-    const { menuSelection } = this.state;
+    const { activeIndex, menuSelection } = this.state;
+    const { contacts, userSession, singleDoc, graphitePro, proOrgInfo, teamListModalOpen, teamShare } = this.global;
+    let linkHref = '';
+    let docId;
+    if(window.location.href.includes("new")) {
+        docId = window.location.href.split("new/")[1];
+    } else {
+        docId = singleDoc.id;
+    }
+    const teamList = proOrgInfo ? proOrgInfo.teams ? proOrgInfo.teams : [] : [];
     return (
     <div className="menu-bar no-print" >
         <ul>
@@ -186,6 +220,135 @@ export default class MenuBar extends React.Component {
                     <div className="hide" />
                 }
             </li>
+            {
+                userSession.isUserSignedIn() ? 
+                <li><span onClick={() => this.handleSelection('share')}>Share</span>
+                {
+                    menuSelection === "share" ? 
+                    <div style={{display: "none"}} id="share-drop" className="dropdown menu-drops">
+                        <ul className="dropdown-menu-content">
+                            <li>
+                            <Modal closeIcon style={{borderRadius: "0"}}
+                              trigger={<button className='link-button'>Public Link</button>}>
+                              <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Publicly</Modal.Header>
+                              <Modal.Content>
+                                <Modal.Description>
+                                  <p>This data is not encrypted and can be accessed by anyone with the link that will be generated.</p>
+                                  {
+                                    singleDoc.singleDocIsPublic === true ?
+                                    <div>
+                                      <p style={{marginBottom: "15px"}}>This document is already being shared publicly.</p>
+
+                                      <Button style={{ borderRadius: "0" }} onClick={share.toggleReadOnly} color="green">{singleDoc.readOnly === true ? "Make Editable" : "Make Read-Only"}</Button>
+                                      <Button style={{ borderRadius: "0" }} onClick={share.stopSharing} color="red">Stop Sharing Publicly</Button>
+                                      <p style={{marginTop: "15px", marginBottom: "15px"}}>
+                                        {singleDoc.readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
+                                      </p>
+                                      <div>
+                                        <p><a href={`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}>{`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}</a></p>
+                                      </div>
+                                    </div>
+                                    :
+                                    <Button style={{ borderRadius: "0" }} secondary onClick={share.sharePublicly}>Share Publicly</Button>
+                                  }
+
+                                </Modal.Description>
+                              </Modal.Content>
+                            </Modal>
+
+                            </li>
+                            <li>
+                            <Modal
+                                closeIcon
+                                style={{borderRadius: "0"}}
+                                trigger={<button style={{textAlign: "left"}} className='link-button' onClick={() => this.setState({ modalOpen: true})}>Share With Contact</button>}
+                                open={this.state.modalOpen}
+                                closeOnEscape={true}
+                                closeOnDimmerClick={true}
+                                onClose={() => this.setState({ modalOpen: false})}
+                                >
+                                <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share Document</Modal.Header>
+                                <Modal.Content>
+                                    <Modal.Description>
+                                    <Item.Group divided>
+                                    <h4>Your Contacts</h4>
+                                    {contacts.slice(0).reverse().map(contact => {
+                                        return (
+                                        <Item className="contact-search" key={contact.contact || contact.id}>
+                                            <Item.Image size='tiny' src={contact.img || contact.image} />
+                                            <Item.Content verticalAlign='middle'>{contact.contact || contact.id} <br/> <Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: true })} color='green' style={{borderRadius: "0"}}>Share</Button><Button onClick={() => this.shareDoc({contact: contact, doc: singleDoc, realTime: false })} color='blue' style={{borderRadius: "0"}}>Share Read-Only</Button></Item.Content>
+                                        </Item>
+                                        )
+                                    })
+                                    }
+                                    </Item.Group>
+                                    </Modal.Description>
+                                </Modal.Content>
+                                </Modal>
+                            </li>
+                            {
+                                graphitePro ? 
+                                <li>
+                                    <Modal 
+                                        open={teamListModalOpen}
+                                        onClose={() => setGlobal({ teamListModalOpen: false})}
+                                        closeIcon style={{borderRadius: "0"}}
+                                        trigger={<button style={{textAlign: "left"}} onClick={() => setGlobal({ teamListModalOpen: true})} className='link-button'>Share With Team</button>}
+                                        >
+                                        <Modal.Header style={{fontFamily: "Muli, san-serif", fontWeight: "200"}}>Share With Team</Modal.Header>
+                                        <Modal.Content>
+                                            <Modal.Description>
+                                            <p>By sharing with your entire team, each teammate will have immediate access to the document and will be able to collaborate in real-time.</p>
+                                            <p>For reference, you can see your list of teammates by expanding each team below.</p>
+                                            <Item.Group divided>
+                                            {teamList.map(team => {
+                                                return (
+                                                    <Item className="contact-search" key={team.id}>
+                                                    <Item.Content verticalAlign='middle'>
+                                                    <Accordion>
+                                                        <Accordion.Title active={activeIndex === team.id} index={team.id} onClick={this.handleClick}>
+                                                        <Icon name='dropdown' />
+                                                        {`${team.name} (${team.users.length} members)`}
+                                                        </Accordion.Title>
+                                                        <Accordion.Content active={activeIndex === team.id}>
+                                                        {
+                                                            team.users.map(user => {
+                                                            return (
+                                                                <p key={user.username}>
+                                                                {user.username}
+                                                                </p>
+                                                            )
+                                                            })
+                                                        }
+                                                        </Accordion.Content>
+                                                    </Accordion>
+                                                    <br/>
+                                                    {
+                                                        teamShare === false ? 
+                                                        <Button style={{float: "right", borderRadius: "0px"}} secondary onClick={() => single.shareWithTeam({teamId: team.id, teamName: team.name, initialShare: true})}>Share</Button> : 
+                                                        <div className="hide" />
+                                                    }
+                                                    </Item.Content>
+                                                    </Item>
+                                                    )
+                                                    }
+                                                )
+                                            }
+                                            </Item.Group>
+                                            {teamShare === false ? <div className="hide" /> : <Button style={{borderRadius: "0"}}>Sharing...</Button>}
+                                            </Modal.Description>
+                                        </Modal.Content>
+                                    </Modal>
+                                </li> : 
+                                <li className="hide" />
+                            }
+                        </ul>
+                    </div> : 
+                    <div className="hide" />
+                }
+            </li> : 
+            <li className="hide" />
+            }
         </ul>
     </div>
     );

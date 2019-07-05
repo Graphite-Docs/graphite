@@ -80,7 +80,7 @@ setGlobal({
     docs: [],
     save: "",
     printPreview: false,
-    autoSave: "Saved",
+    autoSave: "All changes saved",
     singlePublic: {},
     gaiaLink: "",
     hideStealthy: true,
