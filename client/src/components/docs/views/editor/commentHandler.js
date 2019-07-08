@@ -23,14 +23,14 @@ export function hasComments() {
 
 export function onClickComment(event, editor) {
     event.preventDefault();
+    const userSession = getGlobal().userSession;
 
     const { value } = editor;
     
     if (hasComments()) {
-      console.log("has comments");
-      //editor.command(unwrapComment);
       const comment = {
           id: uuid(),
+          author: userSession ? userSession.loadUserData().username : "Anonymous",
           comment: document.getElementById('comment-input').value
       };
       if (comment === null || comment === "") {
@@ -46,6 +46,7 @@ export function onClickComment(event, editor) {
     } else if (value.selection.isExpanded) {
         const comment = {
             id: uuid(),
+            author: userSession ? userSession.loadUserData().username : "Anonymous",
             comment: document.getElementById('comment-input').value
         };
       if (comment === null || comment === "") {

@@ -5,7 +5,7 @@ import alignCenter from './assets/icons/align-center.svg';
 import alignRight from './assets/icons/align-right.svg';
 import arrowsAlt from './assets/icons/compress-arrows-alt.svg';
 import arrowsAltH from './assets/icons/arrows-alt-h.svg';
-
+let comments = [];
 export function hanldeTOCNav(id) {
   document.getElementById(id).scrollIntoView();
 }
@@ -86,7 +86,7 @@ export function renderBlock(props, editor, next) {
         return <h4 className={node.data.get('class') ? node.data.get('class') : ""} {...attributes}>{children}</h4>
       case 'h5':
         return <h5 className={node.data.get('class') ? node.data.get('class') : ""} {...attributes}>{children}</h5>
-      case 'h5':
+      case 'h6':
         return <span className={node.data.get('class') ? node.data.get('class') : ""} {...attributes}>{children}</span>
       case 'list-item':
         return <li {...attributes}>{children}</li>
@@ -98,20 +98,22 @@ export function renderBlock(props, editor, next) {
       case 'image': {
           const src = node.data.get('src');
           const id = node.data.get('id');
+          const thisClass = node.data.get('class');
+          
           return (
-            <div className="image-block" id={id} style={{width: "50%", float: "left"}} onClick={() => revealImageMenus(id)}>
+            <div {...attributes} className={thisClass} id={id} onClick={() => revealImageMenus(id)}>
               <img
-                {...attributes}
                 src={src}
                 className="doc-image"
+                alt="custom"
               />
               <div className="image-menu" id={`image-menu-${id}`}style={{display: "none"}}>
                 <ul className="image-position">
-                  <li onClick={() => imageAlign(id, "left")}><img src={alignLeft} alt="align left icon" /></li>
-                  <li onClick={() => imageAlign(id, "center")}><img src={alignCenter} alt="align center icon" /></li>
-                  <li onClick={() => imageAlign(id, "right")}><img src={alignRight} alt="align right icon" /></li>
-                  <li onClick={() => imageSize(id, 'half')}><img src={arrowsAlt} alt="half-width icon" /></li>
-                  <li onClick={() => imageSize(id, 'full')}><img src={arrowsAltH} alt="full-width icon" /></li>
+                  <li onClick={() => imageAlign(editor, id, src, node.key, "left")}><img src={alignLeft} alt="align left icon" /></li>
+                  <li onClick={() => imageAlign(editor, id, src, node.key, "center")}><img src={alignCenter} alt="align center icon" /></li>
+                  <li onClick={() => imageAlign(editor, id, src, node.key, "right")}><img src={alignRight} alt="align right icon" /></li>
+                  <li onClick={() => imageSize(editor, id, src, node.key, 'half')}><img src={arrowsAlt} alt="half-width icon" /></li>
+                  <li onClick={() => imageSize(editor, id, src, node.key, 'full')}><img src={arrowsAltH} alt="full-width icon" /></li>
                 </ul>
               </div>
             </div>
@@ -137,39 +139,6 @@ export function renderBlock(props, editor, next) {
         return <div className={node.data.get('class') ? node.data.get('class') : ""} {...attributes}>{children}</div>
       case 'tab': 
         return <pre {...attributes}>{children}</pre>
-      // case 'circle':
-      //   return (
-      //     <svg {...attributes} className="svg-shapes" id={thisId} draggable="true" onClick={() => handleShapeClick(thisId)} height="100" width="100">
-      //       <circle cx="50" cy="50" r="40" stroke="black" strokeWidth="3" fill="white" />
-      //     </svg>
-      //   )  
-      // case 'rectangle':
-      //     return (
-      //         <svg {...attributes} className="svg-shapes" id={thisId} draggable="true" onClick={() => handleShapeClick(thisId)} width="400" height="110">
-      //           <rect width="300" height="100" stroke="black" strokeWidth="3" fill="white" />
-      //         </svg> 
-      //     )  
-      // case 'square':
-      //     return (
-      //           <svg {...attributes} viewBox="0 0 300 300" className="svg-shapes" id={thisId} draggable="true" onClick={() => handleShapeClick(thisId)} width="400" height="400">
-      //               <rect width="300" height="300" stroke="black" strokeWidth="3" fill="white" />
-      //           </svg> 
-      //     )
-          
-      // case 'horizontal-line':
-      //     return (
-      //       <svg {...attributes} className="svg-shapes" id={thisId} draggable="true" onClick={() => handleShapeClick(thisId)} height="100" width="500">
-      //         <line x1="0" y1="50" x2="500" y2="50"  stroke="black" strokeWidth="3" fill="black"/>
-      //       </svg>
-      //     )
-
-      // case 'vertical-line':
-      //   let id = uuid();
-      //   return (
-      //     <svg {...attributes} className="svg-shapes" id={thisId} draggable="true" onClick={() => handleShapeClick(thisId)} height="500" width="3">
-      //       <rect width="3" height="500" stroke="black" strokeWidth="3" fill="white" />
-      //     </svg>
-      //   )
       case "hr": 
           return (
             <hr className="hr" {...attributes} />
@@ -187,6 +156,11 @@ export function revealImageMenus(id) {
 
 export function renderInline(props, editor, next) {
   const { attributes, children, node } = props
+  comments.push(node.data.get('comment'))
+
+  let unique_array = Array.from(new Set(comments))
+
+  setGlobal({ allComments: unique_array });
   switch (node.type) {
     case 'link': {
       const { data } = node
@@ -202,8 +176,9 @@ export function renderInline(props, editor, next) {
       const comment = data.get('comment');
       return (
         <mark className="mark" style={{cursor: "pointer", textAlign: "center"}} {...attributes}>
-          <span style={{display: "none"}} className="modal comment-modal" id={comment.id}>
-            <span style={{marginBottom:"15px"}} className="comment-text">{comment.comment}</span><br/><br/>
+          <span style={{display: "none", fontSize: "16px"}} className="custom-modal comment-modal" id={comment.id}>
+            <span className="comment-text">{comment.comment}</span><br/>
+            <span style={{marginBottom:"15px"}}>From {comment.author}</span><br/>
             <button className="save-button" onClick={() => resolveComment(editor, node.key)}>Resolve</button><button className="cancel-button" onClick={() => handleCloseCommentModal(comment)}>Close</button>
           </span>
           <abbr id={`comment:${comment.id}`} title={comment} onClick={() => handleCommentModal(comment)}>{children}</abbr>

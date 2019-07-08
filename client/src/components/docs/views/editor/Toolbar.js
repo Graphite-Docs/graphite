@@ -1,4 +1,4 @@
-import React, { setGlobal } from 'reactn';
+import React from 'reactn';
 import fontOptions from './fontOptions.json';
 import headingOptions from './headingOptions.json';
 import fontSizeOptions from './fontSizeOptions.json';
@@ -23,7 +23,7 @@ import listUL from './assets/icons/list-ul.svg';
 import listOL from './assets/icons/list-ol.svg';
 import removeFormat from './assets/icons/remove-format.svg';
 import quoteLeft from './assets/icons/quote-left.svg';
-const uuid = require('uuid/v4');
+
 
 export default class Toolbar extends React.Component {
   constructor(props) {
@@ -215,7 +215,7 @@ export default class Toolbar extends React.Component {
                             }
                         </span>
                     </span>
-                    <span><img className="caret" src={caretDown} /></span>
+                    <span><img className="caret" src={caretDown} alt="caret down icon" /></span>
                 </li>
                 <li onClick={this.handleFontList}>
                     <span className="dropdown-selection">{currentFont.data ? currentFont.data.font : "Times New Roman"}</span>
@@ -230,7 +230,7 @@ export default class Toolbar extends React.Component {
                         }
                         </span>
                     </span>
-                    <span><img className="caret" src={caretDown} /></span>
+                    <span><img className="caret" src={caretDown} alt="caret down icon"/></span>
                 </li>
                 <li onClick={this.handleSizeList}>
                 <span className="dropdown-selection">{currentFontSize.data ? fontSizeOptions.filter(a => a.px === currentFontSize.data.size)[0].pt :  "12"}</span>
@@ -245,7 +245,7 @@ export default class Toolbar extends React.Component {
                         }
                         </span>
                     </span>
-                    <span><img className="caret" src={caretDown} /></span>
+                    <span><img className="caret" src={caretDown} alt="caret down icon"/></span>
                 </li>
                 <li style={{borderBottom: boldApplied ? "5px solid #1a73e8" : "none"}} onClick={(event) => this.props.onClickBlock(event, 'bold')}><img src={bold} alt="bold icon" /></li>
                 <li style={{borderBottom: italicsApplied ? "5px solid #1a73e8" : "none"}} onClick={(event) => this.props.onClickBlock(event, 'italic')}><img src={italic} alt="italic icon" /></li>
@@ -297,25 +297,25 @@ export default class Toolbar extends React.Component {
                 </li>
                 <li onClick={this.triggerFilePicker}>
                     <input onChange={this.props.onImageClick} style={{display: "none"}} type="file" id="file-input" accept=".png, .jpg, .jpeg, .gif" />
-                    <img src={image} alt="image icon" />
+                    <img src={image} alt="upload icon" />
                 </li>
                 <li onClick={this.triggerLinkModal}>
-                    <img src={link} alt="image icon" />
+                    <img src={link} alt="create link icon" />
                 </li>
                 <li onClick={this.triggerCommentModal}>
-                    <img src={comment} alt="image icon" />
+                    <img src={comment} alt="add comment icon" />
                 </li>
                 <li onClick={(event) => this.props.onClickBlock(event, 'unordered-list')}>
-                    <img src={listUL} alt="image icon" />
+                    <img src={listUL} alt="unordered list icon" />
                 </li>
                 <li onClick={(event) => this.props.onClickBlock(event, 'ordered-list')}>
-                    <img src={listOL} alt="image icon" />
+                    <img src={listOL} alt="ordered list" />
                 </li>
                 <li onClick={(event) => this.props.onClickBlock(event, 'clear-formatting')}>
-                    <img src={removeFormat} alt="image icon" />
+                    <img src={removeFormat} alt="clear formatting" />
                 </li>
                 <li onClick={(event) => this.props.onClickBlock(event, 'block-quote')}>
-                    <img src={quoteLeft} alt="image icon" />
+                    <img src={quoteLeft} alt="block quote" />
                 </li>
             </ul>
         </div>

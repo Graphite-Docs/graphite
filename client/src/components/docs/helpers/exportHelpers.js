@@ -2,7 +2,6 @@ import { saveAs } from 'file-saver';
 import { getGlobal } from 'reactn';
 import { convertHtmlToRtf } from './htmltortf';
 const htmlDocx = require('html-docx-js/dist/html-docx');
-const os = require('os');
 
 export function exportAsWord() {
     document.getElementById('file-drop').style.display = "none";

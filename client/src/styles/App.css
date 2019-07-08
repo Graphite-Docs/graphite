@@ -356,7 +356,7 @@ p {
 }
 
 h1 {
-  font-size: 3rem!important;
+  font-size: 3rem;
 }
 
 h3 {
@@ -364,12 +364,12 @@ h3 {
 }
 
 h1, h2, h3, h4, button {
-  font-family: 'Muli', sans-serif!important;
-  font-weight: 300!important;
+  font-family: 'Muli', sans-serif;
+  font-weight: 300;
 }
 
 h5, h6 {
-  font-family: 'Muli', sans-serif!important;
+  font-family: 'Muli', sans-serif;
   text-transform: uppercase;
 }
 
@@ -1421,6 +1421,26 @@ div.markdown-editor__editor-container h2 {
   margin: 7px;
 }
 
+.image-small-left {
+  width: 50%;
+  float: left;
+}
+
+.image-small-right {
+  width: 50%;
+  float: right;
+}
+
+.image-small-center {
+  width: 50%;
+  margin: auto;
+}
+
+.image-full {
+  width: 100%;
+  margin: auto;
+}
+
 .image-block:hover {
   cursor: pointer;
 }
@@ -1826,6 +1846,15 @@ p {
   border: 0.5px solid rgb(113, 103, 248);
   border-radius: 3px;
   padding-top: 3px;
+}
+
+.ui.secondary.button, .ui.secondary.buttons .button {
+  background-color: #ffbd27;
+  color: #282828;
+}
+
+#editor-section h1, #editor-section h2, #editor-section h3, #editor-section h4, #editor-section h5, #editor-section h6 {
+  font-weight: 400!important;
 }
 
 @media print {

@@ -17,7 +17,7 @@ const headerFour = isHotkey('shift+mod+4');
 const headerFive = isHotkey('shift+mod+5');
 const shiftTab = isHotkey('shift+tab');
 const DEFAULT_NODE = 'paragraph';
-const STARTING_NODE = 'page-view';
+
 let enterPress = 0;
 var timer = null;
 
@@ -59,10 +59,10 @@ export function onChange(change) {
   const fontSizeApplied = value.marks.filter(mark => mark.type === "font-size").size === 1 ? true : false;
   const fontFamilyApplied = value.marks.filter(mark => mark.type === "font-family").size === 1 ? true : false;
   const blockApplied = value.blocks.filter(block => block.toJSON()).size === 1 ? true : false;
-  
   value.blocks.map(block => {
     if(block.toJSON().type === "image") {
       //Do nothing here
+      return null
     } else {
       const images = document.getElementsByClassName('image-block');
       for (const image of images) {
@@ -595,7 +595,7 @@ export function clickBlock(editor, type) {
               })
               .focus();
       }
-    } else if(type == 'bold') {
+    } else if(type === 'bold') {
         // event.preventDefault();
         editor.toggleMark('bold').focus();
     } else if(type === 'italic') {

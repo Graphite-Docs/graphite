@@ -19,8 +19,9 @@ export default class CommentReview extends React.Component {
                 {
                     allComments.map(comment => {
                         return (
-                            <div style={{marginTop: "5px", marginTop: "5px"}} key={comment.id}>
+                            <div style={{marginTop: "5px", marginBottom: "5px"}} key={comment.id}>
                                 <div style={{marginLeft: "10px"}}>{comment.comment}</div>
+                                <div style={{marginLeft: "10px"}}>From: {comment.author}</div>
                                 <button style={{marginLeft: "10px"}} className="save-button" onClick={() => this.findComment(comment.id)}>View</button>
                                 <hr/>
                             </div>

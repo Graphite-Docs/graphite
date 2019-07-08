@@ -7,7 +7,7 @@ export async function handleImageDrop(e, editor, next) {
     if (!target && e.type === 'drop') return next()
 
     const transfer = getEventTransfer(e)
-    const { type, text, files } = transfer
+    const { type, files } = transfer
 
     if (type === 'files') {
       for (const file of files) {
@@ -24,19 +24,11 @@ export async function handleImageDrop(e, editor, next) {
       return
     }
 
-    // if (type === 'text') {
-    //   if (!isUrl(text)) return next()
-    //   if (!isImage(text)) return next()
-    //   editor.command(insertImage, text, target)
-    //   return
-    // }
-
     next()
 
 }
 
 export async function handleImageUpload(e, editor) {
-    const target = editor.findEventRange(e)
     const file = e.target.files[0];
     
     const reader = new FileReader()
@@ -69,35 +61,67 @@ export function insertImage(editor, src, target) {
       type: 'image',
       data: { 
           src,
-          id: uuid()
-        },
+          id: uuid(), 
+          class: "image-block image-small-left"
+        }
     })
 }
 
-export function imageAlign(id, position) {
+export function imageAlign(editor, id, src, key, position) {
+    console.log(position)
     if(position === 'right') {
-        document.getElementById(id).removeAttribute("style");
-        document.getElementById(id).style.width = "50%";
-        document.getElementById(id).style.float = "right";
-        document.getElementById(id).style.margin = "10px";
+        editor.removeNodeByKey(key)
+        .insertBlock({
+            type: 'image',
+            data: { 
+                src,
+                id: id, 
+                class: "image-block image-small-right"
+                }
+        });
     } else if(position === "left") {
-        document.getElementById(id).removeAttribute("style");
-        document.getElementById(id).style.width = "50%";
-        document.getElementById(id).style.float = "left";
-        document.getElementById(id).style.margin = "10px";
+        editor.removeNodeByKey(key)
+        .insertBlock({
+            type: 'image',
+            data: { 
+                src,
+                id: id, 
+                class: "image-block image-small-left"
+                }
+        });
     } else if(position === "center") {
-        document.getElementById(id).removeAttribute("style");
-        document.getElementById(id).style.width = "50%";
-        document.getElementById(id).style.margin = "auto";
-        //document.getElementById(id).style.margin = "10px";
+        editor.removeNodeByKey(key)
+        .insertBlock({
+            type: 'image',
+            data: { 
+                src,
+                id: id, 
+                class: "image-block image-small-center"
+                }
+        })
     }
 }
 
-export function imageSize(id, size) {
+export function imageSize(editor, id, src, key, size) {
     if(size === "full") {
-        document.getElementById(id).style.width = "100%";
+        editor.removeNodeByKey(key)
+        .insertBlock({
+            type: 'image',
+            data: { 
+                src,
+                id: id, 
+                class: "image-block image-full"
+                }
+        })
     } else {
-        document.getElementById(id).style.width = "50%";
-        document.getElementById(id).style.float = "left";
+        editor.removeNodeByKey(key)
+        .insertBlock({
+            type: 'image',
+            data: { 
+                src,
+                id: id, 
+                class: "image-block image-small-left"
+                }
+        })
     }
 }

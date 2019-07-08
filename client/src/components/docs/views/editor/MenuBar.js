@@ -1,5 +1,5 @@
 import React, { setGlobal } from 'reactn';
-import { exportAsWord, exportAsRTF, exportAsTXT, exportAsPDF } from '../../helpers/exportHelpers';
+import { exportAsWord, exportAsRTF, exportAsTXT } from '../../helpers/exportHelpers';
 import { handlePageSettings, lineHeight } from '../../helpers/settings';
 import Countable from 'countable';
 import { Modal, Button, Item, Accordion, Icon } from 'semantic-ui-react';
@@ -123,7 +123,6 @@ export default class MenuBar extends React.Component {
   render() {
     const { activeIndex, menuSelection } = this.state;
     const { contacts, userSession, singleDoc, graphitePro, proOrgInfo, teamListModalOpen, teamShare } = this.global;
-    let linkHref = '';
     let docId;
     if(window.location.href.includes("new")) {
         docId = window.location.href.split("new/")[1];

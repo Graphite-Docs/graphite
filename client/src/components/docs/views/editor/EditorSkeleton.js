@@ -4,6 +4,9 @@ import MainMenu from './MainMenu';
 import MenuBar from './MenuBar';
 
 class EditorSkeleton extends Component {
+  componentDidMount() {
+    
+  }
   render() {
       return (
         <div>

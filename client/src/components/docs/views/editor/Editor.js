@@ -45,6 +45,8 @@ const schema = {
             const paragraph = Block.create('paragraph')
             return editor.insertNodeByKey(node.key, node.nodes.size, paragraph)
           }
+          default: 
+          Block.create('paragraph')
         }
       },
     },
@@ -210,6 +212,7 @@ applyOperations = operations => {
   render() {
     const { content, collabContent } = this.global;
     const { editor } = this;
+    
     //Checking to see if the editor exists and if there is a table and if the user has clicked into the table
     if(editor) {
       if(editor.isSelectionInTable()) {
