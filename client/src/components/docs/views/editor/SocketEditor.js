@@ -1,6 +1,6 @@
 import React, { Component } from 'reactn';
 import socketIOClient from 'socket.io-client';
-import SlateEditor from './SlateEditor';
+import SlateEditor from './Editor';
 let serverhost = window.location.href.includes("local") ? "http://localhost:5000" : "https://socket.graphitedocs.com";
 
 class SocketEditor extends Component {
@@ -60,23 +60,20 @@ class SocketEditor extends Component {
     })
   }
 
-  send = content => {
+  send = (content) => {
     const data = JSON.stringify({ content, uniqueID: this.uniqueID });
     this.socket.emit('update content', data);
   }
 
-  onChange = change => {
-    console.log("changing")
+  onChange = (change) => {
+    console.log("socket change")
     const ops = change.operations
-    // console.log(ops);
     const ops2 = ops
       .filter(o => o.type !== 'set_selection' && o.type !== 'set_value' && o.type !== undefined && (!o.data || !o.data.has('source')))
       .toArray()
       // .toJS()
       .map(o => ({ ...o, data: { source: this.uniqueID } }))
 
-
-    // console.log(ops2)
     if (ops2.length > 0) {
       this.send(ops);
     }

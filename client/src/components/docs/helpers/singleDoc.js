@@ -35,7 +35,6 @@ export async function handleChange(change) {
 }
 
 export async function saveDoc(updates) {
-    setGlobal({ autoSave: "Saving" })
     let singleDoc = await singleDocModel(updates);
     setGlobal({ singleDoc: singleDoc });
 
@@ -83,13 +82,13 @@ export async function saveDoc(updates) {
     const updatedIndex = await postData(indexParams);
     console.log(updatedIndex);
     loadData({refresh: false});
-    setGlobal({ autoSave: "Saved" });
+    setGlobal({ autoSave: "All changed saved" });
 
     if(singleDoc.singleDocIsPublic) {
       const object = {};
       object.title = getGlobal().title;
       if (singleDoc.readOnly) {
-        object.content = document.getElementsByClassName("editor")[0].innerHTML;
+        object.content = document.getElementById("editor-section").innerHTML;
       } else {
         let content = getGlobal().content;
         object.content = content.toJSON();
@@ -97,7 +96,7 @@ export async function saveDoc(updates) {
       object.readOnly = singleDoc.readOnly;
       object.words = wordCount(
         document
-          .getElementsByClassName("editor")[0]
+          .getElementById("editor-section")
           .innerHTML.replace(/<(?:.|\n)*?>/gm, "")
       );
       object.shared = getMonthDayYear();

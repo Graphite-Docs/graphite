@@ -43,7 +43,7 @@ export function fetchData(){
     })
 }
 
-export function handlePubChange(change) { //calling this on change in textarea...
+export function handlePubChange(change) {
   setGlobal({
     collabContent: change.value
   });

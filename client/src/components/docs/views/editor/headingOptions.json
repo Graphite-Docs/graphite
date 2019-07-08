@@ -1,0 +1,26 @@
+[
+    {
+        "name": "Normal text", 
+        "key": "p"
+    }, 
+    {
+        "name": "Heading 1",
+        "key": "h1"
+    },
+    {
+        "name": "Heading 2",
+        "key": "h2"
+    },
+    {
+        "name": "Heading 3",
+        "key": "h3"
+    },
+    {
+        "name": "Heading 4",
+        "key": "h4"
+    },
+    {
+        "name": "Heading 5",
+        "key": "h5"
+    }
+]

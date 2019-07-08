@@ -29,6 +29,7 @@ import {ToastsContainer, ToastsStore} from 'react-toasts';
 class App extends Component {
   async componentDidMount() {
     const { userSession } = this.global;
+    document.body.style.background = "#fff";
     if(userSession.isUserSignedIn()) {
       await handleProCheck();
       loadData();

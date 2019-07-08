@@ -44,7 +44,7 @@ export default class Nav extends Component {
       return (
         <Menu className='header-menu' style={{ borderRadius: "0", background: "#000", border: "none" }}>
           <Menu.Item>
-            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "50px", marginLeft: "10px", padding: "5px" }} /></Link>
+            <Link to={'/'}><Image src={logoSquare} style={{ maxHeight: "40px", marginLeft: "10px", padding: "5px" }} /></Link>
           </Menu.Item>
           <Menu.Item position="right">
           <Dropdown icon='th' className="app-switcher" style={{ color: "#fff", marginRight: "15px" }}>
