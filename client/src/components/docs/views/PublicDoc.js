@@ -1,6 +1,6 @@
 import React, { Component } from 'reactn';
 import SocketEditor from './editor/SocketEditor';
-import PublicEditorSkeleton from '../views/editors/PublicEditorSkeleton';
+import PublicEditorSkeleton from '../views/editor/EditorSkeleton';
 import {Image } from 'semantic-ui-react';
 import {Menu as MainMenu} from 'semantic-ui-react';
 import logoSquare from '../../../assets/images/graphite-mark.svg';

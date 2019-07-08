@@ -1,6 +1,6 @@
 import React, { Component, setGlobal } from "reactn";
 import SocketEditor from './editor/SocketEditor';
-import EditorSkeleton from './editors/EditorSkeleton';
+import EditorSkeleton from './editor/EditorSkeleton';
 const shared = require('../helpers/singleShared');
 
 export default class SingleSharedDoc extends Component {

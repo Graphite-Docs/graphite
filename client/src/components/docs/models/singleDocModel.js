@@ -1,7 +1,7 @@
 import { getMonthDayYear } from "../../shared/helpers/getMonthDayYear";
 import { getGlobal } from 'reactn';
 import { Value } from 'slate';
-const initialValue = require('../views/editors/initialValue.json');
+const initialValue = require('../views/editor/initialValue.json');
 
 export async function singleDocModel(updates) {
     let singleDoc = getGlobal().singleDoc;

@@ -12,8 +12,7 @@ import { serializer } from './deserializer';
 import { ToastsStore} from 'react-toasts';
 import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
 import axios from 'axios';
-const wordCount = require('html-word-count');
-const initialTimeline = require('../views/editors/initialTimeline.json');
+const wordCount = require('html-word-count')
 const uuid = require('uuidv4');
 const lzjs = require('lzjs');
 const environment = window.location.origin;
@@ -163,8 +162,7 @@ export async function loadSingle() {
         singleDoc: JSON.parse(decryptedDoc), 
         title: JSON.parse(decryptedDoc).title,
         content: Value.fromJSON(JSON.parse(decryptedDoc).content),
-        loading: false, 
-        myTimeline: JSON.parse(decryptedDoc).myTimeline || initialTimeline
+        loading: false
       })
     } else {
         await setTimeout(async () => {
@@ -182,8 +180,7 @@ export async function loadSingle() {
             singleDoc: JSON.parse(decryptedDoc), 
             title: JSON.parse(decryptedDoc).title,
             content: Value.fromJSON(JSON.parse(decryptedDoc).content),
-            loading: false, 
-            myTimeline: JSON.parse(decryptedDoc).myTimeline || initialTimeline
+            loading: false
           })
         }, 3000);
     }
@@ -206,8 +203,7 @@ export async function loadSingle() {
       singleDoc: parsedDoc, 
       title: JSON.parse(doc).title,
       content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
-      loading: false, 
-      myTimeline: JSON.parse(doc).myTimeline || initialTimeline
+      loading: false
     })
   }
 }
@@ -244,8 +240,7 @@ export async function loadVersion(id) {
   setGlobal({
     singleDoc: JSON.parse(doc), 
     title: JSON.parse(doc).title,
-    content: Value.fromJSON(JSON.parse(doc).content),
-    myTimeline: JSON.parse(doc).myTimeline || initialTimeline
+    content: Value.fromJSON(JSON.parse(doc).content)
   })
 }
 
