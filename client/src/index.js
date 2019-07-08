@@ -8,7 +8,7 @@ import * as serviceWorker from './serviceWorker';
 import { configure } from 'radiks';
 import { UserSession } from 'blockstack';
 import { appConfig } from './utils/config';
-import initialValue from './components/docs/views/editors/initialValue.json';
+import initialValue from './components/docs/views/editor/initialValue.json';
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
