@@ -9,7 +9,7 @@ export default class WordModal extends React.Component {
     render() {
         const { words, charactersSpaces, charactersNoSpaces, paragraphs, sentences, pages } = this.global;
         return( 
-            <div style={{display:"none"}} id="word-modal" className="modal">
+            <div style={{display:"none"}} id="word-modal" className="custom-modal">
                 <h2 onClick={this.handleClose}>X</h2>
                 <h3>Document Info</h3>
                 <ul>
