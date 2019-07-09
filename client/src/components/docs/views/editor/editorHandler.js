@@ -1,4 +1,5 @@
 import { setGlobal, getGlobal } from 'reactn';
+import { onClickList } from './listHandler';
 import isHotkey from 'is-hotkey'
 import uuid from 'uuid/v4';
 import { saveDoc } from '../../helpers/singleDoc';
@@ -17,6 +18,7 @@ const headerFour = isHotkey('shift+mod+4');
 const headerFive = isHotkey('shift+mod+5');
 const shiftTab = isHotkey('shift+tab');
 const DEFAULT_NODE = 'paragraph';
+let bulletReady = false;
 
 let enterPress = 0;
 var timer = null;
@@ -173,6 +175,19 @@ export function onChange(change) {
 }
 
 export function onKeyDown(event, editor, next) {
+    if(event.key === '*') {
+      bulletReady = true;
+    } 
+    if(bulletReady) {
+      if(event.key === " ") {
+        const { value } = editor;
+        const { startBlock } = value
+        bulletReady = false;
+        onClickList(event, editor, 'unordered-list');
+        editor.moveFocusToStartOfNode(startBlock).delete()
+      }
+    }
+    console.log(bulletReady);
     if(shiftTab(event)) {
       if(hasBlock('list-item')) {
         if(getGlobal().nodeType === "unordered") {
@@ -190,6 +205,7 @@ export function onKeyDown(event, editor, next) {
     }
     if(event.key === "Tab") {
       if(hasBlock('list-item')) {
+        event.preventDefault();
         if(getGlobal().nodeType === "unordered") {
           editor.setBlocks('list-item').wrapBlock('unordered-list').focus();
         } else if(getGlobal().nodeType === "ordered") {

@@ -1248,13 +1248,13 @@ div.markdown-editor__editor-container h2 {
 .justify {
   text-align: justify;
 }
-
+/* 
 .main-editor {
   max-width: 100%;
   margin: auto;
   padding: 25px;
   overflow-y: scroll;
-}
+} */
 
 .top-toolbar {
   border-bottom: #eee solid 1px;
