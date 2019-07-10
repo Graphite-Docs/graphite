@@ -24,6 +24,47 @@ class SingleDoc extends Component {
   
   render() {
     const { loading, singleDoc} = this.global;
+    if(singleDoc.document) {
+      if(singleDoc.document.spacing && document.getElementById('editor-section')) {
+        const spacing = singleDoc.document.spacing;
+        let writingSpace = document.getElementById('editor-section');
+        
+        if(spacing === 1) {
+                if(writingSpace.classList.contains('single-space')) {
+                    writingSpace.classList.remove('single-space')
+                }
+                if(writingSpace.classList.contains('one-point-five-space')) {
+                    writingSpace.classList.remove('one-point-five-space')
+                }
+                if(writingSpace.classList.contains('double-space')) {
+                    writingSpace.classList.remove('double-space')
+                }
+                writingSpace.classList.add('single-space');
+        } else if(spacing === 1.5) {
+            if(writingSpace.classList.contains('single-space')) {
+                writingSpace.classList.remove('single-space')
+            }
+            if(writingSpace.classList.contains('one-point-five-space')) {
+                writingSpace.classList.remove('one-point-five-space')
+            }
+            if(writingSpace.classList.contains('double-space')) {
+                writingSpace.classList.remove('double-space')
+            }
+            writingSpace.classList.add('one-point-five-space');
+        } else if(spacing === 2) {
+            if(writingSpace.classList.contains('single-space')) {
+                writingSpace.classList.remove('single-space')
+            }
+            if(writingSpace.classList.contains('one-point-five-space')) {
+                writingSpace.classList.remove('one-point-five-space')
+            }
+            if(writingSpace.classList.contains('double-space')) {
+                writingSpace.classList.remove('double-space')
+            }
+            writingSpace.classList.add('double-space');
+        }
+      }
+    }
     let realTime = false;
     if(singleDoc.readOnly === false) {
       realTime = true;

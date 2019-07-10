@@ -215,7 +215,7 @@ setGlobal({
     deleteLastOption: false,
     publicForm: {},
     fullFile: "",
-    spacing: 2,
+    spacing: 1,
     emailOK: false,
     profileEmail: "",
     countFilesDone: false,

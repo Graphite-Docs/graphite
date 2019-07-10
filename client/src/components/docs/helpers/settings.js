@@ -6,7 +6,8 @@ export async function savePageSettings() {
         marginRight: getGlobal().marginRight,
         marginBottom: getGlobal().marginBottom,
         marginLeft: getGlobal().marginLeft,
-        orientation: getGlobal().orientation
+        orientation: getGlobal().orientation, 
+        spacing: getGlobal().spacing
     }
     setGlobal({ document: thisDoc });
     document.getElementById('page-settings').style.display = "none";
@@ -40,6 +41,7 @@ export function lineHeight(spacing) {
     let doc = getGlobal().document;
     
     if(spacing === 'single') {
+            doc.spacing = 1;
             if(writingSpace.classList.contains('single-space')) {
                 writingSpace.classList.remove('single-space')
             }
@@ -51,6 +53,7 @@ export function lineHeight(spacing) {
             }
             writingSpace.classList.add('single-space');
     } else if(spacing === "1.50") {
+        doc.spacing = 1.5;
         if(writingSpace.classList.contains('single-space')) {
             writingSpace.classList.remove('single-space')
         }
@@ -62,6 +65,7 @@ export function lineHeight(spacing) {
         }
         writingSpace.classList.add('one-point-five-space');
     } else if(spacing === "double") {
+        doc.spacing = 2;
         if(writingSpace.classList.contains('single-space')) {
             writingSpace.classList.remove('single-space')
         }

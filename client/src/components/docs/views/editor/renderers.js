@@ -156,11 +156,13 @@ export function revealImageMenus(id) {
 
 export function renderInline(props, editor, next) {
   const { attributes, children, node } = props
-  comments.push(node.data.get('comment'))
+  if(node.data.get('comment')) {
+    comments.push(node.data.get('comment'))
 
-  let unique_array = Array.from(new Set(comments))
+    let unique_array = Array.from(new Set(comments))
 
-  setGlobal({ allComments: unique_array });
+    setGlobal({ allComments: unique_array });
+  } 
   switch (node.type) {
     case 'link': {
       const { data } = node

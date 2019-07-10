@@ -35,6 +35,7 @@ export async function handleChange(change) {
 
 export async function saveDoc(updates) {
     let singleDoc = await singleDocModel(updates);
+    singleDoc.document = getGlobal().document;
     setGlobal({ singleDoc: singleDoc });
 
     let filePath;
@@ -164,6 +165,11 @@ export async function loadSingle() {
         content: Value.fromJSON(JSON.parse(decryptedDoc).content),
         loading: false
       })
+      console.log(JSON.parse(decryptedDoc).document)
+      if(JSON.parse(decryptedDoc).document) {
+        let document = JSON.parse(decryptedDoc).document;
+        setGlobal({ marginRight: document.marginRight, marginLeft: document.marginLeft, marginTop: document.marginTop, marginBottom: document.marginBottom, lineSpacing: document.lineSpacing, orientation: document.orientation, document})
+      }
     } else {
         await setTimeout(async () => {
           const teamDocs = await getGlobal().teamDocs;
@@ -182,6 +188,11 @@ export async function loadSingle() {
             content: Value.fromJSON(JSON.parse(decryptedDoc).content),
             loading: false
           })
+          console.log(JSON.parse(decryptedDoc).document)
+          if(JSON.parse(decryptedDoc).document) {
+            let document = JSON.parse(decryptedDoc).document;
+            setGlobal({ marginRight: document.marginRight, marginLeft: document.marginLeft, marginTop: document.marginTop, marginBottom: document.marginBottom, lineSpacing: document.lineSpacing, orientation: document.orientation, document})
+          }
         }, 3000);
     }
   } else {
@@ -205,6 +216,11 @@ export async function loadSingle() {
       content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
       loading: false
     })
+    console.log(JSON.parse(doc).document);
+    if(JSON.parse(doc).document) {
+      let document = JSON.parse(doc).document;
+      setGlobal({ marginRight: document.marginRight, marginLeft: document.marginLeft, marginTop: document.marginTop, marginBottom: document.marginBottom, lineSpacing: document.lineSpacing, orientation: document.orientation, document})
+    }
   }
 }
 

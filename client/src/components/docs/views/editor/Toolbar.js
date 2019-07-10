@@ -23,6 +23,7 @@ import listUL from './assets/icons/list-ul.svg';
 import listOL from './assets/icons/list-ol.svg';
 import removeFormat from './assets/icons/remove-format.svg';
 import quoteLeft from './assets/icons/quote-left.svg';
+let is_fired = false;
 
 
 export default class Toolbar extends React.Component {
@@ -189,10 +190,13 @@ export default class Toolbar extends React.Component {
     const node = document.getElementById("link-input");
     if(node) {
         node.addEventListener("keyup", (event) => {
-            if (event.key === "Enter") {
+            if (event.key === "Enter" && is_fired === false) {
                 this.props.onClickBlock(event, 'link');
+                is_fired = true;
             }
         });
+    } else {
+        is_fired = false;
     }
     const { currentColor, currentHighlight, currentFont, currentHeading, currentFontSize } = this.global;
     const { boldApplied, italicsApplied, underlineApplied, strikeApplied, alignment } = this.global;
