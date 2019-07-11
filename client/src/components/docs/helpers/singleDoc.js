@@ -27,7 +27,7 @@ export async function handleChange(change) {
     let updates = {
       content: getGlobal().content
     }
-    clearTimeout(timer); 
+    clearTimeout(timer);
     clearTimeout(versionTimer);
     timer = setTimeout(() => saveDoc(updates), 3000);
     versionTimer = setTimeout(updateVersions, 6000);
@@ -48,13 +48,13 @@ export async function saveDoc(updates) {
     }
     let file = `/documents/${filePath}.json`;
     let docParams = {
-        fileName: file, 
-        body: JSON.stringify(getGlobal().singleDoc), 
+        fileName: file,
+        body: JSON.stringify(getGlobal().singleDoc),
         encrypt: true
     }
     const updatedDoc = await postData(docParams);
     console.log(updatedDoc);
-    
+
     //Now we update the index file;
     let docs = await getGlobal().documents;
     let index = await docs.map((x) => {return x.id }).indexOf(filePath);
@@ -73,10 +73,10 @@ export async function saveDoc(updates) {
         console.log("Not a shared doc.")
       }
     }
-    
+
     let indexParams = {
-      fileName: 'documentscollection.json', 
-      body: JSON.stringify(getGlobal().documents), 
+      fileName: 'documentscollection.json',
+      body: JSON.stringify(getGlobal().documents),
       encrypt: true
     }
     const updatedIndex = await postData(indexParams);
@@ -107,7 +107,7 @@ export async function saveDoc(updates) {
 
     if(window.location.href.includes('team')) {
       const data = {
-        fromSave: true, 
+        fromSave: true,
         teamName: "", //Will need to think through how best to pass this through
         teamId: window.location.href.split('team/')[1].split('/')[0]
       }
@@ -115,8 +115,8 @@ export async function saveDoc(updates) {
     } else if(singleDoc.teams) {
       for (const team of singleDoc.teams) {
         const data = {
-          fromSave: true, 
-          teamId: team.teamId, 
+          fromSave: true,
+          teamId: team.teamId,
           teamName: team.teamName
         }
         shareWithTeam(data);
@@ -130,7 +130,7 @@ export async function handleTitle(e) {
     title: title
   }
   setGlobal({ title });
-  clearTimeout(timer); 
+  clearTimeout(timer);
   timer = setTimeout(() => saveDoc(updates), 1500);
 }
 
@@ -160,7 +160,7 @@ export async function loadSingle() {
       const encryptedDoc = await fetchData(teamDoc);
       const decryptedDoc = userSession.decryptContent(JSON.parse(encryptedDoc), {privateKey: JSON.parse(fetchedKeys).private});
       setGlobal({
-        singleDoc: JSON.parse(decryptedDoc), 
+        singleDoc: JSON.parse(decryptedDoc),
         title: JSON.parse(decryptedDoc).title,
         content: Value.fromJSON(JSON.parse(decryptedDoc).content),
         loading: false
@@ -183,7 +183,7 @@ export async function loadSingle() {
           const encryptedDoc = await fetchData(teamDoc);
           const decryptedDoc = userSession.decryptContent(JSON.parse(encryptedDoc), {privateKey: JSON.parse(fetchedKeys).private});
           setGlobal({
-            singleDoc: JSON.parse(decryptedDoc), 
+            singleDoc: JSON.parse(decryptedDoc),
             title: JSON.parse(decryptedDoc).title,
             content: Value.fromJSON(JSON.parse(decryptedDoc).content),
             loading: false
@@ -208,24 +208,27 @@ export async function loadSingle() {
     }
 
     let doc = await fetchData(docParams);
-    console.log(doc);
-    let parsedDoc = JSON.parse(doc);
-    let compressed = parsedDoc.compressed;
-    let updatedContent;
-    if(compressed === true) {
-      console.log("compressed")
-      updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
-    } 
-    setGlobal({
-      singleDoc: parsedDoc, 
-      title: JSON.parse(doc).title,
-      content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
-      loading: false
-    })
-    console.log(JSON.parse(doc).document);
-    if(JSON.parse(doc).document) {
-      let document = JSON.parse(doc).document;
-      setGlobal({ marginRight: document.marginRight, marginLeft: document.marginLeft, marginTop: document.marginTop, marginBottom: document.marginBottom, lineSpacing: document.lineSpacing, orientation: document.orientation, document})
+
+    if (doc) {
+      console.log(doc);
+      let parsedDoc = JSON.parse(doc);
+      let compressed = parsedDoc.compressed;
+      let updatedContent;
+      if(compressed === true) {
+        console.log("compressed")
+        updatedContent = serializer.deserialize(lzjs.decompress(parsedDoc.content));
+      }
+      setGlobal({
+        singleDoc: parsedDoc,
+        title: JSON.parse(doc).title,
+        content: compressed ? Value.fromJSON(updatedContent) : Value.fromJSON(parsedDoc.content),
+        loading: false
+      })
+      console.log(JSON.parse(doc).document);
+      if(JSON.parse(doc).document) {
+        let document = JSON.parse(doc).document;
+        setGlobal({ marginRight: document.marginRight, marginLeft: document.marginLeft, marginTop: document.marginTop, marginBottom: document.marginBottom, lineSpacing: document.lineSpacing, orientation: document.orientation, document})
+      }
     }
   }
 }
@@ -237,8 +240,8 @@ export async function updateVersions() {
   const newVersionId = uuid();
   let file = `documents/versions/${newVersionId}.json`;
     let versionParams = {
-        fileName: file, 
-        body: JSON.stringify(singleDoc), 
+        fileName: file,
+        body: JSON.stringify(singleDoc),
         encrypt: true
     }
     const newVersion = await postData(versionParams);
@@ -260,7 +263,7 @@ export async function loadVersion(id) {
   let doc = await fetchData(docParams);
   console.log(JSON.parse(doc))
   setGlobal({
-    singleDoc: JSON.parse(doc), 
+    singleDoc: JSON.parse(doc),
     title: JSON.parse(doc).title,
     content: Value.fromJSON(JSON.parse(doc).content)
   })
@@ -290,16 +293,16 @@ export async function shareWithTeam(data) {
 
   const document = {
     id: fileId,
-    team: data.teamId, 
+    team: data.teamId,
     orgId: proOrgInfo.orgId,
     title: getGlobal().title,
-    content: getGlobal().content, 
+    content: getGlobal().content,
     currentHostBucket: userSession.loadUserData().username
   }
   const encryptedTeamDoc = userSession.encryptContent(JSON.stringify(document), {publicKey: JSON.parse(fetchedKeys).public})
- 
+
   const teamDoc = {
-    fileName: `teamDocs/${data.teamId}/${fileId}.json`, 
+    fileName: `teamDocs/${data.teamId}/${fileId}.json`,
     encrypt: false,
     body: JSON.stringify(encryptedTeamDoc)
   }
@@ -319,31 +322,31 @@ export async function shareWithTeam(data) {
 
   const syncedDoc = {
     id: fileId,
-    title: userSession.encryptContent(getGlobal().title, {publicKey: JSON.parse(fetchedKeys).public}), 
+    title: userSession.encryptContent(getGlobal().title, {publicKey: JSON.parse(fetchedKeys).public}),
     teamName: userSession.encryptContent(data.teamName, {publicKey: JSON.parse(fetchedKeys).public}),
     orgId: proOrgInfo.orgId,
     teamId: data.teamId,
     lastUpdated: getMonthDayYear(),
-    timestamp: Date.now(), 
+    timestamp: Date.now(),
     currentHostBucket: userSession.encryptContent(userSession.loadUserData().username, {publicKey: JSON.parse(fetchedKeys).public}),
     pubKey: getPublicKeyFromPrivate(privateKey)
   }
-  
+
   let serverUrl;
     const tokenData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
-    
+
     environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
     axios.post(`${serverUrl}/account/organization/${proOrgInfo.orgId}/documents`, JSON.stringify(syncedDoc), headerObj)
         .then(async (res) => {
