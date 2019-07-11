@@ -18,8 +18,6 @@ export function hasLinks() {
 }
 
 export function onClickLink(event, editor) {
-    console.log(event);
-    console.log(editor);
     event.preventDefault()
 
     const { value } = editor;

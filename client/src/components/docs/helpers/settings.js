@@ -36,7 +36,6 @@ export async function handlePageSettings() {
 }
 
 export function lineHeight(spacing) {
-    console.log(spacing);
     let writingSpace = document.getElementById('editor-section');
     let doc = getGlobal().document;
     

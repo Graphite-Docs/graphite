@@ -22,6 +22,7 @@ import Trial from './components/pro/views/Trial';
 import ApiDocs from './components/pro/views/API/ApiDocs';
 import SignIn from './components/shared/views/SignIn';
 import Skeleton from './components/docs/views/Skeleteon';
+import DevTools from './components/shared/views/DevTools';
 import { handleProCheck } from './components/pro/helpers/account';
 import { loadData } from './components/shared/helpers/accountContext';
 import {ToastsContainer, ToastsStore} from 'react-toasts';
@@ -84,6 +85,7 @@ class App extends Component {
              <Route exact path='/invite/:id' component={Invites} />
              <Route exact path='/walkthrough' component={Walkthrough} />
              <Route exact path='/pro/api' component={ApiDocs} />
+             <Route exact path='/dev/tools' component={DevTools} />
            </div>
          </BrowserRouter>
         </div>

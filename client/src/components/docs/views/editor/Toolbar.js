@@ -167,9 +167,15 @@ export default class Toolbar extends React.Component {
   }
 
   triggerCommentModal = (e) => {
-    let dimmer = document.getElementsByClassName('dimmer');
-    dimmer[0].style.display = "block";
-    document.getElementById('comment-modal').style.display = "block";
+    const { editor } = this.props;
+    if(editor.value.selection.isExpanded) {
+        let dimmer = document.getElementsByClassName('dimmer');
+        dimmer[0].style.display = "block";
+        document.getElementById('comment-modal').style.display = "block";
+    } else {
+        //Maybe fire off a toast?
+    }
+    
     //document.getElementById('comment-input').autofocus = true;
   }
 

@@ -241,7 +241,7 @@ applyOperations = operations => {
           />
         }
         <Toolbar
-          editor={this.ref}
+          editor={this.editor}
           onClickBlock={this.onClickBlock}
           currentColor={this.currentColor}
           currentHightlight={this.currentHighlight}
