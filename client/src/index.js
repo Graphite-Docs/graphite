@@ -54,7 +54,7 @@ setGlobal({
     activeIndicator: false,
     receiverID: "",
     confirmAdd: false,
-    title: "",
+    title: "Untitled",
     content: Value.fromJSON(initialValue),
     singleFileContent: "",
     id: "",

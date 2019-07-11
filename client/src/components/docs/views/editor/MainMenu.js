@@ -11,7 +11,7 @@ export default class MainMenu extends React.Component {
                     userSession.isUserSignedIn() ?
                     <ul>
                         <li><Link to={'/documents'}><Icon style={{color: "#282828"}} name='arrow left' /></Link></li>
-                        <li><strong><input className="title-input" value={title ? title : "Untitled"} onChange={handleTitle} type="text" /></strong></li>
+                        <li><strong><input className="title-input" value={title} onChange={handleTitle} type="text" /></strong></li>
                         <li style={{cursor: "default", position: "absolute", right: "5px", top: "2px"}}><strong>{autoSave}</strong></li>
                     </ul> : 
                     <ul>

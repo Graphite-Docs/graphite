@@ -196,13 +196,19 @@ export async function loadSingle() {
         }, 3000);
     }
   } else {
-    const file = `/documents/${window.location.href.split('documents/')[1]}.json`;
+    let file;
+    if(window.location.href.includes('new')) {
+      file = `/documents/${window.location.href.split('new/')[1]}.json`;
+    } else {
+      file = `/documents/${window.location.href.split('documents/')[1]}.json`;
+    }
     const docParams = {
       fileName: file,
       decrypt: true
     }
 
     let doc = await fetchData(docParams);
+    console.log(doc);
     let parsedDoc = JSON.parse(doc);
     let compressed = parsedDoc.compressed;
     let updatedContent;

@@ -12,8 +12,9 @@ class SingleDoc extends Component {
         loading: true, 
         singleDoc: {}, 
         content: "", 
-        title: ""
+        title: "Untitled"
       });
+      single.loadSingle();
       setTimeout(() => {
         setGlobal({loading: false})
       }, 500)
