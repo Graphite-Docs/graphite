@@ -1,4 +1,4 @@
 [build]
-base = "/client/"
-publish = "/client/build"
+base = "/"
+publish = "/build"
 command = "npm run memory-build"

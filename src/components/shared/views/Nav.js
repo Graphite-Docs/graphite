@@ -5,7 +5,7 @@ import {
 import { Link } from 'react-router-dom';
 import logoSquare from '../../../assets/images/whiteMark.svg';
 import { Menu, Image, Icon, Dropdown } from 'semantic-ui-react'
-import { signOut } from '../helpers/auth';
+import { signOut } from '..//helpers/auth';
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 export default class Nav extends Component {
