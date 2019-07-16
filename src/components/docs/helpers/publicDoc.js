@@ -3,11 +3,12 @@ import { Value } from 'slate';
 const axios = require('axios');
 const blockstack = require('blockstack');
 export function fetchData(){
-    const user = window.location.href.split('docs/')[1].split('-')[0];
+    const user = window.location.href.split('docs/')[1].split('&id=')[0];
     blockstack.lookupProfile(user, "https://core.blockstack.org/v1/names")
     .then((profile) => {
       setGlobal({ url: profile.apps[window.location.origin]}, () => {
-        const id = window.location.href.split('docs/')[1].split('-')[1].split('#')[0]
+        const id = window.location.href.split('docs/')[1].split('&id=')[1].split('#')[0]
+        console.log(id);
         axios.get(`${getGlobal().url}public/${id}.json`)
         .then((response) => {
             console.log(response)
@@ -50,7 +51,7 @@ export function handlePubChange(change) {
 }
 
 export function pollForChanges() {
-  const user = window.location.href.split('docs/')[1].split('-')[0];
+  const user = window.location.href.split('docs/')[1].split('&id=')[0];
     blockstack.lookupProfile(user, "https://core.blockstack.org/v1/names")
     .then((profile) => {
       setGlobal({ url: profile.apps[window.location.origin]}, () => {

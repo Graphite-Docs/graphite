@@ -45,7 +45,7 @@ class SocketEditor extends Component {
     if(window.location.href.includes('docInfo')) {
         room = room = window.location.href.split('id=')[1];
     } else if(window.location.href.includes('shared')) {
-        room = window.location.href.split('shared/docs/')[1].split('-')[1]
+        room = window.location.href.split('shared/docs/')[1].split('&id=')[1]
     } else {
       if(window.location.href.includes("new")) {
         room = window.location.href.split("new/")[1];

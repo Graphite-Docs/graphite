@@ -53,6 +53,7 @@ export async function checkPro() {
         decrypt: true
     }
     const account = await fetchData(accountParams);
+    console.log(account);
     if(account) {
         const orgId = JSON.parse(account).orgId;
         const { userSession } = getGlobal();

@@ -244,7 +244,7 @@ export default class MenuBar extends React.Component {
                                         {singleDoc.readOnly === true ? "This shared document is read-only." : "This shared document is editable."}
                                       </p>
                                       <div>
-                                        <p><a href={`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}>{`${window.location.origin}/shared/docs/${userSession.loadUserData().username}-${docId}`}</a></p>
+                                        <p><a href={`${window.location.origin}/shared/docs/${userSession.loadUserData().username}&id=${docId}`}>{`${window.location.origin}/shared/docs/${userSession.loadUserData().username}&id=${docId}`}</a></p>
                                       </div>
                                     </div>
                                     :

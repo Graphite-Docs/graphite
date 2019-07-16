@@ -83,7 +83,7 @@ export function sharePublicly(params) {
     window.location.href.includes("new") ? id = window.location.href.split("new/")[1] : id = window.location.href.split("documents/")[1];
     const directory = "public/";
     const file = directory + id + ".json";
-    const link = `${window.location.origin}/shared/docs/${user}-${id}`;
+    const link = `${window.location.origin}/shared/docs/${user}&id=${id}`;
 
     try {
         let pubDocParams = {
