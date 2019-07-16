@@ -5,7 +5,6 @@ import { ToastsStore} from 'react-toasts';
 import { fetchData } from '../../shared/helpers/fetch';
 import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
 const blockstack = require("blockstack");
-const environment = window.location.origin;
 
 export async function handleProCheck() {
     if(window.location.href.includes('invite/accept')) {
@@ -50,35 +49,34 @@ export async function handleProCheck() {
 
 export async function checkPro() {
     const accountParams = {
-        fileName: "account.json", 
+        fileName: "account.json",
         decrypt: true
     }
     const account = await fetchData(accountParams);
     if(account) {
         const orgId = JSON.parse(account).orgId;
         const { userSession } = getGlobal();
-        const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
         const username = userSession.loadUserData().username;
         const pubKey = blockstack.getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
         const data = {
-            profile: userSession.loadUserData().profile, 
+            profile: userSession.loadUserData().profile,
             username: userSession.loadUserData().username
         }
         const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
         const headerObj = {
             headers: {
-                'Access-Control-Allow-Origin': '*', 
-                'Content-Type': 'application/json', 
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
                 'Authorization': bearer
-            }, 
+            },
         }
-        return axios.get(`${baseUrl}/account/org/${orgId}/user/${username}?pubKey=${pubKey}`, headerObj)
+        return axios.get(`/account/org/${orgId}/user/${username}?pubKey=${pubKey}`, headerObj)
             .then(async (res) => {
                 if(res.data.data) {
                     return res.data.data;
                 } else {
                     return "User not found";
-    
+
                 }
             }).catch(err => console.log(err));
     } else {
@@ -112,30 +110,29 @@ export async function saveOrgDetails() {
     orgInfo["orgName"] = getGlobal().orgName;
     setGlobal({ proOrgInfo: orgInfo });
     let orgParams = {
-        fileName: "account.json", 
-        encrypt: true, 
+        fileName: "account.json",
+        encrypt: true,
         body: JSON.stringify(orgInfo)
     }
     let postOrgInfo = await postData(orgParams);
     console.log(postOrgInfo);
     //Then update the DB
     const data = {
-        profile: userSession.loadUserData().profile, 
+        profile: userSession.loadUserData().profile,
         username: userSession.loadUserData().username
     }
     const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
         },
     }
-    let serverUrl = window.location.href.includes("local") ? "http://localhost:5000" : "https://socket.graphitedocs.com";
     const orgId = getGlobal().proOrgInfo.orgId;
-    const url = `${serverUrl}/account/org/name/${orgId}`;
+    const url = `/account/org/name/${orgId}`;
     const body = {
-        orgName: getGlobal().orgName, 
+        orgName: getGlobal().orgName,
         orgId: getGlobal().proOrgInfo.orgId,
         pubKey
     }
@@ -157,23 +154,21 @@ export async function deleteFromOrg(data) {
     const privateKey = userSession.loadUserData().appPrivateKey;
     const pubKey = getPublicKeyFromPrivate(privateKey);
 
-    let serverUrl;
     const tokenData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey
     }
     const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
 
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
-    axios.delete(`${serverUrl}/account/organization/${proOrgInfo.orgId}/users/${data.id}?pubKey=${pubKey}`, headerObj)
+    axios.delete(`/account/organization/${proOrgInfo.orgId}/users/${data.id}?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {

@@ -9,16 +9,28 @@ import { configure } from 'radiks';
 import { UserSession } from 'blockstack';
 import { appConfig } from './utils/config';
 import initialValue from './components/docs/views/editor/initialValue.json';
+import axios from 'axios'
 
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 const userSession = new UserSession({ appConfig })
 const port = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://whispering-sands-47101.herokuapp.com';
 
+const setAxiosHeaders = () => {
+  // Default
+  // axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? process.env.REACT_APP_API_URL_LOCAL : process.env.REACT_APP_API_URL_SOCKET
+
+  // Local w/ sockets
+  axios.defaults.baseURL = process.env.REACT_APP_API_URL_SOCKET
+
+  // Local w/o sockets
+  // axios.defaults.baseURL = process.env.REACT_APP_API_URL_LOCAL
+}
+
 setGlobal({
     userSession,
     organization: {},
-    documents: [], 
+    documents: [],
     contacts: [],
     files: [],
     teams: [],
@@ -252,20 +264,20 @@ setGlobal({
     timelineEventTextHeadline: "",
     timelineEventTextText: "",
     peopleList: [],
-    profileFound: false, 
-    response: {}, 
-    reAuth: false, 
+    profileFound: false,
+    response: {},
+    reAuth: false,
     provider: "",
-    shareModalOpen: false, 
+    shareModalOpen: false,
     tagModalOpen: false,
     deleteModalOpen: false,
-    selectedDoc: {}, 
+    selectedDoc: {},
     sharedDocs: [],
     sharedFiles: [],
     fileProcessing: false,
-    vaultModalOpen: false, 
-    sharefileModalOpen: false, 
-    vaultPublicModalOpen: false, 
+    vaultModalOpen: false,
+    sharefileModalOpen: false,
+    vaultPublicModalOpen: false,
     contactModalOpen: false,
     trialModalOpen: false,
     orgNameModalOpen: false,
@@ -273,54 +285,55 @@ setGlobal({
     newTeamMateModalOpen: false,
     teamListModalOpen: false,
     contact: {},
-    sharedCollectionLoading: false, 
-    welcome: false, 
-    newTeamName: "", 
-    selectedTeam: "", 
-    settingsNav: "org", 
-    teamKeys: "", 
-    teamShare: false, 
-    contactEditing: false, 
-    newNote: "", 
-    contactNotes: [], 
+    sharedCollectionLoading: false,
+    welcome: false,
+    newTeamName: "",
+    selectedTeam: "",
+    settingsNav: "org",
+    teamKeys: "",
+    teamShare: false,
+    contactEditing: false,
+    newNote: "",
+    contactNotes: [],
     formTitleSaved: false,
-    formLinkModalOpen: false, 
-    formEmbedModalOpen: false, 
-    teamForms: [], 
+    formLinkModalOpen: false,
+    formEmbedModalOpen: false,
+    teamForms: [],
     formResponses: [],
-    submitted: false, 
-    embed: "", 
+    submitted: false,
+    embed: "",
     teamId: "",
     document: {},
     comments: [],
-    currentColor: {}, 
-    currentHighlight: {}, 
-    currentFont: {}, 
+    currentColor: {},
+    currentHighlight: {},
+    currentFont: {},
     currentTextType: {},
-    currentHeading: "", 
+    currentHeading: "",
     currentFontSize: {},
-    boldApplied: false, 
-    italicsApplied: false, 
-    underlineApplied: false, 
-    strikeApplied: false, 
-    alignment: "left", 
-    nodeType: "", 
+    boldApplied: false,
+    italicsApplied: false,
+    underlineApplied: false,
+    strikeApplied: false,
+    alignment: "left",
+    nodeType: "",
     marginTop: 1,
     marginBottom: 1,
     marginLeft: 1,
-    marginRight: 1, 
-    orientation: "portrait", 
-    tableSize: "1x1", 
+    marginRight: 1,
+    orientation: "portrait",
+    tableSize: "1x1",
     tableOfContents: [],
-    docOutline: [], 
+    docOutline: [],
     pages: 0,
-    allComments: [], 
+    allComments: [],
     paragraphs: 0,
     sentences: 0,
     charactersNoSpaces: 0,
     charactersSpaces: 0
 })
 
+setAxiosHeaders()
 configure({
     apiServer: port,
     userSession

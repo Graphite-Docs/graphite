@@ -1,14 +1,14 @@
 import React, { Component } from 'reactn';
 import socketIOClient from 'socket.io-client';
 import SlateEditor from './Editor';
-let serverhost = window.location.href.includes("local") ? "http://localhost:5000" : "https://socket.graphitedocs.com";
+import axios from 'axios';
 
 class SocketEditor extends Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      endpoint: serverhost,
+      endpoint: axios.defaults.baseURL,
       showCollab: false,
       uniqueID: ""
     }
@@ -19,7 +19,7 @@ class SocketEditor extends Component {
     } else {
       this.uniqueID = Math.round(Math.random() * 1000000000000);
     }
-    
+
     this.socket = socketIOClient(this.state.endpoint);
     this.socket.on('update content', data => {
       const content = JSON.parse(data)

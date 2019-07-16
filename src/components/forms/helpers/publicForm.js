@@ -3,7 +3,6 @@ import {setGlobal, getGlobal} from 'reactn';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { ToastsStore} from 'react-toasts';
 const uuid = require('uuidv4');
-const environment = window.location.origin;
 const blockstack = require('blockstack');
 let host;
 
@@ -17,16 +16,15 @@ export async function loadPublicForm() {
         //console.log("team form");
         const formId = window.location.href.split('forms/')[1].split('/')[1];
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
-        const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
         const headerObj = {
             headers: {
-                'Access-Control-Allow-Origin': '*', 
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
-            }, 
+            },
         }
         //console.log(formId);
         //console.log(`${baseUrl}/public/organization/${orgId}/forms/${formId}`);
-        axios.get(`${baseUrl}/public/organization/${orgId}/forms/${formId}`, headerObj)
+        axios.get(`/public/organization/${orgId}/forms/${formId}`, headerObj)
             .then(async (res) => {
                 console.log(res);
                 if(res.data.data) {
@@ -50,7 +48,7 @@ export async function loadFromHost(host) {
     }
     // const options = { username: host, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
     // let params = {
-    //     fileName: `public/forms/${formId}.json`, 
+    //     fileName: `public/forms/${formId}.json`,
     //     options
     // }
     // let fetchedForm = await fetchData(params);
@@ -87,22 +85,20 @@ export async function postForm(responses) {
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
         const thisResponse = {
             id: uuid(),
-            responses, 
+            responses,
             dateSubmitted: getMonthDayYear(),
-            timestamp: Date.now(), 
+            timestamp: Date.now(),
             title: publicForm.title,
-            formId, 
+            formId,
             orgId
         }
-        let serverUrl;
-        environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
         const headerObj = {
             headers: {
-                'Access-Control-Allow-Origin': '*', 
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
-            }, 
+            },
         }
-        axios.post(`${serverUrl}/public/organization/${orgId}/forms/${formId}/user/${user}`, JSON.stringify(thisResponse), headerObj)
+        axios.post(`/public/organization/${orgId}/forms/${formId}/user/${user}`, JSON.stringify(thisResponse), headerObj)
             .then(async (res) => {
                 console.log(res.data)
                 if(res.data.success === false) {
@@ -119,19 +115,17 @@ export async function postForm(responses) {
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
         const thisResponse = {
             id: uuid(),
-            responses, 
+            responses,
             dateSubmitted: getMonthDayYear(),
             timestamp: Date.now()
         }
-        let serverUrl;
-        environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
         const headerObj = {
             headers: {
-                'Access-Control-Allow-Origin': '*', 
+                'Access-Control-Allow-Origin': '*',
                 'Content-Type': 'application/json'
-            }, 
+            },
         }
-        axios.post(`${serverUrl}/public/organization/${orgId}/forms/${formId}`, JSON.stringify(thisResponse), headerObj)
+        axios.post(`/public/organization/${orgId}/forms/${formId}`, JSON.stringify(thisResponse), headerObj)
             .then(async (res) => {
                 console.log(res.data)
                 if(res.data.success === false) {

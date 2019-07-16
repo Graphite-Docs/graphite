@@ -6,7 +6,6 @@ import { postData } from '../../shared/helpers/post';
 import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
 import update from 'immutability-helper';
 import axios from 'axios';
-const environment = window.location.origin;
 const blockstack = require('blockstack');
 var timer = null;
 
@@ -26,38 +25,37 @@ export async function loadForm(id) {
         fetchedKeys = await fetchData(teamKeyParams);
         console.log(fetchedKeys);
         setGlobal({ teamKeys: fetchedKeys });
-        const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
         const data = {
-            profile: userSession.loadUserData().profile, 
+            profile: userSession.loadUserData().profile,
             username: userSession.loadUserData().username
         }
         const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
         const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
         const headerObj = {
             headers: {
-                'Access-Control-Allow-Origin': '*', 
-                'Content-Type': 'application/json', 
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json',
                 'Authorization': bearer
-            }, 
+            },
         }
 
-        axios.get(`${baseUrl}/public/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
+        axios.get(`/public/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
             .then(async (res) => {
-                
+
                 if(res.data.data) {
                     const host = res.data.data.currentHostBucket;
                     const options = { username: host, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false}
                     let params = {
-                        fileName: `forms/${id}.json`, 
+                        fileName: `forms/${id}.json`,
                         options
                     }
-                
+
                     let teamForm = await fetchData(params);
                     let decryptedForm = JSON.parse(userSession.decryptContent(teamForm, {privateKey: JSON.parse(fetchedKeys).private}));
-                    
+
                     await setGlobal({ singleForm: decryptedForm, formLoading: false });
                     //finally we need to fetch the responses
-                    axios.get(`${baseUrl}/account/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
+                    axios.get(`/account/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
                         .then(async (res) => {
                             console.log(res);
                             if(res.data.data) {
@@ -79,29 +77,28 @@ export async function loadForm(id) {
             }).catch(err => console.log(err));
     } else {
         const formParams = {
-            fileName: `forms/${id}.json`, 
+            fileName: `forms/${id}.json`,
             decrypt: true
         }
         const form = await fetchData(formParams);
         if(JSON.parse(form)) {
             await setGlobal({ singleForm: JSON.parse(form), formLoading: false});
-            
+
             if(teamForm) {
-                const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
                 const data = {
-                    profile: userSession.loadUserData().profile, 
+                    profile: userSession.loadUserData().profile,
                     username: userSession.loadUserData().username
                 }
                 const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
                 const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
                 const headerObj = {
                     headers: {
-                        'Access-Control-Allow-Origin': '*', 
-                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/json',
                         'Authorization': bearer
-                    }, 
+                    },
                 }
-                axios.get(`${baseUrl}/public/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
+                axios.get(`/public/organization/${getGlobal().proOrgInfo.orgId}/forms/${id}?pubKey=${pubKey}`, headerObj)
                     .then(async (res) => {
                         console.log(res);
                         if(res.data.data) {
@@ -117,21 +114,20 @@ export async function loadForm(id) {
                         }
                     }).catch(err => console.log(err));
             } else {
-                const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
                 const data = {
-                    profile: userSession.loadUserData().profile, 
+                    profile: userSession.loadUserData().profile,
                     username: userSession.loadUserData().username
                 }
                 const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
                 const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
                 const headerObj = {
                     headers: {
-                        'Access-Control-Allow-Origin': '*', 
-                        'Content-Type': 'application/json', 
+                        'Access-Control-Allow-Origin': '*',
+                        'Content-Type': 'application/json',
                         'Authorization': bearer
-                    }, 
+                    },
                 }
-                axios.get(`${baseUrl}/public/forms/${id}/user/${userSession.loadUserData().username}?pubKey=${pubKey}`, headerObj)
+                axios.get(`/public/forms/${id}/user/${userSession.loadUserData().username}?pubKey=${pubKey}`, headerObj)
                 .then(async (res) => {
                     if(res.data.data) {
                         setGlobal({ formResponses: res.data.data});
@@ -163,7 +159,7 @@ export async function postNewForm(id, fetchedKeys) {
         if(teamForm) {
             teamId = window.location.href.split('team/')[1].split('/')[0];
         }
-        
+
         setGlobal({ formLoading: false });
         //Need to create the form since it doesn't exist yet
         const formObject = {
@@ -172,11 +168,11 @@ export async function postNewForm(id, fetchedKeys) {
             title: "Untitled",
             created: getMonthDayYear(),
             lastUpdated: Date.now(),
-            questions: [], 
+            questions: [],
             teamForm: teamForm ? true : false,
             teamName: teamForm ? getGlobal().teamName : "",
             teamId: teamForm ? getGlobal().teamId : "",
-            teams: [], 
+            teams: [],
             responses: []
         }
         setGlobal({ singleForm: formObject });
@@ -184,23 +180,23 @@ export async function postNewForm(id, fetchedKeys) {
             //Don't add to index
             const encryptedFormObject = userSession.encryptContent(JSON.stringify(formObject), {publicKey: JSON.parse(fetchedKeys).public})
             const newFormParams = {
-                fileName: `forms/${formObject.id}.json`, 
-                encrypt: false, 
+                fileName: `forms/${formObject.id}.json`,
+                encrypt: false,
                 body: encryptedFormObject
             }
             const newForm = await postData(newFormParams);
             console.log(newForm);
             const data = {
-                fromSave: true, 
-                teamId: teamId, 
-                teamName: teamName, 
+                fromSave: true,
+                teamId: teamId,
+                teamName: teamName,
                 initialShare: true
             }
             shareWithTeam(data);
         } else {
             const newFormParams = {
-                fileName: `forms/${formObject.id}.json`, 
-                encrypt: true, 
+                fileName: `forms/${formObject.id}.json`,
+                encrypt: true,
                 body: JSON.stringify(formObject)
             }
             const newForm = await postData(newFormParams);
@@ -233,11 +229,11 @@ export async function saveForm(teamShare) {
         title: singleForm.title,
         created: singleForm.created,
         lastUpdated: Date.now(),
-        questions: singleForm.questions, 
-        teamForm: singleForm.teamForm, 
-        teams: singleForm.teams, 
+        questions: singleForm.questions,
+        teamForm: singleForm.teamForm,
+        teams: singleForm.teams,
         teamName: singleForm.teamName || "",
-        teamId: singleForm.teamId || "", 
+        teamId: singleForm.teamId || "",
         responses: singleForm.responses || []
     }
     await setGlobal({ singleForm: formObject });
@@ -249,20 +245,20 @@ export async function saveForm(teamShare) {
         const thisTeam = teams.filter(a => a.id === teamId)[0];
 
         newFormParams = {
-            fileName: `forms/${formObject.id}.json`, 
-            encrypt: false, 
+            fileName: `forms/${formObject.id}.json`,
+            encrypt: false,
             body: encryptedTeamForm
         }
         const data = {
-            fromSave: true, 
+            fromSave: true,
             teamName: thisTeam.name,
             teamId: teamId
           }
           shareWithTeam(data);
     } else {
         newFormParams = {
-            fileName: `forms/${formObject.id}.json`, 
-            encrypt: true, 
+            fileName: `forms/${formObject.id}.json`,
+            encrypt: true,
             body: JSON.stringify(formObject)
         }
         let forms = getGlobal().forms;
@@ -285,7 +281,7 @@ export async function saveForm(teamShare) {
     }
 
     const newForm = await postData(newFormParams);
-    
+
     ToastsStore.success(`Form saved`);
     console.log(newForm);
 }
@@ -310,7 +306,7 @@ export function handleFormTitle(e) {
     title = e.target.value;
     singleForm["title"] = title;
     setGlobal({ singleForm });
-    clearTimeout(timer); 
+    clearTimeout(timer);
     timer = setTimeout(() => {
         saveForm();
         setGlobal({ formTitleSaved: true });
@@ -332,16 +328,16 @@ export async function publicForm(type) {
         title: singleForm.title,
         created: singleForm.created,
         lastUpdated: Date.now(),
-        questions: singleForm.questions, 
+        questions: singleForm.questions,
         teamForm: singleForm.teamForm,
-        teams: singleForm.teams, 
+        teams: singleForm.teams,
         responses: getGlobal().formResponses
     }
     console.log(formObject);
     setGlobal({ singleForm: formObject });
     const newFormParams = {
-        fileName: `public/forms/${formObject.id}.json`, 
-        encrypt: false, 
+        fileName: `public/forms/${formObject.id}.json`,
+        encrypt: false,
         body: JSON.stringify(formObject)
     }
     const newPublicForm = await postData(newFormParams);
@@ -356,7 +352,7 @@ export async function publicForm(type) {
         }
         shareWithTeam(teamInfo);
     }
-   
+
     if(type === 'link') {
         setGlobal({ formLinkModalOpen: true })
     } else {
@@ -386,16 +382,16 @@ export async function shareWithTeam(data) {
     let singleForm = getGlobal().singleForm;
     const form = {
       id: singleForm.id,
-      team: data.teamId, 
+      team: data.teamId,
       orgId: proOrgInfo.orgId,
       title: singleForm.title,
       responses: singleForm.responses || getGlobal().formResponses,
       currentHostBucket: userSession.loadUserData().username
     }
     const encryptedTeamForm = userSession.encryptContent(JSON.stringify(form), {publicKey: JSON.parse(fetchedKeys).public})
-   
+
     const teamForm = {
-      fileName: `teamForms/${data.teamId}/${singleForm.id}.json`, 
+      fileName: `teamForms/${data.teamId}/${singleForm.id}.json`,
       encrypt: false,
       body: JSON.stringify(encryptedTeamForm)
     }
@@ -411,39 +407,35 @@ export async function shareWithTeam(data) {
     } else {
       await saveForm(false);
     }
-  
+
     const privateKey = userSession.loadUserData().appPrivateKey;
-  
+
     const syncedForm = {
       id: singleForm.id,
-      title: userSession.encryptContent(singleForm.title, {publicKey: JSON.parse(fetchedKeys).public}), 
+      title: userSession.encryptContent(singleForm.title, {publicKey: JSON.parse(fetchedKeys).public}),
       teamName: data.teamName ? userSession.encryptContent(data.teamName, {publicKey: JSON.parse(fetchedKeys).public}) : "",
       orgId: proOrgInfo.orgId,
       teamId: data.teamId,
       lastUpdated: getMonthDayYear(),
-      timestamp: Date.now(), 
+      timestamp: Date.now(),
       responses: singleForm.responses || getGlobal().formResponses,
       currentHostBucket: userSession.loadUserData().username,
       pubKey: getPublicKeyFromPrivate(privateKey)
     }
-    
-    let serverUrl;
       const tokenData = {
-          profile: userSession.loadUserData().profile, 
-          username: userSession.loadUserData().username, 
+          profile: userSession.loadUserData().profile,
+          username: userSession.loadUserData().username,
           pubKey: getPublicKeyFromPrivate(privateKey)
       }
       const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
-      
-      environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
       const headerObj = {
           headers: {
-              'Access-Control-Allow-Origin': '*', 
-              'Content-Type': 'application/json', 
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
               'Authorization': bearer
-          }, 
+          },
       }
-      axios.post(`${serverUrl}/account/organization/${proOrgInfo.orgId}/forms`, JSON.stringify(syncedForm), headerObj)
+      axios.post(`/account/organization/${proOrgInfo.orgId}/forms`, JSON.stringify(syncedForm), headerObj)
           .then(async (res) => {
               console.log(res.data)
               if(res.data.success === false) {

@@ -16,7 +16,6 @@ const Papa = require('papaparse');
 let abuf4;
 var FileSaver = require('file-saver');
 let timer = null;
-const environment = window.location.origin;
 
 export async function loadSingleVaultFile() {
     let wb;
@@ -52,7 +51,7 @@ export async function loadSingleVaultFile() {
         const encryptedFile = await fetchData(teamFile);
         const decryptedFile = userSession.decryptContent(JSON.parse(encryptedFile), {privateKey: JSON.parse(fetchedKeys).private});
         await setGlobal({
-          singleFile: JSON.parse(decryptedFile), 
+          singleFile: JSON.parse(decryptedFile),
           file: JSON.parse(decryptedFile),
           name: JSON.parse(decryptedFile).name,
           type: JSON.parse(decryptedFile).file.type,
@@ -92,7 +91,7 @@ export async function loadSingleVaultFile() {
           wb = XLSX.read(abuf4, { type: "buffer" });
           first_worksheet = wb.Sheets[wb.SheetNames[0]];
           data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
-          
+
           setGlobal({ grid: data });
           setGlobal({ loading: "hide", show: "" });
         }
@@ -103,11 +102,11 @@ export async function loadSingleVaultFile() {
           setGlobal({ loading: "hide", show: "" });
         }
         setGlobal({ loading: false });
-      } else { 
+      } else {
         console.log("No team files...")
         //Need to figure out how to handle this better.
-      } 
-      
+      }
+
       } else {
         const fileId = window.location.href.split('files/')[1];
         const file = `${fileId}.json`
@@ -118,9 +117,9 @@ export async function loadSingleVaultFile() {
 
         let thisFile = await fetchData(fileParams);
         await setGlobal({
-            file: JSON.parse(thisFile), 
+            file: JSON.parse(thisFile),
             singleFile: JSON.parse(thisFile),
-            name: JSON.parse(thisFile).name, 
+            name: JSON.parse(thisFile).name,
             type: JSON.parse(thisFile).type,
             link: JSON.parse(thisFile).link
         })
@@ -158,7 +157,7 @@ export async function loadSingleVaultFile() {
             wb = XLSX.read(abuf4, { type: "buffer" });
             first_worksheet = wb.Sheets[wb.SheetNames[0]];
             data = XLSX.utils.sheet_to_json(first_worksheet, { header: 1 });
-            
+
             setGlobal({ grid: data });
             setGlobal({ loading: "hide", show: "" });
           }
@@ -187,10 +186,10 @@ export async function downloadPDF() {
     oReq.onload = function() {
         // Once the file is downloaded, open a new window with the PDF
         // Remember to allow the POP-UPS in your browser
-        var file = new Blob([oReq.response], { 
-            type: 'application/pdf' 
+        var file = new Blob([oReq.response], {
+            type: 'application/pdf'
         });
-        
+
         // Generate file download directly in the browser !
         FileSaver.saveAs(file, getGlobal().name);
     };
@@ -211,18 +210,18 @@ export async function signWithBlockusign(fileId) {
     const options = { username: userSession.loadUserData().username, zoneFileLookupURL: "https://core.blockstack.org/v1/names", decrypt: false, app: 'https://blockusign.co'}
     try {
         let dataParams = {
-            fileName: 'key.json', 
-            options, 
+            fileName: 'key.json',
+            options,
             decrypt: false
         }
         let thisKey = await fetchData(dataParams);
         if(thisKey) {
             const data = JSON.stringify(getGlobal().singleFile);
             const encryptedData = userSession.encryptContent(data, {publicKey: JSON.parse(thisKey)})
-            
+
             let postParams = {
-                fileName: `blockusign/${fileId}`, 
-                encrypt: false, 
+                fileName: `blockusign/${fileId}`,
+                encrypt: false,
                 body: JSON.stringify(encryptedData)
             }
 
@@ -242,12 +241,12 @@ export async function signWithBlockusign(fileId) {
     let singleFile = await getGlobal().singleFile;
     singleFile["publicVaultFile"] = true;
     await setGlobal({ singleFile, publicVaultFile: true });
-    //First we save the single file with its updates. 
+    //First we save the single file with its updates.
     await saveFile();
     //Now we save the file publicly
     const publicParams = {
-        fileName, 
-        encrypt: false, 
+        fileName,
+        encrypt: false,
         body: JSON.stringify(singleFile)
     }
     const postedPublic = await postData(publicParams);
@@ -266,8 +265,8 @@ export async function signWithBlockusign(fileId) {
     await saveFile();
 
     let publicParams = {
-        fileName, 
-        encrypt: false, 
+        fileName,
+        encrypt: false,
         body: JSON.stringify({})
     }
     const postedPublic = await postData(publicParams);
@@ -281,15 +280,15 @@ export async function signWithBlockusign(fileId) {
     let singleFile = await getGlobal().singleFile;
     singleFile["name"] = name;
     await setGlobal({ name, singleFile });
-    clearTimeout(timer); 
+    clearTimeout(timer);
     timer = setTimeout(() => saveFile(), 1500);
   }
 
   export async function saveFile() {
     let singleFile = await getGlobal().singleFile;
     let singleFileParams = {
-        fileName: `${window.location.href.split('files/')[1]}.json`, 
-        encrypt: true, 
+        fileName: `${window.location.href.split('files/')[1]}.json`,
+        encrypt: true,
         body: JSON.stringify(singleFile)
     }
     const postedFile = await postData(singleFileParams);
@@ -302,7 +301,7 @@ export async function signWithBlockusign(fileId) {
     let file = await getGlobal().singleFile;
     const indexObject = {
         uploaded: file.uploaded,
-        timestamp: Date.now(), 
+        timestamp: Date.now(),
         name: file.name,
         size: file.size,
         type: file.type,
@@ -311,7 +310,7 @@ export async function signWithBlockusign(fileId) {
         lastModified: file.lastModified,
         lastModifiedDate: file.lastModifiedDate,
         publicVaultFile: file.publicVaultFile,
-        id: file.id, 
+        id: file.id,
         fileType: "vault"
     }
     let index = await files.map((x) => {return x.id }).indexOf(window.location.href.split('files/')[1]);
@@ -322,8 +321,8 @@ export async function signWithBlockusign(fileId) {
       console.log("Error doc index")
     }
     let fileIndexParams = {
-        fileName: 'uploads.json', 
-        encrypt: true, 
+        fileName: 'uploads.json',
+        encrypt: true,
         body: JSON.stringify(getGlobal().files)
     }
     const postedIndex = await postData(fileIndexParams);
@@ -340,52 +339,52 @@ export async function signWithBlockusign(fileId) {
     const content = await getGlobal().singleFileContent;
     const id = uuid();
     let singleModel = {
-      id: id, 
+      id: id,
       content,
-      fileType: "documents", 
-      lastUpdate: Date.now(), 
-      updated: getMonthDayYear(), 
+      fileType: "documents",
+      lastUpdate: Date.now(),
+      updated: getMonthDayYear(),
       readOnly: true,
       rtc: false,
-      sharedWith: [], 
+      sharedWith: [],
       singleDocIsPublic: false,
-      singleDocTags: [], 
-      teamDoc: false, 
+      singleDocTags: [],
+      teamDoc: false,
       versions: [],
-      title: singleFile.name, 
+      title: singleFile.name,
       compressed: true
   }
     let fileName = `/documents/${id}.json`;
     let docParams = {
-        fileName, 
-        body: JSON.stringify(singleModel), 
+        fileName,
+        body: JSON.stringify(singleModel),
         encrypt: true
     }
     const updatedDoc = await postData(docParams);
     console.log(updatedDoc);
-    
+
     //Now we update the index file;
     let docs = await getGlobal().documents;
     let docObject = {
-      id: id, 
-      fileType: "documents", 
-      lastUpdate: Date.now(), 
-      updated: getMonthDayYear(), 
+      id: id,
+      fileType: "documents",
+      lastUpdate: Date.now(),
+      updated: getMonthDayYear(),
       readOnly: true,
       rtc: false,
-      sharedWith: [], 
+      sharedWith: [],
       singleDocIsPublic: false,
-      singleDocTags: [], 
-      teamDoc: false, 
+      singleDocTags: [],
+      teamDoc: false,
       versions: [],
       title: singleFile.name
     }
 
     await setGlobal({ documents: [...docs, docObject], filteredDocs: [...getGlobal().filteredDocs, docObject]})
-    
+
     let indexParams = {
-      fileName: 'documentscollection.json', 
-      body: JSON.stringify(getGlobal().documents), 
+      fileName: 'documentscollection.json',
+      body: JSON.stringify(getGlobal().documents),
       encrypt: true
     }
 
@@ -409,61 +408,59 @@ export async function signWithBlockusign(fileId) {
       decrypt: true
     }
     const fetchedKeys = await fetchData(teamKeyParams);
-  
+
     const file = {
       id: fileId,
-      team: data.teamId, 
+      team: data.teamId,
       orgId: proOrgInfo.orgId,
-      name: getGlobal().name, 
+      name: getGlobal().name,
       file: getGlobal().singleFile,
       currentHostBucket: userSession.loadUserData().username
     }
     const encryptedTeamFile = userSession.encryptContent(JSON.stringify(file), {publicKey: JSON.parse(fetchedKeys).public})
-   
+
     const teamFile = {
-      fileName: `teamFiles/${data.teamId}/${fileId}.json`, 
+      fileName: `teamFiles/${data.teamId}/${fileId}.json`,
       encrypt: false,
       body: JSON.stringify(encryptedTeamFile)
     }
     const postedTeamFile = await postData(teamFile);
     console.log(postedTeamFile);
-  
+
     let singleFile = getGlobal().singleFile;
     singleFile["teamFile"] = true;
     await setGlobal({ singleFile });
     await saveFile();
-  
+
     const privateKey = userSession.loadUserData().appPrivateKey;
-  
+
     const syncedFile = {
       id: fileId,
-      name: userSession.encryptContent(getGlobal().name, {publicKey: JSON.parse(fetchedKeys).public}), 
+      name: userSession.encryptContent(getGlobal().name, {publicKey: JSON.parse(fetchedKeys).public}),
       teamName: userSession.encryptContent(data.teamName, {publicKey: JSON.parse(fetchedKeys).public}),
       orgId: proOrgInfo.orgId,
       teamId: data.teamId,
       lastUpdated: getMonthDayYear(),
-      timestamp: Date.now(), 
+      timestamp: Date.now(),
       currentHostBucket: userSession.encryptContent(userSession.loadUserData().username, {publicKey: JSON.parse(fetchedKeys).public}),
       pubKey: getPublicKeyFromPrivate(privateKey)
     }
-    
-    let serverUrl;
+
       const tokenData = {
-          profile: userSession.loadUserData().profile, 
-          username: userSession.loadUserData().username, 
+          profile: userSession.loadUserData().profile,
+          username: userSession.loadUserData().username,
           pubKey: getPublicKeyFromPrivate(privateKey)
       }
       const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
-      
-      environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
+
       const headerObj = {
           headers: {
-              'Access-Control-Allow-Origin': '*', 
-              'Content-Type': 'application/json', 
+              'Access-Control-Allow-Origin': '*',
+              'Content-Type': 'application/json',
               'Authorization': bearer
-          }, 
+          },
       }
-      axios.post(`${serverUrl}/account/organization/${proOrgInfo.orgId}/files`, JSON.stringify(syncedFile), headerObj)
+      axios.post(`/account/organization/${proOrgInfo.orgId}/files`, JSON.stringify(syncedFile), headerObj)
           .then(async (res) => {
               console.log(res.data)
               if(res.data.success === false) {
@@ -481,4 +478,3 @@ export async function signWithBlockusign(fileId) {
               }
           })
   }
-

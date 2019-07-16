@@ -7,7 +7,6 @@ import { handleProCheck } from '../helpers/account';
 import { postData } from '../../shared/helpers/post';
 const jwt = require('jsonwebtoken');
 const blockstack = require('blockstack');
-const environment = window.location.origin;
 
 export async function generateInviteJWT(userData) {
     const { proOrgInfo } = getGlobal();
@@ -19,30 +18,27 @@ export async function generateInviteJWT(userData) {
 export async function sendInviteEmail(userData, token) {
 
     const { userSession } = getGlobal();
-    let serverUrl;
     const privateKey = userSession.loadUserData().appPrivateKey;
     const jwtData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(jwtData, userSession.loadUserData().appPrivateKey);
-    
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
     const inviteUrlBase = window.location.href.includes('local') ? "http://localhost:3000" : "https://app.graphitedocs.com";
     userData["pubKey"] = getPublicKeyFromPrivate(privateKey);
     const data = {
-        inviteUrl: `${inviteUrlBase}/invite/${token}`, 
+        inviteUrl: `${inviteUrlBase}/invite/${token}`,
         userData
     }
-    axios.post(`${serverUrl}/emails/invite`, JSON.stringify(data), headerObj)
+    axios.post(`/emails/invite`, JSON.stringify(data), headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(userData.resend) {
@@ -68,14 +64,14 @@ export async function resendInvite(user, team) {
         id: user.id,
         username: null,
         role: user.role,
-        email: user.email, 
-        name: user.name, 
-        invitePending: true, 
-        orgId: proOrgInfo.orgId, 
+        email: user.email,
+        name: user.name,
+        invitePending: true,
+        orgId: proOrgInfo.orgId,
         selectedTeam: team,
         orgName: proOrgInfo.orgName,
         teamKeys,
-        pubKey: getPublicKeyFromPrivate(privateKey), 
+        pubKey: getPublicKeyFromPrivate(privateKey),
         resend: true
     }
     generateInviteJWT(dataObj);
@@ -101,17 +97,17 @@ export async function decodeToken() {
     const accountObject = {
         orgId: decoded.orgId,
         id: decoded.id,
-        name: decoded.name, 
-        organization: decoded.orgName, 
-        email: decoded.email, 
+        name: decoded.name,
+        organization: decoded.orgName,
+        email: decoded.email,
         role: decoded.role,
-        username: getGlobal().userSession.loadUserData().username, 
+        username: getGlobal().userSession.loadUserData().username,
         selectedTeam: decoded.selectedTeam,
         pubKey: blockstack.getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey),
     }
 
     const accountParams = {
-        fileName: "account.json", 
+        fileName: "account.json",
         encrypt: true,
         body: JSON.stringify(accountObject)
     }
@@ -121,7 +117,7 @@ export async function decodeToken() {
 
     const teamKeyParams = {
         fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${decoded.selectedTeam}/key.json`,
-        encrypt: true, 
+        encrypt: true,
         body: JSON.stringify(decoded.teamKeys)
     }
     const postedKeys = await postData(teamKeyParams);
@@ -136,24 +132,21 @@ export async function updateUserInfo(tokenData) {
     dataObj["username"] = userSession.loadUserData().username;
     const privateKey = userSession.loadUserData().appPrivateKey;
     dataObj["pubKey"] = getPublicKeyFromPrivate(privateKey);
-    
-    let serverUrl;
+
     const jwtData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(jwtData, userSession.loadUserData().appPrivateKey);
-    
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
-    axios.put(`${serverUrl}/account/organization/${dataObj.orgId}/user/${dataObj.id}`, JSON.stringify(dataObj), headerObj)
+    axios.put(`/account/organization/${dataObj.orgId}/user/${dataObj.id}`, JSON.stringify(dataObj), headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {
@@ -169,4 +162,3 @@ export async function updateUserInfo(tokenData) {
             ToastsStore.error(`Trouble updating your account`);
         })
 }
-

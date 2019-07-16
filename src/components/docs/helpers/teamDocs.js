@@ -3,7 +3,6 @@ import { getGlobal } from 'reactn';
 import { ToastsStore} from 'react-toasts';
 import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
 import { loadData } from '../../shared/helpers/accountContext';
-const environment = window.location.origin;
 const blockstack = require('blockstack');
 
 export function deleteTeamDoc(data) {
@@ -12,23 +11,21 @@ export function deleteTeamDoc(data) {
     const privateKey = userSession.loadUserData().appPrivateKey;
     const pubKey = getPublicKeyFromPrivate(privateKey);
 
-    let serverUrl;
     const tokenData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey
     }
     const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
 
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
-    axios.delete(`${serverUrl}/account/organization/${proOrgInfo.orgId}/teams/${data.teamId}/documents/${data.docId}?pubKey=${pubKey}`, headerObj)
+    axios.delete(`/account/organization/${proOrgInfo.orgId}/teams/${data.teamId}/documents/${data.docId}?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {

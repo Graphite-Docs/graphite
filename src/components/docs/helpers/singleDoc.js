@@ -15,7 +15,6 @@ import axios from 'axios';
 const wordCount = require('html-word-count')
 const uuid = require('uuidv4');
 const lzjs = require('lzjs');
-const environment = window.location.origin;
 const blockstack = require('blockstack');
 
 var timer = null;
@@ -332,15 +331,12 @@ export async function shareWithTeam(data) {
     pubKey: getPublicKeyFromPrivate(privateKey)
   }
 
-  let serverUrl;
     const tokenData = {
         profile: userSession.loadUserData().profile,
         username: userSession.loadUserData().username,
         pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
-
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
             'Access-Control-Allow-Origin': '*',
@@ -348,7 +344,7 @@ export async function shareWithTeam(data) {
             'Authorization': bearer
         },
     }
-    axios.post(`${serverUrl}/account/organization/${proOrgInfo.orgId}/documents`, JSON.stringify(syncedDoc), headerObj)
+    axios.post(`/account/organization/${proOrgInfo.orgId}/documents`, JSON.stringify(syncedDoc), headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {

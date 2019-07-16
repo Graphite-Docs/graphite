@@ -8,7 +8,6 @@ import { generateInviteJWT } from './invites';
 import { fetchData } from '../../shared/helpers/fetch';
 const blockstack = require('blockstack');
 const uuid = require('uuidv4');
-const environment = window.location.origin;
 
 export async function fetchTeamKey() {
     const { userSession } = getGlobal();
@@ -37,14 +36,14 @@ export async function saveNewTeam() {
         team: {
             name: getGlobal().newTeamName,
             id: teamId,
-            pubKey: publicKey, 
+            pubKey: publicKey,
             users: [
                 {
                     id: userInfo.id,
                     username: userSession.loadUserData().username,
                     role: checkRole === "Admin" ? "Admin" : "Manager",
-                    email: userInfo.email, 
-                    name: userInfo.name 
+                    email: userInfo.email,
+                    name: userInfo.name
                 }
             ]
         }
@@ -56,29 +55,25 @@ export async function saveNewTeam() {
 
     const teamKeyParams = {
         fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${teamObj.team.id}/key.json`,
-        encrypt: true, 
+        encrypt: true,
         body: JSON.stringify(teamKey)
     }
     const postedTeamKey = await postData(teamKeyParams);
     console.log(postedTeamKey);
-
-    let serverUrl;
     const data = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
-    
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
-    axios.post(`${serverUrl}/account/org/team`, JSON.stringify(teamObj), headerObj)
+    axios.post(`/account/org/team`, JSON.stringify(teamObj), headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {
@@ -101,8 +96,8 @@ export async function saveNewTeammate(data) {
         id: userId,
         username: null,
         role: data.role,
-        email: data.email, 
-        name: data.name, 
+        email: data.email,
+        name: data.name,
         invitePending: true
     }
 
@@ -115,8 +110,8 @@ export async function saveNewTeammate(data) {
     orgInfo.users.push(updatedUserObj);
     await setGlobal({ proOrgInfo: orgInfo });
     const accountParams = {
-        fileName: "account.json", 
-        encrypt: true, 
+        fileName: "account.json",
+        encrypt: true,
         body: JSON.stringify(getGlobal().proOrgInfo)
     }
     const updatedAccount = await postData(accountParams);
@@ -125,23 +120,20 @@ export async function saveNewTeammate(data) {
     userObj["selectedTeam"] = data.selectedTeam;
     userObj["pubKey"] = getPublicKeyFromPrivate(privateKey);
     userObj["orgId"] = proOrgInfo.orgId;
-    let serverUrl;
     const jwtData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey: getPublicKeyFromPrivate(privateKey)
     }
     const bearer = blockstack.signProfileToken(jwtData, userSession.loadUserData().appPrivateKey);
-    
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
-    axios.post(`${serverUrl}/account/user?updateTeam=${true}`, JSON.stringify(userObj), headerObj)
+    axios.post(`/account/user?updateTeam=${true}`, JSON.stringify(userObj), headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {
@@ -166,23 +158,20 @@ export async function deleteUser(data) {
     const privateKey = userSession.loadUserData().appPrivateKey;
     const pubKey = getPublicKeyFromPrivate(privateKey);
 
-    let serverUrl;
     const tokenData = {
-        profile: userSession.loadUserData().profile, 
-        username: userSession.loadUserData().username, 
+        profile: userSession.loadUserData().profile,
+        username: userSession.loadUserData().username,
         pubKey
     }
     const bearer = blockstack.signProfileToken(tokenData, userSession.loadUserData().appPrivateKey);
-
-    environment.includes('local') ? serverUrl = 'http://localhost:5000' : serverUrl = 'https://socket.graphitedocs.com';
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
-    axios.delete(`${serverUrl}/account/organization/${proOrgInfo.orgId}/teams/${data.team}/users/${data.user.id}?pubKey=${pubKey}`, headerObj)
+    axios.delete(`/account/organization/${proOrgInfo.orgId}/teams/${data.team}/users/${data.user.id}?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             console.log(res.data)
             if(res.data.success === false) {

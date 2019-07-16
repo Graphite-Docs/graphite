@@ -11,13 +11,13 @@ export async function loadData(params) {
     } else {
         setGlobal({ loading: true })
     }
-    
+
     const docsParams = {
-        fileName: 'documentscollection.json', 
+        fileName: 'documentscollection.json',
         decrypt: true
     }
     const contactsParams = {
-        fileName: 'contact.json', 
+        fileName: 'contact.json',
         decrypt: true
     }
     const filesParams = {
@@ -26,7 +26,7 @@ export async function loadData(params) {
     }
 
     const keyParams = {
-        fileName: "key.json", 
+        fileName: "key.json",
         decrypt: false
     }
 
@@ -55,7 +55,7 @@ export async function loadData(params) {
     } else {
         oldContactsFile = true;
     }
-    
+
     let files = await fetchData(filesParams);
 
     const formsParams = {
@@ -66,7 +66,7 @@ export async function loadData(params) {
     let forms = await fetchData(formsParams);
 
     setGlobal({
-        documents: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [], 
+        documents: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
         filteredDocs: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
         contacts: JSON.parse(contacts) ? oldContactsFile === true ? JSON.parse(contacts).contacts : JSON.parse(contacts) : [],
         filteredContacts: JSON.parse(contacts) ? oldContactsFile === true ? JSON.parse(contacts).contacts : JSON.parse(contacts) : [],
@@ -91,8 +91,8 @@ export async function saveKey() {
     const { userSession } = getGlobal();
     const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
     const keyParams = {
-        fileName: "key.json", 
-        encrypt: false, 
+        fileName: "key.json",
+        encrypt: false,
         body: JSON.stringify(pubKey)
     }
     const postedKey = await postData(keyParams);
@@ -112,23 +112,22 @@ export async function fetchTeamDocs() {
         return myTeams;
     });
 
-    const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
     const data = {
-        profile: userSession.loadUserData().profile, 
+        profile: userSession.loadUserData().profile,
         username: userSession.loadUserData().username
     }
     const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
     const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
 
     for(const team of myTeams) {
-        await axios.get(`${baseUrl}/account/organization/${orgId}/documents/${team.id}?pubKey=${pubKey}`, headerObj)
+        await axios.get(`/account/organization/${orgId}/documents/${team.id}?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             if(res.data.data) {
                 const docs = res.data.data;
@@ -138,14 +137,14 @@ export async function fetchTeamDocs() {
                     decrypt: true,
                 }
                 const fetchedKeys = await fetchData(teamKeyParams);
-                
+
                 // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
                 asyncForEach(docs, (doc) => {
                     let thisDoc = doc;
                     thisDoc.currentHostBucket = userSession.decryptContent(thisDoc.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
                     thisDoc.teamName = userSession.decryptContent(thisDoc.teamName, {privateKey: JSON.parse(fetchedKeys).private});
                     thisDoc.title = userSession.decryptContent(thisDoc.title, {privateKey: JSON.parse(fetchedKeys).private});
-                
+
                     teamDocs.push(thisDoc);
                 })
             } else {
@@ -170,23 +169,22 @@ export async function fetchTeamFiles() {
         return myTeams;
     });
 
-    const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
     const data = {
-        profile: userSession.loadUserData().profile, 
+        profile: userSession.loadUserData().profile,
         username: userSession.loadUserData().username
     }
     const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
     const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
 
     for(const team of myTeams) {
-        await axios.get(`${baseUrl}/account/organization/${orgId}/files/${team.id}?pubKey=${pubKey}`, headerObj)
+        await axios.get(`/account/organization/${orgId}/files/${team.id}?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             if(res.data.data) {
                 const files = res.data.data;
@@ -196,14 +194,14 @@ export async function fetchTeamFiles() {
                     decrypt: true,
                 }
                 const fetchedKeys = await fetchData(teamKeyParams);
-                
+
                 // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
                 asyncForEach(files, (file) => {
                     let thisFile = file;
                     thisFile.currentHostBucket = userSession.decryptContent(thisFile.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
                     thisFile.teamName = userSession.decryptContent(thisFile.teamName, {privateKey: JSON.parse(fetchedKeys).private});
                     thisFile.name = userSession.decryptContent(thisFile.name, {privateKey: JSON.parse(fetchedKeys).private});
-                
+
                     teamFiles.push(thisFile);
                 })
             } else {
@@ -228,23 +226,22 @@ export async function fetchTeamForms() {
         return myTeams;
     });
 
-    const baseUrl = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://socket.graphitedocs.com';
     const data = {
-        profile: userSession.loadUserData().profile, 
+        profile: userSession.loadUserData().profile,
         username: userSession.loadUserData().username
     }
     const pubKey = getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey);
     const bearer = blockstack.signProfileToken(data, userSession.loadUserData().appPrivateKey);
     const headerObj = {
         headers: {
-            'Access-Control-Allow-Origin': '*', 
-            'Content-Type': 'application/json', 
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json',
             'Authorization': bearer
-        }, 
+        },
     }
 
     for(const team of myTeams) {
-        await axios.get(`${baseUrl}/account/organization/${orgId}/teams/${team.id}/forms?pubKey=${pubKey}`, headerObj)
+        await axios.get(`/account/organization/${orgId}/teams/${team.id}/forms?pubKey=${pubKey}`, headerObj)
         .then(async (res) => {
             if(res.data.data) {
                 const forms = res.data.data;
@@ -254,14 +251,14 @@ export async function fetchTeamForms() {
                     decrypt: true,
                 }
                 const fetchedKeys = await fetchData(teamKeyParams);
-                
+
                 // const thisDoc = userSession.decryptContent(JSON.parse(res.data.data), {privateKey: privateKey});
                 asyncForEach(forms, (form) => {
                     let thisForm = form;
                     //thisForm.currentHostBucket = thisForm.currentHostBucket;//userSession.decryptContent(thisForm.currentHostBucket, {privateKey: JSON.parse(fetchedKeys).private});
                     thisForm.teamName = userSession.decryptContent(thisForm.teamName, {privateKey: JSON.parse(fetchedKeys).private});
                     thisForm.title = userSession.decryptContent(thisForm.title, {privateKey: JSON.parse(fetchedKeys).private});
-                
+
                     teamForms.push(thisForm);
                 })
             } else {
