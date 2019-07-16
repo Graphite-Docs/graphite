@@ -18,12 +18,12 @@ const port = window.location.href.includes('local') ? 'http://localhost:5000' : 
 
 const setAxiosHeaders = () => {
   // Default
-  // axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? process.env.REACT_APP_API_URL_LOCAL : process.env.REACT_APP_API_URL_SOCKET
+  axios.defaults.baseURL = process.env.NODE_ENV === 'development' ? process.env.REACT_APP_API_URL_LOCAL : process.env.REACT_APP_API_URL_SOCKET
 
-  // Local w/ sockets
-  axios.defaults.baseURL = process.env.REACT_APP_API_URL_SOCKET
+  // Local w/ sockets (PRO)
+  // axios.defaults.baseURL = process.env.REACT_APP_API_URL_SOCKET
 
-  // Local w/o sockets
+  // Local w/o sockets (Normal)
   // axios.defaults.baseURL = process.env.REACT_APP_API_URL_LOCAL
 }
 
