@@ -14,11 +14,12 @@ class SingleForm extends Component {
     super(props);
     this.state = {
       activeItem: "Edit Form", 
-      activeIndex: 0
+      activeIndex: 0, 
+      decryptingResponses: false
     }
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     setGlobal({ formResponses: [] });
     let id;
     if(window.location.href.includes('team')) {
@@ -35,7 +36,7 @@ class SingleForm extends Component {
       }
     }
     
-    loadForm(id);
+    await loadForm(id);
   }
 
   handleClick = (e, titleProps) => {

@@ -356,7 +356,7 @@ class EditForm extends Component {
                                         {
                                             question.options.map(opt => {
                                                 return (
-                                                    <Form.Field label={opt.optionText} control='input' type='checkbox' />
+                                                    <Form.Field key={opt.optionText} label={opt.optionText} control='input' type='checkbox' />
                                                 );
                                             })
                                         }

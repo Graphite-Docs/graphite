@@ -38,7 +38,12 @@ export async function loadData(params) {
     }
     let docs = await fetchData(docsParams);
     let oldFile;
-    let isArr = Object.prototype.toString.call(JSON.parse(docs)) === '[object Array]';
+    let isArr;
+    if(docs) {
+        isArr = Object.prototype.toString.call(JSON.parse(docs)) === '[object Array]';
+    } else {
+        isArr = true;
+    }
     //older versions of the doc collection stored the entire state object at the time. Need to check for that
     if(isArr === true) {
         oldFile = false
@@ -66,8 +71,8 @@ export async function loadData(params) {
     let forms = await fetchData(formsParams);
 
     setGlobal({
-        documents: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
-        filteredDocs: JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [],
+        documents: docs ? JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [] : [],
+        filteredDocs: docs ? JSON.parse(docs) ? oldFile === true ? JSON.parse(docs).value : JSON.parse(docs) : [] : [],
         contacts: JSON.parse(contacts) ? oldContactsFile === true ? JSON.parse(contacts).contacts : JSON.parse(contacts) : [],
         filteredContacts: JSON.parse(contacts) ? oldContactsFile === true ? JSON.parse(contacts).contacts : JSON.parse(contacts) : [],
         files: JSON.parse(files) || [],

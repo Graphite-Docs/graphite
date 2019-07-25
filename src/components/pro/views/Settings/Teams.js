@@ -48,7 +48,13 @@ class Teams extends Component {
                                 {
                                     teamList.map(team => {
                                         const myUserAccount = team.users.filter(user => user.username === userSession.loadUserData().username)[0];
-                                        const canDelete = (myUserAccount.role === "Admin" || myUserAccount.role === "Manager") && team.name !== "Admins" ? true : false;
+                                        let canDelete;
+                                        if(myUserAccount) {
+                                            canDelete = (myUserAccount.role === "Admin" || myUserAccount.role === "Manager") && team.name !== "Admins" ? true : false;
+                                        } else {
+                                            canDelete = false;
+                                        }
+                                        
                                         return (
                                             <Table.Row key={team.id}>
                                                 <Table.Cell><button onClick={() => setGlobal({ selectedTeam: team.id})} className="link-button" style={{color: "#4183c4"}}>{team.name}</button></Table.Cell>

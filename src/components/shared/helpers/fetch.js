@@ -7,11 +7,17 @@ export function fetchData(params) {
         return userSession.getFile(fileName, params.options)
         .then((file) => {
             return file
-        }).catch(error => console.log(error))
+        }).catch((err) => {
+            console.log(err);
+            return {
+                err,
+                message: "trouble fetching file"
+            }
+        })
     } else {
         return userSession.getFile(fileName, {decrypt: params.decrypt})
         .then((file) => {
             return file
-        }).catch(error => console.log(error))
+        }).catch(error => console.log(fileName,error))
     }
 }

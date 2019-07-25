@@ -13,7 +13,7 @@ class PublicForm extends Component {
       };
   }
   componentDidMount() {
-      document.body.style.background = "#eee";
+    document.body.style.background = "#eee";
     loadPublicForm();
   }
 

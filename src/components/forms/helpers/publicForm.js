@@ -2,6 +2,7 @@ import axios from 'axios';
 import {setGlobal, getGlobal} from 'reactn';
 import { getMonthDayYear } from '../../shared/helpers/getMonthDayYear';
 import { ToastsStore} from 'react-toasts';
+import { encryptECIES } from 'blockstack/lib/encryption';
 const uuid = require('uuidv4');
 const blockstack = require('blockstack');
 let host;
@@ -62,6 +63,7 @@ export async function loadFromHost(host) {
         .then((response) => {
             //console.log(response);
             if(Object.keys(response.data).length > 0) {
+                console.log(response.data);
                 setGlobal({ publicForm: response.data, loading: false  });
             } else {
                 console.log("error")
@@ -85,7 +87,7 @@ export async function postForm(responses) {
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
         const thisResponse = {
             id: uuid(),
-            responses,
+            responses: encryptECIES(publicForm.pubKey, JSON.stringify(responses)),
             dateSubmitted: getMonthDayYear(),
             timestamp: Date.now(),
             title: publicForm.title,
@@ -115,7 +117,7 @@ export async function postForm(responses) {
         const orgId = window.location.href.split('forms/')[1].split('/')[0];
         const thisResponse = {
             id: uuid(),
-            responses,
+            responses: encryptECIES(publicForm.pubKey, JSON.stringify(responses)),
             dateSubmitted: getMonthDayYear(),
             timestamp: Date.now()
         }

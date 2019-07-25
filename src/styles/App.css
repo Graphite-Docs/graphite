@@ -213,6 +213,20 @@
   float: right;
 }
 
+.hero-main {
+  width: 100%;
+  background: #121212;
+}
+
+#wave {
+  padding-top: 200px;
+  height: 100vh;
+  width: 100%;
+  background: url('../assets/Wave.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
 /* Custom dropdown */
 .custom-dropdown {
   position: relative;

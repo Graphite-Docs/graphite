@@ -26,7 +26,7 @@ export function handleTeamName(e) {
 export async function saveNewTeam() {
     const { userSession, proOrgInfo } = getGlobal();
     const userInfo = proOrgInfo.users.filter(user => user.username === userSession.loadUserData().username)[0];
-    const checkRole = userInfo.role;
+    const checkRole = userInfo.isAdmin;
     const teamId = uuid();
     const privateKey = makeECPrivateKey();
     const publicKey = getPublicKeyFromPrivate(privateKey);
@@ -41,7 +41,7 @@ export async function saveNewTeam() {
                 {
                     id: userInfo.id,
                     username: userSession.loadUserData().username,
-                    role: checkRole === "Admin" ? "Admin" : "Manager",
+                    role: checkRole === true ? "Admin" : "Manager",
                     email: userInfo.email,
                     name: userInfo.name
                 }

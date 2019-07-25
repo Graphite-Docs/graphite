@@ -79,7 +79,7 @@ class Welcome extends Component {
                     {
                         window.location.href.includes('settings') ?
                         <Button style={{marginBottom: "45px"}} onClick={this.handleDone} secondary>All Done!</Button> : 
-                        <Link to={'/settings'}><Button style={{marginBottom: "45px"}} secondary>All Done!</Button></Link>
+                        <Link onClick={() => setGlobal({ welcome: false })} to={'/settings'}><Button style={{marginBottom: "45px"}} secondary>All Done!</Button></Link>
                     }
                     
                 </div>

@@ -6,14 +6,21 @@ import { postData } from '../../shared/helpers/post';
 import { getPublicKeyFromPrivate } from 'blockstack/lib/keys';
 import update from 'immutability-helper';
 import axios from 'axios';
+const { Parser } = require('json2csv');
 const blockstack = require('blockstack');
 var timer = null;
 
-export async function loadForm(id) {
+export async function loadForm(id, refresh) {
     let fetchedKeys;
     const { userSession } = getGlobal();
     let teamForm = window.location.href.includes('team') ? true : false;
-    setGlobal({ formLoading: true });
+    if(refresh === false) {
+        setGlobal({ formLoading: false });
+        ToastsStore.success(`Fetching new responses...`);
+    } else {
+        setGlobal({ formLoading: true });
+    }
+    
     if(teamForm) {
         const teamId = window.location.href.split('team/')[1].split('/')[0];
         //Need to load the team form info first, then we can figure out which bucket to load from.
@@ -23,7 +30,6 @@ export async function loadForm(id) {
             decrypt: true,
         }
         fetchedKeys = await fetchData(teamKeyParams);
-        console.log(fetchedKeys);
         setGlobal({ teamKeys: fetchedKeys });
         const data = {
             profile: userSession.loadUserData().profile,
@@ -60,6 +66,9 @@ export async function loadForm(id) {
                             console.log(res);
                             if(res.data.data) {
                                 setGlobal({ formResponses: res.data.data});
+                                if(refresh === false) {
+                                    ToastsStore.success(`Responses now up to date`);
+                                }
                                 // //Now we need to fetch the team key
                                 // const teamKeyParams = {
                                 //     fileName: `user/${userSession.loadUserData().username.split('.').join('_')}/team/${team.id}/key.json`,
@@ -149,6 +158,7 @@ export async function loadForm(id) {
 }
 
 export async function postNewForm(id, fetchedKeys) {
+    console.log("this should work");
     console.log(fetchedKeys);
 
     let teamForm = window.location.href.includes('team') ? true : false;
@@ -175,6 +185,7 @@ export async function postNewForm(id, fetchedKeys) {
             teams: [],
             responses: []
         }
+        console.log(formObject);
         setGlobal({ singleForm: formObject });
         if(teamForm) {
             //Don't add to index
@@ -331,9 +342,9 @@ export async function publicForm(type) {
         questions: singleForm.questions,
         teamForm: singleForm.teamForm,
         teams: singleForm.teams,
-        responses: getGlobal().formResponses
+        pubKey: teamForm ? getTeamKey() : getPublicKeyFromPrivate(userSession.loadUserData().appPrivateKey)
+        // responses: getGlobal().formResponses
     }
-    console.log(formObject);
     setGlobal({ singleForm: formObject });
     const newFormParams = {
         fileName: `public/forms/${formObject.id}.json`,
@@ -363,6 +374,13 @@ export async function publicForm(type) {
             setGlobal({ formEmbedModalOpen: true, embed: `<iframe \nsrc="${window.location.origin}/single/forms/${proOrgInfo.orgId}/${singleForm.id}/${userSession.loadUserData().username}" \ntitle="${singleForm.title}" \nstyle="position: absolute; height: 100%; max-width: 100%; margin: auto; border: none">\n</iframe>` });
         }
     }
+}
+
+export function getTeamKey() {
+    //stubbing this out for now
+    console.log("the team key would be returned here");
+    const teamKeys = getGlobal().teamKeys;
+    return JSON.parse(teamKeys).public
 }
 
 export async function shareWithTeam(data) {
@@ -452,4 +470,30 @@ export async function shareWithTeam(data) {
                 ToastsStore.error(`Trouble creating form`);
               }
           })
+  }
+
+  export function downloadResponses(items, title) {
+    let fields = ["Date"];
+    let myData = [];
+    for (const item of items) {
+        let obj = {};
+        for(const resp of item.responses) {
+            fields.push(resp.text);
+            obj["Date"] = item.dateSubmitted;
+            obj[resp.text] = resp.response
+        }
+        myData.push(obj);
+    }
+
+    let unique = [...new Set(fields)];
+
+    const json2csvParser = new Parser({ unique });
+    const csv = json2csvParser.parse(myData);
+ 
+    let link = document.createElement('a')
+    link.id = 'download-csv'
+    link.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(csv));
+    link.setAttribute('download', `${title}.csv`);
+    document.body.appendChild(link)
+    document.querySelector('#download-csv').click()
   }
