@@ -10,7 +10,7 @@ export function signIn(e) {
         origin,
         origin + '/manifest.json',
         ['store_write', 'publish_data', 'email'],
-        'http://localhost:5000/',
+        origin,
         blockstack.nextHour().getTime(), {
           solicitGaiaHubUrl: true
         } // new options param
