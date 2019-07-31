@@ -14,7 +14,6 @@ import axios from 'axios'
 const avatarFallbackImage = 'https://s3.amazonaws.com/onename/avatar-placeholder.png';
 
 const userSession = new UserSession({ appConfig })
-console.log(userSession);
 const port = window.location.href.includes('local') ? 'http://localhost:5000' : 'https://whispering-sands-47101.herokuapp.com';
 
 const setAxiosHeaders = () => {
