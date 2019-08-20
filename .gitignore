@@ -11,3 +11,4 @@ src/components/helpers/prod.js
 .gitignore
 .dockerignore
 .DS_Store
+src/utils/keys.js

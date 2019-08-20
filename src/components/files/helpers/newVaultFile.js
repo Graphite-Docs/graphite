@@ -48,22 +48,18 @@ export async function handleVaultDrop(files) {
             setGlobal({ grid: wb.Strings })
             fileObject.grid = getGlobal().grid;
         } 
-        if(fileObject.size > 10000000) {
-            //File greater than 10mb
-            ToastsStore.error(`File larger than 10mb :(`)
-
-        } else {
-            setGlobal({singleFile: fileObject, files: [...getGlobal().files, indexObject], link: fileObject.link, file: fileObject.file }, async () => {
-                console.log(getGlobal().files)    
-                const thisFile = getGlobal().singleFile;
-                let filePath = `${thisFile.id}.json`;
-                let fileParams = {
-                    fileName: filePath, 
-                    body: JSON.stringify(thisFile), 
-                    encrypt: true
-                }
-                const vaultFile = await postData(fileParams);
-                console.log(vaultFile);
+        setGlobal({singleFile: fileObject, files: [...getGlobal().files, indexObject], link: fileObject.link, file: fileObject.file }, async () => {
+            console.log(getGlobal().files)    
+            const thisFile = getGlobal().singleFile;
+            let filePath = `${thisFile.id}.json`;
+            let fileParams = {
+                fileName: filePath, 
+                body: JSON.stringify(thisFile), 
+                encrypt: true
+            }
+            const vaultFile = await postData(fileParams);
+            console.log(vaultFile);
+            if(vaultFile) {
                 const indexFile = 'uploads.json';
                 let indexParams = {
                     fileName: indexFile, 
@@ -77,8 +73,10 @@ export async function handleVaultDrop(files) {
                     ToastsStore.success(`File saved`)
                     loadData({refresh: false});
                 }
-            });
-        }
+            } else {
+                ToastsStore.error(`Trouble saving file`)
+            }
+        });
     };
     reader.readAsDataURL(file);
 }

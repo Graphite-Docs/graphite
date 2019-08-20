@@ -66,6 +66,27 @@
   src: url('../components/docs/views/editor/assets/fonts/SourceSansPro-Regular.otf')
 }
 
+.simpleID-button {
+  width: 200px;
+  margin: auto;
+}
+
+.note {
+  font-size: 12px!important;
+}
+
+.signin_up {
+  list-style: none;
+  padding: 10px;
+  width: 50%;
+  margin: auto;
+}
+
+.signin_up li {
+  display: inline;
+  margin: 5px;
+}
+
 /* Custom Grid */
 
 .col-25-left {
@@ -219,7 +240,7 @@
 }
 
 #wave {
-  padding-top: 200px;
+  padding-top: 70px;
   height: 100vh;
   width: 100%;
   background: url('../assets/Wave.png');
@@ -1863,7 +1884,7 @@ p {
 }
 
 .ui.secondary.button, .ui.secondary.buttons .button {
-  background-color: #ffbd27;
+  background-color: #ffbd27!important;
   color: #282828;
 }
 
