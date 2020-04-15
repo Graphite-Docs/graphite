@@ -25,7 +25,6 @@ const SingleDoc = ({
   const [content, setContent] = useState("");
   useEffect(() => {
     if (!newDoc) {
-      console.log("loading");
       loadDoc(token, id);
     }
 
