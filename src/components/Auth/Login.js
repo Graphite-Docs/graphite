@@ -20,14 +20,18 @@ const Login = ({ login }) => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
+      <label htmlFor="email" className='invisible'>Enter your email address</label>
         <input
           type="email"
+          id='email'
           placeholder="johnnyappleseed@email.com"
           value={email}
           required
           onChange={(e) => setEmail(e.target.value)}
         />
+        <label htmlFor="password" className='invisible'>Enter your password</label>
         <input
+          id='password'
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

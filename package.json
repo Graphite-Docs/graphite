@@ -13,6 +13,7 @@
     "crypto-js": "^4.0.0",
     "eciesjs": "^0.3.5",
     "jsonwebtoken": "^8.5.1",
+    "milligram": "^1.3.0",
     "moment": "^2.24.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

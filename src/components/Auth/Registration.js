@@ -20,15 +20,19 @@ const Registration = ({ register }) => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
+        <label htmlFor="name" className='invisible'>Enter your full name</label>
         <input
           type="text"
           placeholder="Full Name"
+          id='name'
           value={name}
           required
           onChange={(e) => setName(e.target.value)}
         />
+        <label htmlFor="email" className='invisible'>Enter your email address</label>
         <input
           type="email"
+          id='email'
           placeholder="johnnyappleseed@email.com"
           value={email}
           required

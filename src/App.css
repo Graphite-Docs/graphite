@@ -1,0 +1,103 @@
+body {
+  background:#f5f5f5;
+}
+
+input[type='email']:focus, input[type='number']:focus, input[type='password']:focus, input[type='search']:focus, input[type='tel']:focus, input[type='text']:focus, input[type='url']:focus, textarea:focus, select:focus {
+  border-color: #FFBD27;
+  outline: 0;
+}
+
+.center {
+  text-align: center;
+}
+
+button, button:focus {
+  background: #FFBD27!important;
+  border: #FFBD27!important;
+}
+
+.btn-secondary {
+  background: #282828!important;
+  border: #282828!important;
+}
+
+.container {
+  width: 85%;
+  margin: auto;
+}
+
+.top-10 {
+  margin-top: 10px;
+}
+.top-15 {
+  margin-top: 15px;
+}
+.top-20 {
+  margin-top: 20px;
+}
+.top-25 {
+  margin-top: 25px;
+}
+.top-30 {
+  margin-top: 30px;
+}
+.top-35 {
+  margin-top: 35px;
+}
+.top-40 {
+  margin-top: 40px;
+}
+
+.bottom-10 {
+  margin-bottom: 10px;
+}
+.bottom-15 {
+  margin-bottom: 15px;
+}
+.bottom-20 {
+  margin-bottom: 20px;
+}
+.bottom-25 {
+  margin-bottom: 25px;
+}
+.bottom-30 {
+  margin-bottom: 30px;
+}
+.bottom-35 {
+  margin-bottom: 35px;
+}
+.bottom-40 {
+  margin-bottom: 40px;
+}
+
+.screen-center {
+  width: 65%;
+  margin: auto;
+  margin-top: 65%;
+}
+
+.not-button, .not-button:active, .not-button:focus {
+  background: none!important;
+  border: none!important;
+  color: #282828!important;
+  text-transform: none!important;
+  text-decoration: underline;
+  text-decoration-color: #FFBD27;
+}
+
+.uppercase {
+  text-transform: uppercase!important;
+}
+
+.invisible {
+  color: #f5f5f5;
+  font-size: 3px;
+}
+
+@media only screen and (min-width: 400px) {
+  .screen-center {
+    width: 65%;
+    margin: auto;
+    margin-top: 25%;
+  }
+}
