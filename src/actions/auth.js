@@ -7,13 +7,70 @@ import {
   REGISTRATION_VALIDATED,
   AUTH_ERROR,
   LOGIN_FAIL,
-  LOG_OUT,
+  LOG_OUT
 } from "../actions/types";
 import { URL, config } from '../utils/api';
 import axios from "axios";
 import { PrivateKey } from 'eciesjs';
 const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
+// const Stripe = require('stripe');
+const stripe = window.Stripe('pk_test_f017dq0VLdzf22LXPBsLvuDO');
+
+export const checkPaymentStatus = () => async dispatch => {
+  try {
+    const token = localStorage.getItem('token');
+  
+    let decodedToken = await jwt.verify(
+      token,
+      process.env.REACT_APP_JWT_SECRET
+    );
+
+    const { user } = decodedToken;
+    
+    //  Need to set the header with Authorization
+    config.headers["Authorization"] = `Bearer ${token}`;
+    const res = await axios.get(`${URL}/v1/auth/verifyPayment/${user.id}`, config);
+    
+    if(res.data.payment) {
+      decodedToken.user.subscription = true
+    }
+
+    const newToken = await jwt.sign(
+      decodedToken,
+      process.env.REACT_APP_JWT_SECRET)
+    
+    dispatch({
+      type: LOGIN_VALIDATED, 
+      payload: { token: newToken, user: decodedToken.user, paymentMade: res.data.payment }
+    });
+  } catch (error) {
+    console.log(error);
+    dispatch(setAlert(error.message, 'error'));
+  }
+}
+
+export const handleSubscription = (user) => async dispatch => {
+  stripe.redirectToCheckout({
+    items: [{plan: 'plan_H6xaa4agkqE6CG', quantity: 1}],
+    clientReferenceId: user.id,
+
+    // Do not rely on the redirect to the successUrl for fulfilling
+    // purchases, customers may not always reach the success_url after
+    // a successful payment.
+    // Instead use one of the strategies described in
+    // https://stripe.com/docs/payments/checkout/fulfillment
+    successUrl: window.location.protocol + '//localhost:3000/success',
+    cancelUrl: window.location.protocol + '//localhost:3000/canceled',
+  })
+  .then(function (result) {
+    if (result.error) {
+      // If `redirectToCheckout` fails due to a browser or network
+      // error, display the localized error message to your customer.
+      dispatch(setAlert(result.error, 'error'));
+    }
+  });
+}
 
 export const register = (name, email) => async (dispatch) => {
   try {
@@ -29,7 +86,7 @@ export const register = (name, email) => async (dispatch) => {
 
     dispatch({
       type: REGISTRATION_SUCCESS,
-      payload: res.data.token, //TODO - we should be emailing this and just returning success
+      payload: res.data.token,
     });
   } catch (error) {
     dispatch({
@@ -88,8 +145,6 @@ export const validateRegistration = (password, token) => async (dispatch) => {
       privateKey: ciphertextForPrivKey,
     };
 
-    console.log(payload);
-
     //  Need to set the header with Authorization
     config.headers["Authorization"] = `Bearer ${token}`;
 
@@ -104,7 +159,7 @@ export const validateRegistration = (password, token) => async (dispatch) => {
 
     dispatch({
       type: REGISTRATION_VALIDATED,
-      payload: { token: res.data.token, user },
+      payload: { token: res.data.token, user, paymentMade: false },
     });
   } catch (error) {
     console.log(error);
@@ -198,7 +253,7 @@ export const validateLogin = (token, password) => async (dispatch) => {
       
       dispatch({
         type: LOGIN_VALIDATED,
-        payload: { token: res.data.token, user: updatedUser },
+        payload: { token: res.data.token, user: updatedUser, paymentMade: user.subscription },
       });
     } catch (error) {
       console.log(error);
@@ -224,11 +279,14 @@ export const loadUser = () => async (dispatch) => {
         process.env.REACT_APP_JWT_SECRET
       );
     
-      const { user } = decodedToken;
+      const { user, exp } = decodedToken;
+      if (Date.now() >= exp * 1000) {
+        dispatch({ type: AUTH_ERROR });
+      }
       user.privateKey = key;
       dispatch({
         type: LOGIN_VALIDATED,
-        payload: { token, user },
+        payload: { token, user, paymentMade: user.subscription },
       });
     } else {
       dispatch({

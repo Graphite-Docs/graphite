@@ -8,13 +8,13 @@ import Auth from './Auth/Auth';
 
 const PrivateRoute = ({
   component: Component,
-  auth: { isAuthenticated, loading },
+  auth: { isAuthenticated, loading, paymentMade },
   ...rest
 }) => (
   <Route
     {...rest}
     render={props =>
-      !isAuthenticated && !loading ? (
+      (!isAuthenticated && !loading ) || (isAuthenticated && !loading && paymentMade === false) ? (
         <Auth />
       ) : 
       loading ? 

@@ -10,17 +10,17 @@ const Registration = ({ register }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if(name && email) {
+    if (name && email) {
       register(name, email);
     } else {
-      setAlert('Please provide required information', 'error');
+      setAlert("Please provide required information", "error");
     }
   };
 
   return (
     <div>
       <form onSubmit={handleSubmit}>
-      <input
+        <input
           type="text"
           placeholder="Full Name"
           value={name}

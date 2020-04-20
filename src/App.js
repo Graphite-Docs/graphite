@@ -15,6 +15,7 @@ import SingleDoc from './components/Docs/SingleDoc';
 import SharedDoc from './components/Docs/SharedDoc';
 import Profile from './components/Profile/Profile';
 import Verify from './components/Auth/Verify';
+import VerifyPayment from './components/Auth/VerifyPayment';
 
 const App = () => {
   useEffect(() => {
@@ -29,6 +30,8 @@ const App = () => {
             <section>
               <Switch>
                 <Route path='/verify' component={Verify} />
+                <Route path='/success' component={VerifyPayment} />
+                <Route path='/canceled' component={VerifyPayment} />
                 <Route path='/shared/link/:id' component={SharedDoc} />
                 <PrivateRoute exact path='/' component={Docs} />                  
                 <PrivateRoute path='/documents/:id' component={SingleDoc} />    

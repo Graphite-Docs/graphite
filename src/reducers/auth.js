@@ -11,8 +11,11 @@ import {
 const initialState = {
   isAuthenticated: false,
   user: null,
+  email: null, 
+  name: null,
   loading: true,
   emailSent: false, 
+  paymentMade: null,
   token: null
 };
 
@@ -47,6 +50,7 @@ export default function (state = initialState, action) {
         token: payload.token, 
         user: payload.user, 
         isAuthenticated: true, 
+        paymentMade: payload.paymentMade,
         loading: false
       }
     case LOG_OUT:
