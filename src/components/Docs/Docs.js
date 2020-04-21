@@ -8,10 +8,13 @@ import {
   newDocument,
   deleteDoc,
   addNewTag,
-  deleteTag
+  deleteTag,
 } from "../../actions/docs";
-import { shareDocWithLink } from '../../actions/sharedDocs';
+import { shareDocWithLink } from "../../actions/sharedDocs";
 import { v4 as uuidv4 } from "uuid";
+import Loader from "../Loader";
+import Navbar from "../Navbar";
+const langSupport = require("../../utils/languageSupport.json");
 
 const Docs = ({
   logout,
@@ -21,9 +24,10 @@ const Docs = ({
   addNewTag,
   deleteTag,
   shareDocWithLink,
-  auth: { token, user },
+  auth: { token, user, loading },
   docs: { documents },
   history,
+  lang,
 }) => {
   useEffect(() => {
     loadDocs(token);
@@ -54,78 +58,88 @@ const Docs = ({
   };
 
   const shareDocLink = (doc) => {
-    
-    const {
-      id, title, contentUrl
-    } = doc;
-    shareDocWithLink(token, user, {id, title, contentUrl});
-  }
+    const { id, title, contentUrl } = doc;
+    shareDocWithLink(token, user, { id, title, contentUrl });
+  };
 
-  return (
-    <div>
-      Docs
-      <button onClick={logout}>Log out</button>
-      <h3>
-        Your documents{" "}
-        <span>
-          <button onClick={handleNewDoc}>New</button>
-        </span>
-      </h3>
-      <ul>
-        {documents.map((doc) => {
-          return (
-            <li key={doc.id}>
-              <span>
-                <span onClick={() => handleLoadDoc(doc.id)}>
-                  {doc.title ? doc.title : "Untitled"}
-                </span>
-                <span>
-                  Tags:
-                  {doc.tags !== null &&
-                    doc.tags.length > 0 &&
-                    doc.tags.map((tag) => {
-                      return (
-                        <span key={tag.id}>
-                          {tag.name},{" "}
-                          <button
-                            onClick={() => deleteTag(token, doc.id, tag.id)}
-                          >
-                            Delete Tag
+  if (loading) {
+    return <Loader />;
+  } else {
+    return (
+      <div>
+        <Navbar />
+        <div className="clear-nav">
+          <div className="container top-100">
+            <h3>
+              {langSupport[lang].your_docs}{" "}
+              <span className="new-button">
+                <button onClick={handleNewDoc}>{langSupport[lang].new}</button>
+              </span>
+            </h3>
+            <div className="row top-40">
+              {documents.map((doc) => {
+                return (
+                  <div className="column" key={doc.id}>
+                    <div className="card card-medium">
+                      <div onClick={() => handleLoadDoc(doc.id)}>
+                        <h5>{doc.title ? doc.title : "Untitled"}</h5>
+                      </div>
+                      <span>
+                        Tags:
+                        {doc.tags !== null &&
+                          doc.tags.length > 0 &&
+                          doc.tags.map((tag) => {
+                            return (
+                              <span key={tag.id}>
+                                {tag.name},{" "}
+                                <button
+                                  onClick={() =>
+                                    deleteTag(token, doc.id, tag.id)
+                                  }
+                                >
+                                  {langSupport[lang].delete_tag}
+                                </button>
+                              </span>
+                            );
+                          })}
+                        <span>
+                          <button onClick={() => addTag(doc.id)}>
+                            {langSupport[lang].add_tag}
                           </button>
                         </span>
-                      );
-                    })}
-                  <span>
-                    <button onClick={() => addTag(doc.id)}>Add Tag</button>
-                  </span>
-                </span>
-                <span>
-                  <button onClick={() => deleteDoc(token, doc.id)}>
-                    Delete
-                  </button>
-                </span>
-                <span>
-                  <button onClick={() => shareDocLink(doc)}>
-                    Share
-                  </button>
-                </span>
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
-  );
+                      </span>
+                      <span>
+                        <button onClick={() => deleteDoc(token, doc.id)}>
+                          {langSupport[lang].delete}
+                        </button>
+                      </span>
+                      <span>
+                        <button onClick={() => shareDocLink(doc)}>
+                          {langSupport[lang].share}
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 };
 
 Docs.propTypes = {
   auth: PropTypes.object.isRequired,
   docs: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   docs: state.docs,
+  lang: state.lang,
 });
 
 export default connect(mapStateToProps, {
@@ -135,5 +149,5 @@ export default connect(mapStateToProps, {
   deleteDoc,
   addNewTag,
   deleteTag,
-  shareDocWithLink
+  shareDocWithLink,
 })(withRouter(Docs));

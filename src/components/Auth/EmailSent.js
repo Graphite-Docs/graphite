@@ -1,11 +1,23 @@
-import React from 'react'
+import React from 'react';
+import PropTypes from "prop-types";
+import { connect } from "react-redux";
+const langSupport = require("../../utils/languageSupport.json");
 
-const EmailSent = () => {
+const EmailSent = ({ lang }) => {
+  console.log(lang)
   return (
     <div>
-      Please verify your email address. Check your email and click the link we sent.
+      {langSupport[lang].register_email_sent}
     </div>
   )
 }
 
-export default EmailSent;
+EmailSent.propTypes = {
+  lang: PropTypes.string.isRequired
+};
+
+const mapStateToProps = (state) => ({
+  lang: state.lang,
+});
+
+export default connect(mapStateToProps)(EmailSent);

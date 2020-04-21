@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { connect } from 'react-redux';
 import PropTypes from 'prop-types';
 import { checkPaymentStatus } from "../../actions/auth";
+import { setAlert } from "../../actions/alert";
 
 const VerifyPayment = ({ checkPaymentStatus, auth: { paymentMade }, history }) => {
   const [paymentState, setPaymentState] = useState(null);
@@ -16,6 +17,11 @@ const VerifyPayment = ({ checkPaymentStatus, auth: { paymentMade }, history }) =
 
     if(paymentMade) {
       history.push(`/`);
+    } else {
+      setAlert('Problem with payment', 'error')
+      setTimeout(() => {
+        history.push(`/`);
+      }, 2000)
     }
     //eslint-disable-next-line
   }, [paymentMade]);

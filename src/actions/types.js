@@ -25,3 +25,5 @@ export const SAVING = 'SAVING';
 
 export const SHARE_LINK = 'SHARE_LINK';
 export const LOAD_SHARED_DOC = 'LOAD_SHARED_DOC';
+
+export const LANG_SET = "LANG_SET";

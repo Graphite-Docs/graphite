@@ -2,17 +2,14 @@ import React, { useEffect, useState } from "react";
 import PropTypes from 'prop-types';
 import { connect } from "react-redux";
 import { validateRegistration } from "../../actions/auth";
+const langSupport = require("../../utils/languageSupport.json");
 
-const Verify = ({validateRegistration, auth: { isAuthenticated }, history}) => {
-  const [verifyType, setVerifyType] = useState("registration");
+const Verify = ({validateRegistration, auth: { isAuthenticated }, history, lang}) => {
   const [token, setToken] = useState("");
   const [password, setPassword] = useState("");
 
   useEffect(() => {
-    const type = window.location.href.split("type=")[1].split("&")[0];
     const token = window.location.href.split("token=")[1];
-
-    setVerifyType(type);
     setToken(token);
 
     if(isAuthenticated) {
@@ -29,31 +26,34 @@ const Verify = ({validateRegistration, auth: { isAuthenticated }, history}) => {
     validateRegistration(password, token);
   };
 
-  if(verifyType === 'registration') {
     return (
-      <div>
+      <div className='screen-center'>
+        <div className='center bottom-20'>
+          <img src={require('../../assets/img/logo_mark.svg')} alt='graphite mark' />
+        </div>
+        <h5 className='center'>{langSupport[lang].register_set_password}</h5>
         <form onSubmit={handleSubmit}>
+          <label htmlFor='password' className='invisible'></label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Password"
           />
-          <button type="submit">Complete Registration</button>
+          <button type="submit">{langSupport[lang].register_complete}</button>
         </form>
       </div>
     );
-  } else {
-    // TODO - handle an else here if there is one
-  }
 };
 
 Verify.propTypes = {
-  auth: PropTypes.object.isRequired
+  auth: PropTypes.object.isRequired, 
+  lang: PropTypes.string.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  lang: state.lang
 });
 
 export default connect(mapStateToProps, { validateRegistration })(Verify);

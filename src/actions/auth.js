@@ -1,4 +1,5 @@
 import { setAlert } from "./alert";
+import { setLang } from './lang';
 
 import {
   LOGIN_SUCCESS,
@@ -270,6 +271,12 @@ export const logout = () => async (dispatch) => {
 };
 
 export const loadUser = () => async (dispatch) => {
+  //  Get the user's lang if it's in local storage
+  const lang = localStorage.getItem('graphite_lang');
+  if(lang) {
+    dispatch(setLang(lang));
+  }
+
   try {
     const token = localStorage.getItem('token');
     const key = localStorage.getItem('key');

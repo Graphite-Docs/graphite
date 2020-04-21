@@ -5,21 +5,28 @@ import Registration from "./Registration";
 import EmailSent from "./EmailSent";
 import Login from "./Login";
 import StripePayment from "./StripePayment";
+import LangSelector from "../LangSelector";
+const langSupport = require("../../utils/languageSupport.json");
 
-const Auth = ({ auth: { emailSent, paymentMade } }) => {
+const Auth = ({ auth: { emailSent, paymentMade, isAuthenticated }, lang }) => {
   const [authType, setAuthType] = useState("register");
-
-  if (paymentMade === false) {
+  if (paymentMade === false && isAuthenticated) {
     return (
       <div className="container">
+        <div className='top-right-fixed'>
+          <LangSelector />
+        </div>        
         <StripePayment />
       </div>
     );
   } else {
     return (
       <div className="container">
+        <div className='top-right-fixed'>
+          <LangSelector />
+        </div> 
         <div className="screen-center">
-          <div className='bottom-25'>
+          <div className="bottom-25">
             <div className="center">
               <img
                 src={require("../../assets/img/full_logo.svg")}
@@ -31,23 +38,29 @@ const Auth = ({ auth: { emailSent, paymentMade } }) => {
             <EmailSent />
           ) : authType === "register" ? (
             <div>
-            <Registration />
-            <p>Already have an account? <button
-                className="not-button"
-                onClick={() => setAuthType("login")}
-              >
-                Login here.
-              </button></p>
+              <Registration />
+              <p>
+                {langSupport[lang].register_switch_to_login}
+                <button
+                  className="not-button"
+                  onClick={() => setAuthType("login")}
+                >
+                  {langSupport[lang].login_here_button}
+                </button>
+              </p>
             </div>
           ) : (
             <div>
-            <Login />
-            <p>Need to sign up? <button
-                className="not-button"
-                onClick={() => setAuthType("register")}
-              >
-                Register here.
-              </button></p>
+              <Login />
+              <p>
+                {langSupport[lang].login_switch_to_register}{" "}
+                <button
+                  className="not-button"
+                  onClick={() => setAuthType("register")}
+                >
+                  {langSupport[lang].register_here_button}
+                </button>
+              </p>
             </div>
           )}
         </div>
@@ -58,10 +71,12 @@ const Auth = ({ auth: { emailSent, paymentMade } }) => {
 
 Auth.propTypes = {
   auth: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  lang: state.lang,
 });
 
 export default connect(mapStateToProps)(Auth);

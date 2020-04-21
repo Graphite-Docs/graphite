@@ -3,8 +3,9 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { login, validateLogin } from "../../actions/auth";
 import { setAlert } from "../../actions/alert";
+const langSupport = require("../../utils/languageSupport.json");
 
-const Login = ({ login }) => {
+const Login = ({ login, lang }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -35,9 +36,9 @@ const Login = ({ login }) => {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
+          placeholder={langSupport[lang].login_password}
         />
-        <button type="submit">Login</button>
+        <button type="submit">{langSupport[lang].login_button}</button>
       </form>
     </div>
   );
@@ -45,10 +46,12 @@ const Login = ({ login }) => {
 
 Login.propTypes = {
   auth: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  lang: state.lang
 });
 
 export default connect(mapStateToProps, { login, validateLogin })(Login);

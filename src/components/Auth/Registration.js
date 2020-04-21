@@ -3,8 +3,9 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { register } from "../../actions/auth";
 import { setAlert } from "../../actions/alert";
+const langSupport = require("../../utils/languageSupport.json");
 
-const Registration = ({ register }) => {
+const Registration = ({ register, lang }) => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
 
@@ -23,7 +24,7 @@ const Registration = ({ register }) => {
         <label htmlFor="name" className='invisible'>Enter your full name</label>
         <input
           type="text"
-          placeholder="Full Name"
+          placeholder={langSupport[lang].register_name}
           id='name'
           value={name}
           required
@@ -38,7 +39,7 @@ const Registration = ({ register }) => {
           required
           onChange={(e) => setEmail(e.target.value)}
         />
-        <button type="submit">Register</button>
+        <button type="submit">{langSupport[lang].register_button}</button>
       </form>
     </div>
   );
@@ -46,10 +47,12 @@ const Registration = ({ register }) => {
 
 Registration.propTypes = {
   auth: PropTypes.object.isRequired,
+  lang: PropTypes.string.isRequired
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
+  lang: state.lang
 });
 
 export default connect(mapStateToProps, { register })(Registration);
