@@ -1,9 +1,17 @@
 body {
-  background:#f5f5f5;
+  background: #f5f5f5;
 }
 
-input[type='email']:focus, input[type='number']:focus, input[type='password']:focus, input[type='search']:focus, input[type='tel']:focus, input[type='text']:focus, input[type='url']:focus, textarea:focus, select:focus {
-  border-color: #FFBD27;
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="password"]:focus,
+input[type="search"]:focus,
+input[type="tel"]:focus,
+input[type="text"]:focus,
+input[type="url"]:focus,
+textarea:focus,
+select:focus {
+  border-color: #ffbd27;
   outline: 0;
 }
 
@@ -11,21 +19,22 @@ input[type='email']:focus, input[type='number']:focus, input[type='password']:fo
   text-align: center;
 }
 
-button, button:focus {
-  background: #FFBD27!important;
-  border: #FFBD27!important;
+button,
+button:focus {
+  background: #ffbd27 !important;
+  border: #ffbd27 !important;
 }
 
 .btn-secondary {
-  background: #282828!important;
-  border: #282828!important;
+  background: #282828 !important;
+  border: #282828 !important;
 }
 
 .btn-muted {
-  background: transparent!important;
-  border: 1px solid #282828!important;
-  font-size: 10px!important;
-  color: #282828!important;
+  background: transparent !important;
+  border: 1px solid #282828 !important;
+  font-size: 10px !important;
+  color: #282828 !important;
 }
 
 .new-button {
@@ -33,8 +42,6 @@ button, button:focus {
   margin-left: 5px;
   margin-top: -3px;
 }
-
-
 
 .container {
   width: 85%;
@@ -103,26 +110,30 @@ button, button:focus {
   margin-top: 65%;
 }
 
-.not-button, .not-button:active, .not-button:focus {
-  background: none!important;
-  border: none!important;
-  color: #282828!important;
-  text-transform: none!important;
+.not-button,
+.not-button:active,
+.not-button:focus {
+  background: none !important;
+  border: none !important;
+  color: #282828 !important;
+  text-transform: none !important;
   text-decoration: underline;
-  text-decoration-color: #FFBD27;
+  text-decoration-color: #ffbd27;
 }
 
 .btn-left {
-  margin: 0!important;
-  padding-left: 0!important;
+  margin: 0 !important;
+  padding-left: 0 !important;
 }
 
 .uppercase {
-  text-transform: uppercase!important;
+  text-transform: uppercase !important;
 }
 
-.no-underline, .no-underline:active, .no-underline:focus {
-  text-decoration: none!important;
+.no-underline,
+.no-underline:active,
+.no-underline:focus {
+  text-decoration: none !important;
 }
 
 .invisible {
@@ -130,8 +141,10 @@ button, button:focus {
   font-size: 3px;
 }
 
-.Toastify__close-button, .Toastify__close-button:focus, .Toastify__close-button:active {
-  background: transparent!important;
+.Toastify__close-button,
+.Toastify__close-button:focus,
+.Toastify__close-button:active {
+  background: transparent !important;
 }
 
 .clear-nav {
@@ -139,7 +152,7 @@ button, button:focus {
 }
 
 .navigation {
-  border-bottom: .1rem solid #d1d1d1;
+  border-bottom: 0.1rem solid #d1d1d1;
   display: block;
   height: 5.2rem;
   left: 0;
@@ -156,7 +169,9 @@ button, button:focus {
   margin: auto;
 }
 
-.navigation .navigation-link, .navigation .navigation-title, .navigation .title {
+.navigation .navigation-link,
+.navigation .navigation-title,
+.navigation .title {
   display: inline;
   font-size: 1.6rem;
   line-height: 5.2rem;
@@ -196,13 +211,19 @@ button, button:focus {
   border: #eee 1px solid;
   border-radius: 3px;
   padding: 12px;
-  box-shadow: -1px 2px 4px rgba(0,0,0,.25), 1px 1px 3px rgba(0,0,0,.1);
+  box-shadow: -1px 2px 4px rgba(0, 0, 0, 0.25), 1px 1px 3px rgba(0, 0, 0, 0.1);
   width: 300px;
+  z-index: 1;
 }
 
 .lang ul {
   width: 300px;
   margin-top: -15px;
+}
+
+.doc-actions-drop ul {
+  width: 75px;
+  right: 40px;
 }
 
 .lang-selector {
@@ -238,16 +259,58 @@ button, button:focus {
 }
 
 .card {
-  box-shadow: -1px 2px 4px rgba(0,0,0,.25), 1px 1px 3px rgba(0,0,0,.1);
+  box-shadow: -1px 2px 4px rgba(0, 0, 0, 0.25), 1px 1px 3px rgba(0, 0, 0, 0.1);
   background: #f5f5f5;
   padding: 15px;
-  border-radius: 5px;  
+  border-radius: 5px;
 }
 
 .card-medium {
   width: 95%;
   margin: auto;
   margin: 5px;
+}
+
+.tags {
+  display: block;
+  list-style-type: none;
+}
+
+.single-tag {
+  float: left;
+  list-style: none;
+  font-size: 10px;
+  background: #ddd;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+  border-radius: 10px;
+  height: 20px;
+  width: 70px;
+  margin-right: 3px;
+}
+
+.single-tag button {
+  position: relative;
+  top: -26px;
+  right: -20px;
+  display: block;
+}
+
+.add-tag {
+  position: relative;
+  top: -10px;
+  left: -15px;
+}
+
+.doc-actions {
+  float: right;
+  clear: both;
+}
+
+.doc-actions button {
+  margin-right: -25px;
 }
 
 @media only screen and (min-width: 400px) {

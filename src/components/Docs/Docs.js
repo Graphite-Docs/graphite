@@ -62,6 +62,26 @@ const Docs = ({
     shareDocWithLink(token, user, { id, title, contentUrl });
   };
 
+  const toggleActions = (doc_id) => {
+    try {
+      let menu = document.getElementById(doc_id);
+      const style = getComputedStyle(menu);
+      if (style.display !== "none") {
+        menu.style.display = "none";
+      } else {
+        const menus = document.getElementsByClassName("doc-actions-drop");
+        if (menus) {
+          for (const thisMenu of menus) {
+            thisMenu.style.display = "none";
+          }
+        }
+        menu.style.display = "block";
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   if (loading) {
     return <Loader />;
   } else {
@@ -81,43 +101,69 @@ const Docs = ({
                 return (
                   <div className="column" key={doc.id}>
                     <div className="card card-medium">
+                      <div className="doc-actions">
+                        <button
+                          onClick={() => toggleActions(doc.id)}
+                          className="not-button no-underline"
+                        >
+                          <i className="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div
+                          style={{ display: "none" }}
+                          className="menu-drop doc-actions-drop"
+                          id={doc.id}
+                        >
+                          <ul>
+                            <li>
+                              <button onClick={() => deleteDoc(token, doc.id)}>
+                                {langSupport[lang].delete}
+                              </button>
+                            </li>
+                            <li>
+                              <button onClick={() => shareDocLink(doc)}>
+                                {langSupport[lang].share}
+                              </button>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                       <div onClick={() => handleLoadDoc(doc.id)}>
                         <h5>{doc.title ? doc.title : "Untitled"}</h5>
                       </div>
-                      <span>
-                        Tags:
-                        {doc.tags !== null &&
-                          doc.tags.length > 0 &&
-                          doc.tags.map((tag) => {
-                            return (
-                              <span key={tag.id}>
-                                {tag.name},{" "}
-                                <button
-                                  onClick={() =>
-                                    deleteTag(token, doc.id, tag.id)
-                                  }
+
+                      <div>
+                        <ul className="tags">
+                          {doc.tags !== null &&
+                            doc.tags.length > 0 &&
+                            doc.tags.map((tag) => {
+                              return (
+                                <li
+                                  className="single-tag"
+                                  key={tag.id}
+                                  title={tag.name}
                                 >
-                                  {langSupport[lang].delete_tag}
-                                </button>
-                              </span>
-                            );
-                          })}
-                        <span>
-                          <button onClick={() => addTag(doc.id)}>
-                            {langSupport[lang].add_tag}
-                          </button>
-                        </span>
-                      </span>
-                      <span>
-                        <button onClick={() => deleteDoc(token, doc.id)}>
-                          {langSupport[lang].delete}
+                                  {tag.name.length > 5
+                                    ? `${tag.name.slice(0, 5)}...`
+                                    : tag.name}{" "}
+                                  <button
+                                    className="not-button no-underline dark"
+                                    onClick={() =>
+                                      deleteTag(token, doc.id, tag.id)
+                                    }
+                                  >
+                                    <i className="fas fa-times"></i>
+                                  </button>
+                                </li>
+                              );
+                            })}
+                        </ul>
+                        <button
+                          className="not-button no-underline dark add-tag"
+                          onClick={() => addTag(doc.id)}
+                        >
+                          {langSupport[lang].add_tag}
                         </button>
-                      </span>
-                      <span>
-                        <button onClick={() => shareDocLink(doc)}>
-                          {langSupport[lang].share}
-                        </button>
-                      </span>
+                      </div>
                     </div>
                   </div>
                 );
