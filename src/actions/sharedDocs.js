@@ -5,6 +5,7 @@ import axios from "axios";
 import { encryptData, decryptData, getPrivateKey } from "../utils/encryption";
 import { PrivateKey } from "eciesjs";
 import { v4 as uuidv4 } from "uuid";
+import { loadDocs } from "./docs";
 const jwt = require("jsonwebtoken");
 
 export const shareDocWithLink = (token, user, doc) => async (dispatch) => {
@@ -55,47 +56,68 @@ export const shareDocWithLink = (token, user, doc) => async (dispatch) => {
       type: SHARE_LINK,
       payload: sharedToken,
     });
+
+    //  Now if doc is supposed to be readOnly, flip access immediately
+    if (doc.readOnly) {
+      dispatch(changeSharedLinkAccess(token, doc, docInfo));
+    }
+
+    //  Refresh our document index with updated data from server
+    dispatch(loadDocs(token));
   } catch (error) {
     console.log(error);
     dispatch(setAlert(error.message, "error"));
   }
 };
 
-export const removeSharedLinkAccess = (token, document, link) => async dispatch => {
+export const removeSharedLinkAccess = (token, document, link) => async (
+  dispatch
+) => {
   try {
-    config.headers["Authorization"] = `Bearer ${token}`
-    const res = await axios.delete(`${URL}/v1/documents/shared-link/${link.shareId}/${document.id}`, config);
-    
+    config.headers["Authorization"] = `Bearer ${token}`;
+    const res = await axios.delete(
+      `${URL}/v1/documents/shared-link/${link.shareId}/${document.id}`,
+      config
+    );
+
     const singleDoc = res.data;
     singleDoc.content = document.content;
 
     dispatch({
-      type: LOAD_DOC, 
-      payload: singleDoc
-    })
+      type: LOAD_DOC,
+      payload: singleDoc,
+    });
+
+    dispatch(loadDocs(token));
   } catch (error) {
     console.log(error);
-    dispatch(setAlert(error.message, 'error'));
+    dispatch(setAlert(error.message, "error"));
   }
-}
+};
 
-export const changeSharedLinkAccess = (token, document, link) => async dispatch => {
+export const changeSharedLinkAccess = (token, document, link) => async (
+  dispatch
+) => {
   try {
-    config.headers["Authorization"] = `Bearer ${token}`
-    const res = await axios.put(`${URL}/v1/documents/shared-link/${link.shareId}/${document.id}`, null, config);
-    
+    config.headers["Authorization"] = `Bearer ${token}`;
+    const res = await axios.put(
+      `${URL}/v1/documents/shared-link/${link.shareId}/${document.id}`,
+      null,
+      config
+    );
+
     const singleDoc = res.data;
     singleDoc.content = document.content;
 
     dispatch({
-      type: LOAD_DOC, 
-      payload: singleDoc
-    })
+      type: LOAD_DOC,
+      payload: singleDoc,
+    });
   } catch (error) {
     console.log(error);
-    dispatch(setAlert(error.message, 'error'));
+    dispatch(setAlert(error.message, "error"));
   }
-}
+};
 
 export const loadSharedDoc = (token) => async (dispatch) => {
   try {
@@ -123,7 +145,7 @@ export const loadSharedDoc = (token) => async (dispatch) => {
       title,
       content: decryptedContent,
       from,
-      readOnly
+      readOnly,
     };
     dispatch({
       type: LOAD_SHARED_DOC,

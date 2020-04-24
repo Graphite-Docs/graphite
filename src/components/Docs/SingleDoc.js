@@ -109,13 +109,15 @@ const SingleDoc = ({
             ],
             toolbar:
               "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
-            external_plugins: {"wave": "https://cdn2.codox.io/waveTinymce/plugin.min.js"},
-            wave: {  
-              docId: singleDoc.id, 
-              username: user.name ? user.name : "Someone", 
-              apiKey: process.env.REACT_APP_WAVE_KEY, 
-              avatar: { vertical: true }
-            }
+            external_plugins: singleDoc && singleDoc.shareLink.length > 0 ? {
+              wave: "https://cdn2.codox.io/waveTinymce/plugin.min.js"
+            } : null,
+            wave: singleDoc && singleDoc.shareLink.length > 0 ? {
+              docId: singleDoc && singleDoc.id ? singleDoc.id : 'loading...',
+              username: user.name ? user.name : "Someone",
+              apiKey: process.env.REACT_APP_WAVE_KEY,
+              avatar: { vertical: true },
+            } : null,
           }}
           onEditorChange={handleEditorChange}
         />

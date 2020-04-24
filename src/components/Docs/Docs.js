@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { withRouter } from "react-router-dom";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
@@ -10,14 +10,18 @@ import {
   addNewTag,
   deleteTag,
 } from "../../actions/docs";
-import { shareDocWithLink } from "../../actions/sharedDocs";
+import {
+  shareDocWithLink,
+  removeSharedLinkAccess,
+} from "../../actions/sharedDocs";
 import { v4 as uuidv4 } from "uuid";
 import Loader from "../Loader";
 import Navbar from "../Navbar";
 const langSupport = require("../../utils/languageSupport.json");
+const moment = require("moment");
 
 const Docs = ({
-  logout,
+  removeSharedLinkAccess,
   loadDocs,
   newDocument,
   deleteDoc,
@@ -25,14 +29,30 @@ const Docs = ({
   deleteTag,
   shareDocWithLink,
   auth: { token, user, loading },
-  docs: { documents },
+  docs: { documents, shareLink },
   history,
   lang,
 }) => {
+  const [deleteModalOpen, setDeleteModalState] = useState(false);
+  const [shareModalOpen, setShareModalState] = useState(false);
+  const [docToDisplay, setDocToDisplay] = useState({});
+  const [sharePermissions, setSharePermissions] = useState("can-edit");
+  const [fullLink, setFullLink] = useState(null);
+
   useEffect(() => {
     loadDocs(token);
     //eslint-disable-next-line
   }, []);
+
+  useEffect(() => {
+    if (shareLink) {
+      //  construct the actual share link:
+      const rootUrl = window.location.origin;
+      const path = "/shared/link/";
+      const fullLink = rootUrl + path + shareLink;
+      setFullLink(fullLink);
+    }
+  }, [shareLink]);
 
   const handleNewDoc = () => {
     const id = uuidv4();
@@ -57,11 +77,6 @@ const Docs = ({
     addNewTag(token, id, { tagId, tagName });
   };
 
-  const shareDocLink = (doc) => {
-    const { id, title, contentUrl } = doc;
-    shareDocWithLink(token, user, { id, title, contentUrl });
-  };
-
   const toggleActions = (doc_id) => {
     try {
       let menu = document.getElementById(doc_id);
@@ -80,6 +95,33 @@ const Docs = ({
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const handleDelete = (doc) => {
+    //  Display modal for confirmation
+    setDocToDisplay(doc);
+    setDeleteModalState(true);
+  };
+
+  const confirmDelete = () => {
+    deleteDoc(token, docToDisplay.id);
+    setDeleteModalState(false);
+  };
+
+  const handleShare = (doc) => {
+    setDocToDisplay(doc);
+    setShareModalState(true);
+  };
+
+  const confirmShare = (doc) => {
+    doc["readOnly"] = sharePermissions === "can-edit" ? false : true;
+    const { id, title, contentUrl, readOnly } = doc;
+    shareDocWithLink(token, user, { id, title, contentUrl, readOnly });
+  };
+
+  const closeShareModal = () => {
+    setShareModalState(false);
+    setFullLink(null);
   };
 
   if (loading) {
@@ -108,25 +150,37 @@ const Docs = ({
                         >
                           <i className="fas fa-ellipsis-v"></i>
                         </button>
+
                         <div
                           style={{ display: "none" }}
-                          className="menu-drop doc-actions-drop"
+                          className="doc-actions-drop global-menu"
                           id={doc.id}
                         >
                           <ul>
                             <li>
-                              <button onClick={() => deleteDoc(token, doc.id)}>
+                              <button
+                                title={langSupport[lang].delete}
+                                className="not-button no-underline btn-left"
+                                onClick={() => handleDelete(doc)}
+                              >
+                                <i className="far fa-trash-alt"></i>{" "}
                                 {langSupport[lang].delete}
                               </button>
                             </li>
                             <li>
-                              <button onClick={() => shareDocLink(doc)}>
+                              <button
+                                className="not-button no-underline btn-left"
+                                title={langSupport[lang].share}
+                                onClick={() => handleShare(doc)}
+                              >
+                                <i className="fas fa-share-alt"></i>{" "}
                                 {langSupport[lang].share}
                               </button>
                             </li>
                           </ul>
                         </div>
                       </div>
+
                       <div onClick={() => handleLoadDoc(doc.id)}>
                         <h5>{doc.title ? doc.title : "Untitled"}</h5>
                       </div>
@@ -171,6 +225,120 @@ const Docs = ({
             </div>
           </div>
         </div>
+        {/******** Delete Modal ********/}
+        <div
+          style={{
+            display: deleteModalOpen || shareModalOpen ? "block" : "none",
+          }}
+          className="dimmer"
+        />
+        <div
+          style={{ display: deleteModalOpen ? "block" : "none" }}
+          className="modal"
+        >
+          <h3>
+            {langSupport[lang].delete_confirm} <em>{docToDisplay.title}</em>?
+          </h3>
+          <p>{langSupport[lang].no_undo}</p>
+          <button
+            title={langSupport[lang].delete}
+            className="btn-danger"
+            onClick={confirmDelete}
+          >
+            <i className="far fa-trash-alt"></i> {langSupport[lang].delete}
+          </button>
+          <button
+            onClick={() => setDeleteModalState(false)}
+            className="btn-muted left-5"
+          >
+            {langSupport[lang].cancel}
+          </button>
+        </div>
+
+        {/******** Share Modal ********/}
+        <div
+          style={{ display: shareModalOpen ? "block" : "none" }}
+          className="modal"
+        >
+          <div>
+            {fullLink ? (
+              <div>
+                <h3>{langSupport[lang].copy_link}</h3>
+                <h5>{langSupport[lang].give_to}</h5>
+                <p>{fullLink}</p>
+                <p>
+                  <strong>
+                    <u>For security, this link will not be shown again.</u>
+                  </strong>
+                </p>
+                <button onClick={closeShareModal} className="btn-muted left-5">
+                  {langSupport[lang].done}
+                </button>
+              </div>
+            ) : (
+              <div>
+                <h3>{langSupport[lang].share_with_link}</h3>
+                <p>{langSupport[lang].share_encrypted}</p>
+                <select onChange={(e) => setSharePermissions(e.target.value)}>
+                  <option value="can-edit">{langSupport[lang].can_edit}</option>
+                  <option value="can-view">{langSupport[lang].can_view}</option>
+                </select>
+                {docToDisplay.id && documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink ? (
+                  <div>
+                    <p>
+                      {langSupport[lang].share_count_start}{" "}
+                      <strong>
+                        <u>{documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink.length}</u>
+                      </strong>{" "}
+                      {documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink.length > 1
+                        ? langSupport[lang].times
+                        : langSupport[lang].times}
+                      .{langSupport[lang].share_count_end}
+                    </p>
+                    <ul>
+                      {documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink.map((link) => {
+                        return (
+                          <li key={link.shareId}>
+                            {langSupport[lang].shared_on}:{" "}
+                            {lang === "English"
+                              ? moment(link.date).format("MM/DD/YYYY")
+                              : moment(link.date).format("DD/MM/YYYY")}{" "}
+                            <button
+                              onClick={() => {
+                                removeSharedLinkAccess(
+                                  token,
+                                  docToDisplay,
+                                  link
+                                );
+                              }}
+                              className="not-button"
+                            >
+                              Remove Access
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                ) : (
+                  <div />
+                )}
+                <button
+                  title={langSupport[lang].share}
+                  onClick={() => confirmShare(docToDisplay)}
+                >
+                  {langSupport[lang].share}
+                </button>
+                <button
+                  onClick={() => setShareModalState(false)}
+                  className="btn-muted left-5"
+                >
+                  {langSupport[lang].cancel}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -196,4 +364,5 @@ export default connect(mapStateToProps, {
   addNewTag,
   deleteTag,
   shareDocWithLink,
+  removeSharedLinkAccess,
 })(withRouter(Docs));

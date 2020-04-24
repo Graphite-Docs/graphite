@@ -23,7 +23,7 @@ const LangSelector = ({ lang, setLang }) => {
         <ul className="navigation-list">
           <li className="navigation-item">
             <button className="not-button no-underline" onClick={toggleMenu}>{lang}<i className="fas fa-caret-down"></i></button>
-            <div style={{ display: menuState ? "block" : "none" }} className="menu-drop lang" id='lang-drop'>
+            <div style={{ display: menuState ? "block" : "none" }} className="menu-drop global-menu lang" id='lang-drop'>
               <ul>
                 {languages.map((language) => {
                   return <li key={language}><button onClick={() => handleLanguage(language)} className='not-button no-underline btn-left'>{language}</button></li>;

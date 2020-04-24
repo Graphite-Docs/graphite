@@ -6,6 +6,16 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
+document.addEventListener("click", (e) => {
+  const elem = e.target;
+  if (!elem.classList.contains("global-menu")) {
+    const menus = document.getElementsByClassName("global-menu");
+    for (const menu of menus) {
+      menu.style.display = "none";
+    }
+  }
+});
+
 ReactDOM.render(
   <React.StrictMode>
     <App />

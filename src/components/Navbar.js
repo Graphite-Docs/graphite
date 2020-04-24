@@ -51,7 +51,7 @@ const Navbar = ({ auth: { user }, logout, lang }) => {
             </button>
             <div
               style={{ display: menuState ? "block" : "none" }}
-              className="menu-drop"
+              className="menu-drop global-menu"
               id="nav-drop"
             >
               <ul>
