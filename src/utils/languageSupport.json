@@ -40,7 +40,9 @@
     "done": "Done", 
     "copy_link": "Copy This Link", 
     "give_to": "Give to whomever you would like to share with.",
-    "no_show_again": "For security, this link will not be shown again."
+    "no_show_again": "For security, this link will not be shown again.", 
+    "add_a_tag": "Add a tag", 
+    "enter_tag_name": "Enter your tag name here"
   },
   "Deutsche": {
     "register_name": "Vollständiger Name",
@@ -83,7 +85,9 @@
     "done": "Getan", 
     "copy_link": "Kopieren Sie diesen Link", 
     "give_to": "Geben Sie an wen auch immer Sie teilen möchten.",
-    "no_show_again": "Aus Sicherheitsgründen wird dieser Link nicht mehr angezeigt."
+    "no_show_again": "Aus Sicherheitsgründen wird dieser Link nicht mehr angezeigt.", 
+    "add_a_tag": "Füge einen Tag hinzu", 
+    "enter_tag_name": "Geben Sie hier Ihren Tag-Namen ein"
   },
   "Español": {
     "register_name": "Nombre Completo",
@@ -126,6 +130,8 @@
     "done": "Hecho", 
     "copy_link": "Copie este enlace", 
     "give_to": "Dale a quien quieras compartir.",
-    "no_show_again": "Por seguridad, este enlace no se volverá a mostrar."
+    "no_show_again": "Por seguridad, este enlace no se volverá a mostrar.", 
+    "add_a_tag": "Añadir una etiqueta", 
+    "enter_tag_name": "Ingrese el nombre de su etiqueta aquí"
   }
 }

@@ -17,6 +17,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import Loader from "../Loader";
 import Navbar from "../Navbar";
+import { setAlert } from "../../actions/alert";
 const langSupport = require("../../utils/languageSupport.json");
 const moment = require("moment");
 
@@ -35,7 +36,10 @@ const Docs = ({
 }) => {
   const [deleteModalOpen, setDeleteModalState] = useState(false);
   const [shareModalOpen, setShareModalState] = useState(false);
+  const [tagModalOpen, setTagModalState] = useState(false);
   const [docToDisplay, setDocToDisplay] = useState({});
+  const [docForTag, setDocumentForTag] = useState({});
+  const [tagInput, setTagInput] = useState("");
   const [sharePermissions, setSharePermissions] = useState("can-edit");
   const [fullLink, setFullLink] = useState(null);
 
@@ -69,12 +73,6 @@ const Docs = ({
 
   const handleLoadDoc = (id) => {
     history.push(`/documents/${id}`);
-  };
-
-  const addTag = (id) => {
-    const tagId = uuidv4();
-    const tagName = uuidv4();
-    addNewTag(token, id, { tagId, tagName });
   };
 
   const toggleActions = (doc_id) => {
@@ -122,6 +120,23 @@ const Docs = ({
   const closeShareModal = () => {
     setShareModalState(false);
     setFullLink(null);
+  };
+
+  const openTagModal = (doc) => {
+    setDocumentForTag(doc);
+    setTagModalState(true);
+  };
+
+  const handleTag = () => {
+    try {
+      const tagId = uuidv4();
+      const tagName = tagInput;
+      addNewTag(token, docForTag.id, { tagId, tagName });
+      setTagModalState(false);
+    } catch (error) {
+      console.log(error);
+      setAlert(error.message, "error");
+    }
   };
 
   if (loading) {
@@ -181,9 +196,9 @@ const Docs = ({
                         </div>
                       </div>
 
-                      <div onClick={() => handleLoadDoc(doc.id)}>
+                      <button className='not-button no-underline btn-left' onClick={() => handleLoadDoc(doc.id)}>
                         <h5>{doc.title ? doc.title : "Untitled"}</h5>
-                      </div>
+                      </button>
 
                       <div>
                         <ul className="tags">
@@ -213,7 +228,7 @@ const Docs = ({
                         </ul>
                         <button
                           className="not-button no-underline dark add-tag"
-                          onClick={() => addTag(doc.id)}
+                          onClick={() => openTagModal(doc)}
                         >
                           {langSupport[lang].add_tag}
                         </button>
@@ -225,13 +240,42 @@ const Docs = ({
             </div>
           </div>
         </div>
-        {/******** Delete Modal ********/}
+
+        {/******** Dimmer ********/}
         <div
           style={{
-            display: deleteModalOpen || shareModalOpen ? "block" : "none",
+            display:
+              shareModalOpen || tagModalOpen || deleteModalOpen
+                ? "block"
+                : "none",
           }}
           className="dimmer"
         />
+
+        {/******** Tag Modal ********/}
+        <div
+          style={{ display: tagModalOpen ? "block" : "none" }}
+          className="modal"
+        >
+          <h3>{langSupport[lang].add_a_tag}</h3>
+          <div>
+            <input
+              value={tagInput}
+              onChange={(e) => setTagInput(e.target.value)}
+              type="text"
+              placeholder={langSupport[lang].enter_tag_name}
+            />
+          </div>
+          <button onClick={handleTag}>{langSupport[lang].add_tag}</button>
+          <button
+            onClick={() => setTagModalState(false)}
+            className="btn-muted left-5"
+          >
+            {langSupport[lang].cancel}
+          </button>
+        </div>
+
+        {/******** Delete Modal ********/}
         <div
           style={{ display: deleteModalOpen ? "block" : "none" }}
           className="modal"
@@ -283,41 +327,52 @@ const Docs = ({
                   <option value="can-edit">{langSupport[lang].can_edit}</option>
                   <option value="can-view">{langSupport[lang].can_view}</option>
                 </select>
-                {docToDisplay.id && documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink ? (
+                {docToDisplay.id &&
+                documents.filter((doc) => doc.id === docToDisplay.id)[0]
+                  .shareLink ? (
                   <div>
                     <p>
                       {langSupport[lang].share_count_start}{" "}
                       <strong>
-                        <u>{documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink.length}</u>
+                        <u>
+                          {
+                            documents.filter(
+                              (doc) => doc.id === docToDisplay.id
+                            )[0].shareLink.length
+                          }
+                        </u>
                       </strong>{" "}
-                      {documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink.length > 1
+                      {documents.filter((doc) => doc.id === docToDisplay.id)[0]
+                        .shareLink.length > 1
                         ? langSupport[lang].times
                         : langSupport[lang].times}
                       .{langSupport[lang].share_count_end}
                     </p>
                     <ul>
-                      {documents.filter(doc => doc.id === docToDisplay.id)[0].shareLink.map((link) => {
-                        return (
-                          <li key={link.shareId}>
-                            {langSupport[lang].shared_on}:{" "}
-                            {lang === "English"
-                              ? moment(link.date).format("MM/DD/YYYY")
-                              : moment(link.date).format("DD/MM/YYYY")}{" "}
-                            <button
-                              onClick={() => {
-                                removeSharedLinkAccess(
-                                  token,
-                                  docToDisplay,
-                                  link
-                                );
-                              }}
-                              className="not-button"
-                            >
-                              Remove Access
-                            </button>
-                          </li>
-                        );
-                      })}
+                      {documents
+                        .filter((doc) => doc.id === docToDisplay.id)[0]
+                        .shareLink.map((link) => {
+                          return (
+                            <li key={link.shareId}>
+                              {langSupport[lang].shared_on}:{" "}
+                              {lang === "English"
+                                ? moment(link.date).format("MM/DD/YYYY")
+                                : moment(link.date).format("DD/MM/YYYY")}{" "}
+                              <button
+                                onClick={() => {
+                                  removeSharedLinkAccess(
+                                    token,
+                                    docToDisplay,
+                                    link
+                                  );
+                                }}
+                                className="not-button"
+                              >
+                                Remove Access
+                              </button>
+                            </li>
+                          );
+                        })}
                     </ul>
                   </div>
                 ) : (
