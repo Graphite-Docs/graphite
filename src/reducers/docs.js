@@ -9,6 +9,7 @@ import {
   SAVING,
   SHARE_LINK,
   LOAD_SHARED_DOC,
+  LOADING
 } from "../actions/types";
 
 const initialState = {
@@ -58,7 +59,6 @@ export default function (state = initialState, action) {
       return {
         ...state,
         documents: payload,
-        singleDoc: null,
         loading: false,
       };
     case DELETE_DOC:
@@ -85,6 +85,11 @@ export default function (state = initialState, action) {
         loading: false,
         saving: false,
       };
+    case LOADING: 
+      return {
+        ...state, 
+        loading: true
+      }
     default:
       return state;
   }

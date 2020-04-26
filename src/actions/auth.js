@@ -192,14 +192,7 @@ export const login = (email, password) => async (dispatch) => {
       type: LOGIN_FAIL,
     });
     console.log(error);
-
-    const errors = error.response.data.errors;
-
-    if (errors) {
-      for (const error of errors) {
-        dispatch(setAlert(error.msg, "error"));
-      }
-    }
+    dispatch(setAlert(error.msg, "error"));
   }
 };
 

@@ -6,7 +6,8 @@ import {
   SAVING,
   SAVED_DOC,
   DELETE_DOC,
-  NEW_DOC
+  NEW_DOC, 
+  LOADING
 } from "./types";
 import { URL, config } from "../utils/api";
 import axios from "axios";
@@ -71,8 +72,12 @@ export const newDocument = (token, user, newDoc) => async (dispatch) => {
   }
 };
 
-export const loadDoc = (token, doc_id) => async (dispatch) => {
+export const loadDoc = (user, token, doc_id) => async (dispatch) => {
   try {
+    //  So that we don't load the document UI too soon.
+    dispatch({
+      type: LOADING
+    })
     //  Need to set the header with Authorization
     config.headers["Authorization"] = `Bearer ${token}`;
 
@@ -92,7 +97,18 @@ export const loadDoc = (token, doc_id) => async (dispatch) => {
       payload: decryptedDoc,
     });
   } catch (error) {
-    console.log(error);
+    console.log(error.message);
+    if(error.message.includes("404")) {
+      console.log('No document found, assuming this is new and creating...');
+
+      const newDoc = {
+        id: doc_id,
+        title: "Untitled",
+        content: "",
+      };
+
+      dispatch(newDocument(token, user, newDoc));
+    }    
   }
 };
 

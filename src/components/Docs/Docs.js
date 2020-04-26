@@ -60,13 +60,13 @@ const Docs = ({
 
   const handleNewDoc = () => {
     const id = uuidv4();
-    const newDoc = {
-      id,
-      title: "Untitled",
-      content: "",
-    };
+    // const newDoc = {
+    //   id,
+    //   title: "Untitled",
+    //   content: "",
+    // };
 
-    newDocument(token, user, newDoc);
+    //newDocument(token, user, newDoc);
 
     history.push(`/documents/${id}`);
   };
@@ -96,14 +96,15 @@ const Docs = ({
   };
 
   const handleDelete = (doc) => {
-    //  Display modal for confirmation
+    //  Display modal for confirmation    
     setDocToDisplay(doc);
     setDeleteModalState(true);
   };
 
-  const confirmDelete = () => {
-    deleteDoc(token, docToDisplay.id);
+  const confirmDelete = () => {    
+    deleteDoc(token, docToDisplay.id);    
     setDeleteModalState(false);
+    // setDocToDisplay(null);
   };
 
   const handleShare = (doc) => {
@@ -154,6 +155,15 @@ const Docs = ({
               </span>
             </h3>
             <div className="row top-40">
+              {
+                documents.length > 0 ?
+                <div>
+
+                </div> : 
+                <div>
+                  <h5>{langSupport[lang].no_docs}</h5>
+                </div>
+              }
               {documents.map((doc) => {
                 return (
                   <div className="column" key={doc.id}>
@@ -327,8 +337,8 @@ const Docs = ({
                   <option value="can-edit">{langSupport[lang].can_edit}</option>
                   <option value="can-view">{langSupport[lang].can_view}</option>
                 </select>
-                {docToDisplay.id &&
-                documents.filter((doc) => doc.id === docToDisplay.id)[0]
+                {docToDisplay && docToDisplay.id &&
+                documents.filter((doc) => doc.id === docToDisplay.id)[0] && documents.filter((doc) => doc.id === docToDisplay.id)[0]
                   .shareLink ? (
                   <div>
                     <p>
@@ -342,14 +352,14 @@ const Docs = ({
                           }
                         </u>
                       </strong>{" "}
-                      {documents.filter((doc) => doc.id === docToDisplay.id)[0]
-                        .shareLink.length > 1
+                      {documents.filter((doc) => doc.id === docToDisplay.id)[0] && documents.filter((doc) => doc.id === docToDisplay.id)[0].shareLink && documents.filter((doc) => doc.id === docToDisplay.id)[0].shareLink.length > 1
                         ? langSupport[lang].times
-                        : langSupport[lang].times}
-                      .{langSupport[lang].share_count_end}
+                        : langSupport[lang].time}
+                      . {langSupport[lang].share_count_end}
                     </p>
                     <ul>
                       {documents
+                        .filter((doc) => doc.id === docToDisplay.id)[0] && documents
                         .filter((doc) => doc.id === docToDisplay.id)[0]
                         .shareLink.map((link) => {
                           return (

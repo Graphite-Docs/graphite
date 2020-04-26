@@ -5,7 +5,7 @@ import axios from "axios";
 import { encryptData, decryptData, getPrivateKey } from "../utils/encryption";
 import { PrivateKey } from "eciesjs";
 import { v4 as uuidv4 } from "uuid";
-import { loadDocs } from "./docs";
+import { loadDocs, loadDoc } from "./docs";
 const jwt = require("jsonwebtoken");
 
 export const shareDocWithLink = (token, user, doc) => async (dispatch) => {
@@ -64,6 +64,11 @@ export const shareDocWithLink = (token, user, doc) => async (dispatch) => {
 
     //  Refresh our document index with updated data from server
     dispatch(loadDocs(token));
+
+    //  If the share request came from within an open document, make sure to update the document
+    if(window.location.href.includes('documents/')) {
+      dispatch(loadDoc(token, doc.id));
+    }
   } catch (error) {
     console.log(error);
     dispatch(setAlert(error.message, "error"));

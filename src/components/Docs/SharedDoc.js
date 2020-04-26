@@ -7,7 +7,7 @@ import { Editor } from "@tinymce/tinymce-react";
 const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
   useEffect(() => {
     const token = window.location.href.split("link/")[1];
-    loadSharedDoc(token);
+    loadSharedDoc(token);        
     //eslint-disable-next-line
   }, []);
 
@@ -19,6 +19,7 @@ const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
       const { content } = sharedDoc;
       setContent(content);
       setTitle(title);
+      console.log(sharedDoc.id)
     }
     //eslint-disable-next-line
   }, [sharedDoc]);
@@ -42,22 +43,23 @@ const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
           value={content}
           disabled={sharedDoc.readOnly}
           init={{
-            height: 500,
-            menubar: false,
+            branding: false,
+            height: "100vh",
             plugins: [
-              "advlist autolink lists link image charmap print preview anchor",
-              "searchreplace visualblocks code fullscreen",
-              "insertdatetime media table paste code help wordcount",
-            ],
+              "advlist autolink lists link image charmap print preview anchor pagebreak searchreplace",
+              "searchreplace visualblocks code fullscreen formatpainter spellchecker hr toc",
+              "insertdatetime media table paste code help wordcount quickbars directionality",
+            ],           
+            menubar: 'file edit insert format tools',            
             toolbar:
-              "undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help",
-            external_plugins: {
-              wave: "https://cdn2.codox.io/waveTinymce/plugin.min.js",
-            },
-            wave: config,
+              "undo redo | print | formatpainter | formatselect | fontselect | fontsizeselect | bold italic backcolor | forecolor | link | quickimage | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | spellchecker | ltr rtl | help",
+              external_plugins: {
+                wave: "https://cdn2.codox.io/waveTinymce/plugin.min.js",
+              },
+              wave: config,
           }}
           onEditorChange={handleEditorChange}
-        />
+        />        
       </div>
     );
   }

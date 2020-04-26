@@ -367,6 +367,102 @@ button:focus {
   z-index: 1;
 }
 
+.tox-toolbar__group button {
+  background: none!important;
+}
+
+.tox-button.tox-button--icon.tox-button--naked, .tox-mbtn.tox-mbtn--select {
+  background: none!important;
+}
+
+.tox-dialog__footer-end .tox-button {
+  background: #282828 !important;
+  border: #282828 !important;
+}
+
+
+.tox-statusbar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+.codox-styles .codox-container {
+  overflow: hidden!important;
+}
+
+.codox-styles {
+  position: absolute;
+  right: 15px;
+  top: 5px;
+  background: transparent;
+  width: 50vw!important;
+}
+
+.doc-title {
+  margin-bottom: -14px;
+  background-color: #fff;
+}
+
+.doc-title input {
+  width: 200px;
+  margin-left: 5px;
+  margin-top: 1px;
+  margin-right: 5px;
+  border: none;
+}
+
+.doc-title input:focus, .doc-title input:active {
+  border: 1px solid #ffbd27;
+}
+
+.doc-title a {
+  margin-left: 15px;
+  margin-right: 5px;
+  color: #282828;
+}
+
+.doc-title input {
+  font-size: 16px!important;
+}
+
+.tox-statusbar {
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+}
+
+.tox-statusbar__text-container button {
+  background: none !important;
+  border: none !important;
+  color: #282828 !important;
+  text-transform: none !important;
+}
+
+.tox-button.tox-button--secondary {
+  color: #282828!important;
+  background: none !important;
+  border: #282828 1px solid !important;
+}
+
+.tox .tox-button[title='Save'] {
+  background: #ffbd27 !important;
+  border: #ffbd27 !important;
+  color: #fff!important
+}
+
+.doc-title {
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.tox-editor-container {
+  margin-top: 50px!important;
+}
+
 @media only screen and (min-width: 400px) {
   .screen-center {
     width: 300px;
@@ -396,4 +492,5 @@ button:focus {
     margin: auto;
     margin: 5px;
   }
+
 }
