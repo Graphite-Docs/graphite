@@ -9,7 +9,8 @@ import {
   SAVING,
   SHARE_LINK,
   LOAD_SHARED_DOC,
-  LOADING
+  LOADING, 
+  RESET_SINGLE
 } from "../actions/types";
 
 const initialState = {
@@ -89,6 +90,11 @@ export default function (state = initialState, action) {
       return {
         ...state, 
         loading: true
+      }
+    case RESET_SINGLE: 
+      return {
+        ...state, 
+        singleDoc: null
       }
     default:
       return state;

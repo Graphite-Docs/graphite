@@ -7,12 +7,19 @@ import {
   SAVED_DOC,
   DELETE_DOC,
   NEW_DOC, 
-  LOADING
+  LOADING, 
+  RESET_SINGLE
 } from "./types";
 import { URL, config } from "../utils/api";
 import axios from "axios";
 import { encryptData, decryptData, getPrivateKey } from "../utils/encryption";
 import work from "webworkify-webpack";
+
+export const resetSingleDoc = () => dispatch => {
+  dispatch({
+    type: RESET_SINGLE
+  })
+}
 
 export const setSaving = () => async (dispatch) => {
   //  For the UI to indicate the doc is being saved

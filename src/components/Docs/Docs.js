@@ -5,10 +5,10 @@ import { connect } from "react-redux";
 import { logout } from "../../actions/auth";
 import {
   loadDocs,
-  newDocument,
   deleteDoc,
   addNewTag,
   deleteTag,
+  resetSingleDoc
 } from "../../actions/docs";
 import {
   shareDocWithLink,
@@ -24,7 +24,7 @@ const moment = require("moment");
 const Docs = ({
   removeSharedLinkAccess,
   loadDocs,
-  newDocument,
+  resetSingleDoc,
   deleteDoc,
   addNewTag,
   deleteTag,
@@ -58,16 +58,9 @@ const Docs = ({
     }
   }, [shareLink]);
 
-  const handleNewDoc = () => {
+  const handleNewDoc = async () => {
     const id = uuidv4();
-    // const newDoc = {
-    //   id,
-    //   title: "Untitled",
-    //   content: "",
-    // };
-
-    //newDocument(token, user, newDoc);
-
+    await resetSingleDoc();
     history.push(`/documents/${id}`);
   };
 
@@ -133,6 +126,7 @@ const Docs = ({
       const tagId = uuidv4();
       const tagName = tagInput;
       addNewTag(token, docForTag.id, { tagId, tagName });
+      setTagInput('');
       setTagModalState(false);
     } catch (error) {
       console.log(error);
@@ -424,7 +418,7 @@ const mapStateToProps = (state) => ({
 export default connect(mapStateToProps, {
   logout,
   loadDocs,
-  newDocument,
+  resetSingleDoc,
   deleteDoc,
   addNewTag,
   deleteTag,

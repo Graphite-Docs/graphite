@@ -23,6 +23,7 @@ export const INDEX_ERROR = 'INDEX_ERROR';
 export const DOC_ERROR = 'DOC_ERROR';
 export const SAVING = 'SAVING';
 export const LOADING = 'LOADING';
+export const RESET_SINGLE = 'RESET_SINGLE';
 
 export const SHARE_LINK = 'SHARE_LINK';
 export const LOAD_SHARED_DOC = 'LOAD_SHARED_DOC';

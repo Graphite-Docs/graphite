@@ -328,7 +328,8 @@ button:focus {
 .add-tag {
   position: relative;
   top: -10px;
-  left: -15px;
+  left: 10px;
+  padding: 0;
 }
 
 .doc-actions {

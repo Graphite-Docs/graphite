@@ -23,7 +23,7 @@ const SingleDoc = ({
   shareDocWithLink,
 }) => {
   const [id, setId] = useState(window.location.href.split("documents/")[1]);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState("Untitled");
   const [content, setContent] = useState("<p></p>");
   const [shareModalOpen, setShareModalState] = useState(false);
   const [sharePermissions, setSharePermissions] = useState("can-edit");
