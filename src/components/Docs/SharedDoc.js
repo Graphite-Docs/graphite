@@ -4,7 +4,11 @@ import { connect } from "react-redux";
 import { loadSharedDoc } from "../../actions/sharedDocs";
 import { Editor } from "@tinymce/tinymce-react";
 
+// const generateRandomAnimalName = require('random-animal-name-generator');
+// const animalName = generateRandomAnimalName();
+
 const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
+
   useEffect(() => {
     const token = window.location.href.split("link/")[1];
     loadSharedDoc(token);        
@@ -18,8 +22,7 @@ const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
     if (sharedDoc) {
       const { content } = sharedDoc;
       setContent(content);
-      setTitle(title);
-      console.log(sharedDoc.id)
+      setTitle(title);     
     }
     //eslint-disable-next-line
   }, [sharedDoc]);
@@ -28,13 +31,7 @@ const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
 
   if (loading) {
     return <div>Loading...</div>;
-  } else {
-    var config = {
-      docId: sharedDoc.id,
-      username: "Another One",
-      apiKey: process.env.REACT_APP_WAVE_KEY,
-      avatar: { vertical: true },
-    };
+  } else {    
     return (
       <div>
         <Editor
@@ -52,11 +49,7 @@ const SharedDoc = ({ loadSharedDoc, docs: { sharedDoc, loading } }) => {
             ],           
             menubar: 'file edit insert format tools',            
             toolbar:
-              "undo redo | print | formatpainter | formatselect | fontselect | fontsizeselect | bold italic backcolor | forecolor | link | quickimage | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | spellchecker | ltr rtl | help",
-              external_plugins: {
-                wave: "https://cdn2.codox.io/waveTinymce/plugin.min.js",
-              },
-              wave: config,
+              "undo redo | print | formatpainter | formatselect | fontselect | fontsizeselect | bold italic backcolor | forecolor | link | quickimage | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | spellchecker | ltr rtl | help",              
           }}
           onEditorChange={handleEditorChange}
         />        

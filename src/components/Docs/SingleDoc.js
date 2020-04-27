@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { connect } from "react-redux";
-import { saveDoc, loadDoc, setSaving } from "../../actions/docs";
+import { saveDoc, loadDoc, setSaving, resetSingleDoc } from "../../actions/docs";
 import {
   shareDocWithLink,
   removeSharedLinkAccess,
@@ -18,9 +17,11 @@ const SingleDoc = ({
   loadDoc,
   saveDoc,
   setSaving,
+  resetSingleDoc,
   lang,
   removeSharedLinkAccess,
   shareDocWithLink,
+  history
 }) => {
   const [id, setId] = useState(window.location.href.split("documents/")[1]);
   const [title, setTitle] = useState("Untitled");
@@ -111,15 +112,20 @@ const SingleDoc = ({
     shareDocWithLink(token, user, { id, title, contentUrl, readOnly });
   };
 
+  const handleBack = () => {
+    history.push(`/`);
+    resetSingleDoc()
+  }
+
   if (loading) {
     return <div>Loading...</div>;
   } else {
     return (
       <div>
         <div className="doc-title">
-          <Link to="/">
+          <button onClick={handleBack} className='not-button no-underline btn-left' to="/">
             <i className="fas fa-arrow-left"></i>
-          </Link>
+          </button>
           <input
             type="text"
             onChange={handleTitleChange}
@@ -135,6 +141,7 @@ const SingleDoc = ({
           value={content}
           init={{
             branding: false,
+            content_style: window.innerWidth > 700 ? 'body { padding-top: 25px; padding-bottom: 25px; padding-left: 105px; padding-right: 105px; }' : 'body {}',
             height: "100vh",
             plugins: [
               "advlist autolink lists link image charmap print preview anchor pagebreak searchreplace",
@@ -151,24 +158,9 @@ const SingleDoc = ({
                 onAction: () => setShareModalState(true),
               });
             },
+            removed_menuitems: "newdocument",
             toolbar:
-              "undo redo | print | formatpainter | formatselect | fontselect | fontsizeselect | bold italic backcolor | forecolor | link | quickimage | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | spellchecker | ltr rtl | help",
-            // external_plugins:
-            //   singleDoc && singleDoc.shareLink && singleDoc.shareLink.length > 0
-            //     ? {
-            //         wave: "https://cdn2.codox.io/waveTinymce/plugin.min.js",
-            //       }
-            //     : null,
-            // wave:
-            //   singleDoc && singleDoc.shareLink && singleDoc.shareLink.length > 0
-            //     ? {
-            //         docId:
-            //           singleDoc && singleDoc.id ? singleDoc.id : "loading...",
-            //         username: user.name ? user.name : "Someone",
-            //         apiKey: process.env.REACT_APP_WAVE_KEY,
-            //         avatar: { vertical: true },
-            //       }
-            //     : null,
+              "undo redo | print | formatpainter | formatselect | fontselect | fontsizeselect | bold italic backcolor | forecolor | link | quickimage | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | spellchecker | ltr rtl",            
           }}
           onEditorChange={handleEditorChange}
         />
@@ -275,4 +267,5 @@ export default connect(mapStateToProps, {
   setSaving,
   shareDocWithLink,
   removeSharedLinkAccess,
+  resetSingleDoc
 })(SingleDoc);

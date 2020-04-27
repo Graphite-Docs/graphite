@@ -389,15 +389,16 @@ button:focus {
 }
 
 .codox-styles .codox-container {
-  overflow: hidden!important;
+  
 }
 
 .codox-styles {
   position: absolute;
-  right: 15px;
+  left: 100px;
   top: 5px;
   background: transparent;
   width: 50vw!important;
+  z-index: 3;
 }
 
 .doc-title {
@@ -411,16 +412,18 @@ button:focus {
   margin-top: 1px;
   margin-right: 5px;
   border: none;
+  max-width: 25%;
 }
 
 .doc-title input:focus, .doc-title input:active {
   border: 1px solid #ffbd27;
 }
 
-.doc-title a {
-  margin-left: 15px;
-  margin-right: 5px;
+.doc-title button {
+  margin-left: 15px!important;
+  margin-right: 5px!important;
   color: #282828;
+  font-size: 16px;
 }
 
 .doc-title input {
@@ -484,6 +487,10 @@ button:focus {
     margin-top: 15%;
   }
 
+  .doc-title input {
+    max-width: 35%;
+  }
+
   .modal {
     min-width: 70%;
   }
@@ -494,4 +501,18 @@ button:focus {
     margin: 5px;
   }
 
+  .tox-edit-area {
+    max-width: 75%!important;
+    margin-left: 12.5%!important;
+  }
+
+  .tiny-editor-body {
+    padding-left: 105px!important; 
+    padding-right: 105px!important;
+  }
+
+  .codox-styles {
+    left: 250px;
+    top: 5px;
+  }
 }

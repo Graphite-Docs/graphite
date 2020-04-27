@@ -43,7 +43,8 @@
     "no_show_again": "For security, this link will not be shown again.", 
     "add_a_tag": "Add a tag", 
     "enter_tag_name": "Enter your tag name here", 
-    "no_docs": "No documents yet. Go ahead and create one!"
+    "no_docs": "No documents yet. Go ahead and create one!", 
+    "link_security": "For security, this link will not be shown again."
   },
   "Deutsche": {
     "register_name": "Vollständiger Name",
@@ -89,7 +90,8 @@
     "no_show_again": "Aus Sicherheitsgründen wird dieser Link nicht mehr angezeigt.", 
     "add_a_tag": "Füge einen Tag hinzu", 
     "enter_tag_name": "Geben Sie hier Ihren Tag-Namen ein",
-    "no_docs": "Noch keine Dokumente. Mach weiter und erstelle eins!"
+    "no_docs": "Noch keine Dokumente. Mach weiter und erstelle eins!", 
+    "link_security": "Aus Sicherheitsgründen wird dieser Link nicht mehr angezeigt."
   },
   "Español": {
     "register_name": "Nombre Completo",
@@ -135,6 +137,7 @@
     "no_show_again": "Por seguridad, este enlace no se volverá a mostrar.", 
     "add_a_tag": "Añadir una etiqueta", 
     "enter_tag_name": "Ingrese el nombre de su etiqueta aquí",
-    "no_docs": "Aún no hay documentos. ¡Anímate y crea uno!"
+    "no_docs": "Aún no hay documentos. ¡Anímate y crea uno!", 
+    "link_security": "Por seguridad, este enlace no se volverá a mostrar."
   }
 }
