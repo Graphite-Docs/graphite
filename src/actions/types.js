@@ -13,6 +13,7 @@ export const PROFILE_LOADED = 'GET_PROFILE';
 export const PROFILE_ERROR = 'PROFILE_ERROR';
 export const CLEAR_PROFILE = 'CLEAR_PROFILE';
 export const PROFILE_UPDATED = 'PROFILE_UPDATED';
+export const END_LOADING = 'END_LOADING';
 
 export const NEW_DOC = 'NEW_DOC';
 export const LOAD_DOC = 'LOAD_DOC';

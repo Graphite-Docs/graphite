@@ -1,25 +1,22 @@
-import { PROFILE_ERROR, PROFILE_LOADED, CLEAR_PROFILE, PROFILE_UPDATED } from '../actions/types';
+import { LOADING, END_LOADING } from '../actions/types';
 
 const initialState = {
+  avatar: null,
   profile: null, 
-  loading: true
+  loading: false
 };
 
 export default function( state = initialState, action) {
-  const { type, payload } = action;
+  const { type } = action;
   switch(type) {
-    case PROFILE_ERROR: 
-    case CLEAR_PROFILE: 
+    case LOADING: 
       return {
         ...state, 
-        profile: null, 
-        loading: false
+        loading: true
       }
-    case PROFILE_LOADED:
-    case PROFILE_UPDATED:  
+    case END_LOADING: 
       return {
         ...state, 
-        profile: payload, 
         loading: false
       }
     default: 

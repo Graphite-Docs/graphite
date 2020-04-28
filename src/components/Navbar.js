@@ -21,7 +21,7 @@ const Navbar = ({ auth: { user }, logout, lang }) => {
       setAvatar(blankAvatar);
     }
     //eslint-disable-next-line
-  }, []);
+  }, [user]);
 
   const toggleMenu = () => {
     setMenuState(!menuState);
@@ -56,19 +56,19 @@ const Navbar = ({ auth: { user }, logout, lang }) => {
             >
               <ul>
                 <li>
-                  <button className="not-button no-underline btn-left">
-                    {langSupport[lang].nav_profile}
-                  </button>
+                  <Link className='not-button no-underline' to='/profile'>
+                    {langSupport[lang].profile}
+                  </Link>
                 </li>
                 <li>
-                  <button className="not-button no-underline btn-left">
+                  <Link to='/settings' className="not-button no-underline btn-left">
                     {langSupport[lang].nav_settings}
-                  </button>
+                  </Link>
                 </li>
                 <li>
-                  <button className="not-button no-underline btn-left">
+                  <Link to='/billing' className="not-button no-underline btn-left">
                     {langSupport[lang].nav_billing}
-                  </button>
+                  </Link>
                 </li>
                 <li className="divider" />
                 <li>

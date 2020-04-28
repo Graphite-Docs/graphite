@@ -467,6 +467,16 @@ button:focus {
   margin-top: 50px!important;
 }
 
+.avatar-section {
+  text-align: center;
+}
+
+.avatar-section img {
+  max-width: 85%;
+  margin: auto;
+  border-radius: 50%;
+}
+
 @media only screen and (min-width: 400px) {
   .screen-center {
     width: 300px;
@@ -514,5 +524,9 @@ button:focus {
   .codox-styles {
     left: 250px;
     top: 5px;
+  }
+
+  .avatar-section img {
+    max-width: 35%;    
   }
 }
