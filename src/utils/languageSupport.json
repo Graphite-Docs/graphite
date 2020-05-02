@@ -44,7 +44,16 @@
     "add_a_tag": "Add a tag", 
     "enter_tag_name": "Enter your tag name here", 
     "no_docs": "No documents yet. Go ahead and create one!", 
-    "link_security": "For security, this link will not be shown again."
+    "link_security": "For security, this link will not be shown again.", 
+    "uploading": "Uploading...", 
+    "change_avatar": "Change Avatar", 
+    "change_email": "Note: Changing your email means you will need to log in with the updated email going forward.", 
+    "already_cancelled": "You have cancelled your subscription", 
+    "restart": "Want to restart it?", 
+    "restart_subscription": "Restart Subscription", 
+    "see_you_leave": "We hate to see you leave", 
+    "if_you_go": "But if you do go, we want to make things as easy as possible so that you think of us when you're ready to come back. Just click the Cancel button below and you'll be all set.",
+    "cancel_account": "Cancel Account"
   },
   "Deutsche": {
     "register_name": "Vollständiger Name",
@@ -91,7 +100,16 @@
     "add_a_tag": "Füge einen Tag hinzu", 
     "enter_tag_name": "Geben Sie hier Ihren Tag-Namen ein",
     "no_docs": "Noch keine Dokumente. Mach weiter und erstelle eins!", 
-    "link_security": "Aus Sicherheitsgründen wird dieser Link nicht mehr angezeigt."
+    "link_security": "Aus Sicherheitsgründen wird dieser Link nicht mehr angezeigt.",
+    "uploading": "Hochladen...", 
+    "change_avatar": "Avatar ändern", 
+    "change_email": "Hinweis: Wenn Sie Ihre E-Mail-Adresse ändern, müssen Sie sich künftig mit der aktualisierten E-Mail-Adresse anmelden.", 
+    "already_cancelled": "Sie haben Ihr Abonnement gekündigt", 
+    "restart": "Möchten Sie es neu starten?", 
+    "restart_subscription": "Abonnement neu starten", 
+    "see_you_leave": "Wir hassen es, dich gehen zu sehen", 
+    "if_you_go": "Aber wenn Sie gehen, möchten wir die Dinge so einfach wie möglich gestalten, damit Sie an uns denken, wenn Sie bereit sind, wiederzukommen. Klicken Sie einfach unten auf die Schaltfläche Abbrechen und schon sind Sie fertig.",
+    "cancel_account": "Konto kündigen"
   },
   "Español": {
     "register_name": "Nombre Completo",
@@ -138,6 +156,15 @@
     "add_a_tag": "Añadir una etiqueta", 
     "enter_tag_name": "Ingrese el nombre de su etiqueta aquí",
     "no_docs": "Aún no hay documentos. ¡Anímate y crea uno!", 
-    "link_security": "Por seguridad, este enlace no se volverá a mostrar."
+    "link_security": "Por seguridad, este enlace no se volverá a mostrar.",
+    "uploading": "Subiendo...", 
+    "change_avatar": "Cambiar avatar", 
+    "change_email": "Nota: Cambiar su correo electrónico significa que deberá iniciar sesión con el correo electrónico actualizado en el futuro.",
+    "already_cancelled": "Has cancelado tu suscripción", 
+    "restart": "¿Quieres reiniciarlo?", 
+    "restart_subscription": "Reiniciar suscripción", 
+    "see_you_leave": "Odiamos verte partir", 
+    "if_you_go": "Pero si va, queremos hacer las cosas lo más fácil posible para que piense en nosotros cuando esté listo para regresar. Simplemente haga clic en el botón Cancelar a continuación y estará listo.",
+    "cancel_account": "Cancelar cuenta"
   }
 }

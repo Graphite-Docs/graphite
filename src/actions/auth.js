@@ -8,7 +8,8 @@ import {
   REGISTRATION_VALIDATED,
   AUTH_ERROR,
   LOGIN_FAIL,
-  LOG_OUT
+  LOG_OUT, 
+  BILLING_INFO
 } from "../actions/types";
 import { URL, config } from '../utils/api';
 import axios from "axios";
@@ -171,11 +172,12 @@ export const validateRegistration = (password, token) => async (dispatch) => {
 };
 
 export const login = (email, password) => async (dispatch) => {
+  let res;
   try {
     const body = {
       email,
     };
-    const res = await axios.post(
+    res = await axios.post(
       `${URL}/v1/auth/login`,
       JSON.stringify(body),
       config
@@ -192,7 +194,7 @@ export const login = (email, password) => async (dispatch) => {
       type: LOGIN_FAIL,
     });
     console.log(error);
-    dispatch(setAlert(error.msg, "error"));
+    dispatch(setAlert('Check your email or password', "error"));
   }
 };
 
@@ -249,6 +251,11 @@ export const validateLogin = (token, password) => async (dispatch) => {
         type: LOGIN_VALIDATED,
         payload: { token: res.data.token, user: updatedUser, paymentMade: user.subscription },
       });
+
+      dispatch({
+        type: BILLING_INFO, 
+        payload: { subscriptionEndDate: user.subscriptionEndDate }
+      })
     } catch (error) {
       console.log(error);
       dispatch(setAlert(error.message, 'error'))
@@ -271,23 +278,40 @@ export const loadUser = () => async (dispatch) => {
   }
 
   try {
+
     const token = localStorage.getItem('token');
+    
     const key = localStorage.getItem('key');
+
     if(token) {
       const decodedToken = await jwt.verify(
         token,
         process.env.REACT_APP_JWT_SECRET
       );
     
-      const { user, exp } = decodedToken;
+      let { user, exp } = decodedToken;
       if (Date.now() >= exp * 1000) {
         dispatch({ type: AUTH_ERROR });
+      } else {
+        config.headers["Authorization"] = `Bearer ${token}`;
+        const res = await axios.get(
+          `${URL}/v1/auth/user`,
+          config
+        );
+        user = res.data.user;
+        user.privateKey = key;
       }
-      user.privateKey = key;
+      
       dispatch({
         type: LOGIN_VALIDATED,
         payload: { token, user, paymentMade: user.subscription },
       });
+
+      dispatch({
+        type: BILLING_INFO, 
+        payload: { subscriptionEndDate: user.subscriptionEndDate }
+      })
+
     } else {
       dispatch({
         type: AUTH_ERROR,

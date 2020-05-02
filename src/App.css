@@ -165,6 +165,7 @@ button:focus {
 
 .navigation {
   border-bottom: 0.1rem solid #d1d1d1;
+  background: #f5f5f5;
   display: block;
   height: 5.2rem;
   left: 0;
@@ -472,9 +473,29 @@ button:focus {
 }
 
 .avatar-section img {
-  max-width: 85%;
+  max-width: 65%;
   margin: auto;
   border-radius: 50%;
+}
+
+.profile-info {
+  display: inline-block;
+  font-size: 16px!important;
+}
+
+.profile-info input {
+  width: 60%;
+  margin-left: 10px;
+}
+
+.profile-info button i {
+  position: relative;
+  top: -2px;
+  right: -3px;
+}
+
+.muted {
+  font-size: 12px;
 }
 
 @media only screen and (min-width: 400px) {
@@ -527,6 +548,12 @@ button:focus {
   }
 
   .avatar-section img {
-    max-width: 35%;    
+    max-width: 25%;    
+  }
+
+  .profile-info {
+    max-width: 35%;
+    margin: auto;
+    font-size: 20px!important;
   }
 }

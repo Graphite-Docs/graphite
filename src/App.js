@@ -16,6 +16,9 @@ import SharedDoc from './components/Docs/SharedDoc';
 import Profile from './components/Profile/Profile';
 import Verify from './components/Auth/Verify';
 import VerifyPayment from './components/Auth/VerifyPayment';
+import Cancel from './components/Billing/Cancel';
+import Plans from './components/Billing/Plans';
+
 
 const App = () => {
   useEffect(() => {
@@ -34,8 +37,10 @@ const App = () => {
                 <Route path='/canceled' component={VerifyPayment} />
                 <Route path='/shared/link/:id' component={SharedDoc} />
                 <PrivateRoute exact path='/' component={Docs} />                  
-                <PrivateRoute path='/documents/:id' component={SingleDoc} />    
+                <PrivateRoute path='/documents/:id' component={SingleDoc} /> 
+                <PrivateRoute path='/plans' component={Plans} />    
                 <PrivateRoute path='/profile' component={Profile} />            
+                <PrivateRoute exact path='/cancel' component={Cancel} />  
               </Switch>
             </section>
           </Fragment>
