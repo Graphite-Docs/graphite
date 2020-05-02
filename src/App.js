@@ -38,7 +38,7 @@ const App = () => {
                 <Route path='/shared/link/:id' component={SharedDoc} />
                 <PrivateRoute exact path='/' component={Docs} />                  
                 <PrivateRoute path='/documents/:id' component={SingleDoc} /> 
-                <PrivateRoute path='/plans' component={Plans} />    
+                <Route path='/plans' component={Plans} />   {/*Need to implement a separate route check*/}
                 <PrivateRoute path='/profile' component={Profile} />            
                 <PrivateRoute exact path='/cancel' component={Cancel} />  
               </Switch>
