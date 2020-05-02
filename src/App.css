@@ -163,6 +163,10 @@ button:focus {
   margin-top: 5.2rem;
 }
 
+.clear-bottom {
+  margin-bottom: 45px;
+}
+
 .navigation {
   border-bottom: 0.1rem solid #d1d1d1;
   background: #f5f5f5;
@@ -291,6 +295,7 @@ button:focus {
   background: #f5f5f5;
   padding: 15px;
   border-radius: 5px;
+  margin-top: 10px;
 }
 
 .card-medium {
@@ -496,6 +501,17 @@ button:focus {
 
 .muted {
   font-size: 12px;
+}
+
+.active-select-container {
+  float: right;
+}
+
+.active-select-container i {
+  padding: 8px;
+  border-radius: 50%;
+  background: #ffbd27;
+  color: white;
 }
 
 @media only screen and (min-width: 400px) {

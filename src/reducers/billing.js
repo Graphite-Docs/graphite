@@ -1,6 +1,7 @@
 import { CANCEL_ACCOUNT, BILLING_INFO } from '../actions/types';
 const initialState = {
   subscriptionEndDate: null, 
+  subscriptionType: null,
   loading: true, 
   cancelled: false
 };
@@ -19,6 +20,7 @@ export default function( state = initialState, action) {
       return {
         ...state, 
         subscriptionEndDate: payload.subscriptionEndDate, 
+        subscriptionType: payload.subscriptionType,
         loading: false
       }
     default: 

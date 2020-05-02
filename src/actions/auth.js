@@ -254,7 +254,7 @@ export const validateLogin = (token, password) => async (dispatch) => {
 
       dispatch({
         type: BILLING_INFO, 
-        payload: { subscriptionEndDate: user.subscriptionEndDate }
+        payload: { subscriptionEndDate: user.subscriptionEndDate, subscriptionType: user.subscriptionType }
       })
     } catch (error) {
       console.log(error);
@@ -309,7 +309,7 @@ export const loadUser = () => async (dispatch) => {
 
       dispatch({
         type: BILLING_INFO, 
-        payload: { subscriptionEndDate: user.subscriptionEndDate }
+        payload: { subscriptionEndDate: user.subscriptionEndDate, subscriptionType: user.subscriptionType }
       })
 
     } else {
