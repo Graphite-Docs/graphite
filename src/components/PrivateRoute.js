@@ -5,22 +5,22 @@ import { connect } from "react-redux";
 import Loader from "./Loader";
 
 import Auth from "./Auth/Auth";
-import Cancel from "./Billing/Cancel";
+import OrgSelector from "./Organization/OrgSelector";
 
 const PrivateRoute = ({
   component: Component,
   auth: { isAuthenticated, loading, paymentMade },
   billing: { subscriptionEndDate },
+  orgs: { organizations, orgSelector },
   ...rest
 }) => (
   <Route
     {...rest}
     render={(props) =>
-      (!isAuthenticated && !loading) ||
-      (isAuthenticated && !loading && paymentMade === false) ? (
+      (!isAuthenticated && !loading) ? (
         <Auth />
-      ) : subscriptionEndDate && (subscriptionEndDate * 1000) < Date.now() ? (
-        <Cancel />
+      ) : organizations.length > 1 && orgSelector ? (
+        <OrgSelector />
       ) : loading ? (
         <Loader />
       ) : (
@@ -37,7 +37,8 @@ PrivateRoute.propTypes = {
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
-  billing: state.billing
+  billing: state.billing, 
+  orgs: state.orgs
 });
 
 export default connect(mapStateToProps)(PrivateRoute);

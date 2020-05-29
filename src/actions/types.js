@@ -33,3 +33,7 @@ export const LANG_SET = "LANG_SET";
 
 export const CANCEL_ACCOUNT = "CANCEL_ACCOUNT";
 export const BILLING_INFO = "BILLING_INFO";
+
+export const SET_ORG_DATA = 'SET_ORG_DATA';
+export const SET_ORG_SELECTOR = 'SET_ORG_SELECTOR';
+export const SELECT_ORG = 'SELECT_ORG';

@@ -4,22 +4,11 @@ import { connect } from "react-redux";
 import Registration from "./Registration";
 import EmailSent from "./EmailSent";
 import Login from "./Login";
-import StripePayment from "./StripePayment";
 import LangSelector from "../LangSelector";
 const langSupport = require("../../utils/languageSupport.json");
 
-const Auth = ({ auth: { emailSent, paymentMade, isAuthenticated }, lang }) => {
+const Auth = ({ auth: { emailSent }, lang }) => {
   const [authType, setAuthType] = useState("register");
-  if (paymentMade === false && isAuthenticated) {
-    return (
-      <div className="container">
-        <div className='top-right-fixed'>
-          <LangSelector />
-        </div>        
-        <StripePayment />
-      </div>
-    );
-  } else {
     return (
       <div className="container">
         <div className='top-right-fixed'>
@@ -66,7 +55,6 @@ const Auth = ({ auth: { emailSent, paymentMade, isAuthenticated }, lang }) => {
         </div>
       </div>
     );
-  }
 };
 
 Auth.propTypes = {

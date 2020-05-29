@@ -28,13 +28,13 @@ export const cancelAccount = (token) => async dispatch => {
 
 export const restartSubscription = (token, plan) => async dispatch => {
   try {
-    console.log({MSG: "Restart it", plan})
-    config.headers["Authorization"] = `Bearer ${token}`;    
-    const res = await axios.post(
-      `${URL}/v1/payment/restart/${plan}`,
-      JSON.stringify({}),
-      config
-    );
+    // console.log({MSG: "Restart it", plan})
+    // config.headers["Authorization"] = `Bearer ${token}`;    
+    // const res = await axios.post(
+    //   `${URL}/v1/payment/restart/${plan}`,
+    //   JSON.stringify({}),
+    //   config
+    // );
   } catch (error) {
     console.log(error);
     dispatch(setAlert(error.message, 'error'));

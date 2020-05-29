@@ -292,7 +292,7 @@ button:focus {
 
 .card {
   box-shadow: -1px 2px 4px rgba(0, 0, 0, 0.25), 1px 1px 3px rgba(0, 0, 0, 0.1);
-  background: #f5f5f5;
+  background: #fff;
   padding: 15px;
   border-radius: 5px;
   margin-top: 10px;
@@ -371,6 +371,7 @@ button:focus {
   background: #282828;
   opacity: 0.6;
   top: 0;
+  left: 0;
   z-index: 1;
 }
 
@@ -512,6 +513,109 @@ button:focus {
   border-radius: 50%;
   background: #ffbd27;
   color: white;
+}
+
+.wrap {
+  word-wrap: break-word;
+}
+
+table {
+  border: 1px solid #ccc;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  table-layout: fixed;
+}
+
+table caption {
+  font-size: 1.5em;
+  margin: .5em 0 .75em;
+}
+
+table tr {
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+  padding: .35em;
+}
+
+table th,
+table td {
+  padding: .625em;
+  text-align: center;
+}
+
+table th {
+  font-size: .85em;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+td:first-child, th:first-child {
+  padding: .625em;
+}
+
+.hover span {
+  display: none;
+  position: absolute;
+  background: #282828;
+  padding: 5px;
+  border-radius: 8px;
+  color: #fff;
+  right: 0;
+}
+
+.hover:hover span {
+  display: block;
+}
+
+@media screen and (max-width: 600px) {
+  table {
+    border: 0;
+  }
+
+  table caption {
+    font-size: 1.3em;
+  }
+  
+  table thead {
+    border: none;
+    clip: rect(0 0 0 0);
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    padding: 0;
+    position: absolute;
+    width: 1px;
+  }
+  
+  table tr {
+    border-bottom: 3px solid #ddd;
+    display: block;
+    margin-bottom: .625em;
+  }
+  
+  table td {
+    border-bottom: 1px solid #ddd;
+    display: block;
+    font-size: .8em;
+    text-align: right;
+  }
+  
+  table td::before {
+    /*
+    * aria-label has no advantage, it won't be read inside a table
+    content: attr(aria-label);
+    */
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+  
+  table td:last-child {
+    border-bottom: 0;
+  }
 }
 
 @media only screen and (min-width: 400px) {

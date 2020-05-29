@@ -1,4 +1,5 @@
 import { setAlert } from "./alert";
+import { fetchOrgData } from './orgs';
 import { setLang } from './lang';
 
 import {
@@ -8,15 +9,14 @@ import {
   REGISTRATION_VALIDATED,
   AUTH_ERROR,
   LOGIN_FAIL,
-  LOG_OUT, 
-  BILLING_INFO
+  LOG_OUT,
+  LOADING
 } from "../actions/types";
 import { URL, config } from '../utils/api';
 import axios from "axios";
 import { PrivateKey } from 'eciesjs';
 const jwt = require("jsonwebtoken");
 const CryptoJS = require("crypto-js");
-// const Stripe = require('stripe');
 const stripe = window.Stripe('pk_test_f017dq0VLdzf22LXPBsLvuDO');
 
 export const checkPaymentStatus = () => async dispatch => {
@@ -239,23 +239,24 @@ export const validateLogin = (token, password) => async (dispatch) => {
       );
       
       const updatedUser = newDecodedToken.user;
-      
+
       const privKeyBytes = await CryptoJS.AES.decrypt(updatedUser.privateKey, password);
       const decryptedPrivKey = privKeyBytes.toString(CryptoJS.enc.Utf8);
 
       const reEncryptedPrivKey = CryptoJS.AES.encrypt(decryptedPrivKey, process.env.REACT_APP_KEY_ENCRYPTION_SECRET).toString();
 
-      updatedUser.privateKey = reEncryptedPrivKey
-      
+      updatedUser.privateKey = reEncryptedPrivKey;
+
+      const orgData = updatedUser.organizations;
+
       dispatch({
         type: LOGIN_VALIDATED,
         payload: { token: res.data.token, user: updatedUser, paymentMade: user.subscription },
       });
 
-      dispatch({
-        type: BILLING_INFO, 
-        payload: { subscriptionEndDate: user.subscriptionEndDate, subscriptionType: user.subscriptionType }
-      })
+      if(orgData.length > 0) {
+        dispatch(fetchOrgData(orgData, token));
+      }
     } catch (error) {
       console.log(error);
       dispatch(setAlert(error.message, 'error'))
@@ -290,6 +291,7 @@ export const loadUser = () => async (dispatch) => {
       );
     
       let { user, exp } = decodedToken;
+      let orgData;
       if (Date.now() >= exp * 1000) {
         dispatch({ type: AUTH_ERROR });
       } else {
@@ -300,17 +302,17 @@ export const loadUser = () => async (dispatch) => {
         );
         user = res.data.user;
         user.privateKey = key;
+        //  Check if user is a member of an organization
+        orgData = res.data.user.organizations;
       }
       
       dispatch({
         type: LOGIN_VALIDATED,
         payload: { token, user, paymentMade: user.subscription },
       });
-
-      dispatch({
-        type: BILLING_INFO, 
-        payload: { subscriptionEndDate: user.subscriptionEndDate, subscriptionType: user.subscriptionType }
-      })
+      if(orgData.length > 0) {
+        dispatch(fetchOrgData(orgData, token));
+      }
 
     } else {
       dispatch({
@@ -325,3 +327,17 @@ export const loadUser = () => async (dispatch) => {
     });
   }
 };
+
+export const setLoading = () => dispatch => {
+  dispatch({
+    type: LOADING, 
+    payload: true
+  });
+}
+
+export const endLoading = () => dispatch => {
+  dispatch({
+    type: LOADING, 
+    payload: false
+  });
+}

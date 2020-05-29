@@ -5,7 +5,8 @@ import {
   LOGIN_FAIL,
   LOGIN_SUCCESS,
   LOGIN_VALIDATED,
-  LOG_OUT
+  LOG_OUT, 
+  LOADING
 } from "../actions/types";
 
 const initialState = {
@@ -56,6 +57,7 @@ export default function (state = initialState, action) {
     case LOG_OUT:
       localStorage.removeItem('token');
       localStorage.removeItem('key');
+      localStorage.removeItem('selected_org');
       return {
         ...state,
         user: null,
@@ -63,6 +65,11 @@ export default function (state = initialState, action) {
         loading: false,
         emailSent: false
       };
+    case LOADING: 
+      return {
+        ...state, 
+        loading: payload
+      }
     default:
       return state;
   }

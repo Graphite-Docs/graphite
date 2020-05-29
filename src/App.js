@@ -18,6 +18,8 @@ import Verify from './components/Auth/Verify';
 import VerifyPayment from './components/Auth/VerifyPayment';
 import Cancel from './components/Billing/Cancel';
 import Plans from './components/Billing/Plans';
+import OrgSelector from './components/Organization/OrgSelector';
+import Settings from './components/Organization/Settings';
 
 
 const App = () => {
@@ -40,7 +42,9 @@ const App = () => {
                 <PrivateRoute path='/documents/:id' component={SingleDoc} /> 
                 <Route path='/plans' component={Plans} />   {/*Need to implement a separate route check*/}
                 <PrivateRoute path='/profile' component={Profile} />            
-                <PrivateRoute exact path='/cancel' component={Cancel} />  
+                <PrivateRoute exact path='/cancel' component={Cancel} /> 
+                <PrivateRoute path='/org-selection' component={OrgSelector} /> 
+                <PrivateRoute path='/settings' component={Settings} /> 
               </Switch>
             </section>
           </Fragment>

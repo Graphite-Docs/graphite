@@ -7,7 +7,12 @@ import LangSelector from "./LangSelector";
 const blankAvatar = require("../assets/img/blank_avatar.png");
 const langSupport = require("../utils/languageSupport.json");
 
-const Navbar = ({ auth: { user }, logout, lang }) => {
+const Navbar = ({
+  auth: { user },
+  logout,
+  lang,
+  orgs: { organizations, selectedOrg },
+}) => {
   const { avatar } = user;
 
   const [userAvatar, setAvatar] = useState(blankAvatar);
@@ -38,7 +43,7 @@ const Navbar = ({ auth: { user }, logout, lang }) => {
           />
         </Link>
         <ul className="navigation-list float-right">
-          <li className='navigation-item lang-selector'>
+          <li className="navigation-item lang-selector">
             <LangSelector />
           </li>
           <li className="navigation-item">
@@ -55,18 +60,35 @@ const Navbar = ({ auth: { user }, logout, lang }) => {
               id="nav-drop"
             >
               <ul>
+                {organizations.length > 1 && selectedOrg.name && (
+                  <span>
+                    <li>
+                      <Link to="/org-selection" className="not-button no-underline">
+                        {selectedOrg.name}
+                        <i className="left-5 fas fa-exchange-alt"></i>
+                      </Link>                      
+                    </li>
+                    <li className="divider" />
+                  </span>
+                )}
                 <li>
-                  <Link className='not-button no-underline' to='/profile'>
+                  <Link className="not-button no-underline" to="/profile">
                     {langSupport[lang].profile}
                   </Link>
                 </li>
                 <li>
-                  <Link to='/settings' className="not-button no-underline btn-left">
+                  <Link
+                    to="/settings"
+                    className="not-button no-underline btn-left"
+                  >
                     {langSupport[lang].nav_settings}
                   </Link>
                 </li>
                 <li>
-                  <Link to='/billing' className="not-button no-underline btn-left">
+                  <Link
+                    to="/billing"
+                    className="not-button no-underline btn-left"
+                  >
                     {langSupport[lang].nav_billing}
                   </Link>
                 </li>
@@ -91,11 +113,13 @@ const Navbar = ({ auth: { user }, logout, lang }) => {
 Navbar.propTypes = {
   auth: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
+  orgs: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   lang: state.lang,
+  orgs: state.orgs,
 });
 
 export default connect(mapStateToProps, { logout })(Navbar);

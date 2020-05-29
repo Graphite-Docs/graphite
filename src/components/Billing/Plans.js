@@ -4,27 +4,67 @@ import { connect } from "react-redux";
 import Navbar from "../Navbar";
 import moment from "moment";
 import { Redirect } from "react-router-dom";
-import { restartSubscription } from '../../actions/billing';
+import { createOrg } from '../../actions/orgs';
+import { validateEmail } from "../../utils/validations";
+import { setAlert } from "../../actions/alert";
 const langSupport = require("../../utils/languageSupport.json");
 
 const Plans = ({
-  auth: { token, isAuthenticated, loading },
-  billing: { subscriptionType, subscriptionEndDate, cancelled },
-  lang, 
-  restartSubscription
+  auth: { token, isAuthenticated, loading, user },
+  billing: { subscriptionType, subscriptionEndDate },
+  orgs: { organizations },
+  lang,
+  restartSubscription,
+  setAlert,
+  createOrg
 }) => {
-  const [endDate, setEndDate] = useState('');
+  const [endDate, setEndDate] = useState("");
+  const [upgradeModal, setUpgradeModal] = useState(false);
+  const [orgName, setOrgName] = useState("");
+  const [orgEmail, setOrgEmail] = useState("");
 
   useEffect(() => {
-    if(subscriptionEndDate) {
-      const format = lang === 'English' ? "MM/DD/YYYY" : "DD/MM/YYYY";      
-      setEndDate(moment(subscriptionEndDate * 1000).format(format))
-    }    
-  }, [lang, subscriptionEndDate])
+    if (subscriptionEndDate) {
+      const format = lang === "English" ? "MM/DD/YYYY" : "DD/MM/YYYY";
+      setEndDate(moment(subscriptionEndDate * 1000).format(format));
+    }
+  }, [lang, subscriptionEndDate]);
 
   const handleRestart = (plan) => {
-    restartSubscription(token, plan)
-  }
+    restartSubscription(token, plan);
+  };
+
+  const handleUpgrade = () => {
+    setUpgradeModal(true);
+  };
+
+  const handleClose = () => {
+    setUpgradeModal(false);
+    setOrgName("");
+    setOrgName("");
+  };
+
+  const handleSave = (e) => {
+    e.preventDefault();
+    try {
+      const emailValidated = validateEmail(orgEmail);
+      if (orgEmail && orgName && emailValidated) {
+        const newOrg = {
+          name: orgName,
+          contactEmail: orgEmail,
+          billingPlan: "Professional",
+          role: "Owner",
+        };
+        createOrg(newOrg, token, user.publicKey)
+        setUpgradeModal(false);
+      } else {
+        setAlert("Please enter a valid email and organization name", "error");
+      }
+    } catch (error) {
+      console.log(error);
+      setAlert(error.message, "error");
+    }
+  };
 
   const currentDate = Date.now() / 1000;
   const PersonalPlanCard = () => {
@@ -53,27 +93,84 @@ const Plans = ({
           <li>{langSupport[lang].feature_unlimited_team}</li>
           <li>{langSupport[lang].feature_roles}</li>
           <li>{langSupport[lang].feature_word}</li>
-          <li>{langSupport[lang].feature_desktop_app}</li>
         </ul>
       </div>
     );
   };
-  if(!loading && isAuthenticated) {
+  if (!loading && isAuthenticated) {
     return (
       <div>
         <Navbar />
         <div className="clear-nav clear-bottom">
+          {/******** Dimmer ********/}
+          <div
+            style={{
+              display: upgradeModal ? "block" : "none",
+            }}
+            className="dimmer"
+          />
+
+          {/******** Upgrade Modal ********/}
+          <div
+            style={{ display: upgradeModal ? "block" : "none" }}
+            className="modal"
+          >
+            <h3>Upgrade Now</h3>
+            <p>
+              After you upgrade, you will be invoiced for the month ($99). If
+              you'd like to pay the year in advance, please{" "}
+              <a className="not-button" href="mailto:contact@graphitedocs.com">
+                contact us
+              </a>
+              .
+            </p>
+            <div>
+              <form onSubmit={handleSave}>
+                <div className="form-group">
+                  <label htmlFor="orgName">Organization Name</label>
+                  <input
+                    value={orgName}
+                    onChange={(e) => setOrgName(e.target.value)}
+                    id="orgName"
+                    type="text"
+                    placeholder="Acme Corp"
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="orgEmail">Contact Email</label>
+                  <input
+                    value={orgEmail}
+                    onChange={(e) => setOrgEmail(e.target.value)}
+                    id="orgEmail"
+                    type="email"
+                    placeholder="youremail@email.com"
+                  />
+                </div>
+                <button type="submit">Upgrade</button>
+                <button onClick={handleClose} className="btn-muted">
+                  Cancel
+                </button>
+              </form>
+            </div>
+          </div>
           <div className="container top-100">
             <h3>{langSupport[lang].plans}</h3>
             {subscriptionEndDate ? (
               <div>
                 <div className="center">
                   <h4>{langSupport[lang].account_cancelled}</h4>
-                  {
-                    subscriptionEndDate > currentDate ? 
-                    <p>{langSupport[lang].subscription_access_start}{`${subscriptionType.toUpperCase()} PLAN`}{langSupport[lang].subscription_access_end}<strong><u>{endDate}</u></strong></p> : 
+                  {subscriptionEndDate > currentDate ? (
+                    <p>
+                      {langSupport[lang].subscription_access_start}
+                      {`${subscriptionType.toUpperCase()} PLAN`}
+                      {langSupport[lang].subscription_access_end}
+                      <strong>
+                        <u>{endDate}</u>
+                      </strong>
+                    </p>
+                  ) : (
                     <p></p>
-                  }
+                  )}
                   <p>{langSupport[lang].select_a_plan}</p>
                 </div>
                 <div>
@@ -82,16 +179,20 @@ const Plans = ({
                       <div className="card">
                         <div className="plan-card">
                           <PersonalPlanCard />
-                          <button onClick={() => handleRestart('personal')}>{langSupport[lang].select_personal}</button>
+                          <button onClick={() => handleRestart("personal")}>
+                            {langSupport[lang].select_personal}
+                          </button>
                         </div>
                       </div>
                     </div>
-  
+
                     <div className="column">
                       <div className="card">
                         <div className="plan-card">
                           <ProfessionalPlanCard />
-                          <button onClick={() => handleRestart('professional')}>{langSupport[lang].select_professional}</button>
+                          <button onClick={() => handleRestart("professional")}>
+                            {langSupport[lang].select_professional}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -104,38 +205,35 @@ const Plans = ({
                   <div className="card">
                     <div className="plan-card">
                       <div className="active-select-container">
-                        {subscriptionType === "personal" ? (
+                        {organizations.length === 0 ? (
                           <i className="fas fa-check"></i>
                         ) : (
                           <div />
                         )}
                       </div>
                       <PersonalPlanCard />
-                      {
-                        subscriptionType !== 'personal' ?
-                        <button>{langSupport[lang].downgrade}</button> : 
-                        <div />
-                      }
                     </div>
                   </div>
                 </div>
-  
+
                 <div className="column">
                   <div className="card">
                     <div className="plan-card">
                       <div className="active-select-container">
-                        {subscriptionType === "professional" ? (
+                        {organizations.length > 0 ? (
                           <i className="fas fa-check"></i>
                         ) : (
                           <div />
                         )}
                       </div>
                       <ProfessionalPlanCard />
-                      {
-                        subscriptionType !== 'professional' ?
-                        <button>{langSupport[lang].upgrade}</button> : 
+                      {organizations.length === 0 ? (
+                        <button onClick={handleUpgrade} className="btn wrap">
+                          {langSupport[lang].upgrade}
+                        </button>
+                      ) : (
                         <div />
-                      }
+                      )}
                     </div>
                   </div>
                 </div>
@@ -145,24 +243,25 @@ const Plans = ({
         </div>
       </div>
     );
-  } else if(!loading) {
-    return <Redirect to='/'/>
+  } else if (!loading) {
+    return <Redirect to="/" />;
   } else {
-    return (
-      <div>Loading...</div>
-    )
-  }  
+    return <div>Loading...</div>;
+  }
 };
 
 Plans.propTypes = {
   auth: PropTypes.object.isRequired,
   billing: PropTypes.object.isRequired,
+  orgs: PropTypes.object.isRequired,
+  alerts: PropTypes.array.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   billing: state.billing,
-  lang: state.lang
+  lang: state.lang,
+  orgs: state.orgs,
 });
 
-export default connect(mapStateToProps, { restartSubscription })(Plans);
+export default connect(mapStateToProps, { setAlert, createOrg })(Plans);
