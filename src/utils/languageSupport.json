@@ -88,7 +88,15 @@
     "name": "Name", 
     "email": "Email", 
     "role": "Role", 
-    "add_user": "Add User"
+    "add_user": "Add User", 
+    "users": "Users", 
+    "add": "Add", 
+    "admin": "Admin", 
+    "user": "User",
+    "send_invite": "Send Invite",
+    "no_undo": "This action cannot be undone. Are you sure?", 
+    "resend_invite": "Re-Send Invite",
+    "confirm_resend": "Would you like to re-send the invite to"
   },
   "Deutsche": {
     "register_name": "Vollständiger Name",
@@ -179,7 +187,15 @@
     "name": "Name", 
     "email": "Email", 
     "role": "Rolle",
-    "add_user": "Nutzer hinzufügen"
+    "add_user": "Nutzer hinzufügen",
+    "users": "Benutzer",
+    "add": "Hinzufügen", 
+    "admin": "Administrator", 
+    "user": "Benutzer",
+    "send_invite": "Sende Einladung",
+    "no_undo": "Diese Aktion kann nicht rückgängig gemacht werden. Bist du sicher?",
+    "resend_invite": "Einladung erneut senden",
+    "confirm_resend": "Möchten Sie die Einladung erneut an senden"
   },
   "Español": {
     "register_name": "Nombre Completo",
@@ -270,6 +286,14 @@
     "name": "Nombre", 
     "email": "Correo electrónico", 
     "role": "Papel", 
-    "add_user": "Agregar usuario"
+    "add_user": "Agregar usuario",
+    "users": "Los usuarios",
+    "add": "Añadir", 
+    "admin": "Administrador",
+    "user": "Usuario",
+    "send_invite": "Enviar invitación",
+    "no_undo": "Esta acción no se puede deshacer. ¿Estás seguro?",
+    "resend_invite": "Reenviar invitación",
+    "confirm_resend": "¿Desea reenviar la invitación a"
   }
 }

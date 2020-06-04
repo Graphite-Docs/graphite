@@ -148,19 +148,16 @@ const Docs = ({
                 <button onClick={handleNewDoc}>{langSupport[lang].new}</button>
               </span>
             </h3>
-            <div className="row top-40">
+            <div className="grid top-40">
               {
-                documents.length > 0 ?
-                <div>
-
-                </div> : 
+                documents.length < 1 &&                
                 <div>
                   <h5>{langSupport[lang].no_docs}</h5>
                 </div>
               }
               {documents.map((doc) => {
                 return (
-                  <div className="column" key={doc.id}>
+                  <div className="col" key={doc.id}>
                     <div className="card card-medium">
                       <div className="doc-actions">
                         <button

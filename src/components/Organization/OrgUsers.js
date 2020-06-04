@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { connect } from "react-redux";
 import { validateEmail } from "../../utils/validations";
 import { setAlert } from "../../actions/alert";
-import { addUser, updateUser } from "../../actions/orgs";
+import { addUser, deleteUser } from "../../actions/orgs";
 const langSupport = require("../../utils/languageSupport.json");
 
 const OrgUsers = ({
@@ -12,10 +12,11 @@ const OrgUsers = ({
   lang,
   setAlert,
   addUser,
-  updateUser,
+  deleteUser,
 }) => {
   const [newUserModal, setNewUserModal] = useState(false);
-  const [editUserModal, setEditUserModal] = useState(false);
+  const [deleteUserModal, setDeleteUserModal] = useState(false);
+  const [resendModal, setResendModal] = useState(false);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState("Admin");
@@ -37,32 +38,42 @@ const OrgUsers = ({
     }
   };
 
-  const handleEdit = (user) => {
-    setEditUserModal(true);
-    setUserName(user.name);
+  const handleDeleteModal = (user) => {
+    setDeleteUserModal(true);
     setUserEmail(user.email);
+    setUserName(user.name);
   };
 
-  const handleUpdate = (e) => {
-    e.preventDefault();
+  const handleDelete = (e) => {
+    const { token } = auth;
+    deleteUser(token, selectedOrg, userEmail);
+    closeModal(e);
   };
 
   const closeModal = (e) => {
     e.preventDefault();
-    setEditUserModal(false);
+    setDeleteUserModal(false);
     setNewUserModal(false);
+    setResendModal(false);
     setUserName("");
     setUserEmail("");
     setUserRole("");
+  };
+
+  const handleResend = (user) => {
+    setResendModal(true);
+    setUserEmail(user.email);
+    setUserName(user.name);
+    setUserRole(user.organizations[0].role);
   };
 
   return (
     <div className="column">
       <div>
         <h5>
-          <i className="far fa-user"></i> Users{" "}
+          <i className="far fa-user"></i> {langSupport[lang].users}{" "}
           <button onClick={() => setNewUserModal(true)} className="left-5">
-            Add
+            {langSupport[lang].add}
           </button>
         </h5>
         {selectedOrg.role !== "User" && (
@@ -95,13 +106,25 @@ const OrgUsers = ({
                       </td>
                       <td data-label="Role">{user.organizations[0].role}</td>
                       <td>
-                        {user._id !== auth.user._id && (
-                          <button
-                            onClick={() => handleEdit(user)}
-                            className="not-button no-underline btn-left"
+                        {user._id !== auth.user._id &&
+                        user.organizations[0].pending &&
+                        user.organizations[0].role !== "Owner" ? (
+                          <span
+                            onClick={() => handleResend(user)}
+                            className="pending"
                           >
-                            <i className="far fa-edit"></i>
-                          </button>
+                            Pending <i className="far fa-paper-plane"></i>
+                          </span>
+                        ) : (
+                          user._id !== auth.user._id &&
+                          user.organizations[0].pending === false && (
+                            <button
+                              onClick={() => handleDeleteModal(user)}
+                              className="not-button no-underline btn-left"
+                            >
+                              <i className="far fa-trash-alt"></i>
+                            </button>
+                          )
                         )}
                       </td>
                     </tr>
@@ -116,7 +139,8 @@ const OrgUsers = ({
       {/******** Dimmer ********/}
       <div
         style={{
-          display: newUserModal || editUserModal ? "block" : "none",
+          display:
+            newUserModal || deleteUserModal || resendModal ? "block" : "none",
         }}
         className="dimmer"
       />
@@ -126,11 +150,11 @@ const OrgUsers = ({
         style={{ display: newUserModal ? "block" : "none" }}
         className="modal"
       >
-        <h3>Add User</h3>
+        <h3>{langSupport[lang].add_user}</h3>
         <div>
           <form onSubmit={handleAdd}>
             <div>
-              <label>User Full Name</label>
+              <label>{langSupport[lang].register_name}</label>
               <input
                 type="text"
                 value={userName}
@@ -139,7 +163,7 @@ const OrgUsers = ({
               />
             </div>
             <div>
-              <label>User Email</label>
+              <label>{langSupport[lang].email}</label>
               <input
                 type="email"
                 value={userEmail}
@@ -148,54 +172,55 @@ const OrgUsers = ({
               />
             </div>
             <div>
+              <label>{langSupport[lang].role}</label>
               <select onChange={(e) => setUserRole(e.target.value)}>
-                <option value="Admin">Admin</option>
-                <option value="User">User</option>
+                <option value="Admin">{langSupport[lang].admin}</option>
+                <option value="User">{langSupport[lang].user}</option>
               </select>
             </div>
             <div>
-              <button type="submit">Send Invite</button>
+              <button type="submit">{langSupport[lang].send_invite}</button>
               <button onClick={closeModal} className="btn-muted">
-                Cancel
+                {langSupport[lang].cancel}
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {/******** Edit User Modal ********/}
+      {/******** Delete User Modal ********/}
       <div
-        style={{ display: editUserModal ? "block" : "none" }}
+        style={{ display: deleteUserModal ? "block" : "none" }}
         className="modal"
       >
-        <h3>Update User Information</h3>
+        <h3>
+          {langSupport[lang].delete} <u>{userName}</u>?
+        </h3>
         <div>
-          <form onSubmit={handleUpdate}>
-            <div>
-              <label>User Full Name</label>
-              <input
-                type="text"
-                value={userName}
-                onChange={(e) => setUserName(e.target.value)}
-                placeholder="Marco Polo"
-              />
-            </div>
-            <div>
-              <label>User Email</label>
-              <input
-                type="email"
-                value={userEmail}
-                onChange={(e) => setUserEmail(e.target.value)}
-                placeholder="marcopolo@email.com"
-              />
-            </div>
-            <div>
-              <button type="submit">Update User</button>
-              <button onClick={closeModal} className="btn-muted">
-                Cancel
-              </button>
-            </div>
-          </form>
+          <p>{langSupport[lang].no_undo}</p>
+          <button onClick={handleDelete} className="btn-danger">
+            {langSupport[lang].delete}
+          </button>
+          <button onClick={closeModal} className="btn-muted">
+            {langSupport[lang].cancel}
+          </button>
+        </div>
+      </div>
+
+      {/******** Resend Modal ********/}
+      <div
+        style={{ display: resendModal ? "block" : "none" }}
+        className="modal"
+      >
+        <h3>{langSupport[lang].resend_invite}</h3>
+        <div>
+          <p>{langSupport[lang].confirm_resend} {userName}?</p>
+          <div>
+            <button onClick={handleAdd}>{langSupport[lang].resend_invite}</button>
+            <button onClick={closeModal} className="btn-muted">
+              {langSupport[lang].cancel}
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -216,6 +241,6 @@ const mapStateToProps = (state) => ({
   orgs: state.orgs,
 });
 
-export default connect(mapStateToProps, { setAlert, addUser, updateUser })(
+export default connect(mapStateToProps, { setAlert, addUser, deleteUser })(
   OrgUsers
 );

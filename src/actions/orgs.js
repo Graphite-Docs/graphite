@@ -3,7 +3,8 @@ import { setLoading, endLoading } from "./auth";
 import { SET_ORG_DATA, SET_ORG_SELECTOR, SELECT_ORG } from "./types";
 import { URL, config } from "../utils/api";
 import axios from "axios";
-import { generateKeyPair, encryptData } from "../utils/encryption";
+import { generateKeyPair, encryptData, decryptData, getPrivateKey } from "../utils/encryption";
+const jwt = require("jsonwebtoken");
 
 export const fetchOrgData = (orgData, token) => async (dispatch) => {
   //const localOrgData = localStorage.getItem('local_org_data');
@@ -100,11 +101,11 @@ export const createOrg = (org, token, pubKey) => async (dispatch) => {
 
     const teamKeys = {
       publicKey: keypair.publicKey,
-      privateKey: encryptedTeamKey
-    }
-    console.log(teamKeys)
-    org['teamKeys'] = teamKeys;
-    
+      privateKey: encryptedTeamKey,
+    };
+
+    org["teamKeys"] = teamKeys;
+
     //  Need to set the header with Authorization
     config.headers["Authorization"] = `Bearer ${token}`;
 
@@ -134,8 +135,8 @@ export const createOrg = (org, token, pubKey) => async (dispatch) => {
   }
 };
 
-export const updateOrg = (token, updatedOrg) => async dispatch => {
-  dispatch(setAlert('Updating', 'success'));
+export const updateOrg = (token, updatedOrg) => async (dispatch) => {
+  dispatch(setAlert("Updating", "success"));
   try {
     config.headers["Authorization"] = `Bearer ${token}`;
 
@@ -152,27 +153,75 @@ export const updateOrg = (token, updatedOrg) => async dispatch => {
       type: SELECT_ORG,
       payload: thisOrg,
     });
-    dispatch(setAlert('Updated!', 'success'));
+    dispatch(setAlert("Updated!", "success"));
   } catch (error) {
     console.log(error);
-    dispatch(error.message, 'error');
-  }  
-}
+    dispatch(error.message, "error");
+  }
+};
 
-export const addUser = (token, org, user) => async dispatch => {
-  console.log(org, user)
+export const addUser = (token, org, user, teamKeyPair) => async (dispatch) => {
   try {
     const newUserObj = {
-      name: user.userName, 
-      email: user.userEmail, 
-      role: user.userRole, 
-      pending: true
-    }
+      name: user.userName,
+      email: user.userEmail,
+      role: user.userRole,
+      pending: teamKeyPair ? false : true,
+      teamKeys: teamKeyPair
+    };
     config.headers["Authorization"] = `Bearer ${token}`;
 
     const res = await axios.post(
       `${URL}/v1/organizations/${org._id}/users`,
       JSON.stringify(newUserObj),
+      config
+    );
+    
+    //  Check if there is a public key returned in the payload
+    //  If so, we need to send the same request again with the team key encrypted with the user's
+    //  public key
+    const { key } = res.data;
+    let teamKeys;
+    if(key) {
+      let decodedToken = await jwt.verify(
+        token,
+        process.env.REACT_APP_JWT_SECRET
+      );
+
+      const thisUser = org.users.filter(u => u._id === decodedToken.user.id)[0];
+      const thisOrg = thisUser.organizations.filter(o => o.organization === org._id)[0];
+
+      const { publicKey, privateKey } = thisOrg.teamKeys;
+      
+      const userKey = getPrivateKey();
+      const decryptedKey = decryptData(userKey, JSON.stringify(privateKey))//decryptData(userKey, privateKey);
+      const encryptedPrivateKey = encryptData(decodedToken.user.publicKey, JSON.stringify(decryptedKey));
+      teamKeys = {
+        publicKey, 
+        privateKey: encryptedPrivateKey
+      }
+      dispatch(addUser(token, org, user, teamKeys));      
+    } else {
+      const thisOrg = await dispatch(
+        fetchOrg({ organization: res.data._id }, token)
+      );
+      dispatch({
+        type: SELECT_ORG,
+        payload: thisOrg,
+      });
+      dispatch(setAlert("Updated!", "success"));
+    }    
+  } catch (error) {
+    console.log(error);
+    setAlert(error.message, "error");
+  }
+};
+
+export const deleteUser = (token, org, user) => async (dispatch) => {
+  try {
+    const encodedEmail = encodeURIComponent(user);
+    const res = await axios.delete(
+      `${URL}/v1/organizations/${org._id}/users/${encodedEmail}`,
       config
     );
     const thisOrg = await dispatch(
@@ -182,13 +231,9 @@ export const addUser = (token, org, user) => async dispatch => {
       type: SELECT_ORG,
       payload: thisOrg,
     });
-    dispatch(setAlert('Updated!', 'success'));
+    dispatch(setAlert("Updated!", "success"));
   } catch (error) {
     console.log(error);
-    setAlert(error.message, 'error');
+    dispatch(setAlert(error.message, "error"));
   }
-}
-
-export const updateUser = (token, org, user) => async dispatch => {
-  
-}
+};

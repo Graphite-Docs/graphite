@@ -569,7 +569,22 @@ td:first-child, th:first-child {
   display: block;
 }
 
-@media screen and (max-width: 600px) {
+.pending {
+  font-size: 12px;
+}
+
+.pending i {
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.grid {
+  display: grid!important;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))!important;
+  grid-gap: 1rem!important;
+}
+
+@media screen and (min-width: 600px) {
   table {
     border: 0;
   }

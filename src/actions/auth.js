@@ -121,7 +121,7 @@ export const validateRegistration = (password, token) => async (dispatch) => {
     const { user } = decodedToken;
 
     //  Grab auth check data
-    const { email, data } = user;
+    const { email, data, org } = user;
 
     //  Password encrypt auth check data
     const ciphertextForAuthData = CryptoJS.AES.encrypt(
@@ -145,6 +145,7 @@ export const validateRegistration = (password, token) => async (dispatch) => {
       data: ciphertextForAuthData,
       publicKey: publicKey,
       privateKey: ciphertextForPrivKey,
+      org
     };
 
     //  Need to set the header with Authorization
@@ -163,6 +164,18 @@ export const validateRegistration = (password, token) => async (dispatch) => {
       type: REGISTRATION_VALIDATED,
       payload: { token: res.data.token, user, paymentMade: false },
     });
+
+    if(org) {
+      const newToken = res.data.token;
+      const newDecodedToken = await jwt.verify(
+        newToken,
+        process.env.REACT_APP_JWT_SECRET
+      );
+      
+      const updatedUser = newDecodedToken.user;
+      const orgData = updatedUser.organizations;
+      dispatch(fetchOrgData(orgData, newToken));
+    }
   } catch (error) {
     console.log(error);
     dispatch(setAlert(error.message, "error"));
