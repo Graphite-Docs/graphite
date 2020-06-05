@@ -8,7 +8,7 @@ import {
   deleteDoc,
   addNewTag,
   deleteTag,
-  resetSingleDoc
+  resetSingleDoc,
 } from "../../actions/docs";
 import {
   shareDocWithLink,
@@ -31,11 +31,13 @@ const Docs = ({
   shareDocWithLink,
   auth: { token, user, loading },
   docs: { documents, shareLink },
+  orgs: { organizations, selectedOrg },
   history,
   lang,
 }) => {
   const [deleteModalOpen, setDeleteModalState] = useState(false);
   const [shareModalOpen, setShareModalState] = useState(false);
+  const [teamShareModalOpen, setTeamShareModalState] = useState(false);
   const [tagModalOpen, setTagModalState] = useState(false);
   const [docToDisplay, setDocToDisplay] = useState({});
   const [docForTag, setDocumentForTag] = useState({});
@@ -89,13 +91,13 @@ const Docs = ({
   };
 
   const handleDelete = (doc) => {
-    //  Display modal for confirmation    
+    //  Display modal for confirmation
     setDocToDisplay(doc);
     setDeleteModalState(true);
   };
 
-  const confirmDelete = () => {    
-    deleteDoc(token, docToDisplay.id);    
+  const confirmDelete = () => {
+    deleteDoc(token, docToDisplay.id);
     setDeleteModalState(false);
     // setDocToDisplay(null);
   };
@@ -103,6 +105,11 @@ const Docs = ({
   const handleShare = (doc) => {
     setDocToDisplay(doc);
     setShareModalState(true);
+  };
+
+  const handleTeamShare = (doc) => {
+    setDocToDisplay(doc);
+    setTeamShareModalState(true);
   };
 
   const confirmShare = (doc) => {
@@ -114,6 +121,7 @@ const Docs = ({
   const closeShareModal = () => {
     setShareModalState(false);
     setFullLink(null);
+    setTeamShareModalState(false);
   };
 
   const openTagModal = (doc) => {
@@ -126,7 +134,7 @@ const Docs = ({
       const tagId = uuidv4();
       const tagName = tagInput;
       addNewTag(token, docForTag.id, { tagId, tagName });
-      setTagInput('');
+      setTagInput("");
       setTagModalState(false);
     } catch (error) {
       console.log(error);
@@ -149,12 +157,12 @@ const Docs = ({
               </span>
             </h3>
             <div className="grid top-40">
-              {
-                documents.length < 1 &&                
+              {documents.length < 1 && (
                 <div>
                   <h5>{langSupport[lang].no_docs}</h5>
                 </div>
-              }
+              )}
+
               {documents.map((doc) => {
                 return (
                   <div className="col" key={doc.id}>
@@ -189,15 +197,30 @@ const Docs = ({
                                 title={langSupport[lang].share}
                                 onClick={() => handleShare(doc)}
                               >
-                                <i className="fas fa-share-alt"></i>{" "}
+                                <i className="fas fa-link"></i>{" "}
                                 {langSupport[lang].share}
                               </button>
                             </li>
+                            {organizations.length > 0 && (
+                              <li>
+                                <button
+                                  className="not-button no-underline btn-left"
+                                  title={langSupport[lang].share_with_team}
+                                  onClick={() => handleTeamShare(doc)}
+                                >
+                                  <i className="fas fa-user-friends"></i>{" "}
+                                  {langSupport[lang].share_with_team}
+                                </button>
+                              </li>
+                            )}
                           </ul>
                         </div>
                       </div>
 
-                      <button className='not-button no-underline btn-left' onClick={() => handleLoadDoc(doc.id)}>
+                      <button
+                        className="not-button no-underline btn-left"
+                        onClick={() => handleLoadDoc(doc.id)}
+                      >
                         <h5>{doc.title ? doc.title : "Untitled"}</h5>
                       </button>
 
@@ -246,7 +269,10 @@ const Docs = ({
         <div
           style={{
             display:
-              shareModalOpen || tagModalOpen || deleteModalOpen
+              shareModalOpen ||
+              teamShareModalOpen ||
+              tagModalOpen ||
+              deleteModalOpen
                 ? "block"
                 : "none",
           }}
@@ -328,8 +354,10 @@ const Docs = ({
                   <option value="can-edit">{langSupport[lang].can_edit}</option>
                   <option value="can-view">{langSupport[lang].can_view}</option>
                 </select>
-                {docToDisplay && docToDisplay.id &&
-                documents.filter((doc) => doc.id === docToDisplay.id)[0] && documents.filter((doc) => doc.id === docToDisplay.id)[0]
+                {docToDisplay &&
+                docToDisplay.id &&
+                documents.filter((doc) => doc.id === docToDisplay.id)[0] &&
+                documents.filter((doc) => doc.id === docToDisplay.id)[0]
                   .shareLink ? (
                   <div>
                     <p>
@@ -343,37 +371,45 @@ const Docs = ({
                           }
                         </u>
                       </strong>{" "}
-                      {documents.filter((doc) => doc.id === docToDisplay.id)[0] && documents.filter((doc) => doc.id === docToDisplay.id)[0].shareLink && documents.filter((doc) => doc.id === docToDisplay.id)[0].shareLink.length > 1
+                      {documents.filter(
+                        (doc) => doc.id === docToDisplay.id
+                      )[0] &&
+                      documents.filter((doc) => doc.id === docToDisplay.id)[0]
+                        .shareLink &&
+                      documents.filter((doc) => doc.id === docToDisplay.id)[0]
+                        .shareLink.length > 1
                         ? langSupport[lang].times
                         : langSupport[lang].time}
                       . {langSupport[lang].share_count_end}
                     </p>
                     <ul>
-                      {documents
-                        .filter((doc) => doc.id === docToDisplay.id)[0] && documents
-                        .filter((doc) => doc.id === docToDisplay.id)[0]
-                        .shareLink.map((link) => {
-                          return (
-                            <li key={link.shareId}>
-                              {langSupport[lang].shared_on}:{" "}
-                              {lang === "English"
-                                ? moment(link.date).format("MM/DD/YYYY")
-                                : moment(link.date).format("DD/MM/YYYY")}{" "}
-                              <button
-                                onClick={() => {
-                                  removeSharedLinkAccess(
-                                    token,
-                                    docToDisplay,
-                                    link
-                                  );
-                                }}
-                                className="not-button"
-                              >
-                                Remove Access
-                              </button>
-                            </li>
-                          );
-                        })}
+                      {documents.filter(
+                        (doc) => doc.id === docToDisplay.id
+                      )[0] &&
+                        documents
+                          .filter((doc) => doc.id === docToDisplay.id)[0]
+                          .shareLink.map((link) => {
+                            return (
+                              <li key={link.shareId}>
+                                {langSupport[lang].shared_on}:{" "}
+                                {lang === "English"
+                                  ? moment(link.date).format("MM/DD/YYYY")
+                                  : moment(link.date).format("DD/MM/YYYY")}{" "}
+                                <button
+                                  onClick={() => {
+                                    removeSharedLinkAccess(
+                                      token,
+                                      docToDisplay,
+                                      link
+                                    );
+                                  }}
+                                  className="not-button"
+                                >
+                                  Remove Access
+                                </button>
+                              </li>
+                            );
+                          })}
                     </ul>
                   </div>
                 ) : (
@@ -395,6 +431,50 @@ const Docs = ({
             )}
           </div>
         </div>
+
+        {/******** Team Share Modal ********/}
+        <div
+          style={{ display: teamShareModalOpen ? "block" : "none" }}
+          className="modal"
+        >
+          <div>
+            <h3>Share With Your Team</h3>
+            <p>
+              Share with an individual team member or the whole organization
+            </p>
+            <button classNae="btn-secondary">Share With Whole Team</button>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">{langSupport[lang].name}</th>
+                  <th scope="col">{langSupport[lang].role}</th>
+                  <th scope="col"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedOrg.users
+                  ? selectedOrg.users
+                      .filter((u) => u.email !== user.email)
+                      .map((user) => {
+                        return (
+                          <tr key={user._id}>
+                            <td data-label="Name">{user.name}</td>
+                            <td data-label="Name">
+                              {
+                                user.organizations.filter(
+                                  (o) => o.organization === selectedOrg._id
+                                )[0].role
+                              }
+                            </td>
+                            <td>Share <i className="far fa-paper-plane"></i></td>
+                          </tr>
+                        );
+                      })
+                  : null}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     );
   }
@@ -404,12 +484,14 @@ Docs.propTypes = {
   auth: PropTypes.object.isRequired,
   docs: PropTypes.object.isRequired,
   lang: PropTypes.string.isRequired,
+  orgs: PropTypes.object.isRequired,
 };
 
 const mapStateToProps = (state) => ({
   auth: state.auth,
   docs: state.docs,
   lang: state.lang,
+  orgs: state.orgs,
 });
 
 export default connect(mapStateToProps, {

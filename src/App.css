@@ -584,7 +584,7 @@ td:first-child, th:first-child {
   grid-gap: 1rem!important;
 }
 
-@media screen and (min-width: 600px) {
+@media screen and (max-width: 600px) {
   table {
     border: 0;
   }
