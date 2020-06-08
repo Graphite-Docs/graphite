@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from "uuid";
 import Loader from "../Loader";
 import Navbar from "../Navbar";
 import { setAlert } from "../../actions/alert";
+// import { Grid, html } from "gridjs";
 const langSupport = require("../../utils/languageSupport.json");
 const moment = require("moment");
 
@@ -45,10 +46,60 @@ const Docs = ({
   const [sharePermissions, setSharePermissions] = useState("can-edit");
   const [fullLink, setFullLink] = useState(null);
 
+  //  @TODO - The below is a React hack for GridJS, uncomment and continue working when
+  //  GridJS is implemented
+
+  // useEffect(() => {
+  //   const titleEl = document.getElementsByClassName('title-el');
+  //   if(titleEl.length > 0) {      
+  //     for(const el of titleEl) {    
+  //       const id = el.getAttribute('id'); 
+  //       el.onclick = () => handleLoadDoc(id)
+  //     }
+  //   }
+  //   const deleteTagEl = document.getElementsByClassName('delete-tag');
+  //   if(deleteTagEl) {
+  //     for(const el of deleteTagEl) {
+  //       const tagId = el.getAttribute('id').split("tagId=")[1].split("&")[0];
+  //       const docId = el.getAttribute('id').split("docId=")[1];
+  //       el.onclick = () => deleteTag(token, docId, tagId);
+  //     }
+  //   }
+  // })
+
   useEffect(() => {
     loadDocs(token);
     //eslint-disable-next-line
   }, []);
+
+  //  @TODO: Below is the GridJS initialization code. Uncomment when ready to implement
+  //  GridJS.
+
+  // useEffect(() => {
+  //   if(documents.length > 0) {
+  //     new Grid({
+  //       columns: [
+  //         "Title", 
+  //         "Tags", 
+  //         ""
+  //        ],
+  //       data: documents.map(doc => [
+  //         html(`<button class='not-button no-underline left title-el' id=${doc.id}>${doc.title}</span>`), 
+  //         doc.tags.map(tag => { return html(`<span class="single-tag">${tag.name}<button id="tagId=${tag.id}&docId=${doc.id}" class="delete-tag not-button no-underline dark"><i class="fas fa-times"></i></button></span>`) }),
+  //         ''
+  //       ]),
+  //       search: {
+  //         enabled: true,
+  //         placeholder: 'Search...'
+  //       },
+  //       pagination: {
+  //         enabled: true,
+  //         limit: 5,
+  //         summary: false
+  //       }
+  //     }).render(document.getElementById("docs-table"));
+  //   }    
+  // }, [documents]);
 
   useEffect(() => {
     if (shareLink) {
@@ -59,6 +110,7 @@ const Docs = ({
       setFullLink(fullLink);
     }
   }, [shareLink]);
+
 
   const handleNewDoc = async () => {
     const id = uuidv4();
@@ -142,6 +194,10 @@ const Docs = ({
     }
   };
 
+  const shareWithTeamMate = (user) => {
+    console.log(user);
+  }
+
   if (loading) {
     return <Loader />;
   } else {
@@ -162,6 +218,9 @@ const Docs = ({
                   <h5>{langSupport[lang].no_docs}</h5>
                 </div>
               )}
+
+              {/* //  @TODO: This is the container for GridJS <div id='docs-table' /> */}
+
 
               {documents.map((doc) => {
                 return (
@@ -442,7 +501,7 @@ const Docs = ({
             <p>
               Share with an individual team member or the whole organization
             </p>
-            <button classNae="btn-secondary">Share With Whole Team</button>
+            <button className="btn-secondary">Share With Whole Team</button>
             <table>
               <thead>
                 <tr>
@@ -466,7 +525,7 @@ const Docs = ({
                                 )[0].role
                               }
                             </td>
-                            <td>Share <i className="far fa-paper-plane"></i></td>
+                            <td><button onClick={() => shareWithTeamMate(user)} className="not-button no-underline">Share <i className="far fa-paper-plane"></i></button></td>
                           </tr>
                         );
                       })
@@ -474,6 +533,7 @@ const Docs = ({
               </tbody>
             </table>
           </div>
+          <button onClick={closeShareModal} className="btn-muted top-20">Cancel</button>
         </div>
       </div>
     );

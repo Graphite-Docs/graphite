@@ -16,6 +16,9 @@ export const fetchOrgData = (orgData, token) => async (dispatch) => {
       let orgs = [];
       for (const org of orgData) {
         const thisOrg = await dispatch(fetchOrg(org, token));
+
+        //  @TODO: This is a good place to check for users that need their teamKeys created
+        
         orgs.push(thisOrg);
       }
 
@@ -41,6 +44,61 @@ export const fetchOrgData = (orgData, token) => async (dispatch) => {
     } else {
       // Fetch single org
       const org = await dispatch(fetchOrg(orgData[0], token));
+      //  This is where we can update any users that need teamKeys added to their account
+      const users = org.users;
+      
+      for(const user of users) {
+        const userOrgs = user.organizations;        
+        const matchingOrg = userOrgs.filter(o => o.organization === org._id)[0]
+        if(matchingOrg) {
+          //  Check for teamKeys
+          const teamKeys = matchingOrg.teamKeys && matchingOrg.teamKeys.privateKey ? true : false;
+          const userPending = matchingOrg.pending;
+          if(!teamKeys && userPending === false) {
+            //  Get the user's public key so that we can encrypt the team key with it
+            const thisUser = await dispatch(getUser(token, user));
+            const { publicKey } = thisUser;
+
+            //  Get the encrypted teamKey from state
+            const decodedToken = await jwt.verify(
+              token,
+              process.env.REACT_APP_JWT_SECRET
+            );            
+            const { organizations } = decodedToken.user;
+            const thisOrg = organizations.filter(o => o.organization === org._id)[0];
+            const teamKeys = thisOrg.teamKeys;
+            const encryptedTeamKey = teamKeys.privateKey;
+
+            //  Decrypt the team private key with the logged in user's own private key
+            const userPrivKey = getPrivateKey();
+            const teamPrivateKey = decryptData(userPrivKey, JSON.stringify(encryptedTeamKey));
+            
+            //  Encrypt the team private key with the new user's public key
+            const newUserEncryptedKey = encryptData(publicKey, teamPrivateKey);
+            const teamKeyPayload = {
+              email: user.email, 
+              name: user.name, 
+              role: user.organizations.filter(o => o.organization === org._id)[0].role,
+              pending: false, 
+              teamKeys: {
+                publicKey: teamKeys.publicKey, 
+                privateKey: newUserEncryptedKey
+              }
+            }
+
+            //  Need to set the header with Authorization
+            config.headers["Authorization"] = `Bearer ${token}`;
+
+            await axios.post(
+              `${URL}/v1/organizations/${org._id}/users`,
+              JSON.stringify(teamKeyPayload),
+              config
+            );
+
+          }
+        }
+      }
+      
       let orgs = [];
       orgs.push(org);
       dispatch({
@@ -237,3 +295,21 @@ export const deleteUser = (token, org, user) => async (dispatch) => {
     dispatch(setAlert(error.message, "error"));
   }
 };
+
+export const getUser = (token, user) => async dispatch => {
+  return new Promise(async (resolve, reject) => {
+    try {
+      config.headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await axios.get(
+        `${URL}/v1/auth/user/${user._id}`,
+        config
+      );
+      resolve(res.data);
+    } catch (error) {
+      console.log(error);
+      dispatch(setAlert(error.message, 'error'));
+      reject(error);
+    }
+  })  
+}
