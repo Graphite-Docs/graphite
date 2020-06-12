@@ -5,16 +5,15 @@ import axios from "axios";
 import { encryptData, decryptData, getPrivateKey } from "../utils/encryption";
 import { PrivateKey } from "eciesjs";
 import { v4 as uuidv4 } from "uuid";
-import { loadDocs, loadDoc } from "./docs";
+import { loadDocs, loadDoc, saveDoc } from "./docs";
 const jwt = require("jsonwebtoken");
 
 export const shareDocWithLink = (token, user, doc) => async (dispatch) => {
   try {
     //  Fetch the document
 
-    config.headers["Authorization"] = `Bearer ${token}`;
+    const res = await fetchDocument(token, doc);
 
-    const res = await axios.get(`${URL}/v1/documents/${doc.id}`, config);
     const { content } = res.data;
     const privateKeyA = getPrivateKey();
     const decryptedContent = decryptData(privateKeyA, content);
@@ -66,7 +65,7 @@ export const shareDocWithLink = (token, user, doc) => async (dispatch) => {
     dispatch(loadDocs(token));
 
     //  If the share request came from within an open document, make sure to update the document
-    if(window.location.href.includes('documents/')) {
+    if (window.location.href.includes("documents/")) {
       dispatch(loadDoc(token, doc.id));
     }
   } catch (error) {
@@ -164,4 +163,90 @@ export const loadSharedDoc = (token) => async (dispatch) => {
 
 export const updateSharedDoc = (token, doc) => (dispatch) => {
   //
+};
+
+export const shareDocWithTeam = (token, doc, org, access) => async (
+  dispatch
+) => {
+  //  0. Fetch doc content
+  //  1. Determined if document is already a team document
+  //  2. Determine if user is owner
+  //  3. Encrypt the document with the teamKey
+  //  4. Update the user (owner's) document to reflect that it is shared (if nec)
+  //  5. Set the ACL to include all team members
+  //  6. Post to normal doc endpoint and sharedDoc endpoint
+  try {
+    //  Fetch document
+    const res = await fetchDocument(token, doc);
+    const { content, document } = res.data;
+    //  To determine if a team document was returned or if the owner's doc was
+    //  we need to check if the document has a teamDocID or if it has an access list
+    const isTeamDoc = document.teamDocId || document.access ? true : false;
+
+    const decodedToken = await jwt.verify(
+      token,
+      process.env.REACT_APP_JWT_SECRET
+    );
+
+    const { user } = decodedToken;
+    const thisTeam = user.organizations.filter(
+      (o) => o.organization === org._id
+    )[0];
+
+    if (!thisTeam) {
+      return dispatch(setAlert("Error matching team", "error"));
+    }
+
+    const userPrivateKey = getPrivateKey();
+
+    const teamPrivateKeyEncrypted = thisTeam.teamKeys.privateKey;
+    const teamPrivateKey = decryptData(
+      userPrivateKey,
+      JSON.stringify(teamPrivateKeyEncrypted)
+    );
+
+    let decryptedContent;
+    
+    if (isTeamDoc) {
+      //  Need to decrypt the content with the team key      
+      decryptedContent = decryptData(teamPrivateKey, content);
+    } else {
+      //  Need to decrypt the content with the user's private key
+      decryptedContent = decryptData(userPrivateKey, content);
+    }
+
+    //  Now add the content to the document object
+    //  and add the teamContent
+    document["content"] = decryptedContent;
+    document['teamContent'] = decryptedContent
+
+    //  Add the access property as well
+    document["access"] = access;
+
+    //  Finally, add a boolean to indicate it's a team doc
+    document['teamDoc'] = true;
+
+    
+
+    const teamPublicKey = thisTeam.teamKeys.publicKey;
+
+    document['teamPublicKey'] = teamPublicKey;
+
+    dispatch(saveDoc(token, user, document, org._id));
+    dispatch(setAlert('Document shared', 'success'));
+  } catch (error) {
+    console.log(error);
+    dispatch(setAlert(error.message, "error"));
+  }
+};
+
+export const fetchDocument = async (token, doc, orgId) => {
+  try {
+    config.headers["Authorization"] = `Bearer ${token}`;
+
+    const res = await axios.get(`${URL}/v1/documents/${doc.id}`, config);
+    return res;
+  } catch (error) {
+    return error;
+  }
 };

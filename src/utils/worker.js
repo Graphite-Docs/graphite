@@ -4,15 +4,20 @@ const { URL, config } = require('./api');
 export default function worker(self) {
   self.addEventListener('message', async (e) => { //eslint-disable-line
     const payload = JSON.parse(e.data);
-    const { publicKey, document, token } = payload;
+    const { publicKey, document, orgId, token } = payload;
 
-    const { title, id, content } = document;
+    const { title, id, content, teamDoc, access, teamPublicKey } = document;
     const encryptedData = encryptData(publicKey, content);
+    const teamEncryptedData = encryptData(teamPublicKey, content)
     
     const documentForServer = {
       id,
       title: title ? title : 'Untitled', 
-      content: encryptedData
+      content: encryptedData, 
+      teamContent: teamEncryptedData,
+      orgId, 
+      access, 
+      teamDoc
     }
     //  Need to set the header with Authorization
     config.headers["Authorization"] = `Bearer ${token}`;

@@ -24,7 +24,10 @@ import Settings from './components/Organization/Settings';
 
 const App = () => {
   useEffect(() => {
-    store.dispatch(loadUser());
+    //  Should not be called if the user is accepting an invite or verifying their account
+    if(!window.location.href.includes('verify?')) {
+      store.dispatch(loadUser());
+    }    
   }, []);
   return (
     <Provider store={store}>

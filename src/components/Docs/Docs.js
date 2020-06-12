@@ -8,11 +8,12 @@ import {
   deleteDoc,
   addNewTag,
   deleteTag,
-  resetSingleDoc,
+  resetSingleDoc
 } from "../../actions/docs";
 import {
   shareDocWithLink,
   removeSharedLinkAccess,
+  shareDocWithTeam
 } from "../../actions/sharedDocs";
 import { v4 as uuidv4 } from "uuid";
 import Loader from "../Loader";
@@ -29,6 +30,7 @@ const Docs = ({
   deleteDoc,
   addNewTag,
   deleteTag,
+  shareDocWithTeam,
   shareDocWithLink,
   auth: { token, user, loading },
   docs: { documents, shareLink },
@@ -194,8 +196,19 @@ const Docs = ({
     }
   };
 
-  const shareWithTeamMate = (user) => {
-    console.log(user);
+  const shareWithTeam = (teammate) => {
+    //  If no teammate specified, share with the whole team
+    let teamAccess = []
+    if(teammate) {
+      teamAccess.push(teammate)
+    } else {
+      //  Get all teammates on the org and add them
+      const team = selectedOrg.users.map(u => u._id);
+      const teamMinusUser = team.filter(a => a !== user._id)
+      teamAccess = teamMinusUser
+    }
+    shareDocWithTeam(token, docToDisplay, selectedOrg, teamAccess);
+    closeShareModal()
   }
 
   if (loading) {
@@ -501,7 +514,7 @@ const Docs = ({
             <p>
               Share with an individual team member or the whole organization
             </p>
-            <button className="btn-secondary">Share With Whole Team</button>
+            <button onClick={() => shareWithTeam()} className="btn-secondary">Share With Whole Team</button>
             <table>
               <thead>
                 <tr>
@@ -525,7 +538,7 @@ const Docs = ({
                                 )[0].role
                               }
                             </td>
-                            <td><button onClick={() => shareWithTeamMate(user)} className="not-button no-underline">Share <i className="far fa-paper-plane"></i></button></td>
+                            <td><button onClick={() => shareDocWithTeam(user)} className="not-button no-underline">Share <i className="far fa-paper-plane"></i></button></td>
                           </tr>
                         );
                       })
@@ -563,4 +576,5 @@ export default connect(mapStateToProps, {
   deleteTag,
   shareDocWithLink,
   removeSharedLinkAccess,
+  shareDocWithTeam
 })(withRouter(Docs));

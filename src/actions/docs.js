@@ -79,7 +79,7 @@ export const newDocument = (token, user, newDoc) => async (dispatch) => {
   }
 };
 
-export const loadDoc = (user, token, doc_id) => async (dispatch) => {
+export const loadDoc = (user, token, doc_id, org) => async (dispatch) => {
   try {
     //  So that we don't load the document UI too soon.
     dispatch({
@@ -119,7 +119,7 @@ export const loadDoc = (user, token, doc_id) => async (dispatch) => {
   }
 };
 
-export const saveDoc = (token, user, document) => async (dispatch) => {
+export const saveDoc = (token, user, document, orgId) => async (dispatch) => {
   const { publicKey } = user;
 
   try {
@@ -130,7 +130,7 @@ export const saveDoc = (token, user, document) => async (dispatch) => {
         payload: e.data,
       });
     });
-    w.postMessage(JSON.stringify({ token, publicKey, document }));
+    w.postMessage(JSON.stringify({ token, publicKey, document, orgId }));
   } catch (error) {
     console.log(error);
     setAlert(error.message, "error");
