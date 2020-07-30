@@ -17,8 +17,6 @@ export const encryptData = (pubKey, data) => {
 };
 
 export const decryptData = (privKey, data) => {
-  console.log(privKey)
-  console.log(data)
   const dataToDecrypt = JSON.parse(data);
   return decrypt(privKey, Buffer.from(dataToDecrypt)).toString();
 };

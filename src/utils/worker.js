@@ -5,10 +5,13 @@ export default function worker(self) {
   self.addEventListener('message', async (e) => { //eslint-disable-line
     const payload = JSON.parse(e.data);
     const { publicKey, document, orgId, token } = payload;
-
+    debugger
     const { title, id, content, teamDoc, access, teamPublicKey } = document;
     const encryptedData = encryptData(publicKey, content);
-    const teamEncryptedData = encryptData(teamPublicKey, content)
+    let teamEncryptedData;
+    if(teamPublicKey) {
+      teamEncryptedData = encryptData(teamPublicKey, content)
+    }
     
     const documentForServer = {
       id,
