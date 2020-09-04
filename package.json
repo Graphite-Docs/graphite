@@ -26,7 +26,7 @@
     "mammoth": "^1.4.8",
     "node-open-geocoder": "^3.0.0",
     "os": "^0.1.1",
-    "papaparse": "^4.6.3",
+    "papaparse": "^5.2.0",
     "radiks": "^0.2.0",
     "react": "^16.8.6",
     "react-color": "^2.17.0",
