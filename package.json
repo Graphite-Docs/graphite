@@ -54,7 +54,7 @@
     "swagger-ui-react": "^3.22.1",
     "uuidv4": "^4.0.0",
     "video-react": "^0.13.6",
-    "xlsx": "^0.14.2"
+    "xlsx": "^0.17.0"
   },
   "scripts": {
     "start": "react-scripts start",
